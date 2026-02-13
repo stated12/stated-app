@@ -1,27 +1,44 @@
-const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-            password
-            });
+const handleSignup = async (e) => {
+          e.preventDefault();
+            setError(null);
+              setLoading(true);
 
-            if (authError) {
-              setError(authError.message);
-                return;
-                }
+                // Create auth user
+                  const { data, error } = await supabase.auth.signUp({
+                      email,
+                          password,
+                            });
 
-                const user = authData.user;
+                              if (error) {
+                                  setError(error.message);
+                                      setLoading(false);
+                                          return;
+                                            }
 
-                const { error: profileError } = await supabase
-                  .from("profiles")
-                    .insert({
-                        id: user.id,
-                            username: username,
-                                display_name: username
-                                  });
+                                              if (!data.user) {
+                                                  setError("Signup failed");
+                                                      setLoading(false);
+                                                          return;
+                                                            }
 
-                                  if (profileError) {
-                                    setError(profileError.message);
-                                      return;
-                                      }
+                                                              // Insert profile
+                                                                const { error: profileError } = await supabase
+                                                                    .from("profiles")
+                                                                        .insert({
+                                                                              id: data.user.id,
+                                                                                    username: username,
+                                                                                          display_name: username,
+                                                                                              });
 
-                                      window.location.href = "/dashboard";
-})
+                                                                                                if (profileError) {
+                                                                                                    setError("Database error saving new user");
+                                                                                                        setLoading(false);
+                                                                                                            return;
+                                                                                                              }
+
+                                                                                                                // Redirect
+                                                                                                                  router.push("/dashboard");
+
+                                                                                                                    setLoading(false);
+                                                                                                                    };
+}
