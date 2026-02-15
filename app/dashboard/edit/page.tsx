@@ -1,112 +1,107 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
-export default function EditProfilePage() {
+export default function EditProfile() {
   const router = useRouter();
 
-    const [loading, setLoading] = useState(false);
-      const [userId, setUserId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+      const [saving, setSaving] = useState(false);
 
         const [displayName, setDisplayName] = useState("");
           const [bio, setBio] = useState("");
             const [website, setWebsite] = useState("");
-              const [username, setUsername] = useState("");
 
-                const [error, setError] = useState("");
+              useEffect(() => {
+                  loadProfile();
+                    }, []);
 
-                  useEffect(() => {
-                      async function loadUser() {
-                            const {
-                                    data: { user },
-                                          } = await supabase.auth.getUser();
+                      async function loadProfile() {
+                          const {
+                                data: { user },
+                                    } = await supabase.auth.getUser();
 
-                                                if (!user) {
-                                                        router.push("/login");
-                                                                return;
-                                                                      }
+                                        if (!user) {
+                                              router.push("/login");
+                                                    return;
+                                                        }
 
-                                                                            setUserId(user.id);
+                                                            const { data } = await supabase
+                                                                  .from("profiles")
+                                                                        .select("*")
+                                                                              .eq("id", user.id)
+                                                                                    .single();
 
-                                                                                  const { data: profile } = await supabase
-                                                                                          .from("profiles")
-                                                                                                  .select("*")
-                                                                                                          .eq("id", user.id)
-                                                                                                                  .single();
+                                                                                        if (data) {
+                                                                                              setDisplayName(data.display_name || "");
+                                                                                                    setBio(data.bio || "");
+                                                                                                          setWebsite(data.website || "");
+                                                                                                              }
 
-                                                                                                                        if (profile) {
-                                                                                                                                setDisplayName(profile.display_name || "");
-                                                                                                                                        setBio(profile.bio || "");
-                                                                                                                                                setWebsite(profile.website || "");
-                                                                                                                                                        setUsername(profile.username || "");
-                                                                                                                                                              }
-                                                                                                                                                                  }
+                                                                                                                  setLoading(false);
+                                                                                                                    }
 
-                                                                                                                                                                      loadUser();
-                                                                                                                                                                        }, [router]);
+                                                                                                                      async function handleSave() {
+                                                                                                                          setSaving(true);
 
-                                                                                                                                                                          async function handleSave(e: React.FormEvent) {
-                                                                                                                                                                              e.preventDefault();
+                                                                                                                              const {
+                                                                                                                                    data: { user },
+                                                                                                                                        } = await supabase.auth.getUser();
 
-                                                                                                                                                                                  if (!userId) return;
+                                                                                                                                            const { error } = await supabase
+                                                                                                                                                  .from("profiles")
+                                                                                                                                                        .update({
+                                                                                                                                                                display_name: displayName,
+                                                                                                                                                                        bio: bio,
+                                                                                                                                                                                website: website,
+                                                                                                                                                                                      })
+                                                                                                                                                                                            .eq("id", user.id);
 
-                                                                                                                                                                                      setLoading(true);
-                                                                                                                                                                                          setError("");
+                                                                                                                                                                                                setSaving(false);
 
-                                                                                                                                                                                              const { error } = await supabase.from("profiles").upsert({
-                                                                                                                                                                                                    id: userId,
-                                                                                                                                                                                                          username: username || userId.substring(0, 8),
-                                                                                                                                                                                                                display_name: displayName,
-                                                                                                                                                                                                                      bio,
-                                                                                                                                                                                                                            website,
-                                                                                                                                                                                                                                });
+                                                                                                                                                                                                    if (error) {
+                                                                                                                                                                                                          alert("Failed to save profile");
+                                                                                                                                                                                                                return;
+                                                                                                                                                                                                                    }
 
-                                                                                                                                                                                                                                    if (error) {
-                                                                                                                                                                                                                                          setError(error.message);
-                                                                                                                                                                                                                                                setLoading(false);
-                                                                                                                                                                                                                                                      return;
-                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                        router.push("/dashboard");
+                                                                                                                                                                                                                          }
 
-                                                                                                                                                                                                                                                              router.push("/dashboard");
-                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                            if (loading) return <div>Loading...</div>;
 
-                                                                                                                                                                                                                                                                  return (
-                                                                                                                                                                                                                                                                      <div style={{ padding: 20 }}>
-                                                                                                                                                                                                                                                                            <h1>Complete your profile</h1>
+                                                                                                                                                                                                                              return (
+                                                                                                                                                                                                                                  <div style={{ padding: 20 }}>
+                                                                                                                                                                                                                                        <h2>Edit Profile</h2>
 
-                                                                                                                                                                                                                                                                                  <form onSubmit={handleSave}>
-                                                                                                                                                                                                                                                                                          <input
-                                                                                                                                                                                                                                                                                                    placeholder="Username"
-                                                                                                                                                                                                                                                                                                              value={username}
-                                                                                                                                                                                                                                                                                                                        onChange={(e) => setUsername(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                />
+                                                                                                                                                                                                                                              <input
+                                                                                                                                                                                                                                                      placeholder="Full Name"
+                                                                                                                                                                                                                                                              value={displayName}
+                                                                                                                                                                                                                                                                      onChange={(e) => setDisplayName(e.target.value)}
+                                                                                                                                                                                                                                                                            />
 
-                                                                                                                                                                                                                                                                                                                                        <input
-                                                                                                                                                                                                                                                                                                                                                  placeholder="Full name"
-                                                                                                                                                                                                                                                                                                                                                            value={displayName}
-                                                                                                                                                                                                                                                                                                                                                                      onChange={(e) => setDisplayName(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                                                              />
+                                                                                                                                                                                                                                                                                  <br /><br />
 
-                                                                                                                                                                                                                                                                                                                                                                                      <textarea
-                                                                                                                                                                                                                                                                                                                                                                                                placeholder="Bio"
-                                                                                                                                                                                                                                                                                                                                                                                                          value={bio}
-                                                                                                                                                                                                                                                                                                                                                                                                                    onChange={(e) => setBio(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                                                                                                            />
+                                                                                                                                                                                                                                                                                        <textarea
+                                                                                                                                                                                                                                                                                                placeholder="Bio"
+                                                                                                                                                                                                                                                                                                        value={bio}
+                                                                                                                                                                                                                                                                                                                onChange={(e) => setBio(e.target.value)}
+                                                                                                                                                                                                                                                                                                                      />
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                    <input
-                                                                                                                                                                                                                                                                                                                                                                                                                                              placeholder="Website"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        value={website}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  onChange={(e) => setWebsite(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                          />
+                                                                                                                                                                                                                                                                                                                            <br /><br />
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  {error && <p style={{ color: "red" }}>{error}</p>}
+                                                                                                                                                                                                                                                                                                                                  <input
+                                                                                                                                                                                                                                                                                                                                          placeholder="Website"
+                                                                                                                                                                                                                                                                                                                                                  value={website}
+                                                                                                                                                                                                                                                                                                                                                          onChange={(e) => setWebsite(e.target.value)}
+                                                                                                                                                                                                                                                                                                                                                                />
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <button disabled={loading}>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    {loading ? "Saving..." : "Save profile"}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </form>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        );
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                      <br /><br />
+
+                                                                                                                                                                                                                                                                                                                                                                            <button onClick={handleSave} disabled={saving}>
+                                                                                                                                                                                                                                                                                                                                                                                    {saving ? "Saving..." : "Save"}
+                                                                                                                                                                                                                                                                                                                                                                                          </button>
+                                                                                                                                                                                                                                                                                                                                                                                              </div>
+                                                                                                                                                                                                                                                                                                                                                                                                );
+                                                                                                                                                                                                                                                                                                                                                                                                }
