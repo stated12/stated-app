@@ -1,81 +1,130 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
-export default function EditProfile() {
-  const router = useRouter();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const [fullName, setFullName] = useState("");
-      const [bio, setBio] = useState("");
-        const [website, setWebsite] = useState("");
+    export default function EditProfile() {
+      const router = useRouter();
+
+        const [loading, setLoading] = useState(false);
           const [error, setError] = useState("");
-            const [loading, setLoading] = useState(false);
 
-              const handleSave = async () => {
-                  setLoading(true);
-                      setError("");
+            const [fullName, setFullName] = useState("");
+              const [bio, setBio] = useState("");
+                const [website, setWebsite] = useState("");
 
-                          const {
-                                data: { user },
-                                    } = await supabase.auth.getUser();
+                  const [userId, setUserId] = useState<string | null>(null);
 
-                                        if (!user) {
-                                              setError("Not logged in");
-                                                    setLoading(false);
+                    useEffect(() => {
+                        getUser();
+                          }, []);
+
+                            async function getUser() {
+                                const {
+                                      data: { user },
+                                          } = await supabase.auth.getUser();
+
+                                              if (!user) {
+                                                    router.push("/login");
                                                           return;
                                                               }
 
-                                                                  const { error } = await supabase
-                                                                        .from("profiles")
-                                                                              .upsert({
-                                                                                      id: user.id,
-                                                                                              username: user.user_metadata.username,
-                                                                                                      display_name: fullName,
-                                                                                                              bio: bio,
-                                                                                                                      website: website,
-                                                                                                                            });
+                                                                  setUserId(user.id);
 
-                                                                                                                                if (error) {
-                                                                                                                                      setError(error.message);
-                                                                                                                                            setLoading(false);
-                                                                                                                                                  return;
-                                                                                                                                                      }
+                                                                      // load existing profile if exists
+                                                                          const { data } = await supabase
+                                                                                .from("profiles")
+                                                                                      .select("*")
+                                                                                            .eq("id", user.id)
+                                                                                                  .single();
 
-                                                                                                                                                          router.push("/dashboard");
-                                                                                                                                                            };
+                                                                                                      if (data) {
+                                                                                                            setFullName(data.display_name || "");
+                                                                                                                  setBio(data.bio || "");
+                                                                                                                        setWebsite(data.website || "");
+                                                                                                                            }
+                                                                                                                              }
 
-                                                                                                                                                              return (
-                                                                                                                                                                  <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
-                                                                                                                                                                        <h2>Complete your profile</h2>
+                                                                                                                                async function handleSave(e: any) {
+                                                                                                                                    e.preventDefault();
 
-                                                                                                                                                                              <input
-                                                                                                                                                                                      placeholder="Full name"
-                                                                                                                                                                                              value={fullName}
-                                                                                                                                                                                                      onChange={(e) => setFullName(e.target.value)}
-                                                                                                                                                                                                              style={{ width: "100%", marginBottom: 10 }}
-                                                                                                                                                                                                                    />
+                                                                                                                                        setLoading(true);
+                                                                                                                                            setError("");
 
-                                                                                                                                                                                                                          <textarea
-                                                                                                                                                                                                                                  placeholder="Short bio"
-                                                                                                                                                                                                                                          value={bio}
-                                                                                                                                                                                                                                                  onChange={(e) => setBio(e.target.value)}
-                                                                                                                                                                                                                                                          style={{ width: "100%", marginBottom: 10 }}
-                                                                                                                                                                                                                                                                />
+                                                                                                                                                if (!userId) {
+                                                                                                                                                      setError("User not found");
+                                                                                                                                                            setLoading(false);
+                                                                                                                                                                  return;
+                                                                                                                                                                      }
 
-                                                                                                                                                                                                                                                                      <input
-                                                                                                                                                                                                                                                                              placeholder="Website"
-                                                                                                                                                                                                                                                                                      value={website}
-                                                                                                                                                                                                                                                                                              onChange={(e) => setWebsite(e.target.value)}
-                                                                                                                                                                                                                                                                                                      style={{ width: "100%", marginBottom: 10 }}
-                                                                                                                                                                                                                                                                                                            />
+                                                                                                                                                                          const { error } = await supabase.from("profiles").upsert(
+                                                                                                                                                                                {
+                                                                                                                                                                                        id: userId, // THIS IS THE CRITICAL FIX
+                                                                                                                                                                                                display_name: fullName,
+                                                                                                                                                                                                        bio: bio,
+                                                                                                                                                                                                                website: website,
+                                                                                                                                                                                                                      },
+                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                    onConflict: "id",
+                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                              );
 
-                                                                                                                                                                                                                                                                                                                  {error && <p style={{ color: "red" }}>{error}</p>}
+                                                                                                                                                                                                                                                  setLoading(false);
 
-                                                                                                                                                                                                                                                                                                                        <button onClick={handleSave} disabled={loading}>
-                                                                                                                                                                                                                                                                                                                                {loading ? "Saving..." : "Continue"}
-                                                                                                                                                                                                                                                                                                                                      </button>
-                                                                                                                                                                                                                                                                                                                                          </div>
-                                                                                                                                                                                                                                                                                                                                            );
-                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                      if (error) {
+                                                                                                                                                                                                                                                            setError(error.message);
+                                                                                                                                                                                                                                                                  return;
+                                                                                                                                                                                                                                                                      }
+
+                                                                                                                                                                                                                                                                          router.push("/dashboard");
+                                                                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                                                                                              return (
+                                                                                                                                                                                                                                                                                  <div style={{ padding: 20 }}>
+                                                                                                                                                                                                                                                                                        <h1>Complete your profile</h1>
+
+                                                                                                                                                                                                                                                                                              <form onSubmit={handleSave}>
+
+                                                                                                                                                                                                                                                                                                      <div>
+                                                                                                                                                                                                                                                                                                                <label>Full name</label>
+                                                                                                                                                                                                                                                                                                                          <input
+                                                                                                                                                                                                                                                                                                                                      value={fullName}
+                                                                                                                                                                                                                                                                                                                                                  onChange={(e) => setFullName(e.target.value)}
+                                                                                                                                                                                                                                                                                                                                                              required
+                                                                                                                                                                                                                                                                                                                                                                        />
+                                                                                                                                                                                                                                                                                                                                                                                </div>
+
+                                                                                                                                                                                                                                                                                                                                                                                        <div>
+                                                                                                                                                                                                                                                                                                                                                                                                  <label>Short bio</label>
+                                                                                                                                                                                                                                                                                                                                                                                                            <textarea
+                                                                                                                                                                                                                                                                                                                                                                                                                        value={bio}
+                                                                                                                                                                                                                                                                                                                                                                                                                                    onChange={(e) => setBio(e.target.value)}
+                                                                                                                                                                                                                                                                                                                                                                                                                                              />
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      </div>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                              <div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <label>Website</label>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <input
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              value={website}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          onChange={(e) => setWebsite(e.target.value)}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    />
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    {error && (
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <p style={{ color: "red" }}>{error}</p>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      )}
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <button disabled={loading}>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        {loading ? "Saving..." : "Continue"}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </button>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </form>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            );
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
