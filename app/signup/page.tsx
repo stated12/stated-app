@@ -1,12 +1,11 @@
-                                                                                                                          const { data, error: signupError } = await supabase.auth.signUp({
-                "use client"; 
+  );
+}                                    "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
-
   const supabase = createClient();
   const router = useRouter();
 
@@ -17,14 +16,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSignup(e: any) {
+  const handleSignup = async (e: any) => {
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
-
       // Sign up user
       const { data, error: signupError } = await supabase.auth.signUp({
         email,
@@ -40,17 +38,18 @@ export default function SignupPage() {
       const user = data.user;
 
       if (!user) {
-        setError("User not created");
+        setError("Signup failed. No user returned.");
         setLoading(false);
         return;
       }
 
-      // Insert profile
+      // Insert into profiles table
       const { error: profileError } = await supabase
         .from("profiles")
         .insert({
           id: user.id,
           username: username,
+          email: email,
         });
 
       if (profileError) {
@@ -59,20 +58,19 @@ export default function SignupPage() {
         return;
       }
 
-      // Go to onboarding
+      // Success → go onboarding
       router.push("/onboarding");
 
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Something went wrong");
     }
 
     setLoading(false);
-  }
+  };
 
   return (
     <div style={{ padding: "40px", maxWidth: "400px", margin: "auto" }}>
-
-      <h2>Create account</h2>
+      <h1>Signup</h1>
 
       <form onSubmit={handleSignup}>
 
@@ -82,7 +80,7 @@ export default function SignupPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px" }}
         />
 
         <input
@@ -91,7 +89,7 @@ export default function SignupPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px" }}
         />
 
         <input
@@ -100,21 +98,15 @@ export default function SignupPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px" }}
         />
 
         <button
           type="submit"
           disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "black",
-            color: "white",
-            border: "none",
-          }}
+          style={{ padding: "10px", width: "100%" }}
         >
-          {loading ? "Creating..." : "Create Account"}
+          {loading ? "Creating account..." : "Signup"}
         </button>
 
       </form>
@@ -124,11 +116,9 @@ export default function SignupPage() {
           {error}
         </p>
       )}
-
     </div>
   );
-}                                                                                                                  email,
-                                                                                                                                          password,
+}                                                                                                        password,
                                                                                                                                                 });
 
                                                                                                                                                       if (signupError) {
