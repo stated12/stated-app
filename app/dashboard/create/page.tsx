@@ -1,40 +1,98 @@
-"use client";
+           "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage() {
 
   const supabase = createClient();
-    const router = useRouter();
+  const router = useRouter();
 
-      const [text, setText] = useState("");
-        const [duration, setDuration] = useState("7d");
-          const [credits, setCredits] = useState(0);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-            useEffect(() => {
-                loadCredits();
-                  }, []);
+  async function createCommitment() {
 
-                    async function loadCredits() {
+    setError("");
 
-                        const { data } = await supabase.auth.getUser();
+    if (!text.trim()) {
+      setError("Enter commitment");
+      return;
+    }
 
-                            if (!data?.user) {
-                                  router.push("/login");
-                                        return;
-                                            }
+    setLoading(true);
 
-                                                const { data: creditData } = await supabase
-                                                      .from("credits")
-                                                            .select("credits_remaining")
-                                                                  .eq("user_id", data.user.id)
-                                                                        .single();
+    const { data } = await supabase.auth.getUser();
 
-                                                                            if (creditData) {
-                                                                                  setCredits(creditData.credits_remaining);
-                                                                                      }
+    if (!data?.user) {
+      setError("Not logged in");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("commitments")
+      .insert({
+        user_id: data.user.id,
+        text: text,
+        status: "active"
+      });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+
+      <h1>Create Commitment</h1>
+
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Enter your commitment"
+        style={{
+          width: "100%",
+          height: 100,
+          padding: 10,
+          borderRadius: 6,
+          border: "1px solid #ccc"
+        }}
+      />
+
+      <br /><br />
+
+      {error && (
+        <p style={{ color: "red" }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        onClick={createCommitment}
+        disabled={loading}
+        style={{
+          padding: "10px 16px",
+          backgroundColor: "#16a34a",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: "pointer"
+        }}
+      >
+        {loading ? "Creating..." : "Create"}
+      </button>
+
+    </div>
+  );
+}                                                                           }
                                                                                         }
 
                                                                                           async function createCommitment() {
