@@ -1,5 +1,4 @@
-                                                                                                                                            padding: 12,
-             "use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -80,8 +79,4 @@ export default function LoginPage() {
     </div>
   );
 
-}                                                                                                                                                                                                                                                                                                       background: '#000',
-                                                                                                                                                                                                                                                                                                                      color: '#fff',
-                                                                                                                                                                                                                                                                                                                        border: 'none',
-                                                                                                                                                                                                                                                                                                                          borderRadius: 6,
-                                                                                                                                                                                                                                                                                                                          }
+}
