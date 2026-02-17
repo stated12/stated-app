@@ -9,9 +9,9 @@ export default async function PublicProfile(
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, name, bio")
+    .select("username, display_name, bio")
     .eq("username", username)
-    .single();
+    .maybeSingle();
 
   if (error || !profile) {
     return (
@@ -24,12 +24,14 @@ export default async function PublicProfile(
 
   return (
     <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-      <h1>{profile.name}</h1>
+      <h1>{profile.display_name}</h1>
 
-      <p style={{ color: "#666" }}>@{profile.username}</p>
+      <p style={{ color: "#666" }}>
+        @{profile.username}
+      </p>
 
       <p style={{ marginTop: "10px" }}>
-        {profile.bio}
+        {profile.bio || "No bio yet."}
       </p>
     </div>
   );
