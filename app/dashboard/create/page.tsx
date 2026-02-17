@@ -23,16 +23,21 @@ export default function CreateCommitmentPage() {
     setLoading(true);
 
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
 
     const { error } = await supabase
       .from("commitments")
       .insert({
-        user_id: user?.id,
-        text: text.trim(),
-        duration,
-        status: "active",
+        user_id: user.id,
+        text: text,
+        duration: duration,
+        status: "active"
       });
 
     setLoading(false);
@@ -48,21 +53,21 @@ export default function CreateCommitmentPage() {
   return (
     <div className="max-w-xl mx-auto p-4">
 
-      <h1 className="text-xl mb-4">
+      <h1 className="text-2xl mb-4">
         Create commitment
       </h1>
 
       <input
-        className="border rounded-lg p-3 w-full mb-4"
-        placeholder="I will run 5 kms everyday"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e)=>setText(e.target.value)}
+        placeholder="I will run 5km daily"
+        className="border rounded-lg p-3 w-full mb-4"
       />
 
       <select
-        className="border rounded-lg p-3 w-full mb-4"
         value={duration}
-        onChange={(e) => setDuration(e.target.value)}
+        onChange={(e)=>setDuration(e.target.value)}
+        className="border rounded-lg p-3 w-full mb-4"
       >
         <option>1 week</option>
         <option>2 weeks</option>
@@ -75,8 +80,7 @@ export default function CreateCommitmentPage() {
 
       <button
         onClick={createCommitment}
-        disabled={loading}
-        className="w-full bg-blue-600 text-white py-3 rounded-full"
+        className="bg-blue-600 text-white px-6 py-3 rounded-full w-full"
       >
         {loading ? "Creating..." : "Create commitment"}
       </button>
