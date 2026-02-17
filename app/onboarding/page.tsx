@@ -1,40 +1,108 @@
-"use client";
+         "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function OnboardingPage() {
+
+  const supabase = createClient();
   const router = useRouter();
 
-    const [fullName, setFullName] = useState("");
-      const [bio, setBio] = useState("");
-        const [website, setWebsite] = useState("");
-          const [loading, setLoading] = useState(false);
-            const [error, setError] = useState("");
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-              const handleSubmit = async (e: React.FormEvent) => {
-                  e.preventDefault();
-                      setError("");
-                          setLoading(true);
+  async function handleSave() {
 
-                              const {
-                                    data: { user },
-                                          error: userError,
-                                              } = await supabase.auth.getUser();
+    setLoading(true);
+    setError("");
 
-                                                  if (userError || !user) {
-                                                        setError("Not authenticated. Please sign in again.");
-                                                              setLoading(false);
-                                                                    return;
-                                                                        }
+    try {
 
-                                                                            const { error: insertError } = await supabase
-                                                                                  .from("profiles")
-                                                                                        .upsert({
-                                                                                                id: user.id,
-                                                                                                        full_name: fullName,
-                                                                                                                bio,
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+
+      if (userError || !userData?.user) {
+        setError("Not logged in");
+        setLoading(false);
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          username: username,
+          created_at: new Date().toISOString()
+        });
+
+      if (insertError) {
+        setError(insertError.message);
+        setLoading(false);
+        return;
+      }
+
+      router.push("/dashboard");
+
+    } catch (err: any) {
+
+      setError(err.message);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+
+      <h1>Create your username</h1>
+
+      <input
+        type="text"
+        placeholder="Enter username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        style={{
+          padding: 10,
+          marginTop: 10,
+          width: "100%",
+          maxWidth: 300
+        }}
+      />
+
+      <br />
+
+      <button
+        onClick={handleSave}
+        disabled={loading}
+        style={{
+          marginTop: 15,
+          padding: "10px 16px",
+          backgroundColor: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: "pointer"
+        }}
+      >
+        {loading ? "Saving..." : "Save"}
+      </button>
+
+      {error && (
+        <p style={{ color: "red", marginTop: 10 }}>
+          {error}
+        </p>
+      )}
+
+    </div>
+  );
+}                                                                                                       bio,
                                                                                                                         website,
                                                                                                                               });
 
