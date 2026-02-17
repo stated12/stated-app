@@ -1,5 +1,4 @@
-                                                                                                                          </div>
-        "use client";
+"use client";
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -10,34 +9,39 @@ export default function CreateCommitmentPage() {
   const router = useRouter();
 
   const [text, setText] = useState("");
-  const [duration, setDuration] = useState("7");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function createCommitment() {
-    setLoading(true);
     setError("");
+
+    if (!text.trim()) {
+      setError("Please enter a commitment.");
+      return;
+    }
+
+    setLoading(true);
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Not logged in");
+      setError("Not logged in.");
       setLoading(false);
       return;
     }
 
     const { error } = await supabase.from("commitments").insert({
       user_id: user.id,
-      text: text,
-      duration_days: parseInt(duration),
+      text: text.trim(),
       status: "active",
     });
 
+    setLoading(false);
+
     if (error) {
       setError(error.message);
-      setLoading(false);
       return;
     }
 
@@ -49,47 +53,22 @@ export default function CreateCommitmentPage() {
       <h1>Create Commitment</h1>
 
       <textarea
-        placeholder="Enter your commitment"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        style={{
-          width: "100%",
-          height: "100px",
-          marginTop: "10px",
-        }}
+        placeholder="Enter your commitment"
+        style={{ width: "100%", height: "100px" }}
       />
 
-      <div style={{ marginTop: "10px" }}>
-        <label>Duration: </label>
+      <br />
+      <br />
 
-        <select
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        >
-          <option value="7">7 days</option>
-          <option value="14">14 days</option>
-          <option value="30">30 days</option>
-          <option value="60">60 days</option>
-        </select>
-      </div>
-
-      <button
-        onClick={createCommitment}
-        disabled={loading}
-        style={{
-          marginTop: "20px",
-          padding: "10px",
-        }}
-      >
-        {loading ? "Creating..." : "Create Commitment"}
+      <button onClick={createCommitment} disabled={loading}>
+        {loading ? "Creating..." : "Create"}
       </button>
 
       {error && (
-        <p style={{ color: "red", marginTop: "10px" }}>
-          {error}
-        </p>
+        <p style={{ color: "red", marginTop: "10px" }}>{error}</p>
       )}
     </div>
   );
-                                                                                                                                     }                                                                                                                                                                                                                                                                                                                    );
-                                                                                                                                                                                                                                                                                                                            }
+}
