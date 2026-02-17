@@ -9,85 +9,76 @@ export default function CreateCommitmentPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const [text, setText] = useState("");
+  const [title, setTitle] = useState("");
+  const [duration, setDuration] = useState("30");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  async function createCommitment() {
-
-    setError("");
-
-    if (!text.trim()) {
-      setError("Enter commitment");
-      return;
-    }
+  async function handleCreate() {
 
     setLoading(true);
 
-    const { data } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!data?.user) {
-      setError("Not logged in");
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
-    const { error } = await supabase
-      .from("commitments")
-      .insert({
-        user_id: data.user.id,
-        text: text,
-        status: "active"
-      });
+    const start = new Date();
+    const end = new Date();
+    end.setDate(start.getDate() + parseInt(duration));
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+    await supabase.from("commitments").insert({
+      title,
+      user_id: user.id,
+      status: "active",
+      start_date: start.toISOString(),
+      end_date: end.toISOString(),
+    });
 
     router.push("/dashboard");
   }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
 
-      <h1>Create Commitment</h1>
+      <div className="max-w-md mx-auto">
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Enter your commitment"
-        style={{
-          width: "100%",
-          height: 100,
-          padding: 10,
-          borderRadius: 6,
-          border: "1px solid #ccc"
-        }}
-      />
+        <h1 className="text-xl font-semibold mb-6 text-center">
+          Create commitment
+        </h1>
 
-      <br /><br />
+        <input
+          type="text"
+          placeholder="I will..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border rounded-lg p-3 mb-4"
+        />
 
-      {error && (
-        <p style={{ color: "red" }}>
-          {error}
-        </p>
-      )}
+        <select
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          className="w-full border rounded-lg p-3 mb-6"
+        >
 
-      <button
-        onClick={createCommitment}
-        disabled={loading}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#2563eb",
-          color: "white",
-          borderRadius: 6,
-          border: "none"
-        }}
-      >
-        {loading ? "Creating..." : "Create"}
-      </button>
+          <option value="7">1 week</option>
+          <option value="14">2 weeks</option>
+          <option value="30">1 month</option>
+          <option value="90">3 months</option>
+          <option value="180">6 months</option>
+          <option value="365">1 year</option>
+
+        </select>
+
+        <button
+          onClick={handleCreate}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-3 rounded-full font-medium"
+        >
+          {loading ? "Creating..." : "Create commitment"}
+        </button>
+
+      </div>
 
     </div>
   );
