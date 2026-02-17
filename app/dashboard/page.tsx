@@ -2,86 +2,359 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import CommitmentCard from "@/components/CommitmentCard";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
 
   const supabase = createClient();
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [userId, setUserId] = useState("");
+
+  const [profile, setProfile] = useState<any>(null);
+
+  const [fullName, setFullName] = useState("");
+  const [bio, setBio] = useState("");
+  const [accountType, setAccountType] = useState("individual");
 
   const [commitments, setCommitments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
 
   useEffect(() => {
-    fetchCommitments();
+    loadDashboard();
   }, []);
 
-  async function fetchCommitments() {
+  async function loadDashboard() {
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!userData?.user) {
+      router.push("/login");
+      return;
+    }
 
-    const { data, error } = await supabase
+    const uid = userData.user.id;
+    setUserId(uid);
+
+    // load profile
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", uid)
+      .single();
+
+    if (profileData) {
+
+      setProfile(profileData);
+
+      setFullName(profileData.full_name || "");
+      setBio(profileData.bio || "");
+      setAccountType(profileData.account_type || "individual");
+
+    }
+
+    // load credits
+    const { data: creditData } = await supabase
+      .from("credits")
+      .select("credits_remaining")
+      .eq("user_id", uid)
+      .single();
+
+    if (creditData) {
+      setCredits(creditData.credits_remaining);
+    }
+
+    // load commitments
+    const { data: commitmentData } = await supabase
       .from("commitments")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", uid)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setCommitments(data);
+    if (commitmentData) {
+      setCommitments(commitmentData);
     }
 
     setLoading(false);
   }
 
+  async function saveProfile() {
+
+    if (!fullName) {
+      alert("Enter full name");
+      return;
+    }
+
+    setSaving(true);
+
+    const username = fullName
+      .toLowerCase()
+      .replace(/\s+/g, "");
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: userId,
+        full_name: fullName,
+        bio,
+        account_type: accountType,
+        username
+      });
+
+    if (error) {
+      alert(error.message);
+      setSaving(false);
+      return;
+    }
+
+    alert("Profile saved");
+
+    setSaving(false);
+
+    loadDashboard();
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push("/");
+  }
+
+  function goCreate() {
+    router.push("/dashboard/create");
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40 }}>
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  const publicUrl =
+    profile?.username
+      ? `stated-app.vercel.app/u/${profile.username}`
+      : "";
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
+    <div
+      style={{
+        maxWidth: 600,
+        margin: "0 auto",
+        padding: 20,
+        fontFamily: "system-ui"
+      }}
+    >
 
-      {/* Header */}
-      <div className="max-w-md mx-auto flex justify-between items-center mb-6">
+      {/* Identity */}
 
-        <h1 className="text-xl font-semibold">
-          Your commitments
-        </h1>
+      <h1 style={{ fontSize: 28 }}>
+        {fullName || "Your profile"}
+      </h1>
+
+      <p style={{ color: "#666" }}>
+        This is your public commitment identity.
+      </p>
+
+      {publicUrl && (
+        <div
+          style={{
+            marginTop: 10,
+            marginBottom: 20,
+            padding: 10,
+            background: "#f4f4f4",
+            borderRadius: 8
+          }}
+        >
+          stated.app/{profile.username}
+        </div>
+      )}
+
+      {/* Account Type */}
+
+      <div style={{ marginTop: 20 }}>
+
+        <label>Account type</label>
+
+        <select
+          value={accountType}
+          onChange={(e) =>
+            setAccountType(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 6
+          }}
+        >
+          <option value="individual">
+            Individual
+          </option>
+
+          <option value="company">
+            Company
+          </option>
+
+        </select>
 
       </div>
 
-      {/* Create Button */}
-      <div className="flex justify-center mb-6">
+      {/* Full Name */}
 
-        <Link href="/dashboard/create">
+      <div style={{ marginTop: 20 }}>
 
-          <button className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium shadow hover:bg-blue-700 transition">
-            Create commitment
-          </button>
+        <label>Full name</label>
 
-        </Link>
+        <input
+          value={fullName}
+          onChange={(e) =>
+            setFullName(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 6
+          }}
+        />
+
+      </div>
+
+      {/* Bio */}
+
+      <div style={{ marginTop: 20 }}>
+
+        <label>Bio</label>
+
+        <textarea
+          value={bio}
+          onChange={(e) =>
+            setBio(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 6,
+            height: 80
+          }}
+        />
 
       </div>
 
-      {/* List */}
-      <div className="space-y-4">
+      {/* Save */}
 
-        {loading && (
-          <p className="text-center text-gray-500">
-            Loading...
-          </p>
-        )}
+      <button
+        onClick={saveProfile}
+        disabled={saving}
+        style={{
+          marginTop: 20,
+          padding: 12,
+          width: "100%",
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: 8
+        }}
+      >
+        {saving ? "Saving..." : "Save profile"}
+      </button>
 
-        {!loading && commitments.length === 0 && (
-          <p className="text-center text-gray-500">
-            No commitments yet
-          </p>
-        )}
+      {/* Commitments */}
 
-        {commitments.map((c) => (
-          <CommitmentCard key={c.id} commitment={c} />
-        ))}
+      <h2 style={{ marginTop: 40 }}>
+        Your commitments
+      </h2>
+
+      <div
+        style={{
+          marginTop: 20,
+          marginBottom: 20,
+          textAlign: "center"
+        }}
+      >
+
+        <button
+          onClick={goCreate}
+          style={{
+            padding: "14px 26px",
+            borderRadius: 50,
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            fontSize: 16
+          }}
+        >
+          Create commitment
+        </button>
 
       </div>
+
+      {commitments.map((c) => (
+
+        <div
+          key={c.id}
+          style={{
+            padding: 14,
+            border: "1px solid #eee",
+            borderRadius: 10,
+            marginBottom: 10
+          }}
+        >
+
+          <div>
+            {c.text}
+          </div>
+
+          <div
+            style={{
+              fontSize: 12,
+              color: "#666",
+              marginTop: 6
+            }}
+          >
+            {c.status}
+          </div>
+
+        </div>
+
+      ))}
+
+      {/* Credits */}
+
+      <div style={{ marginTop: 30 }}>
+        Credits remaining: {credits}
+      </div>
+
+      {/* Billing */}
+
+      <button
+        style={{
+          marginTop: 10,
+          padding: 10,
+          width: "100%",
+          borderRadius: 8,
+          border: "1px solid #ddd"
+        }}
+      >
+        Upgrade plan
+      </button>
+
+      {/* Logout */}
+
+      <button
+        onClick={logout}
+        style={{
+          marginTop: 10,
+          padding: 10,
+          width: "100%",
+          borderRadius: 8,
+          border: "1px solid #ddd"
+        }}
+      >
+        Logout
+      </button>
 
     </div>
   );
