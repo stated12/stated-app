@@ -1,70 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage() {
 
   const supabase = createClient();
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("1 month");
+  const [text, setText] = useState("");
+  const [duration, setDuration] = useState("1 week");
   const [loading, setLoading] = useState(false);
 
-  const durationOptions = [
-    "1 week",
-    "2 weeks",
-    "3 weeks",
-    "1 month",
-    "3 months",
-    "6 months",
-    "1 year",
-  ];
+  async function createCommitment() {
 
-  function calculateEndDate(duration: string) {
-
-    const start = new Date();
-    const end = new Date(start);
-
-    switch (duration) {
-      case "1 week":
-        end.setDate(start.getDate() + 7);
-        break;
-
-      case "2 weeks":
-        end.setDate(start.getDate() + 14);
-        break;
-
-      case "3 weeks":
-        end.setDate(start.getDate() + 21);
-        break;
-
-      case "1 month":
-        end.setMonth(start.getMonth() + 1);
-        break;
-
-      case "3 months":
-        end.setMonth(start.getMonth() + 3);
-        break;
-
-      case "6 months":
-        end.setMonth(start.getMonth() + 6);
-        break;
-
-      case "1 year":
-        end.setFullYear(start.getFullYear() + 1);
-        break;
-    }
-
-    return end.toISOString();
-  }
-
-  async function handleCreate() {
-
-    if (!title.trim()) {
-      alert("Please enter your commitment");
+    if (!text.trim()) {
+      alert("Enter commitment");
       return;
     }
 
@@ -74,22 +26,14 @@ export default function CreateCommitmentPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      alert("Not logged in");
-      return;
-    }
-
-    const startDate = new Date().toISOString();
-    const endDate = calculateEndDate(duration);
-
-    const { error } = await supabase.from("commitments").insert({
-      user_id: user.id,
-      title,
-      duration,
-      start_date: startDate,
-      end_date: endDate,
-      status: "active",
-    });
+    const { error } = await supabase
+      .from("commitments")
+      .insert({
+        user_id: user?.id,
+        text: text.trim(),
+        duration,
+        status: "active",
+      });
 
     setLoading(false);
 
@@ -102,50 +46,40 @@ export default function CreateCommitmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div className="max-w-xl mx-auto p-4">
 
-      <div className="max-w-md mx-auto">
+      <h1 className="text-xl mb-4">
+        Create commitment
+      </h1>
 
-        <h1 className="text-xl font-semibold mb-6 text-center">
-          Create commitment
-        </h1>
+      <input
+        className="border rounded-lg p-3 w-full mb-4"
+        placeholder="I will run 5 kms everyday"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
 
-        {/* Title */}
-        <input
-          type="text"
-          placeholder="I will..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full border rounded-xl px-4 py-3 mb-4 text-base"
-        />
+      <select
+        className="border rounded-lg p-3 w-full mb-4"
+        value={duration}
+        onChange={(e) => setDuration(e.target.value)}
+      >
+        <option>1 week</option>
+        <option>2 weeks</option>
+        <option>3 weeks</option>
+        <option>1 month</option>
+        <option>3 months</option>
+        <option>6 months</option>
+        <option>1 year</option>
+      </select>
 
-        {/* Duration */}
-        <select
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          className="w-full border rounded-xl px-4 py-3 mb-6 text-base bg-white"
-        >
-          {durationOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-
-        {/* Centered Rounded Button */}
-        <div className="flex justify-center">
-
-          <button
-            onClick={handleCreate}
-            disabled={loading}
-            className="bg-blue-600 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-700 transition"
-          >
-            {loading ? "Creating..." : "Create commitment"}
-          </button>
-
-        </div>
-
-      </div>
+      <button
+        onClick={createCommitment}
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-3 rounded-full"
+      >
+        {loading ? "Creating..." : "Create commitment"}
+      </button>
 
     </div>
   );
