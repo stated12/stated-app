@@ -1,4 +1,3 @@
-                                                                                                                                                                                                                                                                                                                </div>
 "use client";
 
 import { useState } from "react";
@@ -19,62 +18,31 @@ export default function OnboardingPage() {
     setLoading(true);
     setError("");
 
-    try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      // get current user
-      const {
-        data: { user },
-        error: userError
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        setError("User not logged in");
-        setLoading(false);
-        return;
-      }
-
-      // validate username
-      if (!username || username.length < 3) {
-        setError("Username must be at least 3 characters");
-        setLoading(false);
-        return;
-      }
-
-      // check if username already exists
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("username", username)
-        .single();
-
-      if (existing) {
-        setError("Username already taken");
-        setLoading(false);
-        return;
-      }
-
-      // update profile
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ username: username })
-        .eq("id", user.id);
-
-      if (updateError) {
-        setError(updateError.message);
-        setLoading(false);
-        return;
-      }
-
-      // go to dashboard
-      router.push("/dashboard");
-
-    } catch (err: any) {
-
-      setError(err.message || "Something went wrong");
-
+    if (userError || !user) {
+      setError("User not found");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        username: username,
+      });
+
+    if (insertError) {
+      setError(insertError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
   }
 
   return (
@@ -82,40 +50,32 @@ export default function OnboardingPage() {
 
       <h1>Create your username</h1>
 
-      <p>This will be your public profile URL:</p>
-
-      <p><b>stated.in/u/{username || "username"}</b></p>
-
       <input
         type="text"
-        placeholder="Enter username"
+        placeholder="username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         style={{
-          padding: "10px",
-          width: "100%",
-          maxWidth: "400px",
-          marginTop: "10px",
-          border: "1px solid #ccc",
-          borderRadius: "6px"
+          padding: 10,
+          marginTop: 10,
+          width: 250,
+          display: "block"
         }}
       />
-
-      <br /><br />
 
       <button
         onClick={handleSave}
         disabled={loading}
         style={{
           padding: "10px 16px",
+          marginTop: 10,
           backgroundColor: "#2563eb",
           color: "white",
           border: "none",
-          borderRadius: "6px",
-          cursor: "pointer"
+          borderRadius: 6
         }}
       >
-        {loading ? "Saving..." : "Save Username"}
+        {loading ? "Saving..." : "Continue"}
       </button>
 
       {error && (
@@ -126,27 +86,7 @@ export default function OnboardingPage() {
 
     </div>
   );
-
-               }
-                                                                                                                                                                                                                                                                                                                                                                                                                      <div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                  <label className="block text-sm font-medium mb-1">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                Short bio
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            </label>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <textarea
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      value={bio}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    onChange={(e) => setBio(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  className="w-full border rounded-lg px-3 py-2"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                rows={3}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              placeholder="What do you stand for"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <label className="block text-sm font-medium mb-1">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Website (optional)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <input
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              type="url"
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                       type="url"
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             value={website}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           onChange={(e) => setWebsite(e.target.value)}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         className="w-full border rounded-lg px-3 py-2"
