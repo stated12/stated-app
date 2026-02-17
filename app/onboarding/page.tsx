@@ -1,4 +1,5 @@
-         "use client";
+                                                                                                                                                                                                                                                                                                                </div>
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,42 +21,60 @@ export default function OnboardingPage() {
 
     try {
 
-      const { data: userData, error: userError } =
-        await supabase.auth.getUser();
+      // get current user
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser();
 
-      if (userError || !userData?.user) {
-        setError("Not logged in");
+      if (userError || !user) {
+        setError("User not logged in");
         setLoading(false);
         return;
       }
 
-      const userId = userData.user.id;
+      // validate username
+      if (!username || username.length < 3) {
+        setError("Username must be at least 3 characters");
+        setLoading(false);
+        return;
+      }
 
-      const { error: insertError } = await supabase
+      // check if username already exists
+      const { data: existing } = await supabase
         .from("profiles")
-        .insert({
-          id: userId,
-          username: username,
-          created_at: new Date().toISOString()
-        });
+        .select("username")
+        .eq("username", username)
+        .single();
 
-      if (insertError) {
-        setError(insertError.message);
+      if (existing) {
+        setError("Username already taken");
         setLoading(false);
         return;
       }
 
+      // update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ username: username })
+        .eq("id", user.id);
+
+      if (updateError) {
+        setError(updateError.message);
+        setLoading(false);
+        return;
+      }
+
+      // go to dashboard
       router.push("/dashboard");
 
     } catch (err: any) {
 
-      setError(err.message);
-
-    } finally {
-
-      setLoading(false);
+      setError(err.message || "Something went wrong");
 
     }
+
+    setLoading(false);
   }
 
   return (
@@ -63,35 +82,40 @@ export default function OnboardingPage() {
 
       <h1>Create your username</h1>
 
+      <p>This will be your public profile URL:</p>
+
+      <p><b>stated.in/u/{username || "username"}</b></p>
+
       <input
         type="text"
         placeholder="Enter username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         style={{
-          padding: 10,
-          marginTop: 10,
+          padding: "10px",
           width: "100%",
-          maxWidth: 300
+          maxWidth: "400px",
+          marginTop: "10px",
+          border: "1px solid #ccc",
+          borderRadius: "6px"
         }}
       />
 
-      <br />
+      <br /><br />
 
       <button
         onClick={handleSave}
         disabled={loading}
         style={{
-          marginTop: 15,
           padding: "10px 16px",
           backgroundColor: "#2563eb",
           color: "white",
           border: "none",
-          borderRadius: 6,
+          borderRadius: "6px",
           cursor: "pointer"
         }}
       >
-        {loading ? "Saving..." : "Save"}
+        {loading ? "Saving..." : "Save Username"}
       </button>
 
       {error && (
@@ -102,44 +126,8 @@ export default function OnboardingPage() {
 
     </div>
   );
-}                                                                                                       bio,
-                                                                                                                        website,
-                                                                                                                              });
 
-                                                                                                                                  if (insertError) {
-                                                                                                                                        setError("Failed to save profile. Please try again.");
-                                                                                                                                              setLoading(false);
-                                                                                                                                                    return;
-                                                                                                                                                        }
-
-                                                                                                                                                            router.push("/dashboard");
-                                                                                                                                                              };
-
-                                                                                                                                                                return (
-                                                                                                                                                                    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                                                                                                                                                                          <div className="w-full max-w-md bg-white rounded-xl shadow p-8">
-                                                                                                                                                                                  <h1 className="text-2xl font-semibold mb-2">
-                                                                                                                                                                                            Complete your profile
-                                                                                                                                                                                                    </h1>
-                                                                                                                                                                                                            <p className="text-gray-600 mb-6">
-                                                                                                                                                                                                                      This information will appear on your public profile.
-                                                                                                                                                                                                                              </p>
-
-                                                                                                                                                                                                                                      <form onSubmit={handleSubmit} className="space-y-4">
-                                                                                                                                                                                                                                                <div>
-                                                                                                                                                                                                                                                            <label className="block text-sm font-medium mb-1">
-                                                                                                                                                                                                                                                                          Full name
-                                                                                                                                                                                                                                                                                      </label>
-                                                                                                                                                                                                                                                                                                  <input
-                                                                                                                                                                                                                                                                                                                type="text"
-                                                                                                                                                                                                                                                                                                                              required
-                                                                                                                                                                                                                                                                                                                                            value={fullName}
-                                                                                                                                                                                                                                                                                                                                                          onChange={(e) => setFullName(e.target.value)}
-                                                                                                                                                                                                                                                                                                                                                                        className="w-full border rounded-lg px-3 py-2"
-                                                                                                                                                                                                                                                                                                                                                                                      placeholder="Your name"
-                                                                                                                                                                                                                                                                                                                                                                                                  />
-                                                                                                                                                                                                                                                                                                                                                                                                            </div>
-
+               }
                                                                                                                                                                                                                                                                                                                                                                                                                       <div>
                                                                                                                                                                                                                                                                                                                                                                                                                                   <label className="block text-sm font-medium mb-1">
                                                                                                                                                                                                                                                                                                                                                                                                                                                 Short bio
