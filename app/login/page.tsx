@@ -1,4 +1,5 @@
-"use client";
+                                                                                                                                            padding: 12,
+             "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: any) => {
+  async function handleLogin(e: React.FormEvent) {
 
     e.preventDefault();
 
@@ -22,8 +23,8 @@ export default function LoginPage() {
     setError("");
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: email,
+      password: password,
     });
 
     if (error) {
@@ -34,7 +35,7 @@ export default function LoginPage() {
 
     router.push("/dashboard");
 
-  };
+  }
 
   return (
     <div style={{ padding: "40px" }}>
@@ -49,8 +50,9 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ display: "block", marginBottom: "10px", padding: "10px" }}
         />
+
+        <br /><br />
 
         <input
           type="password"
@@ -58,17 +60,19 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ display: "block", marginBottom: "10px", padding: "10px" }}
         />
 
-        <button type="submit" disabled={loading}>
+        <br /><br />
+
+        <button type="submit">
           {loading ? "Logging in..." : "Login"}
         </button>
 
         {error && (
-          <p style={{ color: "red" }}>
-            {error}
-          </p>
+          <>
+            <br /><br />
+            <p style={{ color: "red" }}>{error}</p>
+          </>
         )}
 
       </form>
@@ -76,48 +80,7 @@ export default function LoginPage() {
     </div>
   );
 
-}
-                                                                                              <form onSubmit={handleLogin}>
-                                                                                                      <input
-                                                                                                                type="email"
-                                                                                                                          placeholder="Email"
-                                                                                                                                    value={email}
-                                                                                                                                              required
-                                                                                                                                                        onChange={(e) => setEmail(e.target.value)}
-                                                                                                                                                                  style={inputStyle}
-                                                                                                                                                                          />
-
-                                                                                                                                                                                  <input
-                                                                                                                                                                                            type="password"
-                                                                                                                                                                                                      placeholder="Password"
-                                                                                                                                                                                                                value={password}
-                                                                                                                                                                                                                          required
-                                                                                                                                                                                                                                    onChange={(e) => setPassword(e.target.value)}
-                                                                                                                                                                                                                                              style={inputStyle}
-                                                                                                                                                                                                                                                      />
-
-                                                                                                                                                                                                                                                              {error && <p style={{ color: 'red' }}>{error}</p>}
-
-                                                                                                                                                                                                                                                                      <button type="submit" disabled={loading} style={buttonStyle}>
-                                                                                                                                                                                                                                                                                {loading ? 'Logging in…' : 'Log in'}
-                                                                                                                                                                                                                                                                                        </button>
-                                                                                                                                                                                                                                                                                              </form>
-                                                                                                                                                                                                                                                                                                  </main>
-                                                                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                                                                                    }
-
-                                                                                                                                                                                                                                                                                                    const inputStyle = {
-                                                                                                                                                                                                                                                                                                      width: '100%',
-                                                                                                                                                                                                                                                                                                        padding: 12,
-                                                                                                                                                                                                                                                                                                          marginBottom: 14,
-                                                                                                                                                                                                                                                                                                            borderRadius: 6,
-                                                                                                                                                                                                                                                                                                              border: '1px solid #ccc',
-                                                                                                                                                                                                                                                                                                              }
-
-                                                                                                                                                                                                                                                                                                              const buttonStyle = {
-                                                                                                                                                                                                                                                                                                                width: '100%',
-                                                                                                                                                                                                                                                                                                                  padding: 12,
-                                                                                                                                                                                                                                                                                                                    background: '#000',
+}                                                                                                                                                                                                                                                                                                       background: '#000',
                                                                                                                                                                                                                                                                                                                       color: '#fff',
                                                                                                                                                                                                                                                                                                                         border: 'none',
                                                                                                                                                                                                                                                                                                                           borderRadius: 6,
