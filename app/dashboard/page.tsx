@@ -4,385 +4,305 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function DashboardPage() {
+type Commitment = {
+  id: string;
+  text: string;
+  status: "active" | "paused" | "withdrawn" | "completed";
+  created_at: string;
+  completed_at?: string;
+  proof_url?: string;
+};
 
+export default function DashboardPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState({
+    account_type: "individual",
+    full_name: "",
+    bio: "",
+    username: "",
+  });
 
-  const [profile, setProfile] = useState<any>(null);
-  const [credits, setCredits] = useState(0);
-  const [commitments, setCommitments] = useState<any[]>([]);
-
-  const [editingProfile, setEditingProfile] = useState(false);
-
-  const [fullName, setFullName] = useState("");
-  const [bio, setBio] = useState("");
-  const [accountType, setAccountType] = useState("individual");
-
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [bioCount, setBioCount] = useState(0);
+  const BIO_LIMIT = 300;
 
   useEffect(() => {
-    loadDashboard();
+    loadUser();
   }, []);
 
-  async function loadDashboard() {
+  async function loadUser() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { data } = await supabase.auth.getUser();
-
-    if (!data?.user) {
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    const userId = data.user.id;
+    setUser(user);
 
-    // Load profile
-    const { data: profileData } = await supabase
+    loadProfile(user.id);
+    loadCommitments(user.id);
+  }
+
+  async function loadProfile(userId: string) {
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
 
-    if (profileData) {
-      setProfile(profileData);
-      setFullName(profileData.full_name || "");
-      setBio(profileData.bio || "");
-      setAccountType(profileData.account_type || "individual");
+    if (data) {
+      setProfile(data);
+      setBioCount(data.bio?.length || 0);
     }
+  }
 
-    // Load credits
-    const { data: creditsData } = await supabase
-      .from("credits")
-      .select("credits_remaining")
-      .eq("user_id", userId)
-      .single();
-
-    if (creditsData) {
-      setCredits(creditsData.credits_remaining);
-    }
-
-    // Load commitments
-    const { data: commitmentsData } = await supabase
+  async function loadCommitments(userId: string) {
+    const { data } = await supabase
       .from("commitments")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (commitmentsData) {
-      setCommitments(commitmentsData);
-    }
-
-    setLoading(false);
+    if (data) setCommitments(data);
   }
 
   async function saveProfile() {
-
-    setSaving(true);
-    setMessage("");
-
-    const { data } = await supabase.auth.getUser();
-
-    if (!data?.user) return;
-
-    const userId = data.user.id;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName,
-        bio: bio,
-        account_type: accountType
-      })
-      .eq("id", userId);
-
-    if (error) {
-      setMessage("Failed to save profile");
-    } else {
-      setMessage("Profile saved");
-      setEditingProfile(false);
-      loadDashboard();
-    }
-
-    setSaving(false);
+    await supabase.from("profiles").update(profile).eq("id", user.id);
+    alert("Profile saved");
   }
 
-  async function updateStatus(commitmentId: string, status: string) {
+  async function updateStatus(id: string, status: string) {
+    const updateData: any = { status };
+
+    if (status === "completed") {
+      updateData.completed_at = new Date().toISOString();
+    }
 
     await supabase
       .from("commitments")
-      .update({
-        status,
-        completed_at: status === "completed" ? new Date() : null
-      })
-      .eq("id", commitmentId);
+      .update(updateData)
+      .eq("id", id);
 
-    loadDashboard();
+    loadCommitments(user.id);
+  }
+
+  async function saveProof(id: string, proof_url: string) {
+    await supabase
+      .from("commitments")
+      .update({ proof_url })
+      .eq("id", id);
+
+    loadCommitments(user.id);
   }
 
   async function logout() {
-
     await supabase.auth.signOut();
-
-    router.push("/login");
+    router.push("/");
   }
 
-  function goToCreate() {
-
-    router.push("/dashboard/create");
-  }
-
-  if (loading) {
-    return (
-      <div style={{ padding: 40 }}>
-        Loading...
-      </div>
-    );
+  function formatDate(date: string) {
+    return new Date(date).toLocaleDateString();
   }
 
   return (
+    <div className="max-w-xl mx-auto p-4">
 
-    <div style={{
-      maxWidth: 700,
-      margin: "0 auto",
-      padding: 20
-    }}>
-
-      {/* LOGO HEADER */}
-
-      <h1 style={{
-        fontSize: 28,
-        fontWeight: 700,
-        color: "#2563eb",
-        marginBottom: 20
-      }}>
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-blue-600 mb-6">
         Stated
       </h1>
 
-      {/* PROFILE CARD */}
+      {/* Profile Card */}
+      <div className="border rounded-xl p-4 mb-6">
 
-      <div style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20
-      }}>
+        <label className="block text-sm mb-1">Account type</label>
 
-        {!editingProfile && profile && (
+        <select
+          className="border rounded-lg p-2 w-full mb-4"
+          value={profile.account_type}
+          onChange={(e) =>
+            setProfile({ ...profile, account_type: e.target.value })
+          }
+        >
+          <option value="individual">Individual</option>
+          <option value="company">Company</option>
+        </select>
 
-          <div>
+        <label className="block text-sm mb-1">Full name</label>
 
-            <div style={{ marginBottom: 6 }}>
-              <strong>
-                {profile.full_name || "No name set"}
-              </strong>
-            </div>
+        <input
+          className="border rounded-lg p-2 w-full mb-4"
+          value={profile.full_name}
+          onChange={(e) =>
+            setProfile({ ...profile, full_name: e.target.value })
+          }
+        />
 
-            <div style={{
-              fontSize: 14,
-              color: "#6b7280",
-              marginBottom: 10
-            }}>
-              {profile.bio || "No bio added"}
-            </div>
+        <label className="block text-sm mb-1">
+          Bio ({bioCount}/{BIO_LIMIT})
+        </label>
 
-            <div style={{
-              fontSize: 14,
-              marginBottom: 10
-            }}>
-              Public URL:
-              <br />
-              <strong>
-                stated.app/u/{profile.username}
-              </strong>
-            </div>
+        <textarea
+          className="border rounded-lg p-2 w-full mb-2"
+          maxLength={BIO_LIMIT}
+          value={profile.bio}
+          onChange={(e) => {
+            setProfile({ ...profile, bio: e.target.value });
+            setBioCount(e.target.value.length);
+          }}
+        />
 
-            <button
-              onClick={() => setEditingProfile(true)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid #2563eb",
-                background: "white",
-                color: "#2563eb",
-                cursor: "pointer"
-              }}
-            >
-              Edit profile
-            </button>
+        <div className="text-sm text-gray-500 mb-4">
+          Public URL:
+          <br />
+          <strong>
+            stated.app/u/{profile.username || "username"}
+          </strong>
+        </div>
 
-          </div>
-        )}
-
-        {editingProfile && (
-
-          <div>
-
-            <div style={{ marginBottom: 10 }}>
-
-              <label>Account type</label>
-
-              <select
-                value={accountType}
-                onChange={(e) => setAccountType(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              >
-                <option value="individual">Individual</option>
-                <option value="company">Company</option>
-              </select>
-
-            </div>
-
-            <div style={{ marginBottom: 10 }}>
-
-              <label>Full name</label>
-
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                maxLength={60}
-                style={{ width: "100%", padding: 8 }}
-              />
-
-            </div>
-
-            <div style={{ marginBottom: 10 }}>
-
-              <label>Bio (max 300 characters)</label>
-
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={300}
-                style={{ width: "100%", padding: 8 }}
-              />
-
-            </div>
-
-            <button
-              onClick={saveProfile}
-              disabled={saving}
-              style={{
-                padding: "8px 14px",
-                background: "#2563eb",
-                color: "white",
-                borderRadius: 6,
-                border: "none",
-                cursor: "pointer"
-              }}
-            >
-              Save
-            </button>
-
-            {message && (
-              <div style={{ marginTop: 10 }}>
-                {message}
-              </div>
-            )}
-
-          </div>
-
-        )}
+        <button
+          onClick={saveProfile}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          Save profile
+        </button>
 
       </div>
 
-      {/* CREDITS */}
-
-      <div style={{ marginBottom: 20 }}>
-
-        Credits remaining: <strong>{credits}</strong>
-
-      </div>
-
-      {/* CREATE BUTTON */}
-
+      {/* Create Commitment */}
       <button
-        onClick={goToCreate}
-        style={{
-          width: "100%",
-          padding: 12,
-          background: "#2563eb",
-          color: "white",
-          borderRadius: 999,
-          border: "none",
-          fontSize: 16,
-          marginBottom: 30,
-          cursor: "pointer"
-        }}
+        onClick={() => router.push("/dashboard/create")}
+        className="w-full bg-blue-600 text-white py-3 rounded-full mb-6"
       >
         Create Commitment
       </button>
 
-      {/* COMMITMENTS */}
-
-      <h2 style={{ marginBottom: 10 }}>
-        Your commitments
-      </h2>
+      {/* Commitments */}
+      <h2 className="text-xl mb-4">Your commitments</h2>
 
       {commitments.map((c) => (
 
-        <div key={c.id}
-          style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            padding: 12,
-            marginBottom: 12
-          }}
+        <div
+          key={c.id}
+          className={`border rounded-xl p-4 mb-4 ${
+            c.status === "completed"
+              ? "border-green-500 bg-green-50"
+              : ""
+          }`}
         >
 
-          <div style={{ marginBottom: 8 }}>
+          <div className="font-medium mb-2">
             {c.text}
           </div>
 
-          <div style={{
-            fontSize: 14,
-            marginBottom: 10
-          }}>
-            Status: <strong>{c.status}</strong>
-          </div>
+          {/* Status badge */}
+          {c.status === "completed" ? (
+            <div className="text-green-600 font-semibold mb-2">
+              COMPLETED ✓
+            </div>
+          ) : (
+            <div className="text-gray-600 mb-2">
+              Status: {c.status}
+            </div>
+          )}
 
-          {c.status !== "completed" && c.status !== "withdrawn" && (
+          {/* Completion date */}
+          {c.completed_at && (
+            <div className="text-sm text-gray-500 mb-2">
+              Completed on: {formatDate(c.completed_at)}
+            </div>
+          )}
 
+          {/* Status selector */}
+          {c.status !== "completed" && (
             <select
               value={c.status}
               onChange={(e) =>
                 updateStatus(c.id, e.target.value)
               }
-              style={{ padding: 6 }}
+              className="border rounded-lg p-2 mb-2"
             >
               <option value="active">Active</option>
               <option value="paused">Paused</option>
-              <option value="completed">Completed</option>
               <option value="withdrawn">Withdrawn</option>
+              <option value="completed">Completed</option>
             </select>
+          )}
 
+          {/* Proof section */}
+          {c.status === "completed" && (
+            <ProofSection
+              commitment={c}
+              saveProof={saveProof}
+            />
           )}
 
         </div>
 
       ))}
 
-      {/* LOGOUT */}
-
+      {/* Logout */}
       <button
         onClick={logout}
-        style={{
-          marginTop: 30,
-          padding: 10,
-          background: "#ef4444",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer"
-        }}
+        className="bg-red-500 text-white px-4 py-2 rounded-lg"
       >
         Logout
       </button>
 
     </div>
+  );
+}
 
+
+/* Proof upload component */
+
+function ProofSection({
+  commitment,
+  saveProof,
+}: {
+  commitment: Commitment;
+  saveProof: any;
+}) {
+  const [proof, setProof] = useState(
+    commitment.proof_url || ""
   );
 
-              }
+  return (
+    <div className="mt-3">
+
+      <div className="text-sm mb-1">
+        Add proof (optional)
+      </div>
+
+      <input
+        type="text"
+        placeholder="Paste proof URL"
+        className="border rounded-lg p-2 w-full mb-2"
+        value={proof}
+        onChange={(e) => setProof(e.target.value)}
+      />
+
+      <button
+        onClick={() =>
+          saveProof(commitment.id, proof)
+        }
+        className="bg-green-600 text-white px-3 py-1 rounded-lg"
+      >
+        Save proof
+      </button>
+
+      {commitment.proof_url && (
+        <div className="text-sm mt-2 text-blue-600">
+          Proof saved ✓
+        </div>
+      )}
+
+    </div>
+  );
+}
