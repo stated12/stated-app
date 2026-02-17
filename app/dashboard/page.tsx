@@ -1,4 +1,4 @@
-"use client";
+           "use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -7,64 +7,91 @@ import { useRouter } from "next/navigation";
 export default function DashboardPage() {
 
   const supabase = createClient();
-    const router = useRouter();
+  const router = useRouter();
 
-      const [loading, setLoading] = useState(true);
-        const [profile, setProfile] = useState<any>(null);
-          const [credits, setCredits] = useState(0);
-            const [commitments, setCommitments] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [commitments, setCommitments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-              useEffect(() => {
-                  loadDashboard();
-                    }, []);
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
-                      async function loadDashboard() {
+  async function loadDashboard() {
 
-                          const { data } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
 
-                              if (!data?.user) {
-                                    router.push("/login");
-                                          return;
-                                              }
+    if (!data?.user) {
+      router.push("/login");
+      return;
+    }
 
-                                                  const userId = data.user.id;
+    setUser(data.user);
 
-                                                      const { data: profileData } = await supabase
-                                                            .from("profiles")
-                                                                  .select("*")
-                                                                        .eq("id", userId)
-                                                                              .single();
+    const { data: commitmentsData } = await supabase
+      .from("commitments")
+      .select("*")
+      .eq("user_id", data.user.id)
+      .order("created_at", { ascending: false });
 
-                                                                                  setProfile(profileData);
+    setCommitments(commitmentsData || []);
+    setLoading(false);
+  }
 
-                                                                                      const { data: creditData } = await supabase
-                                                                                            .from("credits")
-                                                                                                  .select("credits_remaining")
-                                                                                                        .eq("user_id", userId)
-                                                                                                              .single();
+  function goCreate() {
+    router.push("/dashboard/create");
+  }
 
-                                                                                                                  if (creditData) {
-                                                                                                                        setCredits(creditData.credits_remaining);
-                                                                                                                            }
+  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
 
-                                                                                                                                const { data: commitmentsData } = await supabase
-                                                                                                                                      .from("commitments")
-                                                                                                                                            .select("*")
-                                                                                                                                                  .eq("user_id", userId)
-                                                                                                                                                        .order("created_at", { ascending: false });
+  return (
+    <div style={{ padding: 20 }}>
 
-                                                                                                                                                            if (commitmentsData) {
-                                                                                                                                                                  setCommitments(commitmentsData);
-                                                                                                                                                                      }
+      <h1>Dashboard</h1>
 
-                                                                                                                                                                          setLoading(false);
-                                                                                                                                                                            }
+      <p>
+        Logged in as: {user?.email}
+      </p>
 
-                                                                                                                                                                              function goToCreate() {
-                                                                                                                                                                                  router.push("/dashboard/create");
-                                                                                                                                                                                    }
+      <br />
 
-                                                                                                                                                                                      if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
+      <button
+        onClick={goCreate}
+        style={{
+          padding: "10px 16px",
+          backgroundColor: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: "pointer"
+        }}
+      >
+        Create Commitment
+      </button>
+
+      <br /><br />
+
+      <h2>Your Commitments</h2>
+
+      {commitments.length === 0 && (
+        <p>No commitments yet</p>
+      )}
+
+      {commitments.map((c) => (
+        <div key={c.id} style={{
+          border: "1px solid #ddd",
+          padding: 10,
+          marginBottom: 10,
+          borderRadius: 6
+        }}>
+          <p>{c.text}</p>
+          <small>Status: {c.status}</small>
+        </div>
+      ))}
+
+    </div>
+  );
+}                                                                                                                                                                           if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
 
                                                                                                                                                                                         return (
                                                                                                                                                                                             <div style={{ padding: 20 }}>
