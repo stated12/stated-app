@@ -1,7 +1,7 @@
-export default function PublicProfile(
-  { params }: { params: { username: string } }
+export default async function PublicProfile(
+  { params }: { params: Promise<{ username: string }> }
 ) {
-  const username = params?.username;
+  const { username } = await params;
 
   if (!username) {
     return (
@@ -20,7 +20,7 @@ export default function PublicProfile(
         <strong>Username:</strong> {username}
       </p>
 
-      <p>Public profile route is working correctly.</p>
+      <p>Dynamic route is now working correctly.</p>
     </div>
   );
 }
