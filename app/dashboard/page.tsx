@@ -10,18 +10,19 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [userId, setUserId] = useState("");
 
   const [profile, setProfile] = useState<any>(null);
+  const [credits, setCredits] = useState(0);
+  const [commitments, setCommitments] = useState<any[]>([]);
+
+  const [editingProfile, setEditingProfile] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [accountType, setAccountType] = useState("individual");
 
-  const [commitments, setCommitments] = useState<any[]>([]);
-  const [credits, setCredits] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     loadDashboard();
@@ -29,53 +30,49 @@ export default function DashboardPage() {
 
   async function loadDashboard() {
 
-    const { data: userData } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
 
-    if (!userData?.user) {
+    if (!data?.user) {
       router.push("/login");
       return;
     }
 
-    const uid = userData.user.id;
-    setUserId(uid);
+    const userId = data.user.id;
 
-    // load profile
+    // Load profile
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", uid)
+      .eq("id", userId)
       .single();
 
     if (profileData) {
-
       setProfile(profileData);
-
       setFullName(profileData.full_name || "");
       setBio(profileData.bio || "");
       setAccountType(profileData.account_type || "individual");
-
     }
 
-    // load credits
-    const { data: creditData } = await supabase
+    // Load credits
+    const { data: creditsData } = await supabase
       .from("credits")
       .select("credits_remaining")
-      .eq("user_id", uid)
+      .eq("user_id", userId)
       .single();
 
-    if (creditData) {
-      setCredits(creditData.credits_remaining);
+    if (creditsData) {
+      setCredits(creditsData.credits_remaining);
     }
 
-    // load commitments
-    const { data: commitmentData } = await supabase
+    // Load commitments
+    const { data: commitmentsData } = await supabase
       .from("commitments")
       .select("*")
-      .eq("user_id", uid)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (commitmentData) {
-      setCommitments(commitmentData);
+    if (commitmentsData) {
+      setCommitments(commitmentsData);
     }
 
     setLoading(false);
@@ -83,279 +80,309 @@ export default function DashboardPage() {
 
   async function saveProfile() {
 
-    if (!fullName) {
-      alert("Enter full name");
-      return;
-    }
-
     setSaving(true);
+    setMessage("");
 
-    const username = fullName
-      .toLowerCase()
-      .replace(/\s+/g, "");
+    const { data } = await supabase.auth.getUser();
+
+    if (!data?.user) return;
+
+    const userId = data.user.id;
 
     const { error } = await supabase
       .from("profiles")
-      .upsert({
-        id: userId,
+      .update({
         full_name: fullName,
-        bio,
-        account_type: accountType,
-        username
-      });
+        bio: bio,
+        account_type: accountType
+      })
+      .eq("id", userId);
 
     if (error) {
-      alert(error.message);
-      setSaving(false);
-      return;
+      setMessage("Failed to save profile");
+    } else {
+      setMessage("Profile saved");
+      setEditingProfile(false);
+      loadDashboard();
     }
 
-    alert("Profile saved");
-
     setSaving(false);
+  }
+
+  async function updateStatus(commitmentId: string, status: string) {
+
+    await supabase
+      .from("commitments")
+      .update({
+        status,
+        completed_at: status === "completed" ? new Date() : null
+      })
+      .eq("id", commitmentId);
 
     loadDashboard();
   }
 
   async function logout() {
+
     await supabase.auth.signOut();
-    router.push("/");
+
+    router.push("/login");
   }
 
-  function goCreate() {
+  function goToCreate() {
+
     router.push("/dashboard/create");
   }
 
   if (loading) {
     return (
       <div style={{ padding: 40 }}>
-        Loading dashboard...
+        Loading...
       </div>
     );
   }
 
-  const publicUrl =
-    profile?.username
-      ? `stated-app.vercel.app/u/${profile.username}`
-      : "";
-
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "0 auto",
-        padding: 20,
-        fontFamily: "system-ui"
-      }}
-    >
 
-      {/* Identity */}
+    <div style={{
+      maxWidth: 700,
+      margin: "0 auto",
+      padding: 20
+    }}>
 
-      <h1 style={{ fontSize: 28 }}>
-        {fullName || "Your profile"}
+      {/* LOGO HEADER */}
+
+      <h1 style={{
+        fontSize: 28,
+        fontWeight: 700,
+        color: "#2563eb",
+        marginBottom: 20
+      }}>
+        Stated
       </h1>
 
-      <p style={{ color: "#666" }}>
-        This is your public commitment identity.
-      </p>
+      {/* PROFILE CARD */}
 
-      {publicUrl && (
-        <div
-          style={{
-            marginTop: 10,
-            marginBottom: 20,
-            padding: 10,
-            background: "#f4f4f4",
-            borderRadius: 8
-          }}
-        >
-          stated.app/{profile.username}
-        </div>
-      )}
+      <div style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20
+      }}>
 
-      {/* Account Type */}
+        {!editingProfile && profile && (
 
-      <div style={{ marginTop: 20 }}>
+          <div>
 
-        <label>Account type</label>
+            <div style={{ marginBottom: 6 }}>
+              <strong>
+                {profile.full_name || "No name set"}
+              </strong>
+            </div>
 
-        <select
-          value={accountType}
-          onChange={(e) =>
-            setAccountType(e.target.value)
-          }
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 6
-          }}
-        >
-          <option value="individual">
-            Individual
-          </option>
+            <div style={{
+              fontSize: 14,
+              color: "#6b7280",
+              marginBottom: 10
+            }}>
+              {profile.bio || "No bio added"}
+            </div>
 
-          <option value="company">
-            Company
-          </option>
+            <div style={{
+              fontSize: 14,
+              marginBottom: 10
+            }}>
+              Public URL:
+              <br />
+              <strong>
+                stated.app/u/{profile.username}
+              </strong>
+            </div>
 
-        </select>
+            <button
+              onClick={() => setEditingProfile(true)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #2563eb",
+                background: "white",
+                color: "#2563eb",
+                cursor: "pointer"
+              }}
+            >
+              Edit profile
+            </button>
+
+          </div>
+        )}
+
+        {editingProfile && (
+
+          <div>
+
+            <div style={{ marginBottom: 10 }}>
+
+              <label>Account type</label>
+
+              <select
+                value={accountType}
+                onChange={(e) => setAccountType(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              >
+                <option value="individual">Individual</option>
+                <option value="company">Company</option>
+              </select>
+
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+
+              <label>Full name</label>
+
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                maxLength={60}
+                style={{ width: "100%", padding: 8 }}
+              />
+
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+
+              <label>Bio (max 300 characters)</label>
+
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={300}
+                style={{ width: "100%", padding: 8 }}
+              />
+
+            </div>
+
+            <button
+              onClick={saveProfile}
+              disabled={saving}
+              style={{
+                padding: "8px 14px",
+                background: "#2563eb",
+                color: "white",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer"
+              }}
+            >
+              Save
+            </button>
+
+            {message && (
+              <div style={{ marginTop: 10 }}>
+                {message}
+              </div>
+            )}
+
+          </div>
+
+        )}
 
       </div>
 
-      {/* Full Name */}
+      {/* CREDITS */}
 
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginBottom: 20 }}>
 
-        <label>Full name</label>
-
-        <input
-          value={fullName}
-          onChange={(e) =>
-            setFullName(e.target.value)
-          }
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 6
-          }}
-        />
+        Credits remaining: <strong>{credits}</strong>
 
       </div>
 
-      {/* Bio */}
-
-      <div style={{ marginTop: 20 }}>
-
-        <label>Bio</label>
-
-        <textarea
-          value={bio}
-          onChange={(e) =>
-            setBio(e.target.value)
-          }
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 6,
-            height: 80
-          }}
-        />
-
-      </div>
-
-      {/* Save */}
+      {/* CREATE BUTTON */}
 
       <button
-        onClick={saveProfile}
-        disabled={saving}
+        onClick={goToCreate}
         style={{
-          marginTop: 20,
-          padding: 12,
           width: "100%",
+          padding: 12,
           background: "#2563eb",
           color: "white",
+          borderRadius: 999,
           border: "none",
-          borderRadius: 8
+          fontSize: 16,
+          marginBottom: 30,
+          cursor: "pointer"
         }}
       >
-        {saving ? "Saving..." : "Save profile"}
+        Create Commitment
       </button>
 
-      {/* Commitments */}
+      {/* COMMITMENTS */}
 
-      <h2 style={{ marginTop: 40 }}>
+      <h2 style={{ marginBottom: 10 }}>
         Your commitments
       </h2>
 
-      <div
-        style={{
-          marginTop: 20,
-          marginBottom: 20,
-          textAlign: "center"
-        }}
-      >
-
-        <button
-          onClick={goCreate}
-          style={{
-            padding: "14px 26px",
-            borderRadius: 50,
-            border: "none",
-            background: "#2563eb",
-            color: "white",
-            fontSize: 16
-          }}
-        >
-          Create commitment
-        </button>
-
-      </div>
-
       {commitments.map((c) => (
 
-        <div
-          key={c.id}
+        <div key={c.id}
           style={{
-            padding: 14,
-            border: "1px solid #eee",
-            borderRadius: 10,
-            marginBottom: 10
+            border: "1px solid #e5e7eb",
+            borderRadius: 12,
+            padding: 12,
+            marginBottom: 12
           }}
         >
 
-          <div>
+          <div style={{ marginBottom: 8 }}>
             {c.text}
           </div>
 
-          <div
-            style={{
-              fontSize: 12,
-              color: "#666",
-              marginTop: 6
-            }}
-          >
-            {c.status}
+          <div style={{
+            fontSize: 14,
+            marginBottom: 10
+          }}>
+            Status: <strong>{c.status}</strong>
           </div>
+
+          {c.status !== "completed" && c.status !== "withdrawn" && (
+
+            <select
+              value={c.status}
+              onChange={(e) =>
+                updateStatus(c.id, e.target.value)
+              }
+              style={{ padding: 6 }}
+            >
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="completed">Completed</option>
+              <option value="withdrawn">Withdrawn</option>
+            </select>
+
+          )}
 
         </div>
 
       ))}
 
-      {/* Credits */}
-
-      <div style={{ marginTop: 30 }}>
-        Credits remaining: {credits}
-      </div>
-
-      {/* Billing */}
-
-      <button
-        style={{
-          marginTop: 10,
-          padding: 10,
-          width: "100%",
-          borderRadius: 8,
-          border: "1px solid #ddd"
-        }}
-      >
-        Upgrade plan
-      </button>
-
-      {/* Logout */}
+      {/* LOGOUT */}
 
       <button
         onClick={logout}
         style={{
-          marginTop: 10,
+          marginTop: 30,
           padding: 10,
-          width: "100%",
-          borderRadius: 8,
-          border: "1px solid #ddd"
+          background: "#ef4444",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: "pointer"
         }}
       >
         Logout
       </button>
 
     </div>
+
   );
-}
+
+              }
