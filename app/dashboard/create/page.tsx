@@ -1,44 +1,39 @@
-           "use client";
+                                                                                                                          </div>
+        "use client";
 
 import { useState } from "react";
-import { createClient } from "../../../lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage() {
-
   const supabase = createClient();
   const router = useRouter();
 
   const [text, setText] = useState("");
+  const [duration, setDuration] = useState("7");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function createCommitment() {
-
+    setLoading(true);
     setError("");
 
-    if (!text.trim()) {
-      setError("Enter commitment");
-      return;
-    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    setLoading(true);
-
-    const { data } = await supabase.auth.getUser();
-
-    if (!data?.user) {
+    if (!user) {
       setError("Not logged in");
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase
-      .from("commitments")
-      .insert({
-        user_id: data.user.id,
-        text: text,
-        status: "active"
-      });
+    const { error } = await supabase.from("commitments").insert({
+      user_id: user.id,
+      text: text,
+      duration_days: parseInt(duration),
+      status: "active",
+    });
 
     if (error) {
       setError(error.message);
@@ -50,100 +45,51 @@ export default function CreateCommitmentPage() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-
+    <div style={{ padding: "20px" }}>
       <h1>Create Commitment</h1>
 
       <textarea
+        placeholder="Enter your commitment"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Enter your commitment"
         style={{
           width: "100%",
-          height: 100,
-          padding: 10,
-          borderRadius: 6,
-          border: "1px solid #ccc"
+          height: "100px",
+          marginTop: "10px",
         }}
       />
 
-      <br /><br />
+      <div style={{ marginTop: "10px" }}>
+        <label>Duration: </label>
 
-      {error && (
-        <p style={{ color: "red" }}>
-          {error}
-        </p>
-      )}
+        <select
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        >
+          <option value="7">7 days</option>
+          <option value="14">14 days</option>
+          <option value="30">30 days</option>
+          <option value="60">60 days</option>
+        </select>
+      </div>
 
       <button
         onClick={createCommitment}
         disabled={loading}
         style={{
-          padding: "10px 16px",
-          backgroundColor: "#16a34a",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer"
+          marginTop: "20px",
+          padding: "10px",
         }}
       >
-        {loading ? "Creating..." : "Create"}
+        {loading ? "Creating..." : "Create Commitment"}
       </button>
 
+      {error && (
+        <p style={{ color: "red", marginTop: "10px" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
-}                                                                           }
-                                                                                        }
-
-                                                                                          async function createCommitment() {
-
-                                                                                              const { data } = await supabase.auth.getUser();
-
-                                                                                                  if (!data?.user) return;
-
-                                                                                                      await supabase
-                                                                                                            .from("commitments")
-                                                                                                                  .insert({
-                                                                                                                          user_id: data.user.id,
-                                                                                                                                  text: text,
-                                                                                                                                          duration_type: duration,
-                                                                                                                                                  status: "active"
-                                                                                                                                                        });
-
-                                                                                                                                                            router.push("/dashboard");
-                                                                                                                                                              }
-
-                                                                                                                                                                return (
-                                                                                                                                                                    <div style={{ padding: 20 }}>
-
-                                                                                                                                                                          <h1>Create Commitment</h1>
-
-                                                                                                                                                                                <p>Credits: {credits}</p>
-
-                                                                                                                                                                                      <textarea
-                                                                                                                                                                                              value={text}
-                                                                                                                                                                                                      onChange={(e) => setText(e.target.value)}
-                                                                                                                                                                                                              placeholder="Commitment"
-                                                                                                                                                                                                                    />
-
-                                                                                                                                                                                                                          <br /><br />
-
-                                                                                                                                                                                                                                <select
-                                                                                                                                                                                                                                        value={duration}
-                                                                                                                                                                                                                                                onChange={(e) => setDuration(e.target.value)}
-                                                                                                                                                                                                                                                      >
-                                                                                                                                                                                                                                                              <option value="7d">7 Days</option>
-                                                                                                                                                                                                                                                                      <option value="30d">30 Days</option>
-                                                                                                                                                                                                                                                                              <option value="90d">90 Days</option>
-                                                                                                                                                                                                                                                                                      <option value="365d">1 Year</option>
-                                                                                                                                                                                                                                                                                            </select>
-
-                                                                                                                                                                                                                                                                                                  <br /><br />
-
-                                                                                                                                                                                                                                                                                                        <button onClick={createCommitment}>
-                                                                                                                                                                                                                                                                                                                Create
-                                                                                                                                                                                                                                                                                                                      </button>
-
-                                                                                                                                                                                                                                                                                                                          </div>
-                                                                                                                                                                                                                                                                                                                            );
+                                                                                                                                     }                                                                                                                                                                                                                                                                                                                    );
                                                                                                                                                                                                                                                                                                                             }
