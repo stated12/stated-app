@@ -1,41 +1,28 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    export default function Page() {
-      const params = useParams();
-        const username = (params.username as string)?.toLowerCase();
-
-          const [profile, setProfile] = useState<any>(null);
-            const [error, setError] = useState<any>(null);
-
-              useEffect(() => {
-                  if (!username) return;
-
-                      async function fetchProfile() {
-                            const { data, error } = await supabase
-                                    .from("profiles")
-                                            .select("*")
-                                                    .eq("username", username)
-                                                            .maybeSingle();
-
-                                                                  if (error) {
-                                                                          setError(error);
-                                                                                } else {
-                                                                                        setProfile(data);
-                                                                                              }
-                                                                                                  }
-
-                                                                                                      fetchProfile();
                                                                                                         }, [username]);
+import { notFound } from "next/navigation";
 
+export default async function PublicProfile({ params }) {
+  const { username } = params;
+
+  // Temporary mock (replace later with DB)
+  if (!username) return notFound();
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>{username}'s commitments</h1>
+
+      <div style={{ marginTop: 20 }}>
+        <div style={{
+          border: "1px solid #ddd",
+          padding: 15,
+          borderRadius: 8
+        }}>
+          Run 5 kms daily
+        </div>
+      </div>
+    </div>
+  );
+}
                                                                                                           if (error) {
                                                                                                               return (
                                                                                                                     <div style={{ padding: 24 }}>
