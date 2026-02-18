@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "../../../lib/supabase/client";
-import { containsHarmfulContent } from "../../../lib/safety";
+import { createClient } from "../../lib/supabase/client";
+import { containsHarmfulContent } from "../../lib/safety";
 import { useRouter } from "next/navigation";
-
 export default function NewCommitment() {
 
   const supabase = createClient();
