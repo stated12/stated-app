@@ -1,114 +1,141 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 
-export default async function ProfilePage({
-  params,
-}: {
-  params: { username: string };
-}) {
+interface Props {
+  params: {
+    username: string;
+  };
+}
+
+export async function generateMetadata({ params }: Props) {
   const supabase = createClient();
 
-  const { data: account, error } = await supabase
+  const { data } = await supabase
+    .from("accounts")
+    .select("username, name, bio")
+    .eq("username", params.username)
+    .maybeSingle();
+
+  if (!data) {
+    return {
+      title: "Profile not found | Stated",
+      description: "Public accountability profiles on Stated",
+    };
+  }
+
+  const displayName = data.name || data.username;
+
+  return {
+    title: `${displayName} | Stated`,
+    description:
+      data.bio?.substring(0, 150) ||
+      `${displayName}'s public accountability profile on Stated`,
+  };
+}
+
+export default async function PublicProfilePage({ params }: Props) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
     .from("accounts")
     .select(`
       username,
       name,
       bio,
       website_url,
-      twitter_url,
       linkedin_url,
+      twitter_url,
       logo_url,
-      account_type,
-      created_at
+      account_type
     `)
     .eq("username", params.username)
     .maybeSingle();
 
-  if (!account || error) {
+  if (error) {
+    console.error(error);
+  }
+
+  if (!data) {
     notFound();
   }
 
-  return (
-    <main className="min-h-screen bg-white px-4 py-10">
-      {/* Stated branding */}
-      <div className="max-w-2xl mx-auto">
+  const displayName = data.name || data.username;
 
-        <div className="mb-6">
-          <a
-            href="/"
-            className="text-2xl font-bold text-blue-600"
-          >
+  return (
+    <div className="min-h-screen bg-white">
+
+      {/* Header */}
+      <div className="border-b p-4">
+        <div className="max-w-3xl mx-auto">
+          <a href="/" className="text-2xl font-bold text-blue-600">
             Stated
           </a>
         </div>
+      </div>
 
-        {/* Profile Card */}
-        <div className="border rounded-xl p-6 shadow-sm">
+      {/* Profile */}
+      <div className="max-w-3xl mx-auto p-6">
 
-          {/* Logo */}
-          {account.logo_url && (
-            <img
-              src={account.logo_url}
-              alt="Logo"
-              className="w-16 h-16 rounded-lg mb-4"
-            />
-          )}
+        {/* Name */}
+        <h1 className="text-3xl font-bold mb-2">
+          {displayName}
+        </h1>
 
-          {/* Name */}
-          <h1 className="text-2xl font-semibold">
-            {account.name || account.username}
-          </h1>
+        {/* Username */}
+        <div className="text-gray-500 mb-4">
+          stated.app/u/{data.username}
+        </div>
 
-          {/* Username */}
-          <p className="text-gray-500 mb-3">
-            @{account.username}
+        {/* Bio */}
+        {data.bio && (
+          <p className="mb-6 text-gray-800 whitespace-pre-line">
+            {data.bio}
           </p>
+        )}
 
-          {/* Bio */}
-          {account.bio && (
-            <p className="mb-4 text-gray-800">
-              {account.bio}
-            </p>
-          )}
+        {/* Links */}
+        <div className="space-y-2">
 
-          {/* Links */}
-          <div className="flex flex-col gap-2">
-
-            {account.website_url && (
+          {data.website_url && (
+            <div>
               <a
-                href={account.website_url}
+                href={data.website_url}
                 target="_blank"
-                className="text-blue-600"
+                className="text-blue-600 hover:underline"
               >
                 Website
               </a>
-            )}
+            </div>
+          )}
 
-            {account.linkedin_url && (
+          {data.linkedin_url && (
+            <div>
               <a
-                href={account.linkedin_url}
+                href={data.linkedin_url}
                 target="_blank"
-                className="text-blue-600"
+                className="text-blue-600 hover:underline"
               >
                 LinkedIn
               </a>
-            )}
+            </div>
+          )}
 
-            {account.twitter_url && (
+          {data.twitter_url && (
+            <div>
               <a
-                href={account.twitter_url}
+                href={data.twitter_url}
                 target="_blank"
-                className="text-blue-600"
+                className="text-blue-600 hover:underline"
               >
                 Twitter
               </a>
-            )}
-
-          </div>
+            </div>
+          )}
 
         </div>
 
       </div>
-    </main>
+
+    </div>
   );
 }
