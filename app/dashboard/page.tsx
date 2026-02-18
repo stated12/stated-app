@@ -1,232 +1,224 @@
-"use client";
+import Link from "next/link";
+import { createClient } from "../../lib/supabase/server";
+import { getAccountTypeLabel } from "../../lib/account";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+export default async function Dashboard() {
+  const supabase = await createClient();
 
-export default function Dashboard() {
+  // Get logged in user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const supabase = createClient();
-  const router = useRouter();
-
-  const [user, setUser] = useState<any>(null);
-
-  const [profile, setProfile] = useState({
-    full_name: "",
-    bio: "",
-    username: "",
-    account_type: "individual",
-    credits: 1
-  });
-
-  const [commitments, setCommitments] = useState<any[]>([]);
-
-  const BIO_LIMIT = 300;
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-
-    const { data } = await supabase.auth.getUser();
-
-    if (!data.user) {
-      router.push("/login");
-      return;
-    }
-
-    setUser(data.user);
-
-    loadProfile(data.user.id);
-    loadCommitments(data.user.id);
-
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Link
+          href="/login"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+        >
+          Login
+        </Link>
+      </div>
+    );
   }
 
-  async function loadProfile(id:string) {
+  // Get account
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", id)
-      .single();
+  // Get profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-    if (data) setProfile(data);
+  // Get commitments
+  const { data: commitments } = await supabase
+    .from("commitments")
+    .select("*")
+    .eq("account_id", user.id)
+    .order("created_at", { ascending: false });
 
-  }
+  const credits = account?.credits ?? 0;
 
-  async function loadCommitments(id:string) {
-
-    const { data } = await supabase
-      .from("commitments")
-      .select("*")
-      .eq("user_id", id)
-      .order("created_at", { ascending:false });
-
-    if (data) setCommitments(data);
-
-  }
-
-  async function saveProfile() {
-
-    await supabase
-      .from("profiles")
-      .update(profile)
-      .eq("id", user.id);
-
-    alert("Saved");
-
-  }
-
-  async function updateStatus(id:string, status:string) {
-
-    let update:any = { status };
-
-    if (status === "completed")
-      update.completed_at = new Date();
-
-    await supabase
-      .from("commitments")
-      .update(update)
-      .eq("id", id);
-
-    loadCommitments(user.id);
-
-  }
-
-  async function logout() {
-
-    await supabase.auth.signOut();
-    router.push("/");
-
-  }
+  const total = commitments?.length ?? 0;
+  const active =
+    commitments?.filter((c) => c.status === "active").length ?? 0;
+  const completed =
+    commitments?.filter((c) => c.status === "completed").length ?? 0;
+  const failed =
+    commitments?.filter((c) => c.status === "failed").length ?? 0;
 
   return (
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
 
-    <div className="max-w-xl mx-auto p-4">
+      <div className="max-w-3xl mx-auto space-y-6">
 
-      {/* Logo */}
-      <div className="text-3xl font-bold text-blue-600 mb-6">
-        Stated
-      </div>
+        {/* Header */}
+        <h1 className="text-3xl font-bold">Stated</h1>
 
-      {/* Profile Card */}
-      <div className="border rounded-xl p-4 mb-6">
+        {/* Profile Card */}
+        <div className="bg-white rounded-xl shadow p-5 space-y-3">
 
-        <div className="font-semibold text-lg mb-2">
-          {profile.full_name || "No name set"}
-        </div>
-
-        <div className="text-gray-600 mb-3">
-          {profile.bio || "No bio added"}
-        </div>
-
-        <div className="text-sm mb-3">
-          Public URL:
-          <br />
-          <span className="font-semibold">
-            stated.app/u/{profile.username}
-          </span>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-
-          <button
-            onClick={()=>router.push("/dashboard/profile")}
-            className="border px-3 py-1 rounded-lg"
-          >
-            Edit profile
-          </button>
-
-          <button
-            onClick={()=>router.push(`/u/${profile.username}`)}
-            className="border px-3 py-1 rounded-lg"
-          >
-            Public profile
-          </button>
-
-          <button
-            onClick={()=>router.push("/upgrade")}
-            className="border px-3 py-1 rounded-lg"
-          >
-            Upgrade
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* Credits */}
-      <div className="mb-4">
-        Credits remaining: {profile.credits || 1}
-      </div>
-
-      {/* Create */}
-      <button
-        onClick={()=>router.push("/dashboard/create")}
-        className="w-full bg-blue-600 text-white py-3 rounded-full mb-6"
-      >
-        Create Commitment
-      </button>
-
-      {/* Commitments */}
-      <div className="text-lg mb-4">
-        Your commitments
-      </div>
-
-      {commitments.map(c=>(
-
-        <div key={c.id} className="border rounded-xl p-4 mb-4">
-
-          <div className="font-medium mb-2">
-            {c.text}
+          <div className="text-lg font-semibold">
+            {profile?.name || "No name set"}
           </div>
 
-          {c.status === "completed" ? (
+          <div className="text-gray-600">
+            {profile?.bio || "No bio added"}
+          </div>
 
-            <div className="text-green-600 font-semibold mb-2">
-              Completed ✓
+          <div className="text-sm text-gray-500">
+            Public URL:
+            <div>
+              stated.app/u/{profile?.username}
             </div>
+          </div>
 
-          ) : (
+          <div className="text-sm">
+            Account type:
+            <span className="ml-1 font-medium">
+              {getAccountTypeLabel(account?.account_type || "individual")}
+            </span>
+          </div>
 
-            <select
-              value={c.status}
-              onChange={e=>updateStatus(c.id, e.target.value)}
-              className="border p-2 rounded-lg"
+          <div className="flex gap-3 pt-2 flex-wrap">
+
+            <Link
+              href="/profile/edit"
+              className="border px-4 py-2 rounded-lg"
             >
+              Edit profile
+            </Link>
 
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="withdrawn">Withdrawn</option>
-              <option value="completed">Completed</option>
+            <Link
+              href={`/u/${profile?.username}`}
+              className="border px-4 py-2 rounded-lg"
+            >
+              Public profile
+            </Link>
 
-            </select>
+            <Link
+              href="/upgrade"
+              className="border px-4 py-2 rounded-lg"
+            >
+              Upgrade
+            </Link>
 
-          )}
+          </div>
+        </div>
 
-          {c.completed_at && (
+        {/* Credits Card */}
+        <div className="bg-white rounded-xl shadow p-5">
 
-            <div className="text-sm text-gray-500 mt-2">
-              Completed on {new Date(c.completed_at).toLocaleDateString()}
-            </div>
+          <div className="text-lg font-semibold">
+            Credits remaining: {credits}
+          </div>
 
+          {credits === 0 && (
+            <Link
+              href="/upgrade"
+              className="text-blue-600 text-sm"
+            >
+              Buy credits to continue
+            </Link>
           )}
 
         </div>
 
-      ))}
+        {/* Analytics */}
+        <div className="bg-white rounded-xl shadow p-5">
 
-      {/* Logout */}
-      <button
-        onClick={logout}
-        className="bg-red-500 text-white px-4 py-2 rounded-lg"
-      >
-        Logout
-      </button>
+          <div className="font-semibold mb-3">
+            Your stats
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+
+            <div>
+              Total: {total}
+            </div>
+
+            <div>
+              Active: {active}
+            </div>
+
+            <div>
+              Completed: {completed}
+            </div>
+
+            <div>
+              Failed: {failed}
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Create Commitment */}
+        <Link
+          href="/commitment/new"
+          className={`block text-center py-3 rounded-lg text-white ${
+            credits === 0
+              ? "bg-gray-400 pointer-events-none"
+              : "bg-blue-600"
+          }`}
+        >
+          Create Commitment
+        </Link>
+
+        {/* Commitments List */}
+        <div className="space-y-4">
+
+          <div className="font-semibold">
+            Your commitments
+          </div>
+
+          {commitments?.length === 0 && (
+            <div className="text-gray-500">
+              No commitments yet
+            </div>
+          )}
+
+          {commitments?.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white rounded-xl shadow p-4"
+            >
+
+              <div className="font-medium">
+                {c.text}
+              </div>
+
+              <div className="text-sm text-gray-500 mt-1">
+                {c.category} • {c.duration}
+              </div>
+
+              <div className="text-sm mt-1">
+
+                Status:
+                <span className="ml-1 capitalize font-medium">
+                  {c.status}
+                </span>
+
+              </div>
+
+              <div className="text-xs text-gray-400 mt-1">
+                {new Date(c.created_at).toLocaleDateString()}
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+
+      </div>
 
     </div>
-
   );
-
 }
