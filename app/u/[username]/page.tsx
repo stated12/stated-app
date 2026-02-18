@@ -1,138 +1,101 @@
 import { createClient } from "@/lib/supabase/server";
-import { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-type Props = {
+interface Props {
   params: {
     username: string;
   };
-};
+}
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props) {
   const supabase = createClient();
 
-  const { data: account } = await supabase
+  const { data } = await supabase
     .from("accounts")
-    .select("username, name, bio")
+    .select("name, bio, username")
     .eq("username", params.username)
     .single();
 
-  if (!account) {
+  if (!data) {
     return {
-      title: "Profile not found — Stated",
-      description: "This profile does not exist on Stated.",
+      title: "Profile not found | Stated",
     };
   }
 
-  const name = account.name || account.username;
-  const bio =
-    account.bio?.slice(0, 150) ||
+  const title = `${data.name || data.username} (@${data.username}) | Stated`;
+
+  const description =
+    data.bio?.substring(0, 150) ||
     "View public commitments and accountability profile on Stated.";
 
   return {
-    title: `${name} (@${account.username}) — Stated`,
-    description: bio,
-    openGraph: {
-      title: `${name} (@${account.username}) — Stated`,
-      description: bio,
-      url: `https://stated.app/u/${account.username}`,
-      type: "profile",
-    },
+    title,
+    description,
   };
 }
 
 export default async function PublicProfile({ params }: Props) {
   const supabase = createClient();
 
-  // Fetch account
-  const { data: account } = await supabase
+  const { data: account, error } = await supabase
     .from("accounts")
     .select("*")
     .eq("username", params.username)
     .single();
 
-  if (!account) {
-    return (
-      <main className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-2">User not found</h1>
-          <p className="text-gray-500">
-            This profile does not exist.
-          </p>
-        </div>
-      </main>
-    );
+  if (error || !account) {
+    notFound();
   }
 
-  // Fetch commitments
-  const { data: commitments } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("account_id", account.id)
-    .order("created_at", { ascending: false });
-
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 flex justify-center">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-white px-6 py-10 max-w-2xl mx-auto">
 
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <a href="/" className="text-2xl font-bold text-blue-600">
-            Stated
-          </a>
-        </div>
+      {/* Logo */}
+      <div className="text-2xl font-bold mb-8">
+        Stated
+      </div>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+      {/* Profile card */}
+      <div className="border rounded-xl p-6">
 
-          <h1 className="text-2xl font-bold">
-            {account.name || account.username}
-          </h1>
+        <h1 className="text-2xl font-semibold">
+          {account.name || account.username}
+        </h1>
 
-          <p className="text-gray-500 mb-3">
-            @{account.username}
+        <p className="text-gray-500 mb-4">
+          @{account.username}
+        </p>
+
+        {account.bio && (
+          <p className="mb-6">
+            {account.bio}
           </p>
+        )}
 
-          {account.bio && (
-            <p className="text-gray-700 mb-4">
-              {account.bio}
-            </p>
-          )}
+        {/* Website */}
+        {account.website && (
+          <a
+            href={account.website}
+            target="_blank"
+            className="text-blue-600 block mb-2"
+          >
+            Website
+          </a>
+        )}
 
-        </div>
-
-        {/* Commitments */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-
-          <h2 className="text-lg font-semibold mb-4">
-            Commitments
-          </h2>
-
-          {!commitments || commitments.length === 0 ? (
-            <p className="text-gray-500">
-              No commitments yet.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {commitments.map((c) => (
-                <div
-                  key={c.id}
-                  className="border rounded-lg p-4"
-                >
-                  <p className="font-medium">
-                    {c.text}
-                  </p>
-
-                  <p className="text-sm text-gray-500 mt-1">
-                    {c.status || "Active"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-        </div>
+        {/* Social links */}
+        {account.twitter && (
+          <a
+            href={account.twitter}
+            target="_blank"
+            className="text-blue-600 block"
+          >
+            Twitter
+          </a>
+        )}
 
       </div>
-    </main>
+
+    </div>
   );
 }
