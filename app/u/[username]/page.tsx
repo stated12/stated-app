@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const supabase = createClient();
+  const supabase = createServerClient();
 
   const { data } = await supabase
     .from("accounts")
