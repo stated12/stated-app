@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
+import { containsHarmfulContent } from "../../../lib/safety";
 import { useRouter } from "next/navigation";
 
 export default function NewCommitmentPage() {
@@ -11,264 +12,232 @@ export default function NewCommitmentPage() {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("General");
   const [duration, setDuration] = useState("1 week");
-
-  const [credits, setCredits] = useState<number | null>(null);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    loadCredits();
-  }, []);
-
-  async function loadCredits() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("account_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) return;
-
-    const { data: account } = await supabase
-      .from("accounts")
-      .select("credits")
-      .eq("id", profile.account_id)
-      .single();
-
-    if (account) setCredits(account.credits);
-  }
 
   async function createCommitment() {
     setError("");
 
     if (!text.trim()) {
-      setError("Please enter a commitment");
+      setError("Commitment cannot be empty");
       return;
     }
 
-    if (credits !== null && credits <= 0) {
-      setError("No credits remaining");
+    if (containsHarmfulContent(text)) {
+      setError("Commitment contains unsafe or harmful language");
       return;
     }
 
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      setError("Please login again");
-      setLoading(false);
-      return;
-    }
+      if (!user) {
+        setError("Please login first");
+        setLoading(false);
+        return;
+      }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("account_id")
-      .eq("id", user.id)
-      .single();
+      // get account
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_id")
+        .eq("id", user.id)
+        .single();
 
-    if (!profile) {
-      setError("Profile not found");
-      setLoading(false);
-      return;
-    }
+      if (!profile?.account_id) {
+        setError("Account not found");
+        setLoading(false);
+        return;
+      }
 
-    const accountId = profile.account_id;
+      // get credits
+      const { data: account } = await supabase
+        .from("accounts")
+        .select("credits")
+        .eq("id", profile.account_id)
+        .single();
 
-    const { error: insertError } = await supabase
-      .from("commitments")
-      .insert({
-        account_id: accountId,
+      if (!account || account.credits <= 0) {
+        setError("No credits remaining. Please upgrade.");
+        setLoading(false);
+        return;
+      }
+
+      // create commitment
+      await supabase.from("commitments").insert({
         user_id: user.id,
-        text: text.trim(),
+        account_id: profile.account_id,
+        text,
         category,
         duration,
         status: "active",
       });
 
-    if (insertError) {
-      setError(insertError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (credits !== null) {
+      // deduct credit
       await supabase
         .from("accounts")
         .update({
-          credits: credits - 1,
+          credits: account.credits - 1,
         })
-        .eq("id", accountId);
+        .eq("id", profile.account_id);
+
+      router.push("/dashboard");
+    } catch (e) {
+      setError("Something went wrong");
     }
 
-    router.push("/dashboard");
+    setLoading(false);
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f1f5f9",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "16px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "520px",
-          background: "white",
-          borderRadius: "14px",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
-          padding: "20px",
-        }}
-      >
-        {/* Header */}
-        <div style={{ marginBottom: "18px" }}>
-          <div
-            style={{
-              fontSize: "24px",
-              fontWeight: "700",
-              marginBottom: "4px",
-            }}
-          >
-            Stated
-          </div>
-
-          <div
-            style={{
-              fontSize: "18px",
-              fontWeight: "600",
-            }}
-          >
-            Create Commitment
-          </div>
-
-          <div
-            style={{
-              fontSize: "14px",
-              color: "#64748b",
-            }}
-          >
+    <div style={container}>
+      <div style={card}>
+        <div style={header}>
+          <div style={logo}>Stated</div>
+          <div style={title}>Create Commitment</div>
+          <div style={subtitle}>
             Make it public. Stay accountable.
           </div>
         </div>
 
-        {/* Commitment */}
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="I will run 5km daily"
-          rows={4}
-          style={{
-            width: "100%",
-            fontSize: "16px",
-            padding: "14px",
-            borderRadius: "10px",
-            border: "1px solid #e2e8f0",
-            marginBottom: "14px",
-          }}
-        />
+        <div style={form}>
+          {/* Text */}
+          <textarea
+            placeholder="Example: I will run 5km every day"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            style={textarea}
+          />
 
-        {/* Category */}
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          style={{
-            width: "100%",
-            fontSize: "16px",
-            padding: "14px",
-            borderRadius: "10px",
-            border: "1px solid #e2e8f0",
-            marginBottom: "14px",
-          }}
-        >
-          <option>General</option>
-          <option>Fitness</option>
-          <option>Health</option>
-          <option>Learning</option>
-          <option>Business</option>
-          <option>Personal</option>
-        </select>
-
-        {/* Duration */}
-        <select
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          style={{
-            width: "100%",
-            fontSize: "16px",
-            padding: "14px",
-            borderRadius: "10px",
-            border: "1px solid #e2e8f0",
-            marginBottom: "18px",
-          }}
-        >
-          <option>1 week</option>
-          <option>2 weeks</option>
-          <option>3 weeks</option>
-          <option>1 month</option>
-          <option>3 months</option>
-          <option>6 months</option>
-          <option>1 year</option>
-        </select>
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              color: "#dc2626",
-              marginBottom: "12px",
-              fontSize: "14px",
-            }}
+          {/* Category */}
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            style={input}
           >
-            {error}
-          </div>
-        )}
+            <option>General</option>
+            <option>Fitness</option>
+            <option>Health</option>
+            <option>Learning</option>
+            <option>Career</option>
+            <option>Business</option>
+            <option>Finance</option>
+            <option>Personal</option>
+          </select>
 
-        {/* Button */}
-        <button
-          onClick={createCommitment}
-          disabled={loading}
-          style={{
-            width: "100%",
-            fontSize: "16px",
-            padding: "16px",
-            borderRadius: "10px",
-            border: "none",
-            background: loading ? "#94a3b8" : "#2563eb",
-            color: "white",
-            fontWeight: "600",
-          }}
-        >
-          {loading ? "Creating..." : "Create Commitment"}
-        </button>
-
-        {/* Credits */}
-        {credits !== null && (
-          <div
-            style={{
-              marginTop: "14px",
-              fontSize: "14px",
-              color: "#475569",
-              textAlign: "center",
-            }}
+          {/* Duration */}
+          <select
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            style={input}
           >
-            Credits remaining: {credits}
-          </div>
-        )}
+            <option>1 week</option>
+            <option>2 weeks</option>
+            <option>3 weeks</option>
+            <option>1 month</option>
+            <option>3 months</option>
+            <option>6 months</option>
+            <option>1 year</option>
+          </select>
+
+          {error && <div style={errorStyle}>{error}</div>}
+
+          <button
+            onClick={createCommitment}
+            disabled={loading}
+            style={button}
+          >
+            {loading ? "Creating..." : "Create Commitment"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+//
+// STYLES (mobile-first production)
+//
+
+const container = {
+  minHeight: "100vh",
+  background: "#f1f5f9",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "flex-start",
+  padding: "16px",
+  paddingTop: "32px",
+};
+
+const card = {
+  width: "100%",
+  maxWidth: "520px",
+  background: "#ffffff",
+  borderRadius: "12px",
+  padding: "20px",
+  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+};
+
+const header = {
+  marginBottom: "16px",
+};
+
+const logo = {
+  fontSize: "20px",
+  fontWeight: "700",
+  marginBottom: "4px",
+};
+
+const title = {
+  fontSize: "18px",
+  fontWeight: "600",
+};
+
+const subtitle = {
+  fontSize: "14px",
+  color: "#64748b",
+};
+
+const form = {
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "12px",
+};
+
+const textarea = {
+  width: "100%",
+  minHeight: "100px",
+  padding: "12px",
+  fontSize: "16px",
+  borderRadius: "8px",
+  border: "1px solid #e2e8f0",
+};
+
+const input = {
+  width: "100%",
+  padding: "12px",
+  fontSize: "16px",
+  borderRadius: "8px",
+  border: "1px solid #e2e8f0",
+};
+
+const button = {
+  width: "100%",
+  padding: "14px",
+  fontSize: "16px",
+  fontWeight: "600",
+  background: "#2563eb",
+  color: "#ffffff",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+};
+
+const errorStyle = {
+  color: "#dc2626",
+  fontSize: "14px",
+};
