@@ -42,9 +42,7 @@ export default function NewCommitmentPage() {
       .eq("id", profile.account_id)
       .single();
 
-    if (account) {
-      setCredits(account.credits);
-    }
+    if (account) setCredits(account.credits);
   }
 
   async function createCommitment() {
@@ -56,7 +54,7 @@ export default function NewCommitmentPage() {
     }
 
     if (credits !== null && credits <= 0) {
-      setError("No credits remaining. Please upgrade.");
+      setError("No credits remaining");
       return;
     }
 
@@ -103,7 +101,6 @@ export default function NewCommitmentPage() {
       return;
     }
 
-    // decrease credit
     if (credits !== null) {
       await supabase
         .from("accounts")
@@ -120,67 +117,67 @@ export default function NewCommitmentPage() {
     <div
       style={{
         minHeight: "100vh",
+        background: "#f1f5f9",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "#f8fafc",
-        padding: "20px",
+        padding: "16px",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: "480px",
+          maxWidth: "520px",
           background: "white",
-          padding: "28px",
-          borderRadius: "12px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          borderRadius: "14px",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+          padding: "20px",
         }}
       >
-        {/* Logo */}
-        <div
-          style={{
-            fontSize: "26px",
-            fontWeight: "bold",
-            marginBottom: "6px",
-          }}
-        >
-          Stated
+        {/* Header */}
+        <div style={{ marginBottom: "18px" }}>
+          <div
+            style={{
+              fontSize: "24px",
+              fontWeight: "700",
+              marginBottom: "4px",
+            }}
+          >
+            Stated
+          </div>
+
+          <div
+            style={{
+              fontSize: "18px",
+              fontWeight: "600",
+            }}
+          >
+            Create Commitment
+          </div>
+
+          <div
+            style={{
+              fontSize: "14px",
+              color: "#64748b",
+            }}
+          >
+            Make it public. Stay accountable.
+          </div>
         </div>
 
-        <div
-          style={{
-            fontSize: "18px",
-            fontWeight: "600",
-            marginBottom: "4px",
-          }}
-        >
-          Create Commitment
-        </div>
-
-        <div
-          style={{
-            color: "#666",
-            marginBottom: "20px",
-            fontSize: "14px",
-          }}
-        >
-          Make it public. Stay accountable.
-        </div>
-
-        {/* Text input */}
+        {/* Commitment */}
         <textarea
-          placeholder="I will run 5km daily"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          rows={3}
+          placeholder="I will run 5km daily"
+          rows={4}
           style={{
             width: "100%",
-            padding: "12px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
+            fontSize: "16px",
+            padding: "14px",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
             marginBottom: "14px",
-            fontSize: "15px",
           }}
         />
 
@@ -190,9 +187,10 @@ export default function NewCommitmentPage() {
           onChange={(e) => setCategory(e.target.value)}
           style={{
             width: "100%",
-            padding: "12px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
+            fontSize: "16px",
+            padding: "14px",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
             marginBottom: "14px",
           }}
         >
@@ -210,9 +208,10 @@ export default function NewCommitmentPage() {
           onChange={(e) => setDuration(e.target.value)}
           style={{
             width: "100%",
-            padding: "12px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
+            fontSize: "16px",
+            padding: "14px",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
             marginBottom: "18px",
           }}
         >
@@ -229,7 +228,7 @@ export default function NewCommitmentPage() {
         {error && (
           <div
             style={{
-              color: "red",
+              color: "#dc2626",
               marginBottom: "12px",
               fontSize: "14px",
             }}
@@ -244,13 +243,12 @@ export default function NewCommitmentPage() {
           disabled={loading}
           style={{
             width: "100%",
-            padding: "14px",
-            background: loading ? "#999" : "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
             fontSize: "16px",
-            cursor: "pointer",
+            padding: "16px",
+            borderRadius: "10px",
+            border: "none",
+            background: loading ? "#94a3b8" : "#2563eb",
+            color: "white",
             fontWeight: "600",
           }}
         >
@@ -263,7 +261,8 @@ export default function NewCommitmentPage() {
             style={{
               marginTop: "14px",
               fontSize: "14px",
-              color: credits <= 2 ? "#b91c1c" : "#555",
+              color: "#475569",
+              textAlign: "center",
             }}
           >
             Credits remaining: {credits}
