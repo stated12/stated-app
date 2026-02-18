@@ -4,13 +4,72 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+const supabase = createClient();
+
+type Plan = {
+  key: string;
+  name: string;
+  price: number;
+  credits: number;
+  popular?: boolean;
+};
+
+const PLANS: Plan[] = [
+  {
+    key: "individual",
+    name: "Individual",
+    price: 499,
+    credits: 20,
+    popular: true,
+  },
+  {
+    key: "company_starter",
+    name: "Company Starter",
+    price: 1999,
+    credits: 25,
+  },
+  {
+    key: "company_growth",
+    name: "Company Growth",
+    price: 2999,
+    credits: 50,
+  },
+  {
+    key: "company_scale",
+    name: "Company Scale",
+    price: 4999,
+    credits: 75,
+  },
+];
+
+const CREDIT_PACKS: Plan[] = [
+  {
+    key: "pack_10",
+    name: "10 credits",
+    price: 199,
+    credits: 10,
+  },
+  {
+    key: "pack_25",
+    name: "25 credits",
+    price: 399,
+    credits: 25,
+  },
+  {
+    key: "pack_50",
+    name: "50 credits",
+    price: 699,
+    credits: 50,
+  },
+];
+
 export default function UpgradePage() {
-  const supabase = createClient();
   const router = useRouter();
 
-  const [credits, setCredits] = useState<number | null>(null);
-  const [planPurchased, setPlanPurchased] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [account, setAccount] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [buying, setBuying] = useState(false);
 
   useEffect(() => {
     loadAccount();
@@ -26,178 +85,158 @@ export default function UpgradePage() {
       return;
     }
 
+    setUser(user);
+
     const { data } = await supabase
       .from("accounts")
-      .select("credits_remaining, plan_key")
+      .select("*")
       .eq("user_id", user.id)
       .single();
 
-    if (data) {
-      setCredits(data.credits_remaining ?? 0);
-      setPlanPurchased(!!data.plan_key);
-    }
-
+    setAccount(data);
     setLoading(false);
   }
 
-  async function handlePurchase(planKey: string, creditsToAdd: number) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  async function purchase(plan: Plan, isPack: boolean) {
+    if (!account) return;
 
-    if (!user) return;
+    setBuying(true);
 
-    const { data: account } = await supabase
-      .from("accounts")
-      .select("credits_remaining")
-      .eq("user_id", user.id)
-      .single();
+    try {
+      const newCredits =
+        (account.credits_remaining || 0) + plan.credits;
 
-    const newCredits =
-      (account?.credits_remaining ?? 0) + creditsToAdd;
-
-    await supabase
-      .from("accounts")
-      .update({
+      const updateData: any = {
         credits_remaining: newCredits,
-        plan_key: planPurchased ? account?.plan_key : planKey,
-      })
-      .eq("user_id", user.id);
+      };
 
-    alert("Purchase successful");
+      // only set plan_key on first purchase
+      if (!account.plan_key && !isPack) {
+        updateData.plan_key = plan.key;
+        updateData.plan_purchased_at = new Date().toISOString();
+      }
 
-    router.push("/dashboard");
-    router.refresh();
+      const { error } = await supabase
+        .from("accounts")
+        .update(updateData)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      alert(`Success! ${plan.credits} credits added`);
+
+      router.push("/dashboard");
+    } catch (err) {
+      alert("Purchase failed");
+    }
+
+    setBuying(false);
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="p-6 text-center">
         Loading...
       </div>
     );
   }
 
+  const isFreeUser = !account?.plan_key;
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 flex justify-center">
-      <div className="w-full max-w-xl space-y-6">
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
 
-        <div>
-          <h1 className="text-3xl font-bold">Upgrade</h1>
-          <p className="text-gray-600 mt-1">
-            Get credits to create commitments
-          </p>
-        </div>
+      <div className="max-w-xl mx-auto">
 
-        <div className="bg-white p-4 rounded-xl shadow">
-          <p className="text-lg font-medium">
-            Credits remaining: {credits}
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold mb-6">
+          Upgrade Stated
+        </h1>
 
-        {!planPurchased && (
-          <div className="bg-white p-4 rounded-xl shadow space-y-4">
-
-            <h2 className="text-xl font-semibold">
-              Unlock full access
+        {isFreeUser && (
+          <>
+            <h2 className="text-lg font-semibold mb-4">
+              Choose your plan
             </h2>
 
-            <PlanCard
-              title="Individual Plan"
-              price="₹499"
-              credits="20 credits"
-              onClick={() =>
-                handlePurchase("individual", 20)
-              }
-            />
+            <div className="space-y-4 mb-8">
+              {PLANS.map((plan) => (
+                <div
+                  key={plan.key}
+                  className={`bg-white p-5 rounded-xl shadow border ${
+                    plan.popular
+                      ? "border-blue-500"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
 
-            <PlanCard
-              title="Company Standard"
-              price="₹1999"
-              credits="25 credits"
-              onClick={() =>
-                handlePurchase("company_standard", 25)
-              }
-            />
+                    <div>
+                      <div className="font-semibold text-lg">
+                        {plan.name}
+                      </div>
 
-            <PlanCard
-              title="Company Growth"
-              price="₹2999"
-              credits="50 credits"
-              onClick={() =>
-                handlePurchase("company_growth", 50)
-              }
-            />
+                      <div className="text-gray-600 text-sm">
+                        {plan.credits} credits
+                      </div>
+                    </div>
 
-          </div>
+                    <button
+                      onClick={() =>
+                        purchase(plan, false)
+                      }
+                      disabled={buying}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                    >
+                      ₹{plan.price}
+                    </button>
+
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
-        <div className="bg-white p-4 rounded-xl shadow space-y-4">
+        {/* Credit Packs */}
 
-          <h2 className="text-xl font-semibold">
-            Buy Credit Packs
-          </h2>
+        <h2 className="text-lg font-semibold mb-4">
+          Buy credit packs
+        </h2>
 
-          <PlanCard
-            title="Starter Pack"
-            price="₹199"
-            credits="10 credits"
-            onClick={() =>
-              handlePurchase("credit_pack", 10)
-            }
-          />
+        <div className="space-y-4">
+          {CREDIT_PACKS.map((pack) => (
+            <div
+              key={pack.key}
+              className="bg-white p-5 rounded-xl shadow border border-gray-200"
+            >
+              <div className="flex justify-between items-center">
 
-          <PlanCard
-            title="Popular Pack"
-            price="₹399"
-            credits="25 credits"
-            onClick={() =>
-              handlePurchase("credit_pack", 25)
-            }
-          />
+                <div>
+                  <div className="font-semibold">
+                    {pack.name}
+                  </div>
 
-          <PlanCard
-            title="Pro Pack"
-            price="₹699"
-            credits="50 credits"
-            onClick={() =>
-              handlePurchase("credit_pack", 50)
-            }
-          />
+                  <div className="text-gray-600 text-sm">
+                    Add {pack.credits} credits
+                  </div>
+                </div>
 
+                <button
+                  onClick={() =>
+                    purchase(pack, true)
+                  }
+                  disabled={buying}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                >
+                  ₹{pack.price}
+                </button>
+
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>
-    </div>
-  );
-}
-
-function PlanCard({
-  title,
-  price,
-  credits,
-  onClick,
-}: {
-  title: string;
-  price: string;
-  credits: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="border rounded-xl p-4 flex justify-between items-center">
-
-      <div>
-        <p className="font-semibold">{title}</p>
-        <p className="text-gray-600 text-sm">{credits}</p>
-      </div>
-
-      <button
-        onClick={onClick}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-      >
-        Buy {price}
-      </button>
-
     </div>
   );
 }
