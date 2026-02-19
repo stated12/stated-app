@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
 
 export default async function UserPage({
   params,
@@ -8,14 +7,21 @@ export default async function UserPage({
 }) {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, display_name, credits")
+    .select("id, username, display_name, bio, credits")
     .eq("username", params.username)
-    .maybeSingle();
+    .single();
 
-  if (!profile) {
-    notFound();
+  // DEBUG VIEW (never show 404 automatically)
+  if (error || !profile) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h1>Profile lookup debug</h1>
+        <p>Username searched: {params.username}</p>
+        <pre>{JSON.stringify(error, null, 2)}</pre>
+      </div>
+    );
   }
 
   return (
@@ -23,6 +29,7 @@ export default async function UserPage({
       <h1>{profile.display_name}</h1>
       <p>@{profile.username}</p>
       <p>Credits: {profile.credits}</p>
+      <p>{profile.bio || "No bio yet"}</p>
     </div>
   );
 }
