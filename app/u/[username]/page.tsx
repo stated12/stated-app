@@ -7,10 +7,9 @@ export default async function Page({
   params: { username: string };
 }) {
 
-  // THIS LINE IS REQUIRED
-  const supabase = createClient();
+  // FIX: await is REQUIRED
+  const supabase = await createClient();
 
-  // Fetch profile
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("id, username, display_name, credits")
