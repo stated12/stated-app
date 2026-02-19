@@ -6,7 +6,7 @@ export default async function UserPage({
 }: {
   params: { username: string };
 }) {
-  const supabase = await createClient(); // ✅ MUST await
+  const supabase = createClient();
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -14,18 +14,14 @@ export default async function UserPage({
     .eq("username", params.username)
     .maybeSingle();
 
-  if (error || !profile) {
+  if (!profile || error) {
     notFound();
   }
 
   return (
-    <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-      <h1>{profile.display_name || profile.username}</h1>
-
-      {profile.bio && <p>{profile.bio}</p>}
-
+    <div style={{ padding: "40px" }}>
+      <h1>{profile.display_name}</h1>
       <p>@{profile.username}</p>
-
       <p>Credits: {profile.credits}</p>
     </div>
   );
