@@ -7,19 +7,18 @@ interface Props {
   };
 }
 
-export default async function UserPage({ params }: Props) {
-  const supabase = await createClient();
+export default async function UserProfilePage({ params }: Props) {
+  const supabase = createClient();
 
   const username = params.username;
 
-  // Fetch profile
+  // Fetch profile safely
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(`
       id,
       username,
       display_name,
-      bio,
       credits,
       created_at
     `)
@@ -27,47 +26,40 @@ export default async function UserPage({ params }: Props) {
     .single();
 
   if (error || !profile) {
-    notFound();
+    return notFound();
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      
-      {/* Header */}
-      <div className="border-b px-6 py-4 flex justify-between items-center">
-        <div className="text-xl font-semibold text-blue-600">
-          Stated
-        </div>
+    <main className="min-h-screen bg-white flex items-start justify-center pt-16 px-4">
+      <div className="w-full max-w-2xl">
 
-        <div className="text-sm text-gray-500">
-          @{profile.username}
-        </div>
-      </div>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-blue-600 mb-2">
+            Stated
+          </h1>
 
+          <h2 className="text-xl font-semibold">
+            {profile.display_name || profile.username}
+          </h2>
 
-      {/* Profile Section */}
-      <div className="max-w-2xl mx-auto px-6 py-10">
-
-        <h1 className="text-3xl font-bold">
-          {profile.display_name || profile.username}
-        </h1>
-
-        <p className="text-gray-500 mt-2">
-          @{profile.username}
-        </p>
-
-        {profile.bio && (
-          <p className="mt-4 text-gray-700">
-            {profile.bio}
+          <p className="text-gray-500">
+            @{profile.username}
           </p>
-        )}
+        </div>
 
-        <div className="mt-6 text-sm text-gray-500">
-          Credits: {profile.credits ?? 0}
+        {/* Credits Card */}
+        <div className="border rounded-xl p-6 shadow-sm">
+          <p className="text-gray-600 mb-2">
+            Credits
+          </p>
+
+          <p className="text-2xl font-bold">
+            {profile.credits}
+          </p>
         </div>
 
       </div>
-
     </main>
   );
 }
