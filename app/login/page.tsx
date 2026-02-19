@@ -2,21 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-
     setLoading(true);
     setError("");
 
@@ -25,10 +24,9 @@ export default function LoginPage() {
       password,
     });
 
-    setLoading(false);
-
     if (error) {
       setError(error.message);
+      setLoading(false);
       return;
     }
 
@@ -37,25 +35,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm border p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md border">
 
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-600">
-            Stated
-          </h1>
-          <p className="text-gray-500 mt-2 text-sm">
-            Login to your accountability profile
-          </p>
-        </div>
+        <h1 className="text-3xl font-semibold text-center text-blue-600 mb-2">
+          Stated
+        </h1>
 
-        {/* Form */}
+        <p className="text-center text-gray-500 mb-6">
+          Login to your accountability profile
+        </p>
+
         <form onSubmit={handleLogin} className="space-y-4">
 
-          {/* Email */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block mb-1 text-sm font-medium">
               Email
             </label>
             <input
@@ -64,13 +58,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@email.com"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2"
             />
           </div>
 
-          {/* Password */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block mb-1 text-sm font-medium">
               Password
             </label>
             <input
@@ -79,34 +72,44 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2"
             />
           </div>
 
-          {/* Error */}
+          {/* Forgot password link */}
+          <div className="text-right text-sm">
+            <Link
+              href="/forgot-password"
+              className="text-blue-600 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
           {error && (
-            <p className="text-red-500 text-sm">
+            <div className="text-red-500 text-sm">
               {error}
-            </p>
+            </div>
           )}
 
-          {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
 
         </form>
 
-        {/* Signup Link */}
-        <p className="text-sm text-center text-gray-600 mt-6">
+        <p className="text-center text-sm text-gray-500 mt-4">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-blue-600 font-medium">
+          <Link
+            href="/signup"
+            className="text-blue-600 hover:underline"
+          >
             Create account
-          </a>
+          </Link>
         </p>
 
       </div>
