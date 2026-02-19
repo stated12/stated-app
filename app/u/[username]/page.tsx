@@ -1,6 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
 
 interface Props {
   params: {
@@ -8,169 +7,73 @@ interface Props {
   };
 }
 
-export default async function UserPage({ params }: Props) {
-  const supabase = await createClient();
+export default async function ProfilePage({ params }: Props) {
+  const supabase = createClient();
 
   const username = params.username;
 
-  // -------------------------
-  // GET PROFILE
-  // -------------------------
-  const { data: profile, error: profileError } = await supabase
+  // Fetch profile by username
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select(`
       id,
       username,
-      full_name,
+      display_name,
       bio,
       avatar_url,
-      website,
-      twitter,
-      linkedin,
-      github,
-      created_at
+      created_at,
+      credits
     `)
     .eq("username", username)
     .single();
 
-  if (profileError || !profile) {
+  if (error || !profile) {
     notFound();
   }
 
-  // -------------------------
-  // GET COMMITMENTS
-  // -------------------------
-  const { data: commitments } = await supabase
-    .from("commitments")
-    .select(`
-      id,
-      title,
-      description,
-      status,
-      created_at
-    `)
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: false });
-
-  // -------------------------
-  // UI
-  // -------------------------
   return (
     <main className="min-h-screen bg-white">
+      <div className="max-w-2xl mx-auto px-6 py-12">
 
-      {/* HEADER */}
-      <div className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-6 flex items-center gap-4">
+        {/* Logo */}
+        <div className="mb-10">
+          <h1 className="text-2xl font-bold text-blue-600">
+            Stated
+          </h1>
+        </div>
 
-          {profile.avatar_url ? (
-            <Image
-              src={profile.avatar_url}
-              alt="avatar"
-              width={64}
-              height={64}
-              className="rounded-full"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-200" />
-          )}
+        {/* Profile Header */}
+        <div className="flex items-center gap-4 mb-6">
+
+          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-xl font-semibold">
+            {profile.display_name?.charAt(0) || profile.username.charAt(0)}
+          </div>
 
           <div>
-            <h1 className="text-2xl font-semibold">
-              {profile.full_name || profile.username}
-            </h1>
+            <h2 className="text-xl font-semibold">
+              {profile.display_name || profile.username}
+            </h2>
 
-            <p className="text-gray-500">@{profile.username}</p>
-
-            {profile.bio && (
-              <p className="mt-2 text-gray-700">{profile.bio}</p>
-            )}
-
-            {/* SOCIALS */}
-            <div className="flex gap-4 mt-3 text-sm text-blue-600">
-
-              {profile.website && (
-                <a href={profile.website} target="_blank">
-                  Website
-                </a>
-              )}
-
-              {profile.twitter && (
-                <a href={profile.twitter} target="_blank">
-                  Twitter
-                </a>
-              )}
-
-              {profile.linkedin && (
-                <a href={profile.linkedin} target="_blank">
-                  LinkedIn
-                </a>
-              )}
-
-              {profile.github && (
-                <a href={profile.github} target="_blank">
-                  GitHub
-                </a>
-              )}
-
-            </div>
-
+            <p className="text-gray-500">
+              @{profile.username}
+            </p>
           </div>
+
         </div>
-      </div>
 
-      {/* COMMITMENTS */}
-      <div className="max-w-3xl mx-auto px-6 py-8">
-
-        <h2 className="text-lg font-semibold mb-6">
-          Commitments
-        </h2>
-
-        {commitments && commitments.length > 0 ? (
-          <div className="space-y-4">
-
-            {commitments.map((commitment) => (
-              <div
-                key={commitment.id}
-                className="border rounded-lg p-4"
-              >
-
-                <div className="flex justify-between items-center">
-
-                  <h3 className="font-medium">
-                    {commitment.title}
-                  </h3>
-
-                  <span className="text-sm text-gray-500 capitalize">
-                    {commitment.status}
-                  </span>
-
-                </div>
-
-                {commitment.description && (
-                  <p className="text-gray-600 mt-2">
-                    {commitment.description}
-                  </p>
-                )}
-
-                <p className="text-xs text-gray-400 mt-2">
-                  {new Date(commitment.created_at).toLocaleDateString()}
-                </p>
-
-              </div>
-            ))}
-
-          </div>
-
-        ) : (
-
-          <p className="text-gray-500">
-            No commitments yet.
+        {/* Bio */}
+        {profile.bio && (
+          <p className="text-gray-700 mb-6">
+            {profile.bio}
           </p>
-
         )}
 
-      </div>
+        {/* Credits */}
+        <div className="text-sm text-gray-500">
+          Credits: {profile.credits}
+        </div>
 
+      </div>
     </main>
   );
 }
