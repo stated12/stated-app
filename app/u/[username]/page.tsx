@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
 
 export default async function UserPage({
   params,
@@ -7,18 +8,20 @@ export default async function UserPage({
 }) {
   const supabase = await createClient();
 
+  // Normalize username
+  const username = params.username.trim().toLowerCase();
+
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("id, username, display_name, bio, credits")
-    .eq("username", params.username)
-    .single();
+    .ilike("username", username)
+    .maybeSingle();
 
-  // DEBUG VIEW (never show 404 automatically)
-  if (error || !profile) {
+  if (!profile) {
     return (
       <div style={{ padding: 20 }}>
-        <h1>Profile lookup debug</h1>
-        <p>Username searched: {params.username}</p>
+        <h1>Debug Info</h1>
+        <p>Searched username: {username}</p>
         <pre>{JSON.stringify(error, null, 2)}</pre>
       </div>
     );
@@ -28,8 +31,8 @@ export default async function UserPage({
     <div style={{ padding: 20 }}>
       <h1>{profile.display_name}</h1>
       <p>@{profile.username}</p>
+      <p>{profile.bio ?? "No bio yet"}</p>
       <p>Credits: {profile.credits}</p>
-      <p>{profile.bio || "No bio yet"}</p>
     </div>
   );
 }
