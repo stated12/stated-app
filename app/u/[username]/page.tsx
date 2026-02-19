@@ -1,25 +1,25 @@
-import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
 
 export default async function UserPage({
   params,
 }: {
   params: { username: string };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, credits")
+    .select("username, display_name, credits")
     .eq("username", params.username)
     .maybeSingle();
 
-  if (!profile || error) {
+  if (!profile) {
     notFound();
   }
 
   return (
-    <div style={{ padding: "40px" }}>
+    <div style={{ padding: 20 }}>
       <h1>{profile.display_name}</h1>
       <p>@{profile.username}</p>
       <p>Credits: {profile.credits}</p>
