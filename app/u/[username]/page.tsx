@@ -7,15 +7,17 @@ export default async function Page({
   params: { username: string };
 }) {
 
+  // THIS LINE IS REQUIRED
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  // Fetch profile
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("id, username, display_name, credits")
     .eq("username", params.username)
     .single();
 
-  if (error || !data) {
+  if (error || !profile) {
     notFound();
   }
 
@@ -31,15 +33,15 @@ export default async function Page({
         <div className="text-center space-y-2">
 
           <p className="text-xl font-semibold">
-            {data.display_name}
+            {profile.display_name}
           </p>
 
           <p className="text-gray-500">
-            @{data.username}
+            @{profile.username}
           </p>
 
           <p className="text-gray-700 mt-4">
-            Credits: {data.credits}
+            Credits: {profile.credits}
           </p>
 
         </div>
