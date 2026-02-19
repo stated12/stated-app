@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 
-export default async function UserPage({ params }) {
+type Props = {
+  params: {
+    username: string;
+  };
+};
+
+export default async function UserPage({ params }: Props) {
   const supabase = await createClient();
 
   const { data: profile } = await supabase
@@ -10,10 +16,12 @@ export default async function UserPage({ params }) {
     .eq("username", params.username)
     .maybeSingle();
 
-  if (!profile) notFound();
+  if (!profile) {
+    notFound();
+  }
 
   return (
-    <div style={{ padding: 40 }}>
+    <div style={{ padding: "40px" }}>
       <h1>{profile.display_name}</h1>
       <p>@{profile.username}</p>
       <p>Credits: {profile.credits}</p>
