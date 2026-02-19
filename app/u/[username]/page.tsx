@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
 
 interface Props {
   params: {
@@ -7,12 +7,12 @@ interface Props {
   };
 }
 
-export default async function ProfilePage({ params }: Props) {
-  const supabase = createClient();
+export default async function UserPage({ params }: Props) {
+  const supabase = await createClient();
 
   const username = params.username;
 
-  // Fetch profile by username
+  // Fetch profile
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(`
@@ -20,9 +20,8 @@ export default async function ProfilePage({ params }: Props) {
       username,
       display_name,
       bio,
-      avatar_url,
-      created_at,
-      credits
+      credits,
+      created_at
     `)
     .eq("username", username)
     .single();
@@ -33,47 +32,42 @@ export default async function ProfilePage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto px-6 py-12">
-
-        {/* Logo */}
-        <div className="mb-10">
-          <h1 className="text-2xl font-bold text-blue-600">
-            Stated
-          </h1>
+      
+      {/* Header */}
+      <div className="border-b px-6 py-4 flex justify-between items-center">
+        <div className="text-xl font-semibold text-blue-600">
+          Stated
         </div>
 
-        {/* Profile Header */}
-        <div className="flex items-center gap-4 mb-6">
-
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-xl font-semibold">
-            {profile.display_name?.charAt(0) || profile.username.charAt(0)}
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold">
-              {profile.display_name || profile.username}
-            </h2>
-
-            <p className="text-gray-500">
-              @{profile.username}
-            </p>
-          </div>
-
+        <div className="text-sm text-gray-500">
+          @{profile.username}
         </div>
+      </div>
 
-        {/* Bio */}
+
+      {/* Profile Section */}
+      <div className="max-w-2xl mx-auto px-6 py-10">
+
+        <h1 className="text-3xl font-bold">
+          {profile.display_name || profile.username}
+        </h1>
+
+        <p className="text-gray-500 mt-2">
+          @{profile.username}
+        </p>
+
         {profile.bio && (
-          <p className="text-gray-700 mb-6">
+          <p className="mt-4 text-gray-700">
             {profile.bio}
           </p>
         )}
 
-        {/* Credits */}
-        <div className="text-sm text-gray-500">
-          Credits: {profile.credits}
+        <div className="mt-6 text-sm text-gray-500">
+          Credits: {profile.credits ?? 0}
         </div>
 
       </div>
+
     </main>
   );
 }
