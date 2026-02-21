@@ -12,11 +12,7 @@ type Profile = {
   credits: number | null;
 };
 
-export default function UserPage({
-  params,
-}: {
-  params: { username: string };
-}) {
+export default function UserPage({ params }: { params: { username: string } }) {
 
   const supabase = createClient();
 
@@ -25,35 +21,33 @@ export default function UserPage({
 
   useEffect(() => {
 
-    async function loadProfile() {
+    async function load() {
+
+      console.log("Loading username:", params.username);
 
       const { data, error } = await supabase
         .from("profiles")
-        .select(`
-          username,
-          display_name,
-          bio,
-          website,
-          avatar_url,
-          credits
-        `)
+        .select("*")
         .eq("username", params.username)
-        .maybeSingle();
+        .single();
 
-      console.log("PROFILE RESULT:", data, error);
+      console.log("Supabase result:", data, error);
 
-      setProfile(data);
+      if (data) {
+        setProfile(data);
+      }
+
       setLoading(false);
     }
 
-    loadProfile();
+    load();
 
   }, [params.username]);
 
   if (loading) {
     return (
       <div style={styles.center}>
-        Loading profile...
+        Loading...
       </div>
     );
   }
@@ -76,17 +70,7 @@ export default function UserPage({
       <div style={styles.header}>
 
         <div style={styles.avatar}>
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              style={styles.avatarImg}
-              alt="avatar"
-            />
-          ) : (
-            <span style={styles.avatarLetter}>
-              {(profile.display_name || profile.username).charAt(0)}
-            </span>
-          )}
+          {(profile.display_name || profile.username).charAt(0)}
         </div>
 
         <h1 style={styles.name}>
@@ -97,31 +81,10 @@ export default function UserPage({
           @{profile.username}
         </div>
 
-        {profile.bio && (
-          <p style={styles.bio}>
-            {profile.bio}
-          </p>
-        )}
-
-        {profile.website && (
-          <a
-            href={profile.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.link}
-          >
-            {profile.website}
-          </a>
-        )}
-
       </div>
 
-      {/* Commitments section */}
       <div style={styles.section}>
-
-        <h2 style={styles.sectionTitle}>
-          Commitments
-        </h2>
+        <h2>Commitments</h2>
 
         <div style={styles.card}>
           Commitments will appear here.
@@ -144,7 +107,7 @@ const styles = {
 
   brand: {
     fontSize: "20px",
-    fontWeight: 600,
+    fontWeight: "600",
     marginBottom: "24px",
   },
 
@@ -153,7 +116,6 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     height: "60vh",
-    fontFamily: "system-ui",
   },
 
   header: {
@@ -164,51 +126,27 @@ const styles = {
   avatar: {
     width: "80px",
     height: "80px",
-    borderRadius: "40px",
+    borderRadius: "50%",
     background: "#111",
     color: "#fff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 16px auto",
-    overflow: "hidden",
-  },
-
-  avatarImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover" as const,
-  },
-
-  avatarLetter: {
     fontSize: "32px",
   },
 
   name: {
     fontSize: "24px",
-    margin: "0",
+    margin: 0,
   },
 
   username: {
     opacity: 0.6,
-    marginBottom: "12px",
-  },
-
-  bio: {
-    marginBottom: "12px",
-  },
-
-  link: {
-    color: "#2563eb",
   },
 
   section: {
     marginTop: "32px",
-  },
-
-  sectionTitle: {
-    fontSize: "18px",
-    fontWeight: 600,
   },
 
   card: {
