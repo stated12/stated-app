@@ -6,14 +6,14 @@ export default async function Dashboard() {
 
   const supabase = await createClient();
 
-  // GET USER
+  // AUTH USER
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Link
           href="/login"
           className="bg-blue-600 text-white px-6 py-3 rounded-lg"
@@ -24,14 +24,14 @@ export default async function Dashboard() {
     );
   }
 
-  // GET PROFILE
+  // PROFILE
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  // GET COMMITMENTS
+  // COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
@@ -50,7 +50,10 @@ export default async function Dashboard() {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  // TOTAL COMMITMENTS
+  // CALCULATIONS
+
+  const credits = profile?.credits ?? 0;
+
   const total = commitments?.length ?? 0;
 
   const active =
@@ -66,9 +69,6 @@ export default async function Dashboard() {
         c.status === "withdrawn"
     ).length ?? 0;
 
-  // CREDITS
-  const credits = profile?.credits ?? 0;
-
   // AVATAR
   const avatar =
     profile?.avatar_url ||
@@ -77,7 +77,6 @@ export default async function Dashboard() {
     )}&background=2563eb&color=fff`;
 
   return (
-
     <div className="min-h-screen bg-gray-50 px-4 py-8">
 
       <div className="max-w-3xl mx-auto space-y-6">
@@ -85,9 +84,15 @@ export default async function Dashboard() {
         {/* HEADER */}
         <div className="flex justify-between items-center">
 
-          <h1 className="text-3xl font-bold">
-            Dashboard
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold">
+              Stated
+            </h1>
+
+            <div className="text-sm text-gray-500">
+              Dashboard
+            </div>
+          </div>
 
           <Link
             href="/logout"
@@ -123,7 +128,7 @@ export default async function Dashboard() {
               </div>
 
               <div className="text-xs text-gray-400 mt-1">
-                stated.app/u/{profile?.username}
+                stated.in/u/{profile?.username}
               </div>
 
             </div>
@@ -135,21 +140,21 @@ export default async function Dashboard() {
 
             <Link
               href="/profile/edit"
-              className="border px-4 py-2 rounded-lg"
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Edit profile
             </Link>
 
             <Link
               href={`/u/${profile?.username}`}
-              className="border px-4 py-2 rounded-lg"
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Public profile
             </Link>
 
             <Link
               href="/upgrade"
-              className="border px-4 py-2 rounded-lg"
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Upgrade
             </Link>
@@ -159,7 +164,7 @@ export default async function Dashboard() {
         </div>
 
 
-        {/* CREDITS CARD */}
+        {/* CREDITS */}
         <div className="bg-white rounded-xl shadow p-5">
 
           <div className="font-semibold text-lg">
@@ -167,14 +172,12 @@ export default async function Dashboard() {
           </div>
 
           {credits === 0 && (
-
             <Link
               href="/upgrade"
               className="text-blue-600 text-sm"
             >
               Buy credits to continue
             </Link>
-
           )}
 
         </div>
@@ -218,7 +221,7 @@ export default async function Dashboard() {
         </div>
 
 
-        {/* CREATE COMMITMENT BUTTON */}
+        {/* CREATE BUTTON */}
         <Link
           href="/commitment/new"
           className={`block text-center py-3 rounded-lg text-white font-medium ${
@@ -227,50 +230,62 @@ export default async function Dashboard() {
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-
           {credits === 0
             ? "No credits remaining"
             : "Create Commitment"}
-
         </Link>
 
 
-        {/* COMMITMENTS LIST */}
+        {/* COMMITMENTS */}
         <div className="space-y-4">
 
           <div className="font-semibold">
             Your commitments
           </div>
 
-
           {commitments?.length === 0 && (
-
             <div className="text-gray-500">
               No commitments yet
             </div>
-
           )}
-
 
           {commitments?.map((c) => {
 
-            const endDate =
-              c.end_date
-                ? new Date(c.end_date)
-                : null;
+            const start = new Date(c.created_at);
+            const end = c.end_date
+              ? new Date(c.end_date)
+              : null;
 
-            const today =
-              new Date();
+            const today = new Date();
 
-            const daysLeft =
-              endDate
-                ? Math.ceil(
-                    (endDate.getTime() -
-                      today.getTime()) /
-                      (1000 * 60 * 60 * 24)
+            let progress = 0;
+            let daysLeft = null;
+
+            if (end) {
+
+              const totalDays =
+                (end.getTime() - start.getTime()) /
+                (1000 * 60 * 60 * 24);
+
+              const passedDays =
+                (today.getTime() - start.getTime()) /
+                (1000 * 60 * 60 * 24);
+
+              progress =
+                Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    (passedDays / totalDays) * 100
                   )
-                : null;
+                );
 
+              daysLeft =
+                Math.ceil(
+                  (end.getTime() - today.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                );
+            }
 
             return (
 
@@ -283,70 +298,80 @@ export default async function Dashboard() {
                   {c.text}
                 </div>
 
-
+                {/* STATUS */}
                 <div className="text-sm text-gray-500 mt-1 capitalize">
-
                   Status:
                   <span className="ml-1 font-medium">
                     {c.status}
                   </span>
-
                 </div>
 
+                {/* PROGRESS BAR */}
+                {c.status === "active" && end && (
 
-                {c.status === "active" && daysLeft !== null && (
+                  <div className="mt-3">
 
-                  <div className="text-sm text-gray-500 mt-1">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
 
-                    {daysLeft > 0
-                      ? `${daysLeft} days remaining`
-                      : "Expired"}
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${progress}%`,
+                        }}
+                      />
+
+                    </div>
+
+                    <div className="text-xs text-gray-500 mt-1">
+
+                      {daysLeft > 0
+                        ? `${daysLeft} days remaining`
+                        : "Expired"}
+
+                    </div>
 
                   </div>
 
                 )}
 
-
-                <div className="text-xs text-gray-400 mt-1">
-
+                {/* CREATED DATE */}
+                <div className="text-xs text-gray-400 mt-2">
                   Created:
                   {" "}
                   {new Date(
                     c.created_at
                   ).toLocaleDateString()}
-
                 </div>
 
-
-                {/* ACTION BUTTONS */}
+                {/* ACTIONS */}
                 {c.status === "active" && (
 
                   <div className="flex gap-2 mt-3 flex-wrap">
 
                     <Link
                       href={`/commitment/${c.id}/update`}
-                      className="text-sm border px-3 py-1 rounded"
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
                     >
                       Add update
                     </Link>
 
                     <Link
                       href={`/commitment/${c.id}/complete`}
-                      className="text-sm border px-3 py-1 rounded"
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
                     >
                       Complete
                     </Link>
 
                     <Link
                       href={`/commitment/${c.id}/pause`}
-                      className="text-sm border px-3 py-1 rounded"
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
                     >
                       Pause
                     </Link>
 
                     <Link
                       href={`/commitment/${c.id}/withdraw`}
-                      className="text-sm border px-3 py-1 rounded"
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
                     >
                       Withdraw
                     </Link>
@@ -363,11 +388,9 @@ export default async function Dashboard() {
 
         </div>
 
-
       </div>
 
     </div>
-
   );
 
-      }
+}
