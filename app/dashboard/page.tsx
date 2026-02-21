@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { createClient } from "../../lib/supabase/server";
-import { getAccountTypeLabel } from "../../lib/account";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Dashboard() {
+
   const supabase = await createClient();
 
-  // Get logged in user
+  // GET USER
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -23,71 +24,93 @@ export default async function Dashboard() {
     );
   }
 
-  // Get account
-  const { data: account } = await supabase
-    .from("accounts")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  // Get profile
+  // GET PROFILE
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  // Get commitments
+  // GET COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
-    .eq("account_id", user.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const credits = account?.credits ?? 0;
+  // PROFILE VIEWS
+  const { count: profileViews } = await supabase
+    .from("profile_views")
+    .select("*", { count: "exact", head: true })
+    .eq("profile_id", user.id);
+
+  // COMMITMENT VIEWS
+  const { count: commitmentViews } = await supabase
+    .from("commitment_views")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  // CALCULATIONS
+  const credits = profile?.credits ?? 0;
 
   const total = commitments?.length ?? 0;
+
   const active =
     commitments?.filter((c) => c.status === "active").length ?? 0;
+
   const completed =
     commitments?.filter((c) => c.status === "completed").length ?? 0;
-  const failed =
-    commitments?.filter((c) => c.status === "failed").length ?? 0;
+
+  const paused =
+    commitments?.filter(
+      (c) => c.status === "paused" || c.status === "withdrawn"
+    ).length ?? 0;
+
+  const avatar =
+    profile?.avatar_url ||
+    "https://ui-avatars.com/api/?name=" +
+      encodeURIComponent(profile?.display_name || "User");
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
 
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* Header */}
+        {/* HEADER */}
         <h1 className="text-3xl font-bold">Stated</h1>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-xl shadow p-5 space-y-3">
+        {/* PROFILE CARD */}
+        <div className="bg-white rounded-xl shadow p-5">
 
-          <div className="text-lg font-semibold">
-            {profile?.name || "No name set"}
-          </div>
+          <div className="flex items-center gap-4">
 
-          <div className="text-gray-600">
-            {profile?.bio || "No bio added"}
-          </div>
+            <Image
+              src={avatar}
+              width={60}
+              height={60}
+              alt="avatar"
+              className="rounded-full"
+            />
 
-          <div className="text-sm text-gray-500">
-            Public URL:
             <div>
-              stated.app/u/{profile?.username}
+
+              <div className="text-lg font-semibold">
+                {profile?.display_name || "No name set"}
+              </div>
+
+              <div className="text-gray-600 text-sm">
+                {profile?.bio || "No bio added"}
+              </div>
+
+              <div className="text-xs text-gray-400 mt-1">
+                stated.app/u/{profile?.username}
+              </div>
+
             </div>
+
           </div>
 
-          <div className="text-sm">
-            Account type:
-            <span className="ml-1 font-medium">
-              {getAccountTypeLabel(account?.account_type || "individual")}
-            </span>
-          </div>
-
-          <div className="flex gap-3 pt-2 flex-wrap">
+          <div className="flex gap-3 pt-4 flex-wrap">
 
             <Link
               href="/profile/edit"
@@ -111,12 +134,13 @@ export default async function Dashboard() {
             </Link>
 
           </div>
+
         </div>
 
-        {/* Credits Card */}
+        {/* CREDITS */}
         <div className="bg-white rounded-xl shadow p-5">
 
-          <div className="text-lg font-semibold">
+          <div className="font-semibold">
             Credits remaining: {credits}
           </div>
 
@@ -131,48 +155,46 @@ export default async function Dashboard() {
 
         </div>
 
-        {/* Analytics */}
+        {/* ANALYTICS */}
         <div className="bg-white rounded-xl shadow p-5">
 
           <div className="font-semibold mb-3">
-            Your stats
+            Analytics
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
 
-            <div>
-              Total: {total}
-            </div>
+            <div>Profile views: {profileViews ?? 0}</div>
 
-            <div>
-              Active: {active}
-            </div>
+            <div>Total commitments: {total}</div>
 
-            <div>
-              Completed: {completed}
-            </div>
+            <div>Commitment views: {commitmentViews ?? 0}</div>
 
-            <div>
-              Failed: {failed}
-            </div>
+            <div>Active: {active}</div>
+
+            <div>Completed: {completed}</div>
+
+            <div>Paused / Withdrawn: {paused}</div>
 
           </div>
 
         </div>
 
-        {/* Create Commitment */}
+        {/* CREATE COMMITMENT BUTTON */}
         <Link
           href="/commitment/new"
-          className={`block text-center py-3 rounded-lg text-white ${
+          className={`block text-center py-3 rounded-lg text-white font-medium ${
             credits === 0
               ? "bg-gray-400 pointer-events-none"
-              : "bg-blue-600"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          Create Commitment
+          {credits === 0
+            ? "No credits remaining"
+            : "Create Commitment"}
         </Link>
 
-        {/* Commitments List */}
+        {/* COMMITMENTS LIST */}
         <div className="space-y-4">
 
           <div className="font-semibold">
@@ -185,35 +207,60 @@ export default async function Dashboard() {
             </div>
           )}
 
-          {commitments?.map((c) => (
-            <div
-              key={c.id}
-              className="bg-white rounded-xl shadow p-4"
-            >
+          {commitments?.map((c) => {
 
-              <div className="font-medium">
-                {c.text}
+            const endDate = new Date(c.end_date);
+            const today = new Date();
+
+            const daysLeft =
+              Math.ceil(
+                (endDate.getTime() - today.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white rounded-xl shadow p-4"
+              >
+
+                <div className="font-medium">
+                  {c.title}
+                </div>
+
+                <div className="text-sm text-gray-500 mt-1">
+                  {c.category}
+                </div>
+
+                <div className="text-sm mt-1">
+
+                  Status:
+                  <span className="ml-1 font-medium capitalize">
+                    {c.status}
+                  </span>
+
+                </div>
+
+                <div className="text-sm text-gray-500 mt-1">
+
+                  {c.status === "active"
+                    ? `${daysLeft} days remaining`
+                    : ""}
+
+                </div>
+
+                <div className="text-xs text-gray-400 mt-1">
+                  Created:
+                  {" "}
+                  {new Date(
+                    c.created_at
+                  ).toLocaleDateString()}
+                </div>
+
               </div>
+            );
 
-              <div className="text-sm text-gray-500 mt-1">
-                {c.category} • {c.duration}
-              </div>
-
-              <div className="text-sm mt-1">
-
-                Status:
-                <span className="ml-1 capitalize font-medium">
-                  {c.status}
-                </span>
-
-              </div>
-
-              <div className="text-xs text-gray-400 mt-1">
-                {new Date(c.created_at).toLocaleDateString()}
-              </div>
-
-            </div>
-          ))}
+          })}
 
         </div>
 
@@ -221,4 +268,5 @@ export default async function Dashboard() {
 
     </div>
   );
+
 }
