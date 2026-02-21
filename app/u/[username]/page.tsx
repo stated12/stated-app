@@ -16,18 +16,16 @@ export default async function UserPage({
 }) {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  // DEBUG QUERY
+  const { data: profile, error } = await supabase
     .from("profiles")
-    .select(`
-      username,
-      display_name,
-      bio,
-      website,
-      avatar_url,
-      credits
-    `)
-    .eq("username", params.username)
+    .select("*")
+    .ilike("username", params.username)
     .maybeSingle();
+
+  console.log("USERNAME PARAM:", params.username);
+  console.log("PROFILE RESULT:", profile);
+  console.log("PROFILE ERROR:", error);
 
   if (!profile) {
     return (
