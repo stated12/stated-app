@@ -9,16 +9,13 @@ type Profile = {
   username: string;
   display_name: string;
   bio: string | null;
-  website: string | null;
   avatar_url: string | null;
-  credits: number;
 };
 
 type Commitment = {
   id: string;
-  title: string;
+  text: string;
   status: string;
-  created_at: string;
 };
 
 export default function UserPage() {
@@ -34,38 +31,29 @@ export default function UserPage() {
 
   useEffect(() => {
 
-    async function loadAll() {
+    async function loadData() {
 
-      console.log("Fetching profile:", username);
-
-      // STEP 1: fetch profile
-      const { data: profileData, error: profileError } = await supabase
+      // Load profile
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, username, display_name, bio, avatar_url")
         .eq("username", username)
         .single();
 
-      if (profileError || !profileData) {
-        console.log("Profile error:", profileError);
+      if (!profileData) {
         setLoading(false);
         return;
       }
 
       setProfile(profileData);
 
-      console.log("Profile ID:", profileData.id);
-
-      // STEP 2: fetch commitments using user_id
-      const { data: commitmentsData, error: commitmentsError } = await supabase
+      // Load commitments
+      const { data: commitmentsData } = await supabase
         .from("commitments")
-        .select("*")
+        .select("id, text, status")
         .eq("user_id", profileData.id)
         .eq("is_public", true)
         .order("created_at", { ascending: false });
-
-      if (commitmentsError) {
-        console.log("Commitments error:", commitmentsError);
-      }
 
       if (commitmentsData) {
         setCommitments(commitmentsData);
@@ -74,9 +62,7 @@ export default function UserPage() {
       setLoading(false);
     }
 
-    if (username) {
-      loadAll();
-    }
+    if (username) loadData();
 
   }, [username]);
 
@@ -115,32 +101,27 @@ export default function UserPage() {
 
       </div>
 
-      {/* COMMITMENTS SECTION */}
-
+      {/* Commitments Section */}
       <div style={styles.section}>
 
         <h2>Commitments</h2>
 
         {commitments.length === 0 ? (
-
           <div style={styles.card}>
             No commitments yet.
           </div>
-
         ) : (
-
           commitments.map((c) => (
             <div key={c.id} style={styles.card}>
-              <div style={styles.commitmentTitle}>
-                {c.title}
+              <div style={styles.commitmentText}>
+                {c.text}
               </div>
 
-              <div style={styles.commitmentMeta}>
+              <div style={styles.status}>
                 {c.status}
               </div>
             </div>
           ))
-
         )}
 
       </div>
@@ -173,7 +154,6 @@ const styles: any = {
 
   header: {
     textAlign: "center",
-    marginBottom: 40,
   },
 
   avatar: {
@@ -193,6 +173,7 @@ const styles: any = {
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    borderRadius: "50%",
   },
 
   avatarLetter: {
@@ -213,24 +194,24 @@ const styles: any = {
   },
 
   section: {
-    marginTop: 32,
+    marginTop: 40,
   },
 
   card: {
-    padding: 16,
     border: "1px solid #eee",
     borderRadius: 8,
+    padding: 16,
     marginTop: 12,
   },
 
-  commitmentTitle: {
-    fontWeight: 600,
+  commitmentText: {
+    fontSize: 16,
+    marginBottom: 6,
   },
 
-  commitmentMeta: {
+  status: {
+    fontSize: 13,
     opacity: 0.6,
-    fontSize: 14,
-    marginTop: 4,
   },
 
 };
