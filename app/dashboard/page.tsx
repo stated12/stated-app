@@ -50,9 +50,7 @@ export default async function Dashboard() {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  // CALCULATIONS
-  const credits = profile?.credits ?? 0;
-
+  // TOTAL COMMITMENTS
   const total = commitments?.length ?? 0;
 
   const active =
@@ -63,21 +61,43 @@ export default async function Dashboard() {
 
   const paused =
     commitments?.filter(
-      (c) => c.status === "paused" || c.status === "withdrawn"
+      (c) =>
+        c.status === "paused" ||
+        c.status === "withdrawn"
     ).length ?? 0;
 
+  // CREDITS
+  const credits = profile?.credits ?? 0;
+
+  // AVATAR
   const avatar =
     profile?.avatar_url ||
-    "https://ui-avatars.com/api/?name=" +
-      encodeURIComponent(profile?.display_name || "User");
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      profile?.display_name || "User"
+    )}&background=2563eb&color=fff`;
 
   return (
+
     <div className="min-h-screen bg-gray-50 px-4 py-8">
 
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* HEADER */}
-        <h1 className="text-3xl font-bold">Stated</h1>
+        <div className="flex justify-between items-center">
+
+          <h1 className="text-3xl font-bold">
+            Dashboard
+          </h1>
+
+          <Link
+            href="/logout"
+            className="text-sm text-gray-500"
+          >
+            Logout
+          </Link>
+
+        </div>
+
 
         {/* PROFILE CARD */}
         <div className="bg-white rounded-xl shadow p-5">
@@ -86,10 +106,10 @@ export default async function Dashboard() {
 
             <Image
               src={avatar}
-              width={60}
-              height={60}
+              width={64}
+              height={64}
               alt="avatar"
-              className="rounded-full"
+              className="rounded-full object-cover"
             />
 
             <div>
@@ -109,6 +129,7 @@ export default async function Dashboard() {
             </div>
 
           </div>
+
 
           <div className="flex gap-3 pt-4 flex-wrap">
 
@@ -137,23 +158,27 @@ export default async function Dashboard() {
 
         </div>
 
-        {/* CREDITS */}
+
+        {/* CREDITS CARD */}
         <div className="bg-white rounded-xl shadow p-5">
 
-          <div className="font-semibold">
+          <div className="font-semibold text-lg">
             Credits remaining: {credits}
           </div>
 
           {credits === 0 && (
+
             <Link
               href="/upgrade"
               className="text-blue-600 text-sm"
             >
               Buy credits to continue
             </Link>
+
           )}
 
         </div>
+
 
         {/* ANALYTICS */}
         <div className="bg-white rounded-xl shadow p-5">
@@ -164,21 +189,34 @@ export default async function Dashboard() {
 
           <div className="grid grid-cols-2 gap-4 text-sm">
 
-            <div>Profile views: {profileViews ?? 0}</div>
+            <div>
+              Profile views: {profileViews ?? 0}
+            </div>
 
-            <div>Total commitments: {total}</div>
+            <div>
+              Total commitments: {total}
+            </div>
 
-            <div>Commitment views: {commitmentViews ?? 0}</div>
+            <div>
+              Commitment views: {commitmentViews ?? 0}
+            </div>
 
-            <div>Active: {active}</div>
+            <div>
+              Active: {active}
+            </div>
 
-            <div>Completed: {completed}</div>
+            <div>
+              Completed: {completed}
+            </div>
 
-            <div>Paused / Withdrawn: {paused}</div>
+            <div>
+              Paused / Withdrawn: {paused}
+            </div>
 
           </div>
 
         </div>
+
 
         {/* CREATE COMMITMENT BUTTON */}
         <Link
@@ -189,10 +227,13 @@ export default async function Dashboard() {
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
+
           {credits === 0
             ? "No credits remaining"
             : "Create Commitment"}
+
         </Link>
+
 
         {/* COMMITMENTS LIST */}
         <div className="space-y-4">
@@ -201,72 +242,132 @@ export default async function Dashboard() {
             Your commitments
           </div>
 
+
           {commitments?.length === 0 && (
+
             <div className="text-gray-500">
               No commitments yet
             </div>
+
           )}
+
 
           {commitments?.map((c) => {
 
-            const endDate = new Date(c.end_date);
-            const today = new Date();
+            const endDate =
+              c.end_date
+                ? new Date(c.end_date)
+                : null;
+
+            const today =
+              new Date();
 
             const daysLeft =
-              Math.ceil(
-                (endDate.getTime() - today.getTime()) /
-                  (1000 * 60 * 60 * 24)
-              );
+              endDate
+                ? Math.ceil(
+                    (endDate.getTime() -
+                      today.getTime()) /
+                      (1000 * 60 * 60 * 24)
+                  )
+                : null;
+
 
             return (
+
               <div
                 key={c.id}
                 className="bg-white rounded-xl shadow p-4"
               >
 
-                <div className="font-medium">
-                  {c.title}
+                <div className="font-medium text-base">
+                  {c.text}
                 </div>
 
-                <div className="text-sm text-gray-500 mt-1">
-                  {c.category}
-                </div>
 
-                <div className="text-sm mt-1">
+                <div className="text-sm text-gray-500 mt-1 capitalize">
 
                   Status:
-                  <span className="ml-1 font-medium capitalize">
+                  <span className="ml-1 font-medium">
                     {c.status}
                   </span>
 
                 </div>
 
-                <div className="text-sm text-gray-500 mt-1">
 
-                  {c.status === "active"
-                    ? `${daysLeft} days remaining`
-                    : ""}
+                {c.status === "active" && daysLeft !== null && (
 
-                </div>
+                  <div className="text-sm text-gray-500 mt-1">
+
+                    {daysLeft > 0
+                      ? `${daysLeft} days remaining`
+                      : "Expired"}
+
+                  </div>
+
+                )}
+
 
                 <div className="text-xs text-gray-400 mt-1">
+
                   Created:
                   {" "}
                   {new Date(
                     c.created_at
                   ).toLocaleDateString()}
+
                 </div>
 
+
+                {/* ACTION BUTTONS */}
+                {c.status === "active" && (
+
+                  <div className="flex gap-2 mt-3 flex-wrap">
+
+                    <Link
+                      href={`/commitment/${c.id}/update`}
+                      className="text-sm border px-3 py-1 rounded"
+                    >
+                      Add update
+                    </Link>
+
+                    <Link
+                      href={`/commitment/${c.id}/complete`}
+                      className="text-sm border px-3 py-1 rounded"
+                    >
+                      Complete
+                    </Link>
+
+                    <Link
+                      href={`/commitment/${c.id}/pause`}
+                      className="text-sm border px-3 py-1 rounded"
+                    >
+                      Pause
+                    </Link>
+
+                    <Link
+                      href={`/commitment/${c.id}/withdraw`}
+                      className="text-sm border px-3 py-1 rounded"
+                    >
+                      Withdraw
+                    </Link>
+
+                  </div>
+
+                )}
+
               </div>
+
             );
 
           })}
 
         </div>
 
+
       </div>
 
     </div>
+
   );
 
-}
+      }
