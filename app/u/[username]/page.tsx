@@ -31,29 +31,28 @@ export default function UserPage() {
 
   useEffect(() => {
 
-    async function loadData() {
+    async function loadProfile() {
 
-      // Load profile
-      const { data: profileData } = await supabase
+      // EXACT same query that worked before
+      const { data: profileData, error } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url")
+        .select("*")
         .eq("username", username)
         .single();
 
-      if (!profileData) {
+      if (error || !profileData) {
         setLoading(false);
         return;
       }
 
       setProfile(profileData);
 
-      // Load commitments
+      // commitments load
       const { data: commitmentsData } = await supabase
         .from("commitments")
         .select("id, text, status")
         .eq("user_id", profileData.id)
-        .eq("is_public", true)
-        .order("created_at", { ascending: false });
+        .eq("is_public", true);
 
       if (commitmentsData) {
         setCommitments(commitmentsData);
@@ -62,7 +61,7 @@ export default function UserPage() {
       setLoading(false);
     }
 
-    if (username) loadData();
+    if (username) loadProfile();
 
   }, [username]);
 
@@ -101,7 +100,6 @@ export default function UserPage() {
 
       </div>
 
-      {/* Commitments Section */}
       <div style={styles.section}>
 
         <h2>Commitments</h2>
@@ -113,13 +111,8 @@ export default function UserPage() {
         ) : (
           commitments.map((c) => (
             <div key={c.id} style={styles.card}>
-              <div style={styles.commitmentText}>
-                {c.text}
-              </div>
-
-              <div style={styles.status}>
-                {c.status}
-              </div>
+              <div>{c.text}</div>
+              <div style={styles.status}>{c.status}</div>
             </div>
           ))
         )}
@@ -204,14 +197,10 @@ const styles: any = {
     marginTop: 12,
   },
 
-  commitmentText: {
-    fontSize: 16,
-    marginBottom: 6,
-  },
-
   status: {
-    fontSize: 13,
+    fontSize: 12,
     opacity: 0.6,
+    marginTop: 4,
   },
 
 };
