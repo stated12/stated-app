@@ -18,7 +18,6 @@ type Commitment = {
   text: string;
   status: string;
   created_at: string;
-  completed_at: string | null;
 };
 
 export default function UserPage() {
@@ -34,25 +33,20 @@ export default function UserPage() {
 
   useEffect(() => {
 
-    async function loadProfileAndCommitments() {
+    async function load() {
 
       setLoading(true);
 
-      // STEP 1: Load profile
-      const { data: profileData, error: profileError } = await supabase
+      // SAFE PROFILE LOAD
+      const { data: profiles } = await supabase
         .from("profiles")
-        .select(`
-          id,
-          username,
-          display_name,
-          bio,
-          website,
-          avatar_url
-        `)
+        .select("*")
         .eq("username", username)
-        .single();
+        .limit(1);
 
-      if (profileError || !profileData) {
+      const profileData = profiles?.[0] ?? null;
+
+      if (!profileData) {
         setProfile(null);
         setLoading(false);
         return;
@@ -60,16 +54,10 @@ export default function UserPage() {
 
       setProfile(profileData);
 
-      // STEP 2: Load commitments
+      // SAFE COMMITMENTS LOAD
       const { data: commitmentsData } = await supabase
         .from("commitments")
-        .select(`
-          id,
-          text,
-          status,
-          created_at,
-          completed_at
-        `)
+        .select("id, text, status, created_at")
         .eq("user_id", profileData.id)
         .eq("is_public", true)
         .order("created_at", { ascending: false });
@@ -79,9 +67,7 @@ export default function UserPage() {
       setLoading(false);
     }
 
-    if (username) {
-      loadProfileAndCommitments();
-    }
+    if (username) load();
 
   }, [username]);
 
@@ -96,7 +82,6 @@ export default function UserPage() {
 
       <div style={styles.brand}>Stated</div>
 
-      {/* PROFILE HEADER */}
       <div style={styles.header}>
 
         <div style={styles.avatar}>
@@ -121,56 +106,36 @@ export default function UserPage() {
           <p style={styles.bio}>{profile.bio}</p>
         )}
 
-        {profile.website && (
-          <a
-            href={profile.website}
-            target="_blank"
-            style={styles.link}
-          >
-            {profile.website}
-          </a>
-        )}
-
       </div>
 
-      {/* COMMITMENTS SECTION */}
       <div style={styles.section}>
 
-        <h2 style={styles.sectionTitle}>
-          Commitments
-        </h2>
+        <h2>Commitments</h2>
 
         {commitments.length === 0 ? (
-          <div style={styles.emptyCard}>
+
+          <div style={styles.card}>
             No commitments yet.
           </div>
+
         ) : (
-          commitments.map((c) => (
+
+          commitments.map(c => (
+
             <div key={c.id} style={styles.card}>
 
-              <div style={styles.commitmentText}>
+              <div style={{ fontSize: 16 }}>
                 {c.text}
               </div>
 
-              <div style={styles.metaRow}>
-
-                <span style={{
-                  ...styles.status,
-                  ...(c.status === "completed"
-                    ? styles.completed
-                    : styles.active)
-                }}>
-                  {c.status}
-                </span>
-
-                <span style={styles.date}>
-                  {new Date(c.created_at).toLocaleDateString()}
-                </span>
-
+              <div style={{ opacity: 0.6, fontSize: 14 }}>
+                {c.status}
               </div>
 
             </div>
+
           ))
+
         )}
 
       </div>
@@ -216,13 +181,13 @@ const styles: any = {
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 16px auto",
-    overflow: "hidden",
   },
 
   avatarImg: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    borderRadius: "50%",
   },
 
   avatarLetter: {
@@ -236,71 +201,21 @@ const styles: any = {
 
   username: {
     opacity: 0.6,
-    marginBottom: 10,
   },
 
   bio: {
-    marginTop: 10,
-  },
-
-  link: {
-    color: "#2563eb",
-    display: "block",
-    marginTop: 8,
+    marginTop: 12,
   },
 
   section: {
     marginTop: 30,
   },
 
-  sectionTitle: {
-    fontSize: 20,
-    marginBottom: 12,
-  },
-
-  emptyCard: {
-    border: "1px solid #eee",
-    padding: 16,
-    borderRadius: 8,
-    opacity: 0.7,
-  },
-
   card: {
     border: "1px solid #eee",
     padding: 16,
     borderRadius: 8,
-    marginBottom: 12,
-  },
-
-  commitmentText: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-
-  metaRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: 14,
-  },
-
-  status: {
-    padding: "2px 8px",
-    borderRadius: 6,
-    fontSize: 12,
-  },
-
-  active: {
-    background: "#e0f2fe",
-    color: "#0369a1",
-  },
-
-  completed: {
-    background: "#dcfce7",
-    color: "#166534",
-  },
-
-  date: {
-    opacity: 0.6,
+    marginTop: 12,
   },
 
 };
