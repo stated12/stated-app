@@ -15,20 +15,20 @@ export default async function UserPage({
 }: {
   params: { username: string };
 }) {
-  const supabase = createClient();
+
+  // FIX: must use await
+  const supabase = await createClient();
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select(
-      `
+    .select(`
       username,
       display_name,
       bio,
       website,
       avatar_url,
       credits
-      `
-    )
+    `)
     .eq("username", params.username)
     .single();
 
@@ -38,15 +38,13 @@ export default async function UserPage({
 
   return (
     <div style={styles.container}>
-      
-      {/* Branding */}
+
       <div style={styles.brand}>
         Stated
       </div>
 
-      {/* Header */}
       <div style={styles.header}>
-        
+
         <div style={styles.avatar}>
           {profile.avatar_url ? (
             <img
@@ -56,7 +54,7 @@ export default async function UserPage({
             />
           ) : (
             <span style={styles.avatarLetter}>
-              {profile.display_name?.charAt(0) || "U"}
+              {(profile.display_name || profile.username).charAt(0)}
             </span>
           )}
         </div>
@@ -88,7 +86,6 @@ export default async function UserPage({
 
       </div>
 
-      {/* Commitments */}
       <div style={styles.section}>
         <h2>Commitments</h2>
 
@@ -102,20 +99,19 @@ export default async function UserPage({
   );
 }
 
-/* FULLY TYPE SAFE STYLES */
 const styles = {
   container: {
     maxWidth: "600px",
     margin: "0 auto",
     padding: "24px",
     fontFamily: "system-ui",
-  } as const,
+  },
 
   brand: {
     fontSize: "20px",
     fontWeight: 600,
     marginBottom: "24px",
-  } as const,
+  },
 
   header: {
     textAlign: "center" as const,
@@ -133,7 +129,7 @@ const styles = {
     justifyContent: "center",
     margin: "0 auto 16px auto",
     overflow: "hidden",
-  } as const,
+  },
 
   avatarImg: {
     width: "100%",
@@ -143,34 +139,34 @@ const styles = {
 
   avatarLetter: {
     fontSize: "32px",
-  } as const,
+  },
 
   name: {
     fontSize: "24px",
     margin: "0",
-  } as const,
+  },
 
   username: {
     opacity: 0.6,
     marginBottom: "12px",
-  } as const,
+  },
 
   bio: {
     marginBottom: "12px",
-  } as const,
+  },
 
   link: {
     color: "#2563eb",
-  } as const,
+  },
 
   section: {
     marginTop: "32px",
-  } as const,
+  },
 
   card: {
     padding: "16px",
     border: "1px solid #eee",
     borderRadius: "8px",
     marginTop: "12px",
-  } as const,
+  },
 };
