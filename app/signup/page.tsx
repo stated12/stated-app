@@ -10,55 +10,48 @@ export default function SignupPage() {
   const supabase = createClient();
 
   const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] =
+    useState<"idle" | "checking" | "available" | "taken">("idle");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [accountType, setAccountType] =
     useState<"individual" | "company">("individual");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [usernameAvailable, setUsernameAvailable] =
-    useState<boolean | null>(null);
 
-  const [checkingUsername, setCheckingUsername] =
-    useState(false);
 
-  // Username validation
-  function isValidUsername(value: string) {
-
-    const regex = /^[a-z0-9_]{3,20}$/;
-
-    return regex.test(value);
-
-  }
-
-  // Check username availability
+  // CHECK USERNAME AVAILABILITY
   useEffect(() => {
 
-    if (!username || !isValidUsername(username)) {
-      setUsernameAvailable(null);
+    if (!username || username.length < 3) {
+      setUsernameStatus("idle");
       return;
     }
 
     const check = async () => {
 
-      setCheckingUsername(true);
+      setUsernameStatus("checking");
 
       const { data } =
         await supabase
           .from("profiles")
-          .select("id")
+          .select("username")
           .eq("username", username.toLowerCase())
-          .maybeSingle();
+          .single();
 
-      setUsernameAvailable(!data);
-
-      setCheckingUsername(false);
+      if (data) {
+        setUsernameStatus("taken");
+      } else {
+        setUsernameStatus("available");
+      }
 
     };
 
-    const timeout = setTimeout(check, 400);
+    const timeout = setTimeout(check, 500);
 
     return () => clearTimeout(timeout);
 
@@ -72,33 +65,20 @@ export default function SignupPage() {
 
     setError("");
 
-    if (!isValidUsername(username)) {
-
-      setError(
-        "Username must be 3-20 characters, lowercase letters, numbers, or underscore"
-      );
-
+    if (usernameStatus !== "available") {
+      setError("Username is not available");
       return;
-
-    }
-
-    if (!usernameAvailable) {
-
-      setError("Username already taken");
-
-      return;
-
     }
 
     setLoading(true);
 
     try {
 
-      const { error: authError } =
+      // CREATE AUTH USER WITH METADATA
+      const { data, error: authError } =
         await supabase.auth.signUp({
 
           email,
-
           password,
 
           options: {
@@ -112,20 +92,42 @@ export default function SignupPage() {
         });
 
       if (authError) {
-
         setError(authError.message);
-
         setLoading(false);
-
         return;
+      }
 
+      const user = data.user;
+
+      if (!user) {
+        setError("Signup failed");
+        setLoading(false);
+        return;
+      }
+
+      // ENSURE PROFILE EXISTS (trigger should create it)
+      const { error: profileError } =
+        await supabase
+          .from("profiles")
+          .upsert({
+
+            id: user.id,
+            username: username.toLowerCase(),
+            display_name: username,
+            account_type: accountType,
+            credits: 0,
+
+          });
+
+      if (profileError) {
+        console.error(profileError);
       }
 
       router.push("/dashboard");
 
-    } catch {
+    } catch (err) {
 
-      setError("Something went wrong");
+      setError("Unexpected error");
 
     } finally {
 
@@ -138,6 +140,7 @@ export default function SignupPage() {
 
 
   return (
+
     <div style={styles.container}>
 
       <form onSubmit={handleSignup} style={styles.card}>
@@ -151,12 +154,15 @@ export default function SignupPage() {
         </div>
 
 
-        {/* Username */}
+
+        {/* USERNAME */}
+
         <input
           type="text"
           placeholder="Username"
           value={username}
           required
+          minLength={3}
           onChange={(e) =>
             setUsername(
               e.target.value
@@ -168,94 +174,86 @@ export default function SignupPage() {
         />
 
         <div style={styles.url}>
-
           stated.app/u/{username || "username"}
+        </div>
 
-          {checkingUsername && (
-            <span style={{ color: "#666", marginLeft: 8 }}>
-              checking...
-            </span>
-          )}
+        <div style={styles.usernameStatus}>
 
-          {usernameAvailable === true && (
-            <span style={{ color: "green", marginLeft: 8 }}>
-              ✓ available
-            </span>
-          )}
+          {usernameStatus === "checking" && "Checking..."}
 
-          {usernameAvailable === false && (
-            <span style={{ color: "red", marginLeft: 8 }}>
-              ✗ taken
-            </span>
-          )}
+          {usernameStatus === "available" &&
+            <span style={{color:"green"}}>✓ Available</span>}
+
+          {usernameStatus === "taken" &&
+            <span style={{color:"red"}}>✗ Already taken</span>}
 
         </div>
 
 
-        {/* Email */}
+
+        {/* EMAIL */}
+
         <input
           type="email"
           placeholder="Email"
-          value={email}
           required
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
           style={styles.input}
         />
 
 
-        {/* Password */}
+
+        {/* PASSWORD */}
+
         <input
           type="password"
           placeholder="Password"
-          value={password}
           required
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
+          minLength={6}
+          value={password}
+          onChange={(e)=>setPassword(e.target.value)}
           style={styles.input}
         />
 
 
-        {/* Account Type */}
+
+        {/* ACCOUNT TYPE */}
+
         <div style={styles.accountTypeContainer}>
 
           <button
             type="button"
-            onClick={() =>
-              setAccountType("individual")
-            }
+            onClick={()=>setAccountType("individual")}
             style={{
               ...styles.accountTypeButton,
               background:
-                accountType === "individual"
+                accountType==="individual"
                   ? "#2563eb"
                   : "#eee",
               color:
-                accountType === "individual"
+                accountType==="individual"
                   ? "#fff"
-                  : "#000",
+                  : "#000"
             }}
           >
             Individual
           </button>
 
+
           <button
             type="button"
-            onClick={() =>
-              setAccountType("company")
-            }
+            onClick={()=>setAccountType("company")}
             style={{
               ...styles.accountTypeButton,
               background:
-                accountType === "company"
+                accountType==="company"
                   ? "#2563eb"
                   : "#eee",
               color:
-                accountType === "company"
+                accountType==="company"
                   ? "#fff"
-                  : "#000",
+                  : "#000"
             }}
           >
             Company
@@ -264,21 +262,24 @@ export default function SignupPage() {
         </div>
 
 
-        {/* Error */}
-        {error && (
+
+        {/* ERROR */}
+
+        {error &&
           <div style={styles.error}>
             {error}
           </div>
-        )}
+        }
 
 
-        {/* Submit */}
+
+        {/* SUBMIT */}
+
         <button
           type="submit"
           disabled={
             loading ||
-            checkingUsername ||
-            usernameAvailable === false
+            usernameStatus !== "available"
           }
           style={styles.submit}
         >
@@ -288,13 +289,11 @@ export default function SignupPage() {
         </button>
 
 
-        {/* Login */}
+
         <div style={styles.login}>
           Already have account?{" "}
           <span
-            onClick={() =>
-              router.push("/login")
-            }
+            onClick={()=>router.push("/login")}
             style={styles.loginLink}
           >
             Login
@@ -304,6 +303,103 @@ export default function SignupPage() {
       </form>
 
     </div>
+
   );
 
 }
+
+
+
+const styles:any = {
+
+  container:{
+    height:"100vh",
+    display:"flex",
+    justifyContent:"center",
+    alignItems:"center",
+    background:"#f5f5f5"
+  },
+
+  card:{
+    width:400,
+    background:"#fff",
+    padding:32,
+    borderRadius:12,
+    boxShadow:"0 2px 10px rgba(0,0,0,0.1)"
+  },
+
+  brand:{
+    fontSize:32,
+    fontWeight:"bold",
+    color:"#2563eb",
+    textAlign:"center",
+    marginBottom:8
+  },
+
+  tagline:{
+    textAlign:"center",
+    marginBottom:24,
+    color:"#555"
+  },
+
+  input:{
+    width:"100%",
+    padding:12,
+    marginBottom:12,
+    borderRadius:8,
+    border:"1px solid #ddd"
+  },
+
+  url:{
+    fontSize:12,
+    marginBottom:4,
+    color:"#666"
+  },
+
+  usernameStatus:{
+    fontSize:12,
+    marginBottom:12
+  },
+
+  accountTypeContainer:{
+    display:"flex",
+    gap:12,
+    marginBottom:16
+  },
+
+  accountTypeButton:{
+    flex:1,
+    padding:12,
+    borderRadius:8,
+    border:"none",
+    cursor:"pointer"
+  },
+
+  submit:{
+    width:"100%",
+    padding:14,
+    borderRadius:8,
+    border:"none",
+    background:"#2563eb",
+    color:"#fff",
+    fontWeight:"bold",
+    cursor:"pointer"
+  },
+
+  error:{
+    color:"red",
+    marginBottom:12
+  },
+
+  login:{
+    textAlign:"center",
+    marginTop:16
+  },
+
+  loginLink:{
+    color:"#2563eb",
+    cursor:"pointer",
+    fontWeight:"bold"
+  }
+
+};
