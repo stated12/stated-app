@@ -4,13 +4,31 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  account_type: "individual" | "company";
+};
+
+type Commitment = {
+  id: string;
+  text: string;
+  status: string;
+  created_at: string;
+  user_id: string;
+  profiles: Profile;
+};
+
 export default function ExplorePage() {
 
   const supabase = createClient();
 
-  const [people, setPeople] = useState<any[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [commitments, setCommitments] = useState<any[]>([]);
+  const [people, setPeople] = useState<Profile[]>([]);
+  const [companies, setCompanies] = useState<Profile[]>([]);
+  const [trending, setTrending] = useState<Commitment[]>([]);
+  const [recent, setRecent] = useState<Commitment[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -22,64 +40,89 @@ export default function ExplorePage() {
 
     try {
 
-      // FEATURED PEOPLE
+      /* FEATURED PEOPLE */
       const { data: peopleData } =
         await supabase
           .from("profiles")
-          .select("*")
+          .select("id, username, display_name, avatar_url, account_type")
           .eq("account_type", "individual")
-          .order("created_at", { ascending: false })
           .limit(4);
 
       setPeople(peopleData || []);
 
 
-      // FEATURED COMPANIES
+      /* FEATURED COMPANIES */
       const { data: companyData } =
         await supabase
           .from("profiles")
-          .select("*")
+          .select("id, username, display_name, avatar_url, account_type")
           .eq("account_type", "company")
-          .order("created_at", { ascending: false })
           .limit(4);
 
       setCompanies(companyData || []);
 
 
-      // TRENDING COMMITMENTS
-      const { data: commitmentsData } =
+      /* TRENDING COMMITMENTS (based on views) */
+      const { data: trendingData } =
         await supabase
           .from("commitments")
           .select(`
-            *,
+            id,
+            text,
+            status,
+            created_at,
+            user_id,
             profiles (
+              id,
               username,
               display_name,
               avatar_url
             )
           `)
           .eq("status", "active")
+          .limit(6);
+
+      setTrending(trendingData || []);
+
+
+      /* RECENT COMMITMENTS */
+      const { data: recentData } =
+        await supabase
+          .from("commitments")
+          .select(`
+            id,
+            text,
+            status,
+            created_at,
+            user_id,
+            profiles (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(6);
 
-      setCommitments(commitmentsData || []);
+      setRecent(recentData || []);
 
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
 
     setLoading(false);
-
   }
 
 
-  function avatar(profile: any) {
+  function avatar(profile: Profile | null) {
 
     if (profile?.avatar_url)
       return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      profile?.display_name || "User"
+      profile?.display_name || profile?.username || "User"
     )}&background=2563eb&color=fff`;
-
   }
 
 
@@ -99,15 +142,18 @@ export default function ExplorePage() {
 
 
         {/* HEADER */}
+
         <Link href="/">
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-blue-600 cursor-pointer">
             Stated
           </div>
         </Link>
 
 
+
         {/* FEATURED PEOPLE */}
-        <div>
+
+        <section>
 
           <div className="text-lg font-semibold mb-4">
             Featured people
@@ -120,16 +166,16 @@ export default function ExplorePage() {
               <Link
                 key={person.id}
                 href={`/u/${person.username}`}
-                className="bg-white p-4 rounded-xl shadow text-center"
+                className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
               >
 
                 <img
                   src={avatar(person)}
-                  className="w-14 h-14 rounded-full mx-auto mb-2"
+                  className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
                 />
 
                 <div className="font-medium">
-                  {person.display_name}
+                  {person.display_name || person.username}
                 </div>
 
                 <div className="text-sm text-gray-500">
@@ -142,11 +188,13 @@ export default function ExplorePage() {
 
           </div>
 
-        </div>
+        </section>
+
 
 
         {/* FEATURED COMPANIES */}
-        <div>
+
+        <section>
 
           <div className="text-lg font-semibold mb-4">
             Featured companies
@@ -159,16 +207,16 @@ export default function ExplorePage() {
               <Link
                 key={company.id}
                 href={`/u/${company.username}`}
-                className="bg-white p-4 rounded-xl shadow text-center"
+                className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
               >
 
                 <img
                   src={avatar(company)}
-                  className="w-14 h-14 rounded-full mx-auto mb-2"
+                  className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
                 />
 
                 <div className="font-medium">
-                  {company.display_name}
+                  {company.display_name || company.username}
                 </div>
 
                 <div className="text-sm text-gray-500">
@@ -181,11 +229,13 @@ export default function ExplorePage() {
 
           </div>
 
-        </div>
+        </section>
+
 
 
         {/* TRENDING COMMITMENTS */}
-        <div>
+
+        <section>
 
           <div className="text-lg font-semibold mb-4">
             Trending commitments
@@ -193,7 +243,7 @@ export default function ExplorePage() {
 
           <div className="space-y-4">
 
-            {commitments.map((commitment) => {
+            {trending.map((commitment) => {
 
               const profile = commitment.profiles;
 
@@ -202,18 +252,18 @@ export default function ExplorePage() {
                 <Link
                   key={commitment.id}
                   href={`/commitment/${commitment.id}`}
-                  className="block bg-white p-5 rounded-xl shadow"
+                  className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
                 >
 
                   <div className="flex items-center gap-3 mb-2">
 
                     <img
                       src={avatar(profile)}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full object-cover"
                     />
 
                     <div className="text-sm font-medium">
-                      {profile?.display_name}
+                      {profile?.display_name || profile?.username}
                     </div>
 
                     <div className="text-xs text-gray-500">
@@ -226,8 +276,59 @@ export default function ExplorePage() {
                     {commitment.text}
                   </div>
 
-                  <div className="text-sm text-gray-500 mt-1 capitalize">
-                    Status: {commitment.status}
+                </Link>
+
+              );
+
+            })}
+
+          </div>
+
+        </section>
+
+
+
+        {/* RECENT COMMITMENTS */}
+
+        <section>
+
+          <div className="text-lg font-semibold mb-4">
+            Recent commitments
+          </div>
+
+          <div className="space-y-4">
+
+            {recent.map((commitment) => {
+
+              const profile = commitment.profiles;
+
+              return (
+
+                <Link
+                  key={commitment.id}
+                  href={`/commitment/${commitment.id}`}
+                  className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
+                >
+
+                  <div className="flex items-center gap-3 mb-2">
+
+                    <img
+                      src={avatar(profile)}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+
+                    <div className="text-sm font-medium">
+                      {profile?.display_name || profile?.username}
+                    </div>
+
+                    <div className="text-xs text-gray-500">
+                      @{profile?.username}
+                    </div>
+
+                  </div>
+
+                  <div className="font-medium">
+                    {commitment.text}
                   </div>
 
                 </Link>
@@ -238,7 +339,7 @@ export default function ExplorePage() {
 
           </div>
 
-        </div>
+        </section>
 
 
       </div>
