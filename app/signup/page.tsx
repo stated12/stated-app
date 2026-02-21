@@ -17,210 +17,227 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function validateUsername(name: string) {
-    return /^[a-z0-9_]{3,20}$/.test(name);
-  }
+  async function handleSignup() {
 
-  async function handleSignup(e: React.FormEvent) {
+    try {
 
-    e.preventDefault();
+      setLoading(true);
+      setError("");
 
-    setError("");
+      if (!username || !email || !password) {
+        setError("Please fill all fields");
+        setLoading(false);
+        return;
+      }
 
-    const cleanUsername = username.trim().toLowerCase();
+      // Step 1 — Create auth user
+      const { data: authData, error: authError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
 
-    if (!validateUsername(cleanUsername)) {
-      setError("Username must be 3-20 lowercase letters, numbers, or underscores");
-      return;
-    }
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
 
-    setLoading(true);
+      const user = authData.user;
 
-    // Check username availability
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("username", cleanUsername)
-      .maybeSingle();
+      if (!user) {
+        setError("Signup failed");
+        setLoading(false);
+        return;
+      }
 
-    if (existing) {
-      setError("Username already taken");
+      // Step 2 — Create profile
+      const { error: profileError } =
+        await supabase.from("profiles").insert({
+          id: user.id,
+          username: username.toLowerCase(),
+          display_name: username,
+          credits: 0,
+        });
+
+      if (profileError) {
+        setError("Profile creation failed");
+        setLoading(false);
+        return;
+      }
+
+      // Step 3 — Redirect to dashboard
+      router.push("/dashboard");
+
+    } catch (err) {
+
+      setError("Something went wrong");
+
+    } finally {
+
       setLoading(false);
-      return;
+
     }
 
-    // Create auth user
-    const { data: authData, error: authError } =
-      await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-    if (authError || !authData.user) {
-      setError(authError?.message || "Signup failed");
-      setLoading(false);
-      return;
-    }
-
-    // Create profile row
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: authData.user.id,
-        username: cleanUsername,
-        display_name: cleanUsername,
-        account_type: accountType,
-      });
-
-    if (profileError) {
-      setError("Profile creation failed");
-      setLoading(false);
-      return;
-    }
-
-    // Redirect
-    router.push("/dashboard");
   }
 
   return (
-    <div style={styles.container}>
+    <div style={styles.page}>
 
       <div style={styles.card}>
 
-        <h1 style={styles.logo}>Stated</h1>
+        <div style={styles.logo}>
+          Stated
+        </div>
 
-        <p style={styles.tagline}>
-          Make commitments. Stay accountable. Build trust publicly.
-        </p>
+        <div style={styles.subtitle}>
+          Make commitments. Stay accountable.
+          <br />
+          Build trust publicly.
+        </div>
 
-        <form onSubmit={handleSignup}>
+        <input
+          style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChange={(e) =>
+            setUsername(e.target.value)
+          }
+        />
 
-          <input
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={styles.input}
-          />
+        <div style={styles.url}>
+          stated.app/u/{username || "username"}
+        </div>
 
-          <div style={styles.preview}>
-            stated.app/u/{username || "username"}
-          </div>
+        <input
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
+        />
 
-          <input
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={styles.input}
-          />
+        <input
+          style={styles.input}
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) =>
+            setPassword(e.target.value)
+          }
+        />
 
-          <input
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-          />
-
-          <div style={styles.toggleRow}>
-
-            <button
-              type="button"
-              onClick={() => setAccountType("individual")}
-              style={{
-                ...styles.toggle,
-                background:
-                  accountType === "individual" ? "#2563eb" : "#eee",
-                color:
-                  accountType === "individual" ? "#fff" : "#000",
-              }}
-            >
-              Individual
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAccountType("company")}
-              style={{
-                ...styles.toggle,
-                background:
-                  accountType === "company" ? "#2563eb" : "#eee",
-                color:
-                  accountType === "company" ? "#fff" : "#000",
-              }}
-            >
-              Company
-            </button>
-
-          </div>
-
-          {error && (
-            <div style={styles.error}>
-              {error}
-            </div>
-          )}
+        <div style={styles.toggleRow}>
 
           <button
-            disabled={loading}
-            style={styles.button}
+            style={
+              accountType === "individual"
+                ? styles.toggleActive
+                : styles.toggle
+            }
+            onClick={() =>
+              setAccountType("individual")
+            }
           >
-            {loading ? "Creating account..." : "Create account"}
+            Individual
           </button>
 
-        </form>
+          <button
+            style={
+              accountType === "company"
+                ? styles.toggleActive
+                : styles.toggle
+            }
+            onClick={() =>
+              setAccountType("company")
+            }
+          >
+            Company
+          </button>
 
-        <div style={styles.footer}>
+        </div>
+
+        {error && (
+          <div style={styles.error}>
+            {error}
+          </div>
+        )}
+
+        <button
+          style={styles.button}
+          onClick={handleSignup}
+          disabled={loading}
+        >
+          {loading
+            ? "Creating account..."
+            : "Create account"}
+        </button>
+
+        <div style={styles.bottom}>
           Already have account?{" "}
-          <a href="/login">Login</a>
+          <span
+            style={styles.link}
+            onClick={() =>
+              router.push("/login")
+            }
+          >
+            Login
+          </span>
         </div>
 
       </div>
 
     </div>
   );
+
 }
 
 const styles: any = {
 
-  container: {
+  page: {
+    height: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    height: "100vh",
-    padding: 16,
+    background: "#f8fafc",
   },
 
   card: {
-    width: "100%",
-    maxWidth: 420,
-    padding: 24,
-    borderRadius: 16,
-    border: "1px solid #eee",
+    width: 380,
+    padding: 28,
+    borderRadius: 12,
+    background: "#fff",
+    border: "1px solid #e5e7eb",
   },
 
   logo: {
+    fontSize: 28,
+    fontWeight: 800,
+    color: "#2563eb",
     textAlign: "center",
     marginBottom: 8,
   },
 
-  tagline: {
+  subtitle: {
     textAlign: "center",
-    marginBottom: 24,
-    opacity: 0.7,
+    color: "#6b7280",
+    marginBottom: 20,
   },
 
   input: {
     width: "100%",
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 10,
     borderRadius: 8,
-    border: "1px solid #ddd",
+    border: "1px solid #d1d5db",
+    fontSize: 14,
   },
 
-  preview: {
-    marginBottom: 12,
-    fontSize: 14,
-    opacity: 0.6,
+  url: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 10,
   },
 
   toggleRow: {
@@ -233,25 +250,48 @@ const styles: any = {
     flex: 1,
     padding: 10,
     borderRadius: 8,
-    border: "none",
+    border: "1px solid #d1d5db",
+    background: "#f3f4f6",
+    cursor: "pointer",
+  },
+
+  toggleActive: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    border: "1px solid #2563eb",
+    background: "#2563eb",
+    color: "#fff",
+    cursor: "pointer",
   },
 
   button: {
     width: "100%",
-    padding: 14,
-    borderRadius: 8,
+    padding: 12,
     background: "#2563eb",
     color: "#fff",
     border: "none",
+    borderRadius: 8,
+    fontWeight: 600,
+    cursor: "pointer",
   },
 
   error: {
     color: "red",
-    marginBottom: 12,
+    marginBottom: 10,
+    fontSize: 14,
   },
 
-  footer: {
-    marginTop: 16,
+  bottom: {
     textAlign: "center",
+    marginTop: 14,
+    fontSize: 14,
   },
+
+  link: {
+    color: "#2563eb",
+    cursor: "pointer",
+    fontWeight: 600,
+  },
+
 };
