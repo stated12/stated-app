@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 type Profile = {
   id: string;
   username: string;
-  display_name: string;
+  display_name: string | null;
   bio: string | null;
+  website: string | null;
   avatar_url: string | null;
 };
 
@@ -16,6 +17,8 @@ type Commitment = {
   id: string;
   text: string;
   status: string;
+  created_at: string;
+  completed_at: string | null;
 };
 
 export default function UserPage() {
@@ -31,37 +34,54 @@ export default function UserPage() {
 
   useEffect(() => {
 
-    async function loadProfile() {
+    async function loadProfileAndCommitments() {
 
-      // EXACT same query that worked before
-      const { data: profileData, error } = await supabase
+      setLoading(true);
+
+      // STEP 1: Load profile
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          id,
+          username,
+          display_name,
+          bio,
+          website,
+          avatar_url
+        `)
         .eq("username", username)
         .single();
 
-      if (error || !profileData) {
+      if (profileError || !profileData) {
+        setProfile(null);
         setLoading(false);
         return;
       }
 
       setProfile(profileData);
 
-      // commitments load
+      // STEP 2: Load commitments
       const { data: commitmentsData } = await supabase
         .from("commitments")
-        .select("id, text, status")
+        .select(`
+          id,
+          text,
+          status,
+          created_at,
+          completed_at
+        `)
         .eq("user_id", profileData.id)
-        .eq("is_public", true);
+        .eq("is_public", true)
+        .order("created_at", { ascending: false });
 
-      if (commitmentsData) {
-        setCommitments(commitmentsData);
-      }
+      setCommitments(commitmentsData || []);
 
       setLoading(false);
     }
 
-    if (username) loadProfile();
+    if (username) {
+      loadProfileAndCommitments();
+    }
 
   }, [username]);
 
@@ -76,6 +96,7 @@ export default function UserPage() {
 
       <div style={styles.brand}>Stated</div>
 
+      {/* PROFILE HEADER */}
       <div style={styles.header}>
 
         <div style={styles.avatar}>
@@ -83,12 +104,14 @@ export default function UserPage() {
             <img src={profile.avatar_url} style={styles.avatarImg} />
           ) : (
             <span style={styles.avatarLetter}>
-              {profile.display_name?.charAt(0)}
+              {(profile.display_name || profile.username).charAt(0)}
             </span>
           )}
         </div>
 
-        <h1 style={styles.name}>{profile.display_name}</h1>
+        <h1 style={styles.name}>
+          {profile.display_name || profile.username}
+        </h1>
 
         <div style={styles.username}>
           @{profile.username}
@@ -98,21 +121,54 @@ export default function UserPage() {
           <p style={styles.bio}>{profile.bio}</p>
         )}
 
+        {profile.website && (
+          <a
+            href={profile.website}
+            target="_blank"
+            style={styles.link}
+          >
+            {profile.website}
+          </a>
+        )}
+
       </div>
 
+      {/* COMMITMENTS SECTION */}
       <div style={styles.section}>
 
-        <h2>Commitments</h2>
+        <h2 style={styles.sectionTitle}>
+          Commitments
+        </h2>
 
         {commitments.length === 0 ? (
-          <div style={styles.card}>
+          <div style={styles.emptyCard}>
             No commitments yet.
           </div>
         ) : (
           commitments.map((c) => (
             <div key={c.id} style={styles.card}>
-              <div>{c.text}</div>
-              <div style={styles.status}>{c.status}</div>
+
+              <div style={styles.commitmentText}>
+                {c.text}
+              </div>
+
+              <div style={styles.metaRow}>
+
+                <span style={{
+                  ...styles.status,
+                  ...(c.status === "completed"
+                    ? styles.completed
+                    : styles.active)
+                }}>
+                  {c.status}
+                </span>
+
+                <span style={styles.date}>
+                  {new Date(c.created_at).toLocaleDateString()}
+                </span>
+
+              </div>
+
             </div>
           ))
         )}
@@ -147,6 +203,7 @@ const styles: any = {
 
   header: {
     textAlign: "center",
+    marginBottom: 40,
   },
 
   avatar: {
@@ -166,7 +223,6 @@ const styles: any = {
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    borderRadius: "50%",
   },
 
   avatarLetter: {
@@ -180,27 +236,71 @@ const styles: any = {
 
   username: {
     opacity: 0.6,
+    marginBottom: 10,
   },
 
   bio: {
-    marginTop: 12,
+    marginTop: 10,
+  },
+
+  link: {
+    color: "#2563eb",
+    display: "block",
+    marginTop: 8,
   },
 
   section: {
-    marginTop: 40,
+    marginTop: 30,
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    marginBottom: 12,
+  },
+
+  emptyCard: {
+    border: "1px solid #eee",
+    padding: 16,
+    borderRadius: 8,
+    opacity: 0.7,
   },
 
   card: {
     border: "1px solid #eee",
-    borderRadius: 8,
     padding: 16,
-    marginTop: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+
+  commitmentText: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+
+  metaRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 14,
   },
 
   status: {
+    padding: "2px 8px",
+    borderRadius: 6,
     fontSize: 12,
+  },
+
+  active: {
+    background: "#e0f2fe",
+    color: "#0369a1",
+  },
+
+  completed: {
+    background: "#dcfce7",
+    color: "#166534",
+  },
+
+  date: {
     opacity: 0.6,
-    marginTop: 4,
   },
 
 };
