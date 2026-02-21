@@ -10,41 +10,40 @@ export default function CommitmentViewPage() {
   const supabase = createClient();
   const params = useParams();
 
-  const commitmentId = params.id as string;
+  const commitmentId = String(params.id);
 
   const [commitment, setCommitment] = useState<any>(null);
   const [updates, setUpdates] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     loadCommitment();
     trackView();
-  }, []);
+  }, [commitmentId]);
+
 
   async function loadCommitment() {
 
     try {
 
-      // GET COMMITMENT
-      const { data: commitmentData, error: commitmentError } =
+      // LOAD COMMITMENT
+      const { data: commitmentData } =
         await supabase
           .from("commitments")
           .select("*")
           .eq("id", commitmentId)
           .single();
 
-      if (commitmentError || !commitmentData) {
-        setError("Commitment not found");
+      if (!commitmentData) {
         setLoading(false);
         return;
       }
 
       setCommitment(commitmentData);
 
-      // GET PROFILE
+      // LOAD PROFILE
       const { data: profileData } =
         await supabase
           .from("profiles")
@@ -54,7 +53,8 @@ export default function CommitmentViewPage() {
 
       setProfile(profileData);
 
-      // GET UPDATES
+
+      // LOAD UPDATES
       const { data: updatesData } =
         await supabase
           .from("commitment_updates")
@@ -64,73 +64,78 @@ export default function CommitmentViewPage() {
 
       setUpdates(updatesData || []);
 
-    } catch (err) {
-
-      setError("Failed to load commitment");
-
-    }
+    } catch {}
 
     setLoading(false);
 
   }
 
+
   async function trackView() {
 
     try {
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       await supabase
         .from("commitment_views")
         .insert({
-          commitment_id: commitmentId,
-          viewer_id: user?.id || null,
+          commitment_id: commitmentId
         });
 
     } catch {}
 
   }
 
-  function getDaysRemaining() {
 
-    if (!commitment?.end_date) return null;
+  function avatar() {
 
-    const today = new Date();
+    if (profile?.avatar_url)
+      return profile.avatar_url;
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      profile?.display_name || "User"
+    )}&background=2563eb&color=fff`;
+
+  }
+
+
+  function daysRemaining() {
+
+    if (!commitment?.end_date)
+      return null;
+
     const end = new Date(commitment.end_date);
+    const today = new Date();
 
-    const diff =
+    const days =
       Math.ceil(
-        (end.getTime() - today.getTime()) /
+        (end.getTime() - today.getTime())
+        /
         (1000 * 60 * 60 * 24)
       );
 
-    return diff;
+    return days;
 
   }
+
 
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        Loading commitment...
       </div>
     );
 
-  if (error)
+
+  if (!commitment)
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
+      <div className="min-h-screen flex items-center justify-center">
+        Commitment not found
       </div>
     );
 
-  const daysRemaining = getDaysRemaining();
 
-  const avatar =
-    profile?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      profile?.display_name || "User"
-    )}&background=2563eb&color=fff`;
+  const daysLeft = daysRemaining();
+
 
   return (
 
@@ -138,64 +143,74 @@ export default function CommitmentViewPage() {
 
       <div className="max-w-2xl mx-auto space-y-6">
 
-        {/* BRAND */}
+
+        {/* HEADER */}
+
         <Link href="/">
           <div className="text-2xl font-bold text-blue-600">
             Stated
           </div>
         </Link>
 
+
         {/* PROFILE */}
-        <Link href={`/u/${profile?.username}`}>
-          <div className="flex items-center gap-3 cursor-pointer">
 
-            <img
-              src={avatar}
-              className="w-10 h-10 rounded-full"
-            />
+        <Link
+          href={`/u/${profile?.username}`}
+          className="flex items-center gap-3"
+        >
 
-            <div>
+          <img
+            src={avatar()}
+            className="w-10 h-10 rounded-full"
+          />
 
-              <div className="font-medium">
-                {profile?.display_name}
-              </div>
+          <div>
 
-              <div className="text-sm text-gray-500">
-                @{profile?.username}
-              </div>
+            <div className="font-medium">
+              {profile?.display_name}
+            </div>
 
+            <div className="text-sm text-gray-500">
+              @{profile?.username}
             </div>
 
           </div>
+
         </Link>
 
-        {/* COMMITMENT CARD */}
-        <div className="bg-white rounded-xl shadow p-5">
 
-          <div className="text-lg font-semibold">
+        {/* COMMITMENT CARD */}
+
+        <div className="bg-white rounded-xl shadow p-6">
+
+          <div className="text-lg font-medium mb-2">
             {commitment.text}
           </div>
 
-          <div className="text-sm text-gray-500 mt-2">
+
+          <div className="text-sm text-gray-500 capitalize">
 
             Status:
-            <span className="ml-1 capitalize font-medium">
+            <span className="ml-1 font-medium">
               {commitment.status}
             </span>
 
           </div>
 
-          {commitment.status === "active" && daysRemaining !== null && (
+
+          {commitment.status === "active" && daysLeft !== null && (
 
             <div className="text-sm text-gray-500 mt-1">
 
-              {daysRemaining > 0
-                ? `${daysRemaining} days remaining`
+              {daysLeft > 0
+                ? `${daysLeft} days remaining`
                 : "Expired"}
 
             </div>
 
           )}
+
 
           <div className="text-xs text-gray-400 mt-2">
 
@@ -209,20 +224,25 @@ export default function CommitmentViewPage() {
 
         </div>
 
+
+
         {/* UPDATES */}
+
         <div>
 
           <div className="font-semibold mb-3">
             Progress updates
           </div>
 
+
           {updates.length === 0 && (
 
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-500">
               No updates yet
             </div>
 
           )}
+
 
           <div className="space-y-3">
 
@@ -234,13 +254,15 @@ export default function CommitmentViewPage() {
               >
 
                 <div className="text-sm">
-                  {update.content}
+                  {update.text}
                 </div>
 
-                <div className="text-xs text-gray-400 mt-2">
+                <div className="text-xs text-gray-400 mt-1">
+
                   {new Date(
                     update.created_at
-                  ).toLocaleString()}
+                  ).toLocaleDateString()}
+
                 </div>
 
               </div>
@@ -250,6 +272,7 @@ export default function CommitmentViewPage() {
           </div>
 
         </div>
+
 
       </div>
 
