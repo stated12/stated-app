@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-export default function AddUpdatePage() {
+export default function CommitmentUpdatePage() {
 
   const supabase = createClient();
   const router = useRouter();
@@ -13,14 +14,52 @@ export default function AddUpdatePage() {
   const commitmentId = params.id as string;
 
   const [content, setContent] = useState("");
+  const [commitmentText, setCommitmentText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // VERIFY USER OWNS COMMITMENT
+  useEffect(() => {
+
+    async function verifyOwnership() {
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("commitments")
+        .select("text")
+        .eq("id", commitmentId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (error || !data) {
+        setError("Commitment not found");
+        setChecking(false);
+        return;
+      }
+
+      setCommitmentText(data.text);
+      setChecking(false);
+    }
+
+    verifyOwnership();
+
+  }, [commitmentId, router, supabase]);
+
+
+
+  async function submitUpdate() {
 
     if (!content.trim()) {
-      setError("Update cannot be empty");
+      setError("Write your progress update");
       return;
     }
 
@@ -32,49 +71,79 @@ export default function AddUpdatePage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Not authenticated");
-      setLoading(false);
+      router.push("/login");
       return;
     }
 
-    const { error: insertError } =
-      await supabase
-        .from("commitment_updates")
-        .insert({
-          commitment_id: commitmentId,
-          user_id: user.id,
-          content: content.trim(),
-        });
+    const { error } = await supabase
+      .from("commitment_updates")
+      .insert({
+        commitment_id: commitmentId,
+        user_id: user.id,
+        content: content.trim(),
+      });
 
-    if (insertError) {
-      setError(insertError.message);
+    if (error) {
+      setError(error.message);
       setLoading(false);
       return;
     }
 
     router.push("/dashboard");
-    router.refresh();
   }
 
+
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+
+
+  if (error === "Commitment not found") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        {error}
+      </div>
+    );
+  }
+
+
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl shadow w-full max-w-md"
-      >
+    <div className="min-h-screen bg-gray-50 flex justify-center items-center p-4">
 
-        <h1 className="text-xl font-semibold mb-4">
-          Add Update
-        </h1>
+      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
+
+        <Link href="/dashboard">
+          <div className="text-3xl font-bold text-blue-600 mb-2">
+            Stated
+          </div>
+        </Link>
+
+        <div className="text-gray-500 mb-4">
+          Add progress update
+        </div>
+
+
+        <div className="text-sm bg-gray-100 p-3 rounded mb-4">
+          {commitmentText}
+        </div>
+
 
         <textarea
-          placeholder="Example: Completed chapter 2"
           value={content}
-          onChange={(e)=>setContent(e.target.value)}
-          className="w-full border rounded-lg p-3 mb-4"
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Example: Completed chapter 2 today"
+          className="w-full border rounded-lg px-3 py-2 mb-4"
           rows={4}
         />
+
 
         {error && (
           <div className="text-red-500 text-sm mb-3">
@@ -82,17 +151,19 @@ export default function AddUpdatePage() {
           </div>
         )}
 
+
         <button
-          type="submit"
+          onClick={submitUpdate}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700"
         >
-          {loading ? "Saving..." : "Save Update"}
+          {loading ? "Saving..." : "Add Update"}
         </button>
 
-      </form>
+      </div>
 
     </div>
+
   );
 
 }
