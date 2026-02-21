@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Profile = {
@@ -12,9 +13,12 @@ type Profile = {
   credits: number;
 };
 
-export default function UserPage({ params }: { params: { username: string } }) {
+export default function UserPage() {
 
+  const params = useParams();
   const supabase = createClient();
+
+  const username = String(params.username);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,51 +27,40 @@ export default function UserPage({ params }: { params: { username: string } }) {
 
     async function loadProfile() {
 
-      const username = params.username?.trim().toLowerCase();
+      console.log("Fetching username:", username);
 
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .ilike("username", username)
-        .limit(1);
+        .eq("username", username)
+        .single();
 
-      if (error) {
-        console.log("ERROR:", error);
-      }
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
 
-      if (data && data.length > 0) {
-        setProfile(data[0]);
-      } else {
-        setProfile(null);
+      if (data) {
+        setProfile(data);
       }
 
       setLoading(false);
     }
 
-    loadProfile();
+    if (username) {
+      loadProfile();
+    }
 
-  }, [params.username]);
+  }, [username]);
 
   if (loading)
-    return (
-      <div style={styles.center}>
-        Loading profile...
-      </div>
-    );
+    return <div style={styles.center}>Loading profile...</div>;
 
   if (!profile)
-    return (
-      <div style={styles.center}>
-        Profile not found
-      </div>
-    );
+    return <div style={styles.center}>Profile not found</div>;
 
   return (
     <div style={styles.container}>
 
-      <div style={styles.brand}>
-        Stated
-      </div>
+      <div style={styles.brand}>Stated</div>
 
       <div style={styles.header}>
 
@@ -81,34 +74,15 @@ export default function UserPage({ params }: { params: { username: string } }) {
           )}
         </div>
 
-        <h1 style={styles.name}>
-          {profile.display_name}
-        </h1>
+        <h1 style={styles.name}>{profile.display_name}</h1>
 
         <div style={styles.username}>
           @{profile.username}
         </div>
 
         {profile.bio && (
-          <p style={styles.bio}>
-            {profile.bio}
-          </p>
+          <p style={styles.bio}>{profile.bio}</p>
         )}
-
-        {profile.website && (
-          <a href={profile.website} style={styles.link}>
-            {profile.website}
-          </a>
-        )}
-
-      </div>
-
-      <div style={styles.section}>
-        <h2>Commitments</h2>
-
-        <div style={styles.card}>
-          Commitments will appear here.
-        </div>
 
       </div>
 
@@ -140,7 +114,6 @@ const styles: any = {
 
   header: {
     textAlign: "center",
-    marginBottom: 40,
   },
 
   avatar: {
@@ -153,13 +126,13 @@ const styles: any = {
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 16px auto",
-    overflow: "hidden",
   },
 
   avatarImg: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    borderRadius: "50%",
   },
 
   avatarLetter: {
@@ -173,25 +146,9 @@ const styles: any = {
 
   username: {
     opacity: 0.6,
-    marginBottom: 12,
   },
 
   bio: {
-    marginBottom: 12,
-  },
-
-  link: {
-    color: "#2563eb",
-  },
-
-  section: {
-    marginTop: 32,
-  },
-
-  card: {
-    padding: 16,
-    border: "1px solid #eee",
-    borderRadius: 8,
     marginTop: 12,
   },
 
