@@ -6,31 +6,27 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
 
-  const supabase = createClient();
   const router = useRouter();
+  const supabase = createClient();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [accountType, setAccountType] = useState("individual");
+  const [accountType, setAccountType] = useState<"individual" | "company">("individual");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSignup() {
+  async function handleSignup(e: React.FormEvent) {
+
+    e.preventDefault();
+
+    setLoading(true);
+    setError("");
 
     try {
 
-      setLoading(true);
-      setError("");
-
-      if (!username || !email || !password) {
-        setError("Please fill all fields");
-        setLoading(false);
-        return;
-      }
-
-      // Step 1 — Create auth user
+      // 1. Create auth user
       const { data: authData, error: authError } =
         await supabase.auth.signUp({
           email,
@@ -46,30 +42,36 @@ export default function SignupPage() {
       const user = authData.user;
 
       if (!user) {
-        setError("Signup failed");
+        setError("User creation failed");
         setLoading(false);
         return;
       }
 
-      // Step 2 — Create profile
+      // Ensure session exists
+      await supabase.auth.getSession();
+
+      // 2. Create profile row
       const { error: profileError } =
-        await supabase.from("profiles").insert({
-          id: user.id,
-          username: username.toLowerCase(),
-          display_name: username,
-          credits: 0,
-        });
+        await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            username: username.toLowerCase(),
+            display_name: username,
+            account_type: accountType,
+            credits: 0,
+          });
 
       if (profileError) {
-        setError("Profile creation failed");
+        setError(profileError.message);
         setLoading(false);
         return;
       }
 
-      // Step 3 — Redirect to dashboard
+      // 3. Redirect to dashboard
       router.push("/dashboard");
 
-    } catch (err) {
+    } catch (err: any) {
 
       setError("Something went wrong");
 
@@ -82,216 +84,220 @@ export default function SignupPage() {
   }
 
   return (
-    <div style={styles.page}>
+    <div style={styles.container}>
 
-      <div style={styles.card}>
+      <form onSubmit={handleSignup} style={styles.card}>
 
-        <div style={styles.logo}>
+        <div style={styles.brand}>
           Stated
         </div>
 
-        <div style={styles.subtitle}>
-          Make commitments. Stay accountable.
-          <br />
-          Build trust publicly.
+        <div style={styles.tagline}>
+          Make commitments. Stay accountable. Build trust publicly.
         </div>
 
+
+        {/* Username */}
         <input
-          style={styles.input}
+          type="text"
           placeholder="Username"
           value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
+          required
+          onChange={(e) => setUsername(e.target.value)}
+          style={styles.input}
         />
 
         <div style={styles.url}>
           stated.app/u/{username || "username"}
         </div>
 
+
+        {/* Email */}
         <input
-          style={styles.input}
+          type="email"
           placeholder="Email"
           value={email}
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
+          required
+          onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
         />
 
+
+        {/* Password */}
         <input
-          style={styles.input}
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
+          required
+          onChange={(e) => setPassword(e.target.value)}
+          style={styles.input}
         />
 
-        <div style={styles.toggleRow}>
+
+        {/* Account Type */}
+        <div style={styles.accountTypeContainer}>
 
           <button
-            style={
-              accountType === "individual"
-                ? styles.toggleActive
-                : styles.toggle
-            }
-            onClick={() =>
-              setAccountType("individual")
-            }
+            type="button"
+            onClick={() => setAccountType("individual")}
+            style={{
+              ...styles.accountTypeButton,
+              background:
+                accountType === "individual"
+                  ? "#2563eb"
+                  : "#eee",
+              color:
+                accountType === "individual"
+                  ? "#fff"
+                  : "#000",
+            }}
           >
             Individual
           </button>
 
           <button
-            style={
-              accountType === "company"
-                ? styles.toggleActive
-                : styles.toggle
-            }
-            onClick={() =>
-              setAccountType("company")
-            }
+            type="button"
+            onClick={() => setAccountType("company")}
+            style={{
+              ...styles.accountTypeButton,
+              background:
+                accountType === "company"
+                  ? "#2563eb"
+                  : "#eee",
+              color:
+                accountType === "company"
+                  ? "#fff"
+                  : "#000",
+            }}
           >
             Company
           </button>
 
         </div>
 
+
+        {/* Error */}
         {error && (
           <div style={styles.error}>
             {error}
           </div>
         )}
 
+
+        {/* Submit */}
         <button
-          style={styles.button}
-          onClick={handleSignup}
+          type="submit"
           disabled={loading}
+          style={styles.submit}
         >
-          {loading
-            ? "Creating account..."
-            : "Create account"}
+          {loading ? "Creating..." : "Create account"}
         </button>
 
-        <div style={styles.bottom}>
+
+        {/* Login Link */}
+        <div style={styles.login}>
           Already have account?{" "}
           <span
-            style={styles.link}
-            onClick={() =>
-              router.push("/login")
-            }
+            onClick={() => router.push("/login")}
+            style={styles.loginLink}
           >
             Login
           </span>
         </div>
 
-      </div>
+      </form>
 
     </div>
   );
 
 }
 
+
 const styles: any = {
 
-  page: {
+  container: {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#f8fafc",
+    background: "#f5f5f5",
   },
 
   card: {
-    width: 380,
-    padding: 28,
-    borderRadius: 12,
+    width: 400,
     background: "#fff",
-    border: "1px solid #e5e7eb",
+    padding: 32,
+    borderRadius: 12,
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
   },
 
-  logo: {
-    fontSize: 28,
-    fontWeight: 800,
+  brand: {
+    fontSize: 32,
+    fontWeight: "bold",
     color: "#2563eb",
     textAlign: "center",
     marginBottom: 8,
   },
 
-  subtitle: {
+  tagline: {
     textAlign: "center",
-    color: "#6b7280",
-    marginBottom: 20,
+    marginBottom: 24,
+    color: "#555",
   },
 
   input: {
     width: "100%",
     padding: 12,
-    marginBottom: 10,
+    marginBottom: 12,
     borderRadius: 8,
-    border: "1px solid #d1d5db",
-    fontSize: 14,
+    border: "1px solid #ddd",
   },
 
   url: {
     fontSize: 12,
-    color: "#6b7280",
-    marginBottom: 10,
-  },
-
-  toggleRow: {
-    display: "flex",
-    gap: 8,
     marginBottom: 12,
+    color: "#666",
   },
 
-  toggle: {
+  accountTypeContainer: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 16,
+  },
+
+  accountTypeButton: {
     flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #d1d5db",
-    background: "#f3f4f6",
-    cursor: "pointer",
-  },
-
-  toggleActive: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #2563eb",
-    background: "#2563eb",
-    color: "#fff",
-    cursor: "pointer",
-  },
-
-  button: {
-    width: "100%",
     padding: 12,
+    borderRadius: 8,
+    border: "none",
+    cursor: "pointer",
+  },
+
+  submit: {
+    width: "100%",
+    padding: 14,
+    borderRadius: 8,
+    border: "none",
     background: "#2563eb",
     color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    fontWeight: 600,
+    fontWeight: "bold",
     cursor: "pointer",
   },
 
   error: {
     color: "red",
-    marginBottom: 10,
-    fontSize: 14,
+    marginBottom: 12,
   },
 
-  bottom: {
+  login: {
     textAlign: "center",
-    marginTop: 14,
-    fontSize: 14,
+    marginTop: 16,
   },
 
-  link: {
+  loginLink: {
     color: "#2563eb",
     cursor: "pointer",
-    fontWeight: 600,
+    fontWeight: "bold",
   },
 
 };
