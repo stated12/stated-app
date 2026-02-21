@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Profile = {
@@ -13,60 +12,123 @@ type Profile = {
   credits: number;
 };
 
-export default function UserPage() {
+type Commitment = {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+};
 
-  const params = useParams();
+export default function UserPage({
+  params,
+}: {
+  params: { username: string };
+}) {
   const supabase = createClient();
 
-  const username = String(params.username);
+  const username = params.username;
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function loadData() {
+      setLoading(true);
 
-    async function loadProfile() {
+      // Load profile
+      const { data: profileData, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select(
+            `
+            username,
+            display_name,
+            bio,
+            website,
+            avatar_url,
+            credits
+            `
+          )
+          .eq("username", username)
+          .maybeSingle();
 
-      console.log("Fetching username:", username);
+      if (profileError) {
+        console.error("PROFILE ERROR:", profileError);
+      }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username)
-        .single();
+      setProfile(profileData);
 
-      console.log("DATA:", data);
-      console.log("ERROR:", error);
+      // Load commitments
+      const { data: commitmentsData, error: commitmentsError } =
+        await supabase
+          .from("commitments")
+          .select("*")
+          .eq("username", username)
+          .order("created_at", { ascending: false });
 
-      if (data) {
-        setProfile(data);
+      if (commitmentsError) {
+        console.error("COMMITMENTS ERROR:", commitmentsError);
+      }
+
+      setCommitments(commitmentsData || []);
+
+      // Set page metadata
+      if (profileData) {
+        document.title = `${profileData.display_name} | Stated`;
+
+        const meta = document.querySelector(
+          "meta[name='description']"
+        );
+
+        if (meta) {
+          meta.setAttribute(
+            "content",
+            profileData.bio ||
+              "Public commitments and outcomes on Stated"
+          );
+        }
       }
 
       setLoading(false);
     }
 
-    if (username) {
-      loadProfile();
-    }
+    loadData();
+  }, [username, supabase]);
 
-  }, [username]);
-
+  // Loading state
   if (loading)
-    return <div style={styles.center}>Loading profile...</div>;
+    return (
+      <div style={styles.center}>
+        Loading profile...
+      </div>
+    );
 
+  // Not found state
   if (!profile)
-    return <div style={styles.center}>Profile not found</div>;
+    return (
+      <div style={styles.center}>
+        Profile not found
+      </div>
+    );
 
   return (
     <div style={styles.container}>
 
-      <div style={styles.brand}>Stated</div>
+      {/* Branding */}
+      <div style={styles.brand}>
+        Stated
+      </div>
 
+      {/* Profile Header */}
       <div style={styles.header}>
 
         <div style={styles.avatar}>
           {profile.avatar_url ? (
-            <img src={profile.avatar_url} style={styles.avatarImg} />
+            <img
+              src={profile.avatar_url}
+              style={styles.avatarImg}
+            />
           ) : (
             <span style={styles.avatarLetter}>
               {profile.display_name?.charAt(0)}
@@ -74,15 +136,56 @@ export default function UserPage() {
           )}
         </div>
 
-        <h1 style={styles.name}>{profile.display_name}</h1>
+        <h1 style={styles.name}>
+          {profile.display_name}
+        </h1>
 
         <div style={styles.username}>
           @{profile.username}
         </div>
 
         {profile.bio && (
-          <p style={styles.bio}>{profile.bio}</p>
+          <p style={styles.bio}>
+            {profile.bio}
+          </p>
         )}
+
+        {profile.website && (
+          <a
+            href={profile.website}
+            target="_blank"
+            style={styles.link}
+          >
+            {profile.website}
+          </a>
+        )}
+
+      </div>
+
+      {/* Commitments Section */}
+      <div style={styles.section}>
+
+        <h2>Commitments</h2>
+
+        {commitments.length === 0 && (
+          <div style={styles.empty}>
+            No commitments yet.
+          </div>
+        )}
+
+        {commitments.map((c) => (
+          <div key={c.id} style={styles.card}>
+
+            <div style={styles.cardTitle}>
+              {c.title}
+            </div>
+
+            <div style={styles.cardStatus}>
+              {c.status}
+            </div>
+
+          </div>
+        ))}
 
       </div>
 
@@ -114,6 +217,7 @@ const styles: any = {
 
   header: {
     textAlign: "center",
+    marginBottom: 40,
   },
 
   avatar: {
@@ -126,13 +230,13 @@ const styles: any = {
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 16px auto",
+    overflow: "hidden",
   },
 
   avatarImg: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    borderRadius: "50%",
   },
 
   avatarLetter: {
@@ -146,10 +250,40 @@ const styles: any = {
 
   username: {
     opacity: 0.6,
+    marginBottom: 12,
   },
 
   bio: {
+    marginBottom: 12,
+  },
+
+  link: {
+    color: "#2563eb",
+  },
+
+  section: {
+    marginTop: 32,
+  },
+
+  empty: {
+    opacity: 0.6,
     marginTop: 12,
+  },
+
+  card: {
+    padding: 16,
+    border: "1px solid #eee",
+    borderRadius: 8,
+    marginTop: 12,
+  },
+
+  cardTitle: {
+    fontWeight: 600,
+  },
+
+  cardStatus: {
+    opacity: 0.6,
+    marginTop: 4,
   },
 
 };
