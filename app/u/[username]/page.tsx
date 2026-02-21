@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 
 type Profile = {
   username: string;
@@ -12,68 +9,33 @@ type Profile = {
   credits: number;
 };
 
-export default function UserPage({
+export default async function UserPage({
   params,
 }: {
   params: { username: string };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(`
+      username,
+      display_name,
+      bio,
+      website,
+      avatar_url,
+      credits
+    `)
+    .eq("username", params.username)
+    .maybeSingle();
 
-  useEffect(() => {
-    async function loadProfile() {
-      const { data } = await supabase
-        .from("profiles")
-        .select(
-          `
-          username,
-          display_name,
-          bio,
-          website,
-          avatar_url,
-          credits
-        `
-        )
-        .eq("username", params.username)
-        .maybeSingle();
-
-      setProfile(data);
-      setLoading(false);
-
-      if (data) {
-        document.title = `${data.display_name} | Stated`;
-
-        const meta = document.querySelector(
-          "meta[name='description']"
-        );
-
-        if (meta) {
-          meta.setAttribute(
-            "content",
-            data.bio || "Public commitments and outcomes on Stated"
-          );
-        }
-      }
-    }
-
-    loadProfile();
-  }, [params.username]);
-
-  if (loading)
-    return (
-      <div style={styles.center}>
-        Loading profile...
-      </div>
-    );
-
-  if (!profile)
+  if (!profile) {
     return (
       <div style={styles.center}>
         Profile not found
       </div>
     );
+  }
 
   return (
     <div style={styles.container}>
@@ -157,6 +119,7 @@ const styles: any = {
     justifyContent: "center",
     alignItems: "center",
     height: "60vh",
+    fontFamily: "system-ui",
   },
 
   header: {
