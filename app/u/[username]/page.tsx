@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Profile = {
   username: string;
@@ -10,30 +12,58 @@ type Profile = {
   credits: number | null;
 };
 
-export default async function UserPage({
+export default function UserPage({
   params,
 }: {
   params: { username: string };
 }) {
 
-  // FIX: must use await
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select(`
-      username,
-      display_name,
-      bio,
-      website,
-      avatar_url,
-      credits
-    `)
-    .eq("username", params.username)
-    .single();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (error || !profile) {
-    notFound();
+  useEffect(() => {
+
+    async function loadProfile() {
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          username,
+          display_name,
+          bio,
+          website,
+          avatar_url,
+          credits
+        `)
+        .eq("username", params.username)
+        .maybeSingle();
+
+      console.log("PROFILE RESULT:", data, error);
+
+      setProfile(data);
+      setLoading(false);
+    }
+
+    loadProfile();
+
+  }, [params.username]);
+
+  if (loading) {
+    return (
+      <div style={styles.center}>
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div style={styles.center}>
+        Profile not found
+      </div>
+    );
   }
 
   return (
@@ -86,8 +116,12 @@ export default async function UserPage({
 
       </div>
 
+      {/* Commitments section */}
       <div style={styles.section}>
-        <h2>Commitments</h2>
+
+        <h2 style={styles.sectionTitle}>
+          Commitments
+        </h2>
 
         <div style={styles.card}>
           Commitments will appear here.
@@ -100,6 +134,7 @@ export default async function UserPage({
 }
 
 const styles = {
+
   container: {
     maxWidth: "600px",
     margin: "0 auto",
@@ -111,6 +146,14 @@ const styles = {
     fontSize: "20px",
     fontWeight: 600,
     marginBottom: "24px",
+  },
+
+  center: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "60vh",
+    fontFamily: "system-ui",
   },
 
   header: {
@@ -163,10 +206,16 @@ const styles = {
     marginTop: "32px",
   },
 
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: 600,
+  },
+
   card: {
     padding: "16px",
     border: "1px solid #eee",
     borderRadius: "8px",
     marginTop: "12px",
   },
+
 };
