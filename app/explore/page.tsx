@@ -1,215 +1,233 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
 
-export default async function ExplorePage() {
+export default function ExplorePage() {
 
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  // TRENDING COMMITMENTS (most viewed)
-  const { data: trending } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("status", "active")
-    .order("view_count", { ascending: false })
-    .limit(6);
+  const [people, setPeople] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [commitments, setCommitments] = useState<any[]>([]);
 
-  // RECENT COMMITMENTS
-  const { data: recent } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(6);
+  const [loading, setLoading] = useState(true);
 
-  // FEATURED PEOPLE
-  const { data: people } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("account_type", "individual")
-    .limit(4);
+  useEffect(() => {
+    loadExplore();
+  }, []);
 
-  // FEATURED COMPANIES
-  const { data: companies } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("account_type", "company")
-    .limit(4);
+  async function loadExplore() {
+
+    try {
+
+      // FEATURED PEOPLE
+      const { data: peopleData } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("account_type", "individual")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+      setPeople(peopleData || []);
+
+
+      // FEATURED COMPANIES
+      const { data: companyData } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("account_type", "company")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+      setCompanies(companyData || []);
+
+
+      // TRENDING COMMITMENTS
+      const { data: commitmentsData } =
+        await supabase
+          .from("commitments")
+          .select(`
+            *,
+            profiles (
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+      setCommitments(commitmentsData || []);
+
+    } catch {}
+
+    setLoading(false);
+
+  }
+
+
+  function avatar(profile: any) {
+
+    if (profile?.avatar_url)
+      return profile.avatar_url;
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      profile?.display_name || "User"
+    )}&background=2563eb&color=fff`;
+
+  }
+
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading explore...
+      </div>
+    );
+
 
   return (
 
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
 
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
+      <div className="max-w-5xl mx-auto space-y-10">
+
 
         {/* HEADER */}
-        <div className="flex justify-between items-center">
+        <Link href="/">
+          <div className="text-2xl font-bold text-blue-600">
+            Stated
+          </div>
+        </Link>
 
-          <h1 className="text-3xl font-bold">
-            Explore
-          </h1>
 
-          <Link
-            href="/"
-            className="text-blue-600"
-          >
-            Home
-          </Link>
+        {/* FEATURED PEOPLE */}
+        <div>
+
+          <div className="text-lg font-semibold mb-4">
+            Featured people
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            {people.map((person) => (
+
+              <Link
+                key={person.id}
+                href={`/u/${person.username}`}
+                className="bg-white p-4 rounded-xl shadow text-center"
+              >
+
+                <img
+                  src={avatar(person)}
+                  className="w-14 h-14 rounded-full mx-auto mb-2"
+                />
+
+                <div className="font-medium">
+                  {person.display_name}
+                </div>
+
+                <div className="text-sm text-gray-500">
+                  @{person.username}
+                </div>
+
+              </Link>
+
+            ))}
+
+          </div>
 
         </div>
 
 
-        {/* TRENDING */}
-        <section>
-
-          <h2 className="text-xl font-semibold mb-4">
-            Trending commitments
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-4">
-
-            {trending?.map((c) => (
-
-              <Link
-                key={c.id}
-                href={`/u/${c.username}`}
-                className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
-              >
-
-                <div className="font-medium">
-                  {c.text}
-                </div>
-
-                <div className="text-sm text-gray-500 mt-1">
-                  {c.category}
-                </div>
-
-              </Link>
-
-            ))}
-
-          </div>
-
-        </section>
-
-
-        {/* RECENT */}
-        <section>
-
-          <h2 className="text-xl font-semibold mb-4">
-            Recent commitments
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-4">
-
-            {recent?.map((c) => (
-
-              <Link
-                key={c.id}
-                href={`/u/${c.username}`}
-                className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
-              >
-
-                <div className="font-medium">
-                  {c.text}
-                </div>
-
-                <div className="text-sm text-gray-500 mt-1">
-                  {c.category}
-                </div>
-
-              </Link>
-
-            ))}
-
-          </div>
-
-        </section>
-
-
-        {/* FEATURED PEOPLE */}
-        <section>
-
-          <h2 className="text-xl font-semibold mb-4">
-            Featured people
-          </h2>
-
-          <div className="grid md:grid-cols-4 gap-4">
-
-            {people?.map((p) => {
-
-              const avatar =
-                p.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  p.display_name || p.username
-                )}`;
-
-              return (
-
-                <Link
-                  key={p.id}
-                  href={`/u/${p.username}`}
-                  className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
-                >
-
-                  <Image
-                    src={avatar}
-                    width={60}
-                    height={60}
-                    alt="avatar"
-                    className="rounded-full mx-auto"
-                  />
-
-                  <div className="mt-2 font-medium">
-                    {p.display_name || p.username}
-                  </div>
-
-                </Link>
-
-              );
-
-            })}
-
-          </div>
-
-        </section>
-
-
         {/* FEATURED COMPANIES */}
-        <section>
+        <div>
 
-          <h2 className="text-xl font-semibold mb-4">
+          <div className="text-lg font-semibold mb-4">
             Featured companies
-          </h2>
+          </div>
 
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-            {companies?.map((p) => {
+            {companies.map((company) => (
 
-              const avatar =
-                p.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  p.display_name || p.username
-                )}`;
+              <Link
+                key={company.id}
+                href={`/u/${company.username}`}
+                className="bg-white p-4 rounded-xl shadow text-center"
+              >
+
+                <img
+                  src={avatar(company)}
+                  className="w-14 h-14 rounded-full mx-auto mb-2"
+                />
+
+                <div className="font-medium">
+                  {company.display_name}
+                </div>
+
+                <div className="text-sm text-gray-500">
+                  @{company.username}
+                </div>
+
+              </Link>
+
+            ))}
+
+          </div>
+
+        </div>
+
+
+        {/* TRENDING COMMITMENTS */}
+        <div>
+
+          <div className="text-lg font-semibold mb-4">
+            Trending commitments
+          </div>
+
+          <div className="space-y-4">
+
+            {commitments.map((commitment) => {
+
+              const profile = commitment.profiles;
 
               return (
 
                 <Link
-                  key={p.id}
-                  href={`/u/${p.username}`}
-                  className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
+                  key={commitment.id}
+                  href={`/commitment/${commitment.id}`}
+                  className="block bg-white p-5 rounded-xl shadow"
                 >
 
-                  <Image
-                    src={avatar}
-                    width={60}
-                    height={60}
-                    alt="avatar"
-                    className="rounded-full mx-auto"
-                  />
+                  <div className="flex items-center gap-3 mb-2">
 
-                  <div className="mt-2 font-medium">
-                    {p.display_name || p.username}
+                    <img
+                      src={avatar(profile)}
+                      className="w-8 h-8 rounded-full"
+                    />
+
+                    <div className="text-sm font-medium">
+                      {profile?.display_name}
+                    </div>
+
+                    <div className="text-xs text-gray-500">
+                      @{profile?.username}
+                    </div>
+
+                  </div>
+
+                  <div className="font-medium">
+                    {commitment.text}
+                  </div>
+
+                  <div className="text-sm text-gray-500 mt-1 capitalize">
+                    Status: {commitment.status}
                   </div>
 
                 </Link>
@@ -220,7 +238,7 @@ export default async function ExplorePage() {
 
           </div>
 
-        </section>
+        </div>
 
 
       </div>
