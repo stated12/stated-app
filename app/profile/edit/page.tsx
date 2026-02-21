@@ -5,26 +5,32 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function EditProfilePage() {
-
   const supabase = createClient();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
-  const [website, setWebsite] = useState("");
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [profile, setProfile] = useState({
+    display_name: "",
+    bio: "",
+    website: "",
+    linkedin: "",
+    twitter: "",
+    github: "",
+    youtube: "",
+    avatar_url: "",
+  });
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // Load profile
   useEffect(() => {
-
     async function loadProfile() {
-
       const {
-        data: { user }
+        data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
@@ -34,25 +40,57 @@ export default function EditProfilePage() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, bio, website")
+        .select("*")
         .eq("id", user.id)
         .single();
 
-      if (data) {
-        setDisplayName(data.display_name || "");
-        setBio(data.bio || "");
-        setWebsite(data.website || "");
+      if (error) {
+        setError("Failed to load profile");
+      } else if (data) {
+        setProfile({
+          display_name: data.display_name || "",
+          bio: data.bio || "",
+          website: data.website || "",
+          linkedin: data.linkedin || "",
+          twitter: data.twitter || "",
+          github: data.github || "",
+          youtube: data.youtube || "",
+          avatar_url: data.avatar_url || "",
+        });
       }
 
       setLoading(false);
     }
 
     loadProfile();
+  }, [router, supabase]);
 
-  }, []);
+  // Upload avatar
+  async function uploadAvatar(userId: string) {
+    if (!avatarFile) return profile.avatar_url;
 
+    const fileExt = avatarFile.name.split(".").pop();
+    const filePath = `${userId}-${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, avatarFile, {
+        upsert: true,
+      });
+
+    if (error) {
+      throw new Error("Avatar upload failed");
+    }
+
+    const { data } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  }
+
+  // Save profile
   async function handleSave(e: React.FormEvent) {
-
     e.preventDefault();
 
     setSaving(true);
@@ -60,7 +98,7 @@ export default function EditProfilePage() {
     setSuccess("");
 
     const {
-      data: { user }
+      data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
@@ -69,178 +107,199 @@ export default function EditProfilePage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName,
-        bio: bio,
-        website: website,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", user.id);
+    try {
+      const avatar_url = await uploadAvatar(user.id);
 
-    if (error) {
-      setError(error.message);
-      setSaving(false);
-      return;
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_name: profile.display_name,
+          bio: profile.bio,
+          website: profile.website,
+          linkedin: profile.linkedin,
+          twitter: profile.twitter,
+          github: profile.github,
+          youtube: profile.youtube,
+          avatar_url,
+        })
+        .eq("id", user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccess("Profile saved successfully");
+
+      setTimeout(() => {
+        router.push("/dashboard");
+        router.refresh();
+      }, 800);
+    } catch (err: any) {
+      setError(err.message);
     }
 
-    setSuccess("Profile saved");
-
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 800);
-
+    setSaving(false);
   }
 
-  if (loading)
+  if (loading) {
     return (
-      <div style={styles.center}>
+      <div className="min-h-screen flex items-center justify-center">
         Loading...
       </div>
     );
+  }
 
   return (
-    <div style={styles.container}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
 
-      <div style={styles.card}>
+        <h1 className="text-3xl font-bold text-blue-600 mb-2 text-center">
+          Stated
+        </h1>
 
-        <h1 style={styles.logo}>Stated</h1>
-
-        <p style={styles.subtitle}>
+        <p className="text-gray-500 text-center mb-6">
           Edit your profile
         </p>
 
-        <form onSubmit={handleSave}>
+        <form onSubmit={handleSave} className="space-y-4">
 
-          <label style={styles.label}>Display name</label>
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
+            {profile.avatar_url && (
+              <img
+                src={profile.avatar_url}
+                className="w-20 h-20 rounded-full mb-2 object-cover"
+              />
+            )}
 
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setAvatarFile(e.target.files?.[0] || null)
+              }
+              className="text-sm"
+            />
+          </div>
+
+          {/* Display name */}
           <input
-            style={styles.input}
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            type="text"
+            placeholder="Display name"
+            value={profile.display_name}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                display_name: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
           />
 
-          <label style={styles.label}>Bio</label>
-
+          {/* Bio */}
           <textarea
-            style={styles.textarea}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            placeholder="Bio"
+            value={profile.bio}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                bio: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
           />
 
-          <label style={styles.label}>Website</label>
-
+          {/* Website */}
           <input
-            style={styles.input}
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            type="text"
+            placeholder="Website"
+            value={profile.website}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                website: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
           />
 
+          {/* LinkedIn */}
+          <input
+            type="text"
+            placeholder="LinkedIn URL"
+            value={profile.linkedin}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                linkedin: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          {/* Twitter */}
+          <input
+            type="text"
+            placeholder="Twitter/X URL"
+            value={profile.twitter}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                twitter: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          {/* GitHub */}
+          <input
+            type="text"
+            placeholder="GitHub URL"
+            value={profile.github}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                github: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          {/* YouTube */}
+          <input
+            type="text"
+            placeholder="YouTube URL"
+            value={profile.youtube}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                youtube: e.target.value,
+              })
+            }
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          {/* Error */}
           {error && (
-            <div style={styles.error}>{error}</div>
+            <p className="text-red-500 text-sm">{error}</p>
           )}
 
+          {/* Success */}
           {success && (
-            <div style={styles.success}>{success}</div>
+            <p className="text-green-600 text-sm">{success}</p>
           )}
 
+          {/* Save button */}
           <button
-            style={styles.button}
+            type="submit"
             disabled={saving}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold"
           >
             {saving ? "Saving..." : "Save profile"}
           </button>
 
         </form>
-
       </div>
-
     </div>
   );
 }
-
-const styles: any = {
-
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#f8fafc",
-    padding: "16px",
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: "420px",
-    background: "#fff",
-    padding: "28px",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-  },
-
-  logo: {
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#2563eb",
-    textAlign: "center",
-    marginBottom: "8px",
-  },
-
-  subtitle: {
-    textAlign: "center",
-    marginBottom: "24px",
-    color: "#64748b",
-  },
-
-  label: {
-    display: "block",
-    marginBottom: "6px",
-    marginTop: "14px",
-  },
-
-  input: {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-  },
-
-  textarea: {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    minHeight: "80px",
-  },
-
-  button: {
-    width: "100%",
-    marginTop: "20px",
-    padding: "14px",
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontWeight: "600",
-  },
-
-  error: {
-    color: "#dc2626",
-    marginTop: "10px",
-  },
-
-  success: {
-    color: "#16a34a",
-    marginTop: "10px",
-  },
-
-  center: {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-};
