@@ -32,16 +32,15 @@ export default function SignupPage() {
       return;
     }
 
-    const check = async () => {
+    const checkUsername = async () => {
 
       setUsernameStatus("checking");
 
-      const { data } =
-        await supabase
-          .from("profiles")
-          .select("username")
-          .eq("username", username.toLowerCase())
-          .single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("username", username.toLowerCase())
+        .maybeSingle();
 
       if (data) {
         setUsernameStatus("taken");
@@ -51,14 +50,15 @@ export default function SignupPage() {
 
     };
 
-    const timeout = setTimeout(check, 500);
+    const timeout = setTimeout(checkUsername, 400);
 
     return () => clearTimeout(timeout);
 
-  }, [username]);
+  }, [username, supabase]);
 
 
 
+  // HANDLE SIGNUP
   async function handleSignup(e: React.FormEvent) {
 
     e.preventDefault();
@@ -74,7 +74,7 @@ export default function SignupPage() {
 
     try {
 
-      // CREATE AUTH USER WITH METADATA
+      // CREATE AUTH USER WITH METADATA (trigger will create profile)
       const { data, error: authError } =
         await supabase.auth.signUp({
 
@@ -105,23 +105,19 @@ export default function SignupPage() {
         return;
       }
 
-      // ENSURE PROFILE EXISTS (trigger should create it)
-      const { error: profileError } =
-        await supabase
-          .from("profiles")
-          .upsert({
 
-            id: user.id,
-            username: username.toLowerCase(),
-            display_name: username,
-            account_type: accountType,
-            credits: 0,
+      // ENSURE PROFILE EXISTS AND SET CREDITS = 2
+      // safe with trigger because of upsert
+      await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          username: username.toLowerCase(),
+          display_name: username,
+          account_type: accountType,
+          credits: 2,   // ✅ FIXED HERE
+        });
 
-          });
-
-      if (profileError) {
-        console.error(profileError);
-      }
 
       router.push("/dashboard");
 
