@@ -3,49 +3,46 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type Profile = {
-  username: string;
-  display_name: string;
-  bio: string | null;
-};
-
 export default function UserPage({ params }: { params: { username: string } }) {
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profiles, setProfiles] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
-    const load = async () => {
+    async function load() {
 
       const supabase = createClient();
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("username, display_name, bio")
-        .eq("username", params.username)
-        .single();
+        .select("*");
 
+      console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
       console.log("DATA:", data);
       console.log("ERROR:", error);
 
-      setProfile(data);
+      setProfiles(data || []);
       setLoading(false);
-    };
+    }
 
     load();
 
-  }, [params.username]);
+  }, []);
 
   if (loading) return <div>Loading...</div>;
 
-  if (!profile) return <div>Profile not found</div>;
-
   return (
     <div style={{ padding: 20 }}>
-      <h1>{profile.display_name}</h1>
-      <p>@{profile.username}</p>
-      <p>{profile.bio}</p>
+      <h1>Debug Profiles</h1>
+
+      {profiles.length === 0 && <div>NO PROFILES FOUND</div>}
+
+      {profiles.map((p: any) => (
+        <div key={p.username}>
+          {p.username} — {p.display_name}
+        </div>
+      ))}
     </div>
   );
 }
