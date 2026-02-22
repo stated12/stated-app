@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function HomePage() {
-
   const supabase = await createClient();
 
   const {
@@ -15,10 +14,10 @@ export default async function HomePage() {
     redirect("/dashboard");
   }
 
-  // Individuals
-  const { data: individualCommitments } = await supabase
+  const { data: commitments } = await supabase
     .from("commitments")
-    .select(`
+    .select(
+      `
       id,
       text,
       status,
@@ -31,33 +30,21 @@ export default async function HomePage() {
         avatar_url,
         account_type
       )
-    `)
+    `
+    )
     .eq("visibility", "public")
-    .eq("profiles.account_type", "individual")
     .order("created_at", { ascending: false })
-    .limit(6);
+    .limit(12);
 
-  // Companies
-  const { data: companyCommitments } = await supabase
-    .from("commitments")
-    .select(`
-      id,
-      text,
-      status,
-      created_at,
-      end_date,
-      view_count,
-      profiles (
-        username,
-        display_name,
-        avatar_url,
-        account_type
-      )
-    `)
-    .eq("visibility", "public")
-    .eq("profiles.account_type", "company")
-    .order("created_at", { ascending: false })
-    .limit(6);
+  const individuals =
+    commitments?.filter(
+      (c: any) => c.profiles?.account_type === "individual"
+    ) || [];
+
+  const companies =
+    commitments?.filter(
+      (c: any) => c.profiles?.account_type === "company"
+    ) || [];
 
   function daysRemaining(end: string) {
     const diff =
@@ -70,7 +57,6 @@ export default async function HomePage() {
 
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-6 py-4 bg-white shadow-sm">
-
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="logo" width={30} height={30} />
           <span className="text-xl font-semibold">Stated</span>
@@ -86,12 +72,10 @@ export default async function HomePage() {
             Get Started
           </Link>
         </div>
-
       </nav>
 
       {/* HERO */}
       <section className="text-center py-16 px-4 max-w-3xl mx-auto">
-
         <h1 className="text-4xl font-bold mb-4">
           Public commitments. Real accountability.
         </h1>
@@ -102,7 +86,6 @@ export default async function HomePage() {
         </p>
 
         <div className="flex gap-3 justify-center">
-
           <Link
             href="/signup"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg"
@@ -116,34 +99,29 @@ export default async function HomePage() {
           >
             Explore Commitments
           </Link>
-
         </div>
-
       </section>
 
       {/* INDIVIDUAL SECTION */}
       <section className="max-w-6xl mx-auto px-4 pb-12">
-
         <h2 className="text-2xl font-semibold mb-6">
           🔥 Individual Commitments
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-          {individualCommitments?.map((c) => (
-
+          {individuals.map((c: any) => (
             <Link
               key={c.id}
               href={`/u/${c.profiles?.username}`}
               className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
             >
-
               <div className="flex items-center gap-3 mb-3">
-
                 <Image
                   src={
                     c.profiles?.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${c.profiles?.display_name}`
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      c.profiles?.display_name || "User"
+                    )}`
                   }
                   alt="avatar"
                   width={40}
@@ -159,7 +137,6 @@ export default async function HomePage() {
                     @{c.profiles?.username}
                   </div>
                 </div>
-
               </div>
 
               <div className="mb-3 text-gray-800">
@@ -169,41 +146,36 @@ export default async function HomePage() {
               <div className="text-xs text-gray-500 flex justify-between">
                 <span>👁 {c.view_count ?? 0} views</span>
                 <span>
-                  {c.end_date && daysRemaining(c.end_date)} days left
+                  {c.end_date
+                    ? `${daysRemaining(c.end_date)} days left`
+                    : ""}
                 </span>
               </div>
-
             </Link>
-
           ))}
-
         </div>
-
       </section>
 
       {/* COMPANY SECTION */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
-
         <h2 className="text-2xl font-semibold mb-6">
           🏢 Company Commitments
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-          {companyCommitments?.map((c) => (
-
+          {companies.map((c: any) => (
             <Link
               key={c.id}
               href={`/u/${c.profiles?.username}`}
               className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
             >
-
               <div className="flex items-center gap-3 mb-3">
-
                 <Image
                   src={
                     c.profiles?.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${c.profiles?.display_name}`
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      c.profiles?.display_name || "Company"
+                    )}`
                   }
                   alt="avatar"
                   width={40}
@@ -219,7 +191,6 @@ export default async function HomePage() {
                     Company
                   </div>
                 </div>
-
               </div>
 
               <div className="mb-3 text-gray-800">
@@ -229,16 +200,14 @@ export default async function HomePage() {
               <div className="text-xs text-gray-500 flex justify-between">
                 <span>👁 {c.view_count ?? 0} views</span>
                 <span>
-                  {c.end_date && daysRemaining(c.end_date)} days left
+                  {c.end_date
+                    ? `${daysRemaining(c.end_date)} days left`
+                    : ""}
                 </span>
               </div>
-
             </Link>
-
           ))}
-
         </div>
-
       </section>
 
     </div>
