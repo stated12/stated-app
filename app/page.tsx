@@ -15,8 +15,7 @@ export default async function HomePage() {
       profiles (
         username,
         display_name,
-        avatar_url,
-        account_type
+        avatar_url
       )
     `)
     .eq("status", "active")
@@ -27,7 +26,7 @@ export default async function HomePage() {
     <div className="min-h-screen flex flex-col">
 
       {/* HEADER */}
-      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-10 py-6 text-white text-sm">
+      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-12 py-6 text-white text-sm font-medium">
         <Link href="/search">Explore</Link>
         <Link href="/login">Login</Link>
       </header>
@@ -47,13 +46,16 @@ export default async function HomePage() {
         {/* BIG LOGO */}
         <Image
           src="/logo.png"
-          alt="Stated Logo"
-          width={170}
-          height={170}
+          alt="Logo"
+          width={190}
+          height={190}
           className="mb-6"
         />
 
-        <h2 className="text-2xl font-semibold mb-4">Stated</h2>
+        {/* STATED TEXT */}
+        <h2 className="text-3xl font-semibold text-blue-500 mb-4">
+          Stated
+        </h2>
 
         <h1 className="text-4xl md:text-5xl font-bold">
           Public commitments.
@@ -97,7 +99,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {/* RECENT COMMITMENTS (ACTIVE ONLY) */}
+      {/* RECENT ACTIVE COMMITMENTS */}
       <section className="bg-white text-black py-16 px-6 flex-1">
         <div className="max-w-5xl mx-auto">
 
@@ -133,12 +135,12 @@ export default async function HomePage() {
                         {c.profiles?.display_name}
                       </div>
 
-                      <div className="text-gray-800 mb-3">
+                      <div className="text-gray-800 mb-2">
                         {c.text}
                       </div>
 
                       <div className="text-xs text-gray-500">
-                        👁 {c.view_count ?? 0} views
+                        Status: Active • 👁 {c.view_count ?? 0} views
                       </div>
                     </div>
 
@@ -155,13 +157,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* SINGLE CLEAN FOOTER */}
       <footer className="border-t text-center py-6 text-sm text-gray-600">
-        <div className="flex justify-center gap-6 mb-2">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
-          <Link href="/refund">Refund</Link>
-        </div>
         © 2026 Stated
       </footer>
 
