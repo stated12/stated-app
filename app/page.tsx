@@ -15,6 +15,7 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If logged in → show dashboard button
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -28,6 +29,7 @@ export default async function HomePage() {
     );
   }
 
+  // Recent commitments
   const { data: recent } = await supabase
     .from("commitments")
     .select(`
@@ -45,16 +47,10 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const { data: people } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(4);
-
   return (
     <div className="min-h-screen text-white relative">
 
-      {/* BACKGROUND IMAGE */}
+      {/* Background */}
       <Image
         src="/nature-bg.jpg"
         alt="background"
@@ -63,21 +59,28 @@ export default async function HomePage() {
         className="object-cover"
       />
 
-      {/* DARK OVERLAY — FIXED */}
+      {/* Dark Overlay (click-safe) */}
       <div className="absolute inset-0 bg-black/60 pointer-events-none" />
 
-      {/* CONTENT */}
-      <div className="relative z-10">
+      {/* Content */}
+      <div className="relative z-10 flex flex-col min-h-screen">
 
-        {/* HEADER */}
+        {/* Header */}
         <header className="flex justify-between items-center px-6 py-4">
 
           <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="logo" width={40} height={40} />
-            <span className="text-xl font-semibold">Stated</span>
+            <Image
+              src="/logo.png"
+              alt="logo"
+              width={40}
+              height={40}
+            />
+            <span className="text-xl font-semibold">
+              Stated
+            </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-sm">
             <Link href="/explore">Explore</Link>
             <Link href="/login">Login</Link>
             <Link
@@ -90,7 +93,7 @@ export default async function HomePage() {
 
         </header>
 
-        {/* HERO */}
+        {/* Hero */}
         <section className="text-center py-20 px-4">
 
           <Image
@@ -116,16 +119,20 @@ export default async function HomePage() {
             Get 2 Free Credits – Start Now
           </Link>
 
+          <p className="text-sm text-gray-300 mt-3">
+            No credit card required
+          </p>
+
         </section>
 
-        {/* RECENT COMMITMENTS */}
+        {/* Recent Commitments */}
         <section className="max-w-4xl mx-auto px-4 pb-16">
 
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-xl font-semibold mb-6">
             Recent Commitments
           </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
 
             {recent?.map((c) => {
               const profile = normalizeProfile(c.profiles);
@@ -134,79 +141,49 @@ export default async function HomePage() {
                 profile?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   profile?.display_name || profile?.username || "User"
-                )}`;
+                )}&background=2563eb&color=fff`;
 
               return (
-                <div
+                <Link
                   key={c.id}
-                  className="bg-white/10 backdrop-blur rounded-lg p-4 flex items-center gap-3"
+                  href={`/commitment/${c.id}`}
+                  className="block bg-white/10 backdrop-blur rounded-lg p-4 hover:bg-white/20 transition"
                 >
-                  <Image
-                    src={avatar}
-                    alt="avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <div className="font-semibold">
-                      {profile?.display_name || profile?.username}
+
+                  <div className="flex items-center gap-3">
+
+                    <Image
+                      src={avatar}
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+
+                    <div>
+                      <div className="font-semibold">
+                        {profile?.display_name || profile?.username}
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        {c.text}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-300">
-                      {c.text}
-                    </div>
+
                   </div>
-                </div>
+
+                </Link>
               );
             })}
+
+            {!recent?.length && (
+              <div className="text-gray-300">
+                No public commitments yet.
+              </div>
+            )}
 
           </div>
 
         </section>
-
-        {/* FOOTER — SINGLE CLEAN VERSION */}
-        <footer className="text-center text-gray-300 pb-10">
-
-          <div className="space-x-6 text-sm">
-
-            <a
-              href="https://stated.in/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline"
-            >
-              Privacy Policy
-            </a>
-
-            <a
-              href="https://stated.in/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline"
-            >
-              Terms of Service
-            </a>
-
-            <a
-              href="https://stated.in/refund"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline"
-            >
-              Refund Policy
-            </a>
-
-          </div>
-
-          <div className="mt-3 text-sm">
-            support@stated.in
-          </div>
-
-          <div className="mt-2 text-xs text-gray-400">
-            © 2026 Stated
-          </div>
-
-        </footer>
 
       </div>
     </div>
