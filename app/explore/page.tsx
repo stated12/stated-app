@@ -18,7 +18,7 @@ type Commitment = {
   status: string;
   created_at: string;
   user_id: string;
-  profiles: Profile | null;
+  profiles: Profile[] | Profile | null;
 };
 
 export default function ExplorePage() {
@@ -36,27 +36,23 @@ export default function ExplorePage() {
 
   async function loadExplore() {
     try {
-      // PEOPLE
+      // FEATURED PEOPLE
       const { data: peopleData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
         .eq("account_type", "individual")
         .limit(4);
 
-      if (peopleData) {
-        setPeople(peopleData);
-      }
+      if (peopleData) setPeople(peopleData);
 
-      // COMPANIES
+      // FEATURED COMPANIES
       const { data: companyData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
         .eq("account_type", "company")
         .limit(4);
 
-      if (companyData) {
-        setCompanies(companyData);
-      }
+      if (companyData) setCompanies(companyData);
 
       // TRENDING
       const { data: trendingData } = await supabase
@@ -77,9 +73,7 @@ export default function ExplorePage() {
         .eq("status", "active")
         .limit(6);
 
-      if (trendingData) {
-        setTrending(trendingData);
-      }
+      if (trendingData) setTrending(trendingData);
 
       // RECENT
       const { data: recentData } = await supabase
@@ -100,15 +94,21 @@ export default function ExplorePage() {
         .order("created_at", { ascending: false })
         .limit(6);
 
-      if (recentData) {
-        setRecent(recentData);
-      }
+      if (recentData) setRecent(recentData);
 
     } catch (error) {
       console.error(error);
     }
 
     setLoading(false);
+  }
+
+  function normalizeProfile(
+    profileData: Profile[] | Profile | null
+  ): Profile | null {
+    if (!profileData) return null;
+    if (Array.isArray(profileData)) return profileData[0] ?? null;
+    return profileData;
   }
 
   function avatar(profile: Profile | null) {
@@ -137,7 +137,7 @@ export default function ExplorePage() {
           </div>
         </Link>
 
-        {/* PEOPLE */}
+        {/* FEATURED PEOPLE */}
         <section>
           <div className="text-lg font-semibold mb-4">
             Featured people
@@ -166,7 +166,7 @@ export default function ExplorePage() {
           </div>
         </section>
 
-        {/* COMPANIES */}
+        {/* FEATURED COMPANIES */}
         <section>
           <div className="text-lg font-semibold mb-4">
             Featured companies
@@ -203,7 +203,7 @@ export default function ExplorePage() {
 
           <div className="space-y-4">
             {trending.map((commitment) => {
-              const profile = commitment.profiles;
+              const profile = normalizeProfile(commitment.profiles);
 
               return (
                 <Link
@@ -242,7 +242,7 @@ export default function ExplorePage() {
 
           <div className="space-y-4">
             {recent.map((commitment) => {
-              const profile = commitment.profiles;
+              const profile = normalizeProfile(commitment.profiles);
 
               return (
                 <Link
