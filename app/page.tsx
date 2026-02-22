@@ -20,31 +20,19 @@ export default async function HomePage() {
       `
       id,
       text,
-      status,
-      created_at,
       end_date,
       view_count,
       profiles (
         username,
         display_name,
-        avatar_url,
-        account_type
+        avatar_url
       )
     `
     )
     .eq("visibility", "public")
+    .eq("status", "active")
     .order("created_at", { ascending: false })
-    .limit(12);
-
-  const individuals =
-    commitments?.filter(
-      (c: any) => c.profiles?.account_type === "individual"
-    ) || [];
-
-  const companies =
-    commitments?.filter(
-      (c: any) => c.profiles?.account_type === "company"
-    ) || [];
+    .limit(6);
 
   function daysRemaining(end: string) {
     const diff =
@@ -53,28 +41,25 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-white">
 
-      {/* HERO WITH BACKGROUND */}
-      <div className="relative h-[80vh] flex flex-col text-white">
+      {/* HERO */}
+      <div className="relative min-h-[80vh] flex flex-col">
 
         <Image
           src="/nature-bg.jpg"
           alt="background"
           fill
           priority
-          className="object-cover -z-10"
+          className="object-cover"
         />
+        <div className="absolute inset-0 bg-black/65" />
 
-        <div className="absolute inset-0 bg-black/60 -z-10" />
-
-        {/* NAVBAR */}
-        <nav className="flex justify-between items-center px-8 py-6">
+        {/* NAV */}
+        <nav className="relative z-10 flex justify-between items-center px-6 py-5">
           <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="logo" width={40} height={40} />
-            <span className="text-2xl font-bold tracking-tight">
-              Stated
-            </span>
+            <Image src="/logo.png" alt="logo" width={36} height={36} />
+            <span className="text-xl font-semibold">Stated</span>
           </div>
 
           <div className="flex items-center gap-6 text-sm">
@@ -82,168 +67,110 @@ export default async function HomePage() {
             <Link href="/login">Login</Link>
             <Link
               href="/signup"
-              className="bg-blue-600 px-5 py-2 rounded-lg"
+              className="bg-blue-600 px-4 py-2 rounded-lg font-medium"
             >
-              Get Started
+              Get 2 Free Credits
             </Link>
           </div>
         </nav>
 
         {/* HERO CONTENT */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Public commitments.
-            <br />
-            Real accountability.
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
+
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Public commitments. Public outcomes.
           </h1>
 
-          <p className="text-lg text-gray-200 mb-10 max-w-2xl">
-            Track goals. Build credibility. Show progress —
-            as an individual or a company.
+          <p className="text-gray-300 mb-8">
+            Build credibility. Show progress. Stay accountable.
           </p>
 
-          {/* SEARCH BAR */}
-          <form action="/search" className="w-full max-w-2xl">
+          {/* SEARCH */}
+          <form
+            action="/search"
+            className="flex w-full max-w-xl"
+          >
             <input
               name="q"
-              placeholder="Search commitments, people, companies or goals"
-              className="w-full px-6 py-4 rounded-2xl text-black text-lg shadow-xl outline-none"
+              placeholder="Search people, companies, commitments or goals"
+              className="flex-1 px-4 py-3 rounded-l-xl text-black outline-none"
             />
+            <button
+              type="submit"
+              className="bg-blue-600 px-5 py-3 rounded-r-xl"
+            >
+              Search
+            </button>
           </form>
 
-          <div className="mt-10 flex gap-4">
-            <Link
-              href="/signup"
-              className="bg-blue-600 px-8 py-3 rounded-xl font-semibold"
-            >
-              Get Started
-            </Link>
+          <Link
+            href="/signup"
+            className="mt-8 bg-blue-600 px-8 py-4 rounded-xl font-semibold text-lg"
+          >
+            Get 2 Free Credits – Start Now
+          </Link>
 
-            <Link
-              href="/search"
-              className="border border-white px-8 py-3 rounded-xl"
-            >
-              Explore Commitments
-            </Link>
+          <p className="mt-3 text-gray-300 text-sm">
+            No credit card required
+          </p>
+        </div>
+      </div>
+
+      {/* RECENT COMMITMENTS */}
+      <div className="bg-white text-black py-16 px-6 rounded-t-3xl">
+        <div className="max-w-4xl mx-auto">
+
+          <h2 className="text-2xl font-semibold mb-8 text-center">
+            Recent Commitments
+          </h2>
+
+          <div className="space-y-6">
+            {commitments?.map((c: any) => (
+              <Link
+                key={c.id}
+                href={`/u/${c.profiles?.username}`}
+                className="block bg-gray-50 rounded-xl p-5 shadow hover:shadow-md transition"
+              >
+                <div className="flex items-center gap-4">
+
+                  <Image
+                    src={
+                      c.profiles?.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        c.profiles?.display_name || "User"
+                      )}`
+                    }
+                    alt="avatar"
+                    width={45}
+                    height={45}
+                    className="rounded-full"
+                  />
+
+                  <div className="flex-1">
+                    <div className="font-semibold">
+                      {c.profiles?.display_name}
+                    </div>
+                    <div className="text-gray-700">
+                      {c.text}
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-gray-500 text-right">
+                    <div>👁 {c.view_count ?? 0}</div>
+                    {c.end_date && (
+                      <div>
+                        {daysRemaining(c.end_date)} days left
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* WHITE CONTENT SECTION */}
-      <div className="bg-white text-black rounded-t-3xl pt-16 pb-20 px-6">
-        <div className="max-w-6xl mx-auto">
-
-          {/* INDIVIDUALS */}
-          {individuals.length > 0 && (
-            <>
-              <h2 className="text-3xl font-bold mb-8">
-                🔥 Individual Commitments
-              </h2>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                {individuals.slice(0, 3).map((c: any) => (
-                  <Link
-                    key={c.id}
-                    href={`/u/${c.profiles?.username}`}
-                    className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <Image
-                        src={
-                          c.profiles?.avatar_url ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            c.profiles?.display_name || "User"
-                          )}`
-                        }
-                        alt="avatar"
-                        width={45}
-                        height={45}
-                        className="rounded-full"
-                      />
-                      <div>
-                        <div className="font-semibold">
-                          {c.profiles?.display_name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          @{c.profiles?.username}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 text-gray-800 font-medium">
-                      {c.text}
-                    </div>
-
-                    <div className="text-sm text-gray-500 flex justify-between">
-                      <span>👁 {c.view_count ?? 0}</span>
-                      <span>
-                        {c.end_date
-                          ? `${daysRemaining(c.end_date)} days left`
-                          : ""}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* COMPANIES */}
-          {companies.length > 0 && (
-            <>
-              <h2 className="text-3xl font-bold mb-8">
-                🏢 Company Commitments
-              </h2>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {companies.slice(0, 3).map((c: any) => (
-                  <Link
-                    key={c.id}
-                    href={`/u/${c.profiles?.username}`}
-                    className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <Image
-                        src={
-                          c.profiles?.avatar_url ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            c.profiles?.display_name || "Company"
-                          )}`
-                        }
-                        alt="avatar"
-                        width={45}
-                        height={45}
-                        className="rounded-full"
-                      />
-                      <div>
-                        <div className="font-semibold">
-                          {c.profiles?.display_name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Company
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 text-gray-800 font-medium">
-                      {c.text}
-                    </div>
-
-                    <div className="text-sm text-gray-500 flex justify-between">
-                      <span>👁 {c.view_count ?? 0}</span>
-                      <span>
-                        {c.end_date
-                          ? `${daysRemaining(c.end_date)} days left`
-                          : ""}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
