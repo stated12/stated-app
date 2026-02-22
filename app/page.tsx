@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage() {
   const supabase = await createClient();
 
+  // Fetch latest commitments (NO hard status filter)
   const { data: commitments } = await supabase
     .from("commitments")
     .select(`
@@ -18,7 +19,6 @@ export default async function HomePage() {
         avatar_url
       )
     `)
-    .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -26,13 +26,17 @@ export default async function HomePage() {
     <div className="min-h-screen flex flex-col">
 
       {/* HEADER */}
-      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-16 py-6 text-white text-sm font-medium">
-        <Link href="/search">Explore</Link>
-        <Link href="/login">Login</Link>
+      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-16 py-6 text-white text-sm font-medium tracking-wide">
+        <Link href="/search" className="hover:text-blue-400 transition">
+          Explore
+        </Link>
+        <Link href="/login" className="hover:text-blue-400 transition">
+          Login
+        </Link>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-32 pb-24">
+      {/* HERO */}
+      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-32 pb-28">
 
         <Image
           src="/nature-bg.jpg"
@@ -41,33 +45,36 @@ export default async function HomePage() {
           priority
           className="object-cover -z-10"
         />
+
         <div className="absolute inset-0 bg-black/70 -z-10" />
 
-        {/* BIGGER LOGO */}
+        {/* Logo */}
         <Image
           src="/logo.png"
           alt="Stated Logo"
-          width={210}
-          height={210}
+          width={220}
+          height={220}
           className="mb-6"
         />
 
-        {/* STATED TEXT */}
+        {/* Brand Name */}
         <h2 className="text-4xl font-semibold text-blue-500 mb-6">
           Stated
         </h2>
 
+        {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-bold leading-tight">
           Public commitments.
           <br />
           Public outcomes.
         </h1>
 
-        <p className="mt-4 text-gray-300 max-w-xl">
+        {/* Subtext */}
+        <p className="mt-5 text-gray-300 max-w-xl">
           Build credibility. Show progress. Stay accountable.
         </p>
 
-        {/* SEARCH */}
+        {/* Search */}
         <form
           action="/search"
           className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
@@ -80,7 +87,7 @@ export default async function HomePage() {
           />
           <button
             type="submit"
-            className="bg-blue-600 px-6 text-white font-medium"
+            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
           >
             Search
           </button>
@@ -89,7 +96,7 @@ export default async function HomePage() {
         {/* CTA */}
         <Link
           href="/signup"
-          className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium"
+          className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
         >
           Get 2 Free Credits – Start Now
         </Link>
@@ -99,7 +106,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {/* RECENT ACTIVE COMMITMENTS */}
+      {/* RECENT COMMITMENTS */}
       <section className="bg-white text-black py-16 px-6">
         <div className="max-w-5xl mx-auto">
 
@@ -140,7 +147,7 @@ export default async function HomePage() {
                       </div>
 
                       <div className="text-xs text-gray-500">
-                        Status: Active • 👁 {c.view_count ?? 0} views
+                        Status: {c.status ?? "unknown"} • 👁 {c.view_count ?? 0} views
                       </div>
                     </div>
 
@@ -150,7 +157,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="text-center text-gray-500">
-              No active commitments yet.
+              No commitments yet.
             </div>
           )}
 
