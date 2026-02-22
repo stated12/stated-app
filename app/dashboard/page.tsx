@@ -3,10 +3,8 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Dashboard() {
-
   const supabase = await createClient();
 
-  // AUTH USER
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -24,36 +22,29 @@ export default async function Dashboard() {
     );
   }
 
-  // PROFILE
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  // COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // PROFILE VIEWS
   const { count: profileViews } = await supabase
     .from("profile_views")
     .select("*", { count: "exact", head: true })
     .eq("profile_id", user.id);
 
-  // COMMITMENT VIEWS
   const { count: commitmentViews } = await supabase
     .from("commitment_views")
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  // CALCULATIONS
-
   const credits = profile?.credits ?? 0;
-
   const total = commitments?.length ?? 0;
 
   const active =
@@ -64,12 +55,9 @@ export default async function Dashboard() {
 
   const paused =
     commitments?.filter(
-      (c) =>
-        c.status === "paused" ||
-        c.status === "withdrawn"
+      (c) => c.status === "paused" || c.status === "withdrawn"
     ).length ?? 0;
 
-  // AVATAR
   const avatar =
     profile?.avatar_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -78,37 +66,22 @@ export default async function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
-
       <div className="max-w-3xl mx-auto space-y-6">
-
         {/* HEADER */}
         <div className="flex justify-between items-center">
-
           <div>
-            <h1 className="text-3xl font-bold">
-              Stated
-            </h1>
-
-            <div className="text-sm text-gray-500">
-              Dashboard
-            </div>
+            <h1 className="text-3xl font-bold">Stated</h1>
+            <div className="text-sm text-gray-500">Dashboard</div>
           </div>
 
-          <Link
-            href="/logout"
-            className="text-sm text-gray-500"
-          >
+          <Link href="/logout" className="text-sm text-gray-500">
             Logout
           </Link>
-
         </div>
-
 
         {/* PROFILE CARD */}
         <div className="bg-white rounded-xl shadow p-5">
-
           <div className="flex items-center gap-4">
-
             <Image
               src={avatar}
               width={64}
@@ -118,7 +91,6 @@ export default async function Dashboard() {
             />
 
             <div>
-
               <div className="text-lg font-semibold">
                 {profile?.display_name || "No name set"}
               </div>
@@ -130,14 +102,10 @@ export default async function Dashboard() {
               <div className="text-xs text-gray-400 mt-1">
                 stated.in/u/{profile?.username}
               </div>
-
             </div>
-
           </div>
 
-
           <div className="flex gap-3 pt-4 flex-wrap">
-
             <Link
               href="/profile/edit"
               className="border px-4 py-2 rounded-lg hover:bg-gray-50"
@@ -158,68 +126,35 @@ export default async function Dashboard() {
             >
               Upgrade
             </Link>
-
           </div>
-
         </div>
-
 
         {/* CREDITS */}
         <div className="bg-white rounded-xl shadow p-5">
-
           <div className="font-semibold text-lg">
             Credits remaining: {credits}
           </div>
 
           {credits === 0 && (
-            <Link
-              href="/upgrade"
-              className="text-blue-600 text-sm"
-            >
+            <Link href="/upgrade" className="text-blue-600 text-sm">
               Buy credits to continue
             </Link>
           )}
-
         </div>
-
 
         {/* ANALYTICS */}
         <div className="bg-white rounded-xl shadow p-5">
-
-          <div className="font-semibold mb-3">
-            Analytics
-          </div>
+          <div className="font-semibold mb-3">Analytics</div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
-
-            <div>
-              Profile views: {profileViews ?? 0}
-            </div>
-
-            <div>
-              Total commitments: {total}
-            </div>
-
-            <div>
-              Commitment views: {commitmentViews ?? 0}
-            </div>
-
-            <div>
-              Active: {active}
-            </div>
-
-            <div>
-              Completed: {completed}
-            </div>
-
-            <div>
-              Paused / Withdrawn: {paused}
-            </div>
-
+            <div>Profile views: {profileViews ?? 0}</div>
+            <div>Total commitments: {total}</div>
+            <div>Commitment views: {commitmentViews ?? 0}</div>
+            <div>Active: {active}</div>
+            <div>Completed: {completed}</div>
+            <div>Paused / Withdrawn: {paused}</div>
           </div>
-
         </div>
-
 
         {/* CREATE BUTTON */}
         <Link
@@ -235,13 +170,9 @@ export default async function Dashboard() {
             : "Create Commitment"}
         </Link>
 
-
         {/* COMMITMENTS */}
         <div className="space-y-4">
-
-          <div className="font-semibold">
-            Your commitments
-          </div>
+          <div className="font-semibold">Your commitments</div>
 
           {commitments?.length === 0 && (
             <div className="text-gray-500">
@@ -250,19 +181,14 @@ export default async function Dashboard() {
           )}
 
           {commitments?.map((c) => {
-
             const start = new Date(c.created_at);
-            const end = c.end_date
-              ? new Date(c.end_date)
-              : null;
-
+            const end = c.end_date ? new Date(c.end_date) : null;
             const today = new Date();
 
             let progress = 0;
-            let daysLeft = null;
+            let daysLeft = 0; // ✅ always number
 
             if (end) {
-
               const totalDays =
                 (end.getTime() - start.getTime()) /
                 (1000 * 60 * 60 * 24);
@@ -271,34 +197,31 @@ export default async function Dashboard() {
                 (today.getTime() - start.getTime()) /
                 (1000 * 60 * 60 * 24);
 
-              progress =
-                Math.min(
+              if (totalDays > 0) {
+                progress = Math.min(
                   100,
                   Math.max(
                     0,
                     (passedDays / totalDays) * 100
                   )
                 );
+              }
 
-              daysLeft =
-                Math.ceil(
-                  (end.getTime() - today.getTime()) /
-                    (1000 * 60 * 60 * 24)
-                );
+              daysLeft = Math.ceil(
+                (end.getTime() - today.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
             }
 
             return (
-
               <div
                 key={c.id}
                 className="bg-white rounded-xl shadow p-4"
               >
-
                 <div className="font-medium text-base">
                   {c.text}
                 </div>
 
-                {/* STATUS */}
                 <div className="text-sm text-gray-500 mt-1 capitalize">
                   Status:
                   <span className="ml-1 font-medium">
@@ -306,48 +229,32 @@ export default async function Dashboard() {
                   </span>
                 </div>
 
-                {/* PROGRESS BAR */}
                 {c.status === "active" && end && (
-
                   <div className="mt-3">
-
                     <div className="w-full bg-gray-200 rounded-full h-2">
-
                       <div
                         className="bg-blue-600 h-2 rounded-full"
-                        style={{
-                          width: `${progress}%`,
-                        }}
+                        style={{ width: `${progress}%` }}
                       />
-
                     </div>
 
                     <div className="text-xs text-gray-500 mt-1">
-
                       {daysLeft > 0
                         ? `${daysLeft} days remaining`
                         : "Expired"}
-
                     </div>
-
                   </div>
-
                 )}
 
-                {/* CREATED DATE */}
                 <div className="text-xs text-gray-400 mt-2">
-                  Created:
-                  {" "}
+                  Created{" "}
                   {new Date(
                     c.created_at
                   ).toLocaleDateString()}
                 </div>
 
-                {/* ACTIONS */}
                 {c.status === "active" && (
-
                   <div className="flex gap-2 mt-3 flex-wrap">
-
                     <Link
                       href={`/commitment/${c.id}/update`}
                       className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
@@ -375,22 +282,13 @@ export default async function Dashboard() {
                     >
                       Withdraw
                     </Link>
-
                   </div>
-
                 )}
-
               </div>
-
             );
-
           })}
-
         </div>
-
       </div>
-
     </div>
   );
-
 }
