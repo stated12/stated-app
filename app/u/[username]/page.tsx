@@ -1,280 +1,160 @@
-"use client";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import Image from "next/image";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+interface PageProps {
+  params: {
+    username: string;
+  };
+}
 
-type Profile = {
-  id: string;
-  username: string;
-  display_name: string | null;
-  bio: string | null;
-  website: string | null;
-  avatar_url: string | null;
-  linkedin?: string | null;
-  twitter?: string | null;
-  github?: string | null;
-  youtube?: string | null;
-  instagram?: string | null;
-};
+export default async function UserPage({ params }: PageProps) {
+  const supabase = await createClient();
+  const username = params.username;
 
-type Commitment = {
-  id: string;
-  text: string;
-  status: string;
-  created_at: string;
-};
+  if (!username) return notFound();
 
-export default function UserPage() {
-  const params = useParams();
-  const supabase = createClient();
+  // PROFILE
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", username.toLowerCase())
+    .single();
 
-  const username =
-    typeof params?.username === "string"
-      ? params.username
-      : Array.isArray(params?.username)
-      ? params.username[0]
-      : null;
+  if (!profile) return notFound();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [loading, setLoading] = useState(true);
+  // COMMITMENTS
+  const { data: commitments } = await supabase
+    .from("commitments")
+    .select("id, text, status, created_at, view_count")
+    .eq("user_id", profile.id)
+    .eq("is_public", true)
+    .order("created_at", { ascending: false });
 
-  useEffect(() => {
-    if (!username) return;
-
-    async function load() {
-      setLoading(true);
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username)
-        .limit(1);
-
-      const profileData = profiles?.[0] ?? null;
-
-      if (!profileData) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      setProfile(profileData);
-
-      const { data: commitmentsData } = await supabase
-        .from("commitments")
-        .select("id, text, status, created_at")
-        .eq("user_id", profileData.id)
-        .eq("is_public", true)
-        .order("created_at", { ascending: false });
-
-      setCommitments(commitmentsData || []);
-      setLoading(false);
-    }
-
-    load();
-  }, [username]);
-
-  if (loading)
-    return <div style={styles.center}>Loading profile...</div>;
-
-  if (!profile)
-    return <div style={styles.center}>Profile not found</div>;
-
-  function socialLink(label: string, value?: string | null) {
+  // URL normalizer
+  function normalizeUrl(value?: string | null) {
     if (!value) return null;
+    return value.startsWith("http") ? value : `https://${value}`;
+  }
 
-    const url =
-      value.startsWith("http")
-        ? value
-        : `https://${value}`;
+  function SocialLink({
+    label,
+    value,
+  }: {
+    label: string;
+    value?: string | null;
+  }) {
+    const url = normalizeUrl(value);
+    if (!url) return null;
 
     return (
       <a
-        key={label}
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        style={styles.socialLink}
+        className="text-blue-600 hover:underline text-sm"
       >
         {label}
       </a>
     );
   }
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.brand}>Stated</div>
+  const avatarUrl =
+    profile.avatar_url && profile.avatar_url.startsWith("http")
+      ? profile.avatar_url
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          profile.display_name || profile.username
+        )}&background=0D8ABC&color=fff`;
 
-      <div style={styles.header}>
-        <div style={styles.avatar}>
-          {profile.avatar_url ? (
-            <img src={profile.avatar_url} style={styles.avatarImg} />
+  return (
+    <div className="min-h-screen bg-white px-6 py-10">
+      <div className="max-w-2xl mx-auto">
+
+        {/* BRAND */}
+        <div className="text-xl font-semibold mb-8 text-blue-600">
+          Stated
+        </div>
+
+        {/* PROFILE HEADER */}
+        <div className="text-center mb-10">
+
+          <Image
+            src={avatarUrl}
+            alt="avatar"
+            width={110}
+            height={110}
+            className="rounded-full mx-auto mb-4"
+          />
+
+          <h1 className="text-2xl font-semibold">
+            {profile.display_name || profile.username}
+            <span className="text-blue-600 ml-2">★</span>
+          </h1>
+
+          <div className="text-gray-500">
+            @{profile.username}
+          </div>
+
+          {profile.bio && (
+            <p className="mt-4 text-gray-700">
+              {profile.bio}
+            </p>
+          )}
+
+          {profile.website && (
+            <a
+              href={normalizeUrl(profile.website)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-3 text-blue-600 hover:underline"
+            >
+              {profile.website}
+            </a>
+          )}
+
+          {/* SOCIAL LINKS */}
+          <div className="flex justify-center gap-4 mt-4 flex-wrap">
+            <SocialLink label="LinkedIn" value={profile.linkedin} />
+            <SocialLink label="Twitter" value={profile.twitter} />
+            <SocialLink label="GitHub" value={profile.github} />
+            <SocialLink label="YouTube" value={profile.youtube} />
+            <SocialLink label="Instagram" value={profile.instagram} />
+          </div>
+        </div>
+
+        {/* COMMITMENTS */}
+        <div>
+          <h2 className="text-xl font-semibold mb-6">
+            Commitments
+          </h2>
+
+          {commitments && commitments.length > 0 ? (
+            <div className="space-y-4">
+              {commitments.map((c) => (
+                <div
+                  key={c.id}
+                  className="border rounded-xl p-5 hover:shadow-sm transition"
+                >
+                  <div className="font-medium mb-2">
+                    {c.text}
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    Status: {c.status}
+                    {" • "}
+                    👁 {c.view_count ?? 0} views
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <span style={styles.avatarLetter}>
-              {(profile.display_name || profile.username).charAt(0)}
-            </span>
+            <div className="border rounded-xl p-5 text-gray-500">
+              No commitments yet.
+            </div>
           )}
         </div>
 
-        <h1 style={styles.name}>
-          {profile.display_name || profile.username}
-          <span style={styles.star}> ★</span>
-        </h1>
-
-        <div style={styles.username}>
-          @{profile.username}
-        </div>
-
-        {profile.bio && (
-          <p style={styles.bio}>{profile.bio}</p>
-        )}
-
-        {profile.website && (
-          <a
-            href={
-              profile.website.startsWith("http")
-                ? profile.website
-                : `https://${profile.website}`
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.website}
-          >
-            {profile.website}
-          </a>
-        )}
-
-        <div style={styles.socialContainer}>
-          {socialLink("LinkedIn", profile.linkedin)}
-          {socialLink("Twitter", profile.twitter)}
-          {socialLink("GitHub", profile.github)}
-          {socialLink("YouTube", profile.youtube)}
-          {socialLink("Instagram", profile.instagram)}
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <h2>Commitments</h2>
-
-        {commitments.length === 0 ? (
-          <div style={styles.card}>
-            No commitments yet.
-          </div>
-        ) : (
-          commitments.map((c) => (
-            <div key={c.id} style={styles.card}>
-              <div style={{ fontSize: 16 }}>
-                {c.text}
-              </div>
-              <div style={{ opacity: 0.6, fontSize: 14 }}>
-                {c.status}
-              </div>
-            </div>
-          ))
-        )}
       </div>
     </div>
   );
 }
-
-const styles: any = {
-  container: {
-    maxWidth: 600,
-    margin: "0 auto",
-    padding: 24,
-    fontFamily: "system-ui",
-  },
-
-  brand: {
-    fontSize: 20,
-    fontWeight: 600,
-    marginBottom: 24,
-  },
-
-  center: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "60vh",
-  },
-
-  header: {
-    textAlign: "center",
-    marginBottom: 40,
-  },
-
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    background: "#111",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    margin: "0 auto 16px auto",
-  },
-
-  avatarImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    borderRadius: "50%",
-  },
-
-  avatarLetter: {
-    fontSize: 36,
-  },
-
-  name: {
-    fontSize: 24,
-    margin: 0,
-  },
-
-  star: {
-    color: "#2563eb",
-    fontSize: 18,
-  },
-
-  username: {
-    opacity: 0.6,
-  },
-
-  bio: {
-    marginTop: 12,
-  },
-
-  website: {
-    display: "block",
-    marginTop: 10,
-    color: "#2563eb",
-    textDecoration: "none",
-  },
-
-  socialContainer: {
-    marginTop: 12,
-    display: "flex",
-    justifyContent: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-
-  socialLink: {
-    fontSize: 14,
-    color: "#2563eb",
-    textDecoration: "none",
-  },
-
-  section: {
-    marginTop: 30,
-  },
-
-  card: {
-    border: "1px solid #eee",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-};
