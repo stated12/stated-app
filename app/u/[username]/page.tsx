@@ -11,6 +11,11 @@ type Profile = {
   bio: string | null;
   website: string | null;
   avatar_url: string | null;
+  linkedin?: string | null;
+  twitter?: string | null;
+  github?: string | null;
+  youtube?: string | null;
+  instagram?: string | null;
 };
 
 type Commitment = {
@@ -21,23 +26,26 @@ type Commitment = {
 };
 
 export default function UserPage() {
-
   const params = useParams();
   const supabase = createClient();
 
-  const username = String(params.username);
+  const username =
+    typeof params?.username === "string"
+      ? params.username
+      : Array.isArray(params?.username)
+      ? params.username[0]
+      : null;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!username) return;
 
     async function load() {
-
       setLoading(true);
 
-      // SAFE PROFILE LOAD
       const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
@@ -54,7 +62,6 @@ export default function UserPage() {
 
       setProfile(profileData);
 
-      // SAFE COMMITMENTS LOAD
       const { data: commitmentsData } = await supabase
         .from("commitments")
         .select("id, text, status, created_at")
@@ -63,12 +70,10 @@ export default function UserPage() {
         .order("created_at", { ascending: false });
 
       setCommitments(commitmentsData || []);
-
       setLoading(false);
     }
 
-    if (username) load();
-
+    load();
   }, [username]);
 
   if (loading)
@@ -77,13 +82,32 @@ export default function UserPage() {
   if (!profile)
     return <div style={styles.center}>Profile not found</div>;
 
+  function socialLink(label: string, value?: string | null) {
+    if (!value) return null;
+
+    const url =
+      value.startsWith("http")
+        ? value
+        : `https://${value}`;
+
+    return (
+      <a
+        key={label}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.socialLink}
+      >
+        {label}
+      </a>
+    );
+  }
+
   return (
     <div style={styles.container}>
-
       <div style={styles.brand}>Stated</div>
 
       <div style={styles.header}>
-
         <div style={styles.avatar}>
           {profile.avatar_url ? (
             <img src={profile.avatar_url} style={styles.avatarImg} />
@@ -96,6 +120,7 @@ export default function UserPage() {
 
         <h1 style={styles.name}>
           {profile.display_name || profile.username}
+          <span style={styles.star}> ★</span>
         </h1>
 
         <div style={styles.username}>
@@ -106,46 +131,55 @@ export default function UserPage() {
           <p style={styles.bio}>{profile.bio}</p>
         )}
 
+        {profile.website && (
+          <a
+            href={
+              profile.website.startsWith("http")
+                ? profile.website
+                : `https://${profile.website}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            style={styles.website}
+          >
+            {profile.website}
+          </a>
+        )}
+
+        <div style={styles.socialContainer}>
+          {socialLink("LinkedIn", profile.linkedin)}
+          {socialLink("Twitter", profile.twitter)}
+          {socialLink("GitHub", profile.github)}
+          {socialLink("YouTube", profile.youtube)}
+          {socialLink("Instagram", profile.instagram)}
+        </div>
       </div>
 
       <div style={styles.section}>
-
         <h2>Commitments</h2>
 
         {commitments.length === 0 ? (
-
           <div style={styles.card}>
             No commitments yet.
           </div>
-
         ) : (
-
-          commitments.map(c => (
-
+          commitments.map((c) => (
             <div key={c.id} style={styles.card}>
-
               <div style={{ fontSize: 16 }}>
                 {c.text}
               </div>
-
               <div style={{ opacity: 0.6, fontSize: 14 }}>
                 {c.status}
               </div>
-
             </div>
-
           ))
-
         )}
-
       </div>
-
     </div>
   );
 }
 
 const styles: any = {
-
   container: {
     maxWidth: 600,
     margin: "0 auto",
@@ -172,9 +206,9 @@ const styles: any = {
   },
 
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     background: "#111",
     color: "#fff",
     display: "flex",
@@ -191,12 +225,17 @@ const styles: any = {
   },
 
   avatarLetter: {
-    fontSize: 32,
+    fontSize: 36,
   },
 
   name: {
     fontSize: 24,
     margin: 0,
+  },
+
+  star: {
+    color: "#2563eb",
+    fontSize: 18,
   },
 
   username: {
@@ -205,6 +244,27 @@ const styles: any = {
 
   bio: {
     marginTop: 12,
+  },
+
+  website: {
+    display: "block",
+    marginTop: 10,
+    color: "#2563eb",
+    textDecoration: "none",
+  },
+
+  socialContainer: {
+    marginTop: 12,
+    display: "flex",
+    justifyContent: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  socialLink: {
+    fontSize: 14,
+    color: "#2563eb",
+    textDecoration: "none",
   },
 
   section: {
@@ -217,5 +277,4 @@ const styles: any = {
     borderRadius: 8,
     marginTop: 12,
   },
-
 };
