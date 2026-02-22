@@ -18,7 +18,7 @@ type Commitment = {
   status: string;
   created_at: string;
   user_id: string;
-  profiles: Profile | null; // ✅ FIXED (nullable)
+  profiles: Profile | null;
 };
 
 export default function ExplorePage() {
@@ -36,25 +36,29 @@ export default function ExplorePage() {
 
   async function loadExplore() {
     try {
-      /* FEATURED PEOPLE */
+      // PEOPLE
       const { data: peopleData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
         .eq("account_type", "individual")
         .limit(4);
 
-      setPeople((peopleData ?? []) as Profile[]);
+      if (peopleData) {
+        setPeople(peopleData);
+      }
 
-      /* FEATURED COMPANIES */
+      // COMPANIES
       const { data: companyData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
         .eq("account_type", "company")
         .limit(4);
 
-      setCompanies((companyData ?? []) as Profile[]);
+      if (companyData) {
+        setCompanies(companyData);
+      }
 
-      /* TRENDING */
+      // TRENDING
       const { data: trendingData } = await supabase
         .from("commitments")
         .select(`
@@ -73,9 +77,11 @@ export default function ExplorePage() {
         .eq("status", "active")
         .limit(6);
 
-      setTrending((trendingData ?? []) as Commitment[]);
+      if (trendingData) {
+        setTrending(trendingData);
+      }
 
-      /* RECENT */
+      // RECENT
       const { data: recentData } = await supabase
         .from("commitments")
         .select(`
@@ -94,9 +100,12 @@ export default function ExplorePage() {
         .order("created_at", { ascending: false })
         .limit(6);
 
-      setRecent((recentData ?? []) as Commitment[]);
-    } catch (err) {
-      console.error(err);
+      if (recentData) {
+        setRecent(recentData);
+      }
+
+    } catch (error) {
+      console.error(error);
     }
 
     setLoading(false);
@@ -122,14 +131,13 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-5xl mx-auto space-y-10">
 
-        {/* HEADER */}
         <Link href="/">
           <div className="text-2xl font-bold text-blue-600 cursor-pointer">
             Stated
           </div>
         </Link>
 
-        {/* FEATURED PEOPLE */}
+        {/* PEOPLE */}
         <section>
           <div className="text-lg font-semibold mb-4">
             Featured people
@@ -158,7 +166,7 @@ export default function ExplorePage() {
           </div>
         </section>
 
-        {/* FEATURED COMPANIES */}
+        {/* COMPANIES */}
         <section>
           <div className="text-lg font-semibold mb-4">
             Featured companies
