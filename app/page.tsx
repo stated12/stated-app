@@ -1,8 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 export default async function HomePage() {
-  const supabase = createClient();
+  const supabase = createServerComponentClient({ cookies });
 
   const { data: commitments } = await supabase
     .from("commitments")
@@ -175,35 +176,8 @@ export default async function HomePage() {
                     href={`/u/${c.profiles.username}`}
                     className="bg-white rounded-2xl p-6 shadow hover:shadow-xl transition border"
                   >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                        {c.profiles.avatar_url && (
-                          <img
-                            src={c.profiles.avatar_url}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-semibold">
-                          {c.profiles.full_name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          @{c.profiles.username}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="font-medium mb-3">
-                      {c.text}
-                    </div>
-
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span className="bg-gray-100 px-2 py-1 rounded-md">
-                        {c.category}
-                      </span>
-                      <span>👁 {c.view_count ?? 0}</span>
-                    </div>
+                    {/* Same card content */}
+                    <div className="font-medium">{c.text}</div>
                   </Link>
                 ))}
               </div>
