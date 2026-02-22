@@ -26,12 +26,12 @@ export default async function HomePage() {
     <div className="min-h-screen flex flex-col">
 
       {/* HEADER */}
-      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-12 py-6 text-white text-sm font-medium">
+      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-16 py-6 text-white text-sm font-medium">
         <Link href="/search">Explore</Link>
         <Link href="/login">Login</Link>
       </header>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-32 pb-24">
 
         <Image
@@ -43,21 +43,21 @@ export default async function HomePage() {
         />
         <div className="absolute inset-0 bg-black/70 -z-10" />
 
-        {/* BIG LOGO */}
+        {/* BIGGER LOGO */}
         <Image
           src="/logo.png"
-          alt="Logo"
-          width={190}
-          height={190}
+          alt="Stated Logo"
+          width={210}
+          height={210}
           className="mb-6"
         />
 
         {/* STATED TEXT */}
-        <h2 className="text-3xl font-semibold text-blue-500 mb-4">
+        <h2 className="text-4xl font-semibold text-blue-500 mb-6">
           Stated
         </h2>
 
-        <h1 className="text-4xl md:text-5xl font-bold">
+        <h1 className="text-4xl md:text-5xl font-bold leading-tight">
           Public commitments.
           <br />
           Public outcomes.
@@ -89,7 +89,7 @@ export default async function HomePage() {
         {/* CTA */}
         <Link
           href="/signup"
-          className="mt-8 bg-blue-600 px-8 py-4 rounded-xl text-lg font-medium"
+          className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium"
         >
           Get 2 Free Credits – Start Now
         </Link>
@@ -100,7 +100,7 @@ export default async function HomePage() {
       </section>
 
       {/* RECENT ACTIVE COMMITMENTS */}
-      <section className="bg-white text-black py-16 px-6 flex-1">
+      <section className="bg-white text-black py-16 px-6">
         <div className="max-w-5xl mx-auto">
 
           <h2 className="text-2xl font-semibold mb-10 text-center">
@@ -156,11 +156,6 @@ export default async function HomePage() {
 
         </div>
       </section>
-
-      {/* SINGLE CLEAN FOOTER */}
-      <footer className="border-t text-center py-6 text-sm text-gray-600">
-        © 2026 Stated
-      </footer>
 
     </div>
   );
