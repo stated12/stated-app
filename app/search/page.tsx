@@ -1,122 +1,122 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
 
-function normalizeProfile(profileData: any) {
-  if (!profileData) return null;
-  if (Array.isArray(profileData)) return profileData[0] ?? null;
-  return profileData;
-}
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const supabase = await createClient();
+  const query = searchParams.q?.trim();
 
-export default function SearchPage() {
+  let commitments = [];
+  let profiles = [];
 
-  const supabase = createClient();
+  if (query) {
+    const { data: c } = await supabase
+      .from("commitments")
+      .select(
+        `
+        id,
+        text,
+        profiles (
+          username,
+          display_name,
+          avatar_url
+        )
+      `
+      )
+      .ilike("text", `%${query}%`)
+      .eq("visibility", "public");
 
-  const [commitments, setCommitments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+    commitments = c || [];
 
-  useEffect(() => {
-    loadCommitments();
-  }, []);
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .or(
+        `username.ilike.%${query}%,display_name.ilike.%${query}%`
+      );
 
-  async function loadCommitments() {
-    try {
+    profiles = p || [];
+  } else {
+    const { data: c } = await supabase
+      .from("commitments")
+      .select(
+        `
+        id,
+        text,
+        profiles (
+          username,
+          display_name,
+          avatar_url
+        )
+      `
+      )
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(8);
 
-      const { data } = await supabase
-        .from("commitments")
-        .select(`
-          id,
-          text,
-          status,
-          created_at,
-          profiles (
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq("visibility", "public")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      setCommitments(data || []);
-
-    } catch (error) {
-      console.error(error);
-    }
-
-    setLoading(false);
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading search...
-      </div>
-    );
+    commitments = c || [];
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div className="min-h-screen bg-white text-black px-6 py-10">
+      <div className="max-w-4xl mx-auto">
 
-      <div className="max-w-4xl mx-auto space-y-6">
+        <h1 className="text-2xl font-semibold mb-6">
+          {query ? `Results for "${query}"` : "Explore"}
+        </h1>
 
-        <Link href="/">
-          <div className="text-2xl font-bold text-blue-600 cursor-pointer">
-            Stated
-          </div>
-        </Link>
-
-        <div className="text-xl font-semibold">
-          Search Results
-        </div>
-
-        <div className="space-y-4">
-
-          {commitments.map((c) => {
-
-            const profile = normalizeProfile(c.profiles);
-
-            const avatar =
-              profile?.avatar_url ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                profile?.display_name || profile?.username || "User"
-              )}&background=2563eb&color=fff`;
-
-            return (
-              <Link
-                key={c.id}
-                href={`/commitment/${c.id}`}
-                className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
-              >
-
-                <div className="flex items-center gap-3 mb-2">
-
-                  <img
-                    src={avatar}
-                    className="w-8 h-8 rounded-full object-cover"
+        {/* PROFILES */}
+        {profiles.length > 0 && (
+          <>
+            <h2 className="font-semibold mb-3">People & Companies</h2>
+            <div className="space-y-4 mb-8">
+              {profiles.map((p: any) => (
+                <Link
+                  key={p.username}
+                  href={`/u/${p.username}`}
+                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <Image
+                    src={
+                      p.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        p.display_name || "User"
+                      )}`
+                    }
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
                   />
+                  <div>{p.display_name}</div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
-                  <div className="text-sm font-medium">
-                    {profile?.display_name || profile?.username}
-                  </div>
-
-                </div>
-
-                <div className="font-medium">
-                  {c.text}
-                </div>
-
-              </Link>
-            );
-          })}
-
+        {/* COMMITMENTS */}
+        <h2 className="font-semibold mb-3">Commitments</h2>
+        <div className="space-y-4">
+          {commitments.map((c: any) => (
+            <Link
+              key={c.id}
+              href={`/u/${c.profiles?.username}`}
+              className="block p-4 bg-gray-50 rounded-lg"
+            >
+              <div className="font-medium">
+                {c.profiles?.display_name}
+              </div>
+              <div className="text-gray-700">{c.text}</div>
+            </Link>
+          ))}
         </div>
 
       </div>
-
     </div>
   );
 }
