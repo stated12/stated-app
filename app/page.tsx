@@ -2,16 +2,25 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function HomePage() {
+type Profile = {
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+};
 
+function normalizeProfile(profileData: any): Profile | null {
+  if (!profileData) return null;
+  if (Array.isArray(profileData)) return profileData[0] ?? null;
+  return profileData;
+}
+
+export default async function HomePage() {
   const supabase = await createClient();
 
-  // CHECK AUTH
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // AUTO REDIRECT IF LOGGED IN
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -25,7 +34,6 @@ export default async function HomePage() {
     );
   }
 
-  // RECENT COMMITMENTS
   const { data: recent } = await supabase
     .from("commitments")
     .select(`
@@ -44,7 +52,6 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  // TRENDING (by views)
   const { data: trending } = await supabase
     .from("commitments")
     .select(`
@@ -56,29 +63,22 @@ export default async function HomePage() {
         username,
         display_name,
         avatar_url
-      ),
-      commitment_views (
-        id
       )
     `)
     .eq("visibility", "public")
     .limit(5);
 
-  // FEATURED PEOPLE
   const { data: people } = await supabase
     .from("profiles")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(4);
 
-  // FEATURED COMPANIES (same profiles table with type company later)
   const companies = people;
 
   return (
-
     <div className="min-h-screen text-white relative">
 
-      {/* BACKGROUND */}
       <Image
         src="/nature-bg.jpg"
         alt="background"
@@ -87,51 +87,29 @@ export default async function HomePage() {
         className="object-cover"
       />
 
-      {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* CONTENT */}
       <div className="relative z-10">
 
         {/* HEADER */}
         <header className="flex justify-between items-center px-6 py-4">
 
           <div className="flex items-center gap-3">
-
-            <Image
-              src="/logo.png"
-              alt="logo"
-              width={40}
-              height={40}
-            />
-
-            <span className="text-xl font-semibold">
-              Stated
-            </span>
-
+            <Image src="/logo.png" alt="logo" width={40} height={40} />
+            <span className="text-xl font-semibold">Stated</span>
           </div>
 
           <div className="flex items-center gap-4">
-
-            <Link href="/explore">
-              Explore
-            </Link>
-
-            <Link href="/login">
-              Login
-            </Link>
-
+            <Link href="/explore">Explore</Link>
+            <Link href="/login">Login</Link>
             <Link
               href="/signup"
               className="bg-blue-600 px-4 py-2 rounded-lg"
             >
               Get Started
             </Link>
-
           </div>
-
         </header>
-
 
         {/* HERO */}
         <section className="text-center py-20 px-4">
@@ -144,27 +122,12 @@ export default async function HomePage() {
             className="mx-auto mb-6"
           />
 
-          <h1 className="text-5xl font-bold mb-4">
-            Stated
-          </h1>
+          <h1 className="text-5xl font-bold mb-4">Stated</h1>
 
           <p className="text-lg text-gray-200 mb-8">
             Public commitments. Public outcomes.
           </p>
 
-
-          {/* SEARCH */}
-          <div className="max-w-xl mx-auto mb-6">
-
-            <input
-              placeholder="Search commitments, people, or goals"
-              className="w-full px-5 py-3 rounded-lg text-black"
-            />
-
-          </div>
-
-
-          {/* CTA */}
           <Link
             href="/signup"
             className="inline-block bg-blue-600 px-8 py-4 rounded-lg text-lg font-semibold"
@@ -172,22 +135,15 @@ export default async function HomePage() {
             Get 2 Free Credits – Start Now
           </Link>
 
-          <p className="text-sm text-gray-300 mt-2">
-            No credit card required
-          </p>
-
         </section>
-
 
         {/* MAIN GRID */}
         <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-4 pb-20">
 
-          {/* LEFT COLUMN */}
           <div className="md:col-span-2 space-y-6">
 
             {/* RECENT */}
             <div>
-
               <h2 className="text-xl font-semibold mb-4">
                 Recent Commitments
               </h2>
@@ -196,124 +152,50 @@ export default async function HomePage() {
 
                 {recent?.map((c) => {
 
+                  const profile = normalizeProfile(c.profiles);
+
                   const avatar =
-                    c.profiles?.avatar_url ||
+                    profile?.avatar_url ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      c.profiles?.display_name || "User"
+                      profile?.display_name || profile?.username || "User"
                     )}`;
 
                   return (
-
                     <div
                       key={c.id}
-                      className="bg-white/10 backdrop-blur rounded-lg p-4 flex justify-between items-center"
+                      className="bg-white/10 backdrop-blur rounded-lg p-4 flex items-center gap-3"
                     >
-
-                      <div className="flex gap-3 items-center">
-
-                        <Image
-                          src={avatar}
-                          alt="avatar"
-                          width={40}
-                          height={40}
-                          className="rounded-full"
-                        />
-
-                        <div>
-
-                          <div className="font-semibold">
-                            {c.profiles?.display_name}
-                          </div>
-
-                          <div className="text-sm text-gray-300">
-                            {c.text}
-                          </div>
-
+                      <Image
+                        src={avatar}
+                        alt="avatar"
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                      <div>
+                        <div className="font-semibold">
+                          {profile?.display_name || profile?.username}
                         </div>
-
+                        <div className="text-sm text-gray-300">
+                          {c.text}
+                        </div>
                       </div>
-
                     </div>
-
                   );
-
                 })}
 
               </div>
-
-            </div>
-
-
-            {/* TRENDING */}
-            <div>
-
-              <h2 className="text-xl font-semibold mb-4">
-                Trending Commitments
-              </h2>
-
-              <div className="space-y-3">
-
-                {trending?.map((c) => {
-
-                  const avatar =
-                    c.profiles?.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      c.profiles?.display_name || "User"
-                    )}`;
-
-                  return (
-
-                    <div
-                      key={c.id}
-                      className="bg-white/10 backdrop-blur rounded-lg p-4 flex justify-between items-center"
-                    >
-
-                      <div className="flex gap-3 items-center">
-
-                        <Image
-                          src={avatar}
-                          alt="avatar"
-                          width={40}
-                          height={40}
-                          className="rounded-full"
-                        />
-
-                        <div>
-
-                          <div className="font-semibold">
-                            {c.profiles?.display_name}
-                          </div>
-
-                          <div className="text-sm text-gray-300">
-                            {c.text}
-                          </div>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  );
-
-                })}
-
-              </div>
-
             </div>
 
           </div>
 
-
           {/* RIGHT COLUMN */}
           <div>
-
             <h2 className="text-xl font-semibold mb-4">
               Featured Companies
             </h2>
 
             <div className="space-y-3">
-
               {companies?.map((c) => {
 
                 const avatar =
@@ -323,69 +205,44 @@ export default async function HomePage() {
                   )}`;
 
                 return (
-
                   <div
                     key={c.id}
-                    className="bg-white/10 backdrop-blur rounded-lg p-4 flex justify-between items-center"
+                    className="bg-white/10 backdrop-blur rounded-lg p-4 flex items-center gap-3"
                   >
-
-                    <div className="flex gap-3 items-center">
-
-                      <Image
-                        src={avatar}
-                        alt="avatar"
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-
-                      <div>
-
-                        <div className="font-semibold">
-                          {c.display_name}
-                        </div>
-
-                        <div className="text-sm text-gray-300">
-                          @{c.username}
-                        </div>
-
+                    <Image
+                      src={avatar}
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                    <div>
+                      <div className="font-semibold">
+                        {c.display_name}
                       </div>
-
+                      <div className="text-sm text-gray-300">
+                        @{c.username}
+                      </div>
                     </div>
-
-                    <Link
-                      href={`/u/${c.username}`}
-                      className="bg-blue-600 px-3 py-1 rounded"
-                    >
-                      View
-                    </Link>
-
                   </div>
-
                 );
-
               })}
-
             </div>
-
           </div>
 
         </section>
 
-
-        {/* FOOTER */}
+        {/* FOOTER — IMPORTANT FOR RAZORPAY */}
         <footer className="text-center text-gray-400 pb-8">
 
           <div className="space-x-4">
+            <a href="https://stated.in/privacy">Privacy</a>
+            <a href="https://stated.in/terms">Terms</a>
+            <a href="https://stated.in/refund">Refund Policy</a>
+          </div>
 
-            <Link href="/privacy">
-              Privacy
-            </Link>
-
-            <Link href="/terms">
-              Terms
-            </Link>
-
+          <div className="mt-2">
+            support@stated.in
           </div>
 
           <div className="mt-2">
@@ -395,9 +252,6 @@ export default async function HomePage() {
         </footer>
 
       </div>
-
     </div>
-
   );
-
 }
