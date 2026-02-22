@@ -9,26 +9,23 @@ export default function CommitmentViewPage() {
 
   const supabase = createClient();
   const params = useParams();
-
   const commitmentId = String(params.id);
 
   const [commitment, setCommitment] = useState<any>(null);
   const [updates, setUpdates] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!commitmentId) return;
     loadCommitment();
     trackView();
   }, [commitmentId]);
 
 
   async function loadCommitment() {
-
     try {
 
-      // LOAD COMMITMENT
       const { data: commitmentData } =
         await supabase
           .from("commitments")
@@ -43,7 +40,6 @@ export default function CommitmentViewPage() {
 
       setCommitment(commitmentData);
 
-      // LOAD PROFILE
       const { data: profileData } =
         await supabase
           .from("profiles")
@@ -53,8 +49,6 @@ export default function CommitmentViewPage() {
 
       setProfile(profileData);
 
-
-      // LOAD UPDATES
       const { data: updatesData } =
         await supabase
           .from("commitment_updates")
@@ -64,57 +58,64 @@ export default function CommitmentViewPage() {
 
       setUpdates(updatesData || []);
 
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
 
     setLoading(false);
-
   }
 
 
   async function trackView() {
-
     try {
 
+      // Prevent multiple increments in same session
+      const viewedKey = `viewed_${commitmentId}`;
+      if (sessionStorage.getItem(viewedKey)) return;
+
+      sessionStorage.setItem(viewedKey, "true");
+
+      // Insert analytics row
       await supabase
         .from("commitment_views")
         .insert({
           commitment_id: commitmentId
         });
 
-    } catch {}
+      // Atomic increment using RPC
+      await supabase.rpc("increment_commitment_view", {
+        commitment_id_input: commitmentId
+      });
 
+    } catch (err) {
+      console.error("View tracking error:", err);
+    }
   }
 
 
   function avatar() {
-
-    if (profile?.avatar_url)
+    if (profile?.avatar_url && profile.avatar_url.startsWith("http"))
       return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      profile?.display_name || "User"
+      profile?.display_name || profile?.username || "User"
     )}&background=2563eb&color=fff`;
-
   }
 
 
   function daysRemaining() {
-
-    if (!commitment?.end_date)
-      return null;
+    if (!commitment?.end_date) return null;
 
     const end = new Date(commitment.end_date);
     const today = new Date();
 
     const days =
       Math.ceil(
-        (end.getTime() - today.getTime())
-        /
+        (end.getTime() - today.getTime()) /
         (1000 * 60 * 60 * 24)
       );
 
     return days;
-
   }
 
 
@@ -125,7 +126,6 @@ export default function CommitmentViewPage() {
       </div>
     );
 
-
   if (!commitment)
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -133,151 +133,107 @@ export default function CommitmentViewPage() {
       </div>
     );
 
-
   const daysLeft = daysRemaining();
 
 
   return (
-
     <div className="min-h-screen bg-gray-50 px-4 py-8">
 
       <div className="max-w-2xl mx-auto space-y-6">
 
-
         {/* HEADER */}
-
         <Link href="/">
           <div className="text-2xl font-bold text-blue-600">
             Stated
           </div>
         </Link>
 
-
         {/* PROFILE */}
-
         <Link
           href={`/u/${profile?.username}`}
           className="flex items-center gap-3"
         >
-
           <img
             src={avatar()}
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full object-cover"
           />
 
           <div>
-
             <div className="font-medium">
               {profile?.display_name}
             </div>
-
             <div className="text-sm text-gray-500">
               @{profile?.username}
             </div>
-
           </div>
-
         </Link>
 
-
         {/* COMMITMENT CARD */}
-
         <div className="bg-white rounded-xl shadow p-6">
 
           <div className="text-lg font-medium mb-2">
             {commitment.text}
           </div>
 
-
           <div className="text-sm text-gray-500 capitalize">
-
             Status:
             <span className="ml-1 font-medium">
               {commitment.status}
             </span>
-
           </div>
 
-
           {commitment.status === "active" && daysLeft !== null && (
-
             <div className="text-sm text-gray-500 mt-1">
-
               {daysLeft > 0
                 ? `${daysLeft} days remaining`
                 : "Expired"}
-
             </div>
-
           )}
 
-
           <div className="text-xs text-gray-400 mt-2">
+            Created:{" "}
+            {new Date(commitment.created_at).toLocaleDateString()}
+          </div>
 
-            Created:
-            {" "}
-            {new Date(
-              commitment.created_at
-            ).toLocaleDateString()}
-
+          <div className="text-xs text-gray-400 mt-1">
+            👁 {commitment.view_count ?? 0} views
           </div>
 
         </div>
 
-
-
         {/* UPDATES */}
-
         <div>
 
           <div className="font-semibold mb-3">
             Progress updates
           </div>
 
-
           {updates.length === 0 && (
-
             <div className="text-gray-500">
               No updates yet
             </div>
-
           )}
 
-
           <div className="space-y-3">
-
             {updates.map((update) => (
-
               <div
                 key={update.id}
                 className="bg-white rounded-xl shadow p-4"
               >
-
                 <div className="text-sm">
                   {update.text}
                 </div>
 
                 <div className="text-xs text-gray-400 mt-1">
-
-                  {new Date(
-                    update.created_at
-                  ).toLocaleDateString()}
-
+                  {new Date(update.created_at).toLocaleDateString()}
                 </div>
-
               </div>
-
             ))}
-
           </div>
 
         </div>
 
-
       </div>
-
     </div>
-
   );
-
 }
