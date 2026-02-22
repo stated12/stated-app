@@ -1,191 +1,246 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-
-function normalizeProfile(profileData: any) {
-  if (!profileData) return null;
-  if (Array.isArray(profileData)) return profileData[0] ?? null;
-  return profileData;
-}
+import { redirect } from "next/navigation";
 
 export default async function HomePage() {
+
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If logged in → show dashboard button
   if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <Link
-          href="/dashboard"
-          className="bg-blue-600 px-6 py-3 rounded-lg"
-        >
-          Go to Dashboard
-        </Link>
-      </div>
-    );
+    redirect("/dashboard");
   }
 
-  // Recent commitments
-  const { data: recent } = await supabase
+  // Individuals
+  const { data: individualCommitments } = await supabase
     .from("commitments")
     .select(`
       id,
       text,
       status,
       created_at,
+      end_date,
+      view_count,
       profiles (
         username,
         display_name,
-        avatar_url
+        avatar_url,
+        account_type
       )
     `)
     .eq("visibility", "public")
+    .eq("profiles.account_type", "individual")
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(6);
+
+  // Companies
+  const { data: companyCommitments } = await supabase
+    .from("commitments")
+    .select(`
+      id,
+      text,
+      status,
+      created_at,
+      end_date,
+      view_count,
+      profiles (
+        username,
+        display_name,
+        avatar_url,
+        account_type
+      )
+    `)
+    .eq("visibility", "public")
+    .eq("profiles.account_type", "company")
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  function daysRemaining(end: string) {
+    const diff =
+      new Date(end).getTime() - new Date().getTime();
+    return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+  }
 
   return (
-    <div className="min-h-screen text-white relative">
+    <div className="min-h-screen bg-gray-50">
 
-      {/* Background */}
-      <Image
-        src="/nature-bg.jpg"
-        alt="background"
-        fill
-        priority
-        className="object-cover"
-      />
+      {/* NAVBAR */}
+      <nav className="flex justify-between items-center px-6 py-4 bg-white shadow-sm">
 
-      {/* Dark Overlay (click-safe) */}
-      <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+        <div className="flex items-center gap-2">
+          <Image src="/logo.png" alt="logo" width={30} height={30} />
+          <span className="text-xl font-semibold">Stated</span>
+        </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+        <div className="flex items-center gap-6 text-sm">
+          <Link href="/search">Explore</Link>
+          <Link href="/login">Login</Link>
+          <Link
+            href="/signup"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            Get Started
+          </Link>
+        </div>
 
-        {/* Header */}
-        <header className="flex justify-between items-center px-6 py-4">
+      </nav>
 
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="logo"
-              width={40}
-              height={40}
-            />
-            <span className="text-xl font-semibold">
-              Stated
-            </span>
-          </div>
+      {/* HERO */}
+      <section className="text-center py-16 px-4 max-w-3xl mx-auto">
 
-          <div className="flex items-center gap-4 text-sm">
-            <Link href="/explore">Explore</Link>
-            <Link href="/login">Login</Link>
-            <Link
-              href="/signup"
-              className="bg-blue-600 px-4 py-2 rounded-lg"
-            >
-              Get Started
-            </Link>
-          </div>
+        <h1 className="text-4xl font-bold mb-4">
+          Public commitments. Real accountability.
+        </h1>
 
-        </header>
+        <p className="text-gray-600 mb-8">
+          Track goals. Build credibility. Show progress —
+          as an individual or a company.
+        </p>
 
-        {/* Hero */}
-        <section className="text-center py-20 px-4">
-
-          <Image
-            src="/logo.png"
-            alt="logo"
-            width={120}
-            height={120}
-            className="mx-auto mb-6"
-          />
-
-          <h1 className="text-5xl font-bold mb-4">
-            Stated
-          </h1>
-
-          <p className="text-lg text-gray-200 mb-8">
-            Public commitments. Public outcomes.
-          </p>
+        <div className="flex gap-3 justify-center">
 
           <Link
             href="/signup"
-            className="inline-block bg-blue-600 px-8 py-4 rounded-lg text-lg font-semibold"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg"
           >
-            Get 2 Free Credits – Start Now
+            Get Started
           </Link>
 
-          <p className="text-sm text-gray-300 mt-3">
-            No credit card required
-          </p>
+          <Link
+            href="/search"
+            className="border px-6 py-3 rounded-lg"
+          >
+            Explore Commitments
+          </Link>
 
-        </section>
+        </div>
 
-        {/* Recent Commitments */}
-        <section className="max-w-4xl mx-auto px-4 pb-16">
+      </section>
 
-          <h2 className="text-xl font-semibold mb-6">
-            Recent Commitments
-          </h2>
+      {/* INDIVIDUAL SECTION */}
+      <section className="max-w-6xl mx-auto px-4 pb-12">
 
-          <div className="space-y-4">
+        <h2 className="text-2xl font-semibold mb-6">
+          🔥 Individual Commitments
+        </h2>
 
-            {recent?.map((c) => {
-              const profile = normalizeProfile(c.profiles);
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-              const avatar =
-                profile?.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  profile?.display_name || profile?.username || "User"
-                )}&background=2563eb&color=fff`;
+          {individualCommitments?.map((c) => (
 
-              return (
-                <Link
-                  key={c.id}
-                  href={`/commitment/${c.id}`}
-                  className="block bg-white/10 backdrop-blur rounded-lg p-4 hover:bg-white/20 transition"
-                >
+            <Link
+              key={c.id}
+              href={`/u/${c.profiles?.username}`}
+              className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
+            >
 
-                  <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-3">
 
-                    <Image
-                      src={avatar}
-                      alt="avatar"
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
+                <Image
+                  src={
+                    c.profiles?.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${c.profiles?.display_name}`
+                  }
+                  alt="avatar"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
 
-                    <div>
-                      <div className="font-semibold">
-                        {profile?.display_name || profile?.username}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        {c.text}
-                      </div>
-                    </div>
-
+                <div>
+                  <div className="font-semibold">
+                    {c.profiles?.display_name}
                   </div>
+                  <div className="text-xs text-gray-500">
+                    @{c.profiles?.username}
+                  </div>
+                </div>
 
-                </Link>
-              );
-            })}
-
-            {!recent?.length && (
-              <div className="text-gray-300">
-                No public commitments yet.
               </div>
-            )}
 
-          </div>
+              <div className="mb-3 text-gray-800">
+                {c.text}
+              </div>
 
-        </section>
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>👁 {c.view_count ?? 0} views</span>
+                <span>
+                  {c.end_date && daysRemaining(c.end_date)} days left
+                </span>
+              </div>
 
-      </div>
+            </Link>
+
+          ))}
+
+        </div>
+
+      </section>
+
+      {/* COMPANY SECTION */}
+      <section className="max-w-6xl mx-auto px-4 pb-16">
+
+        <h2 className="text-2xl font-semibold mb-6">
+          🏢 Company Commitments
+        </h2>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {companyCommitments?.map((c) => (
+
+            <Link
+              key={c.id}
+              href={`/u/${c.profiles?.username}`}
+              className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
+            >
+
+              <div className="flex items-center gap-3 mb-3">
+
+                <Image
+                  src={
+                    c.profiles?.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${c.profiles?.display_name}`
+                  }
+                  alt="avatar"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+
+                <div>
+                  <div className="font-semibold">
+                    {c.profiles?.display_name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Company
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="mb-3 text-gray-800">
+                {c.text}
+              </div>
+
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>👁 {c.view_count ?? 0} views</span>
+                <span>
+                  {c.end_date && daysRemaining(c.end_date)} days left
+                </span>
+              </div>
+
+            </Link>
+
+          ))}
+
+        </div>
+
+      </section>
+
     </div>
   );
 }
