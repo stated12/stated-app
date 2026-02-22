@@ -10,8 +10,8 @@ export default async function SearchPage({
   const supabase = await createClient();
   const query = searchParams.q?.trim();
 
-  let commitments = [];
-  let profiles = [];
+  let commitments: any[] = [];
+  let profiles: any[] = [];
 
   if (query) {
     const { data: c } = await supabase
@@ -35,9 +35,7 @@ export default async function SearchPage({
     const { data: p } = await supabase
       .from("profiles")
       .select("username, display_name, avatar_url")
-      .or(
-        `username.ilike.%${query}%,display_name.ilike.%${query}%`
-      );
+      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`);
 
     profiles = p || [];
   } else {
@@ -56,7 +54,7 @@ export default async function SearchPage({
       )
       .eq("visibility", "public")
       .order("created_at", { ascending: false })
-      .limit(8);
+      .limit(10);
 
     commitments = c || [];
   }
@@ -69,10 +67,9 @@ export default async function SearchPage({
           {query ? `Results for "${query}"` : "Explore"}
         </h1>
 
-        {/* PROFILES */}
         {profiles.length > 0 && (
           <>
-            <h2 className="font-semibold mb-3">People & Companies</h2>
+            <h2 className="font-semibold mb-3">Profiles</h2>
             <div className="space-y-4 mb-8">
               {profiles.map((p: any) => (
                 <Link
@@ -99,7 +96,6 @@ export default async function SearchPage({
           </>
         )}
 
-        {/* COMMITMENTS */}
         <h2 className="font-semibold mb-3">Commitments</h2>
         <div className="space-y-4">
           {commitments.map((c: any) => (
