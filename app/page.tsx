@@ -48,31 +48,24 @@ export default async function HomePage() {
 
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* NAVBAR */}
-        <nav className="relative z-10 flex justify-between items-center px-6 py-5">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="logo" width={40} height={40} />
-            <span className="text-xl font-semibold">Stated</span>
-          </div>
-
-          <div className="flex items-center gap-6 text-sm">
-            <Link href="/search" className="hover:opacity-80">
-              Explore
-            </Link>
-            <Link href="/login" className="hover:opacity-80">
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="bg-blue-600 px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-            >
-              Get Started
-            </Link>
-          </div>
+        {/* HEADER (ONLY LINKS) */}
+        <nav className="relative z-10 flex justify-end items-center px-6 py-6 gap-8 text-sm">
+          <Link href="/search" className="hover:opacity-80">
+            Explore
+          </Link>
+          <Link href="/login" className="hover:opacity-80">
+            Login
+          </Link>
         </nav>
 
         {/* HERO CONTENT */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
+
+          {/* CENTERED LOGO + NAME */}
+          <div className="flex flex-col items-center mb-6">
+            <Image src="/logo.png" alt="logo" width={60} height={60} />
+            <h2 className="text-2xl font-semibold mt-3">Stated</h2>
+          </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
             Public commitments. Public outcomes.
@@ -101,18 +94,22 @@ export default async function HomePage() {
             </button>
           </form>
 
-          {/* MAIN CTA */}
+          {/* SINGLE CTA ONLY */}
           <Link
             href="/signup"
             className="bg-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition"
           >
-            Get Started
+            Get 2 Free Credits – Start Now
           </Link>
+
+          <p className="mt-3 text-gray-300 text-sm">
+            No credit card required
+          </p>
 
         </div>
       </div>
 
-      {/* RECENT COMMITMENTS SECTION */}
+      {/* RECENT COMMITMENTS */}
       <div className="bg-white text-black py-16 px-6">
         <div className="max-w-3xl mx-auto">
 
@@ -120,9 +117,9 @@ export default async function HomePage() {
             Recent Commitments
           </h2>
 
-          <div className="space-y-6">
-            {commitments && commitments.length > 0 ? (
-              commitments.map((c: any) => (
+          {commitments && commitments.length > 0 ? (
+            <div className="space-y-6">
+              {commitments.map((c: any) => (
                 <Link
                   key={c.id}
                   href={`/u/${c.profiles?.username}`}
@@ -158,13 +155,13 @@ export default async function HomePage() {
 
                   </div>
                 </Link>
-              ))
-            ) : (
-              <div className="text-center text-gray-500">
-                No public commitments yet.
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500">
+              No public commitments yet.
+            </div>
+          )}
 
         </div>
       </div>
