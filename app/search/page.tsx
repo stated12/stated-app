@@ -1,78 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 
-type Profile = {
-  id: string;
-  username: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-};
-
-type Commitment = {
-  id: string;
-  text: string;
-  status: string;
-  created_at: string;
-  profiles: {
-    username: string;
-    display_name: string | null;
-    avatar_url: string | null;
-  };
-};
+function normalizeProfile(profileData: any) {
+  if (!profileData) return null;
+  if (Array.isArray(profileData)) return profileData[0] ?? null;
+  return profileData;
+}
 
 export default function SearchPage() {
+
   const supabase = createClient();
 
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [commitments, setCommitments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  useEffect(() => {
+    loadCommitments();
+  }, []);
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!query.trim()) return;
-
-    setLoading(true);
-
+  async function loadCommitments() {
     try {
-      // SEARCH PROFILES
-      const { data: profileResults } = await supabase
-        .from("profiles")
-        .select("*")
-        .or(
-          `username.ilike.%${query}%,display_name.ilike.%${query}%,bio.ilike.%${query}%`
-        )
-        .limit(10);
 
-      setProfiles(profileResults || []);
-
-      // SEARCH COMMITMENTS
-      const { data: commitmentResults } = await supabase
+      const { data } = await supabase
         .from("commitments")
-        .select(
-          `
-            id,
-            text,
-            status,
-            created_at,
-            profiles (
-              username,
-              display_name,
-              avatar_url
-            )
-          `
-        )
-        .ilike("text", `%${query}%`)
+        .select(`
+          id,
+          text,
+          status,
+          created_at,
+          profiles (
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .limit(10);
 
-      setCommitments(commitmentResults || []);
+      setCommitments(data || []);
+
     } catch (error) {
       console.error(error);
     }
@@ -80,174 +50,70 @@ export default function SearchPage() {
     setLoading(false);
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading search...
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
 
-      {/* HEADER */}
-      <div className="bg-white border-b px-6 py-4">
+      <div className="max-w-4xl mx-auto space-y-6">
 
-        <div className="max-w-3xl mx-auto flex justify-between">
-
-          <Link href="/" className="text-2xl font-bold text-blue-600">
+        <Link href="/">
+          <div className="text-2xl font-bold text-blue-600 cursor-pointer">
             Stated
-          </Link>
+          </div>
+        </Link>
 
-          <Link href="/dashboard" className="text-sm">
-            Dashboard
-          </Link>
-
+        <div className="text-xl font-semibold">
+          Search Results
         </div>
 
-      </div>
+        <div className="space-y-4">
 
-      {/* SEARCH BOX */}
-      <div className="max-w-3xl mx-auto px-4 py-8">
+          {commitments.map((c) => {
 
-        <form onSubmit={handleSearch}>
+            const profile = normalizeProfile(c.profiles);
 
-          <input
-            type="text"
-            placeholder="Search people, companies, or commitments..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full p-4 border rounded-lg"
-          />
+            const avatar =
+              profile?.avatar_url ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                profile?.display_name || profile?.username || "User"
+              )}&background=2563eb&color=fff`;
 
-        </form>
+            return (
+              <Link
+                key={c.id}
+                href={`/commitment/${c.id}`}
+                className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
+              >
 
-      </div>
+                <div className="flex items-center gap-3 mb-2">
 
-      {/* RESULTS */}
-      <div className="max-w-3xl mx-auto px-4 pb-12 space-y-8">
+                  <img
+                    src={avatar}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
 
-        {/* LOADING */}
-        {loading && (
-          <div className="text-gray-500">
-            Searching...
-          </div>
-        )}
+                  <div className="text-sm font-medium">
+                    {profile?.display_name || profile?.username}
+                  </div>
 
-        {/* PEOPLE RESULTS */}
-        {profiles.length > 0 && (
-          <div>
+                </div>
 
-            <div className="font-semibold mb-3">
-              People & Companies
-            </div>
+                <div className="font-medium">
+                  {c.text}
+                </div>
 
-            <div className="space-y-3">
+              </Link>
+            );
+          })}
 
-              {profiles.map((profile) => {
-
-                const avatar =
-                  profile.avatar_url ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    profile.display_name || profile.username
-                  )}&background=2563eb&color=fff`;
-
-                return (
-                  <Link
-                    key={profile.id}
-                    href={`/u/${profile.username}`}
-                    className="block bg-white p-4 rounded-lg shadow hover:bg-gray-50"
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <img
-                        src={avatar}
-                        className="w-10 h-10 rounded-full"
-                      />
-
-                      <div>
-
-                        <div className="font-medium">
-                          {profile.display_name || profile.username}
-                        </div>
-
-                        <div className="text-sm text-gray-500">
-                          @{profile.username}
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </Link>
-                );
-              })}
-
-            </div>
-
-          </div>
-        )}
-
-        {/* COMMITMENT RESULTS */}
-        {commitments.length > 0 && (
-          <div>
-
-            <div className="font-semibold mb-3">
-              Commitments
-            </div>
-
-            <div className="space-y-3">
-
-              {commitments.map((commitment) => {
-
-                const profile = commitment.profiles;
-
-                const avatar =
-                  profile?.avatar_url ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    profile?.display_name || profile?.username || "User"
-                  )}&background=2563eb&color=fff`;
-
-                return (
-                  <Link
-                    key={commitment.id}
-                    href={`/commitment/${commitment.id}`}
-                    className="block bg-white p-4 rounded-lg shadow hover:bg-gray-50"
-                  >
-
-                    <div className="flex items-center gap-3 mb-2">
-
-                      <img
-                        src={avatar}
-                        className="w-8 h-8 rounded-full"
-                      />
-
-                      <div className="text-sm text-gray-500">
-                        @{profile?.username}
-                      </div>
-
-                    </div>
-
-                    <div className="font-medium">
-                      {commitment.text}
-                    </div>
-
-                    <div className="text-sm text-gray-400 mt-1 capitalize">
-                      Status: {commitment.status}
-                    </div>
-
-                  </Link>
-                );
-              })}
-
-            </div>
-
-          </div>
-        )}
-
-        {/* EMPTY */}
-        {!loading &&
-          profiles.length === 0 &&
-          commitments.length === 0 &&
-          query && (
-            <div className="text-gray-500">
-              No results found
-            </div>
-          )}
+        </div>
 
       </div>
 
