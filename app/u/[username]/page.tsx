@@ -10,20 +10,24 @@ interface PageProps {
 
 export default async function UserPage({ params }: PageProps) {
   const supabase = await createClient();
-  const username = params.username;
 
-  if (!username) return notFound();
+  const rawUsername = params?.username;
+  if (!rawUsername) return notFound();
 
-  // PROFILE
-  const { data: profile } = await supabase
+  const username = rawUsername.trim().toLowerCase();
+
+  // FETCH PROFILE (SAFE + CASE INSENSITIVE)
+  const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
-    .eq("username", username.toLowerCase())
-    .single();
+    .ilike("username", username)
+    .limit(1);
+
+  const profile = profiles?.[0] ?? null;
 
   if (!profile) return notFound();
 
-  // COMMITMENTS
+  // FETCH COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at, view_count")
@@ -31,7 +35,6 @@ export default async function UserPage({ params }: PageProps) {
     .eq("is_public", true)
     .order("created_at", { ascending: false });
 
-  // URL normalizer
   function normalizeUrl(value?: string | null) {
     if (!value) return null;
     return value.startsWith("http") ? value : `https://${value}`;
@@ -140,9 +143,7 @@ export default async function UserPage({ params }: PageProps) {
                   </div>
 
                   <div className="text-sm text-gray-500">
-                    Status: {c.status}
-                    {" • "}
-                    👁 {c.view_count ?? 0} views
+                    Status: {c.status} • 👁 {c.view_count ?? 0} views
                   </div>
                 </div>
               ))}
