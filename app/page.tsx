@@ -10,36 +10,52 @@ export default async function HomePage() {
     .select(`
       id,
       text,
+      status,
+      view_count,
       profiles (
         username,
         display_name,
-        avatar_url
+        avatar_url,
+        account_type
       )
     `)
-    .eq("visibility", "public")
+    .eq("status", "active")
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(6);
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="min-h-screen flex flex-col">
 
-      {/* Background */}
-      <Image
-        src="/nature-bg.jpg"
-        alt="Background"
-        fill
-        priority
-        className="object-cover"
-      />
-
-      <div className="absolute inset-0 bg-black/70" />
+      {/* HEADER */}
+      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-10 py-6 text-white text-sm">
+        <Link href="/search">Explore</Link>
+        <Link href="/login">Login</Link>
+      </header>
 
       {/* HERO */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 pt-24">
+      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-32 pb-24">
 
-        <Image src="/logo.png" alt="Stated Logo" width={120} height={120} />
+        <Image
+          src="/nature-bg.jpg"
+          alt="Background"
+          fill
+          priority
+          className="object-cover -z-10"
+        />
+        <div className="absolute inset-0 bg-black/70 -z-10" />
 
-        <h1 className="text-4xl md:text-5xl font-bold mt-6">
+        {/* BIG LOGO */}
+        <Image
+          src="/logo.png"
+          alt="Stated Logo"
+          width={170}
+          height={170}
+          className="mb-6"
+        />
+
+        <h2 className="text-2xl font-semibold mb-4">Stated</h2>
+
+        <h1 className="text-4xl md:text-5xl font-bold">
           Public commitments.
           <br />
           Public outcomes.
@@ -52,7 +68,7 @@ export default async function HomePage() {
         {/* SEARCH */}
         <form
           action="/search"
-          className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden"
+          className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
         >
           <input
             type="text"
@@ -79,41 +95,75 @@ export default async function HomePage() {
         <p className="mt-3 text-sm text-gray-300">
           No credit card required
         </p>
-      </div>
+      </section>
 
-      {/* RECENT COMMITMENTS */}
-      <div className="relative z-10 mt-24 bg-white text-black py-16 px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* RECENT COMMITMENTS (ACTIVE ONLY) */}
+      <section className="bg-white text-black py-16 px-6 flex-1">
+        <div className="max-w-5xl mx-auto">
 
-          <h2 className="text-2xl font-semibold mb-8 text-center">
+          <h2 className="text-2xl font-semibold mb-10 text-center">
             Recent Commitments
           </h2>
 
           {commitments && commitments.length > 0 ? (
-            <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {commitments.map((c: any) => (
                 <Link
                   key={c.id}
                   href={`/u/${c.profiles?.username}`}
-                  className="block p-6 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+                  className="block bg-gray-100 rounded-xl p-6 hover:bg-gray-200 transition"
                 >
-                  <div className="font-semibold">
-                    {c.profiles?.display_name}
-                  </div>
-                  <div className="text-gray-700 mt-1">
-                    {c.text}
+                  <div className="flex items-start gap-4">
+
+                    <Image
+                      src={
+                        c.profiles?.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          c.profiles?.display_name || "User"
+                        )}`
+                      }
+                      alt="avatar"
+                      width={50}
+                      height={50}
+                      className="rounded-full"
+                    />
+
+                    <div className="flex-1">
+                      <div className="font-semibold mb-1">
+                        {c.profiles?.display_name}
+                      </div>
+
+                      <div className="text-gray-800 mb-3">
+                        {c.text}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        👁 {c.view_count ?? 0} views
+                      </div>
+                    </div>
+
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
             <div className="text-center text-gray-500">
-              No public commitments yet.
+              No active commitments yet.
             </div>
           )}
 
         </div>
-      </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t text-center py-6 text-sm text-gray-600">
+        <div className="flex justify-center gap-6 mb-2">
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/refund">Refund</Link>
+        </div>
+        © 2026 Stated
+      </footer>
 
     </div>
   );
