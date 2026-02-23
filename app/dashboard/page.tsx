@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
@@ -61,10 +62,10 @@ export default async function Dashboard() {
       (c) => c.status === "paused" || c.status === "withdrawn"
     ).length ?? 0;
 
+  // ✅ SAFER AVATAR LOGIC
   const avatar =
-    profile?.avatar_url &&
-    profile.avatar_url.startsWith("http")
-      ? profile.avatar_url
+    profile?.avatar_url?.trim()
+      ? profile.avatar_url.trim()
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           profile?.display_name || profile?.username || "User"
         )}&background=2563eb&color=fff`;
@@ -88,13 +89,17 @@ export default async function Dashboard() {
         {/* PROFILE CARD */}
         <div className="bg-white rounded-xl shadow p-5">
           <div className="flex items-center gap-4">
-            <Image
-              src={avatar}
-              width={72}
-              height={72}
-              alt="avatar"
-              className="rounded-full object-cover"
-            />
+
+            {/* ✅ PERFECT CIRCLE AVATAR */}
+            <div className="w-[72px] h-[72px] relative">
+              <Image
+                src={avatar}
+                alt="avatar"
+                fill
+                sizes="72px"
+                className="rounded-full object-cover"
+              />
+            </div>
 
             <div>
               <div className="text-lg font-semibold flex items-center gap-2">
@@ -289,7 +294,6 @@ export default async function Dashboard() {
                   ).toLocaleDateString()}
                 </div>
 
-                {/* ACTIVE ACTIONS */}
                 {c.status === "active" && (
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
@@ -307,7 +311,6 @@ export default async function Dashboard() {
                   </div>
                 )}
 
-                {/* PAUSED ACTIONS */}
                 {c.status === "paused" && (
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <Link href={`/commitment/${c.id}/resume`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
