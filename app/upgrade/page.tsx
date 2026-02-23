@@ -15,67 +15,35 @@ type Plan = {
 };
 
 const PLANS: Plan[] = [
-  {
-    key: "individual",
-    name: "Individual",
-    price: 499,
-    credits: 20,
-    popular: true,
-  },
-  {
-    key: "company_starter",
-    name: "Company Starter",
-    price: 1999,
-    credits: 25,
-  },
-  {
-    key: "company_growth",
-    name: "Company Growth",
-    price: 2999,
-    credits: 50,
-  },
-  {
-    key: "company_scale",
-    name: "Company Scale",
-    price: 4999,
-    credits: 75,
-  },
+  { key: "individual", name: "Individual Pro", price: 499, credits: 20, popular: true },
+  { key: "company_starter", name: "Company Starter", price: 1999, credits: 25 },
+  { key: "company_growth", name: "Company Growth", price: 2999, credits: 50 },
+  { key: "company_scale", name: "Company Scale", price: 4999, credits: 75 },
 ];
 
 const CREDIT_PACKS: Plan[] = [
-  {
-    key: "pack_10",
-    name: "10 credits",
-    price: 199,
-    credits: 10,
-  },
-  {
-    key: "pack_25",
-    name: "25 credits",
-    price: 399,
-    credits: 25,
-  },
-  {
-    key: "pack_50",
-    name: "50 credits",
-    price: 699,
-    credits: 50,
-  },
+  { key: "pack_10", name: "10 credits", price: 199, credits: 10 },
+  { key: "pack_25", name: "25 credits", price: 399, credits: 25 },
+  { key: "pack_50", name: "50 credits", price: 699, credits: 50 },
 ];
 
 export default function UpgradePage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<any>(null);
-  const [account, setAccount] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
 
   useEffect(() => {
-    loadAccount();
+    loadProfile();
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
   }, []);
 
-  async function loadAccount() {
+  async function loadProfile() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -85,111 +53,98 @@ export default function UpgradePage() {
       return;
     }
 
-    setUser(user);
-
     const { data } = await supabase
-      .from("accounts")
+      .from("profiles")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single();
 
-    setAccount(data);
+    setProfile(data);
     setLoading(false);
   }
 
-  async function purchase(plan: Plan, isPack: boolean) {
-    if (!account) return;
-
+  async function purchase(plan: Plan) {
     setBuying(true);
 
-    try {
-      const newCredits =
-        (account.credits_remaining || 0) + plan.credits;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const updateData: any = {
-        credits_remaining: newCredits,
-      };
+    const orderRes = await fetch("/api/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planKey: plan.key }),
+    });
 
-      // only set plan_key on first purchase
-      if (!account.plan_key && !isPack) {
-        updateData.plan_key = plan.key;
-        updateData.plan_purchased_at = new Date().toISOString();
-      }
+    const orderData = await orderRes.json();
 
-      const { error } = await supabase
-        .from("accounts")
-        .update(updateData)
-        .eq("user_id", user.id);
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      amount: orderData.amount,
+      currency: "INR",
+      order_id: orderData.orderId,
+      handler: async function (response: any) {
+        await fetch("/api/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...response,
+            planKey: plan.key,
+            userId: user?.id,
+          }),
+        });
 
-      if (error) throw error;
+        router.push("/dashboard");
+      },
+      theme: { color: "#2563eb" },
+    };
 
-      alert(`Success! ${plan.credits} credits added`);
-
-      router.push("/dashboard");
-    } catch (err) {
-      alert("Purchase failed");
-    }
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
 
     setBuying(false);
   }
 
-  if (loading) {
-    return (
-      <div className="p-6 text-center">
-        Loading...
-      </div>
-    );
-  }
+  if (loading) return <div className="p-6 text-center">Loading...</div>;
 
-  const isFreeUser = !account?.plan_key;
+  const isPro = !!profile?.plan_key;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-xl mx-auto space-y-8">
 
-      <div className="max-w-xl mx-auto">
+        <h1 className="text-3xl font-bold">Upgrade Stated</h1>
 
-        <h1 className="text-3xl font-bold mb-6">
-          Upgrade Stated
-        </h1>
-
-        {isFreeUser && (
+        {!isPro && (
           <>
-            <h2 className="text-lg font-semibold mb-4">
-              Choose your plan
-            </h2>
+            <div className="bg-white p-5 rounded-xl shadow">
+              <h2 className="font-semibold mb-3">Pro unlocks:</h2>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>✔ Analytics dashboard</li>
+                <li>✔ Profile & commitment views</li>
+                <li>✔ Followers (coming soon)</li>
+                <li>✔ Pro badge</li>
+                <li>✔ Lifetime access</li>
+              </ul>
+            </div>
 
-            <div className="space-y-4 mb-8">
+            <div className="space-y-4">
               {PLANS.map((plan) => (
-                <div
-                  key={plan.key}
-                  className={`bg-white p-5 rounded-xl shadow border ${
-                    plan.popular
-                      ? "border-blue-500"
-                      : "border-gray-200"
-                  }`}
-                >
+                <div key={plan.key} className="bg-white p-5 rounded-xl shadow border">
                   <div className="flex justify-between items-center">
-
                     <div>
-                      <div className="font-semibold text-lg">
-                        {plan.name}
-                      </div>
-
-                      <div className="text-gray-600 text-sm">
-                        {plan.credits} credits
+                      <div className="font-semibold">{plan.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {plan.credits} credits included
                       </div>
                     </div>
-
                     <button
-                      onClick={() =>
-                        purchase(plan, false)
-                      }
+                      onClick={() => purchase(plan)}
                       disabled={buying}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg"
                     >
                       ₹{plan.price}
                     </button>
-
                   </div>
                 </div>
               ))}
@@ -197,43 +152,35 @@ export default function UpgradePage() {
           </>
         )}
 
-        {/* Credit Packs */}
+        {isPro && (
+          <div className="bg-green-100 p-4 rounded-lg text-green-700">
+            You are a Pro member 🎉
+          </div>
+        )}
 
-        <h2 className="text-lg font-semibold mb-4">
-          Buy credit packs
-        </h2>
-
-        <div className="space-y-4">
-          {CREDIT_PACKS.map((pack) => (
-            <div
-              key={pack.key}
-              className="bg-white p-5 rounded-xl shadow border border-gray-200"
-            >
-              <div className="flex justify-between items-center">
-
-                <div>
-                  <div className="font-semibold">
-                    {pack.name}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Buy credit packs</h2>
+          <div className="space-y-4">
+            {CREDIT_PACKS.map((pack) => (
+              <div key={pack.key} className="bg-white p-5 rounded-xl shadow">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold">{pack.name}</div>
+                    <div className="text-sm text-gray-600">
+                      Add {pack.credits} credits
+                    </div>
                   </div>
-
-                  <div className="text-gray-600 text-sm">
-                    Add {pack.credits} credits
-                  </div>
+                  <button
+                    onClick={() => purchase(pack)}
+                    disabled={buying}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    ₹{pack.price}
+                  </button>
                 </div>
-
-                <button
-                  onClick={() =>
-                    purchase(pack, true)
-                  }
-                  disabled={buying}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                >
-                  ₹{pack.price}
-                </button>
-
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
       </div>
