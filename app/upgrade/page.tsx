@@ -70,7 +70,10 @@ export default function UpgradePage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const orderRes = await fetch("/api/create-order", {
+    if (!user) return;
+
+    // ✅ Correct API path
+    const orderRes = await fetch("/api/razorpay/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ planKey: plan.key }),
@@ -78,23 +81,36 @@ export default function UpgradePage() {
 
     const orderData = await orderRes.json();
 
+    if (!orderData.orderId) {
+      alert("Order creation failed");
+      setBuying(false);
+      return;
+    }
+
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key: orderData.key, // ✅ use key from API
       amount: orderData.amount,
       currency: "INR",
       order_id: orderData.orderId,
       handler: async function (response: any) {
-        await fetch("/api/verify-payment", {
+        // ✅ Correct verify path
+        const verifyRes = await fetch("/api/razorpay/verify-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...response,
             planKey: plan.key,
-            userId: user?.id,
+            userId: user.id,
           }),
         });
 
-        router.push("/dashboard");
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          router.push("/dashboard");
+        } else {
+          alert("Payment verification failed");
+        }
       },
       theme: { color: "#2563eb" },
     };
