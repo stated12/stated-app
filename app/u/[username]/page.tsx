@@ -27,15 +27,10 @@ export default async function UserPage(
 
   const profile = profiles[0];
 
-  // PROFILE VIEW INSERT
+  // Track profile view (not shown publicly)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
-
-  const { count: profileViews } = await supabase
-    .from("profile_views")
-    .select("*", { count: "exact", head: true })
-    .eq("profile_id", profile.id);
 
   // PUBLIC COMMITMENTS
   const { data: commitments } = await supabase
@@ -45,7 +40,7 @@ export default async function UserPage(
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
-  // INSERT COMMITMENT VIEWS
+  // Track commitment views
   if (commitments) {
     for (const c of commitments) {
       await supabase.from("commitment_views").insert({
@@ -60,6 +55,9 @@ export default async function UserPage(
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           profile.display_name || profile.username || "User"
         )}&background=2563eb&color=fff`;
+
+  const cleanUrl = (url: string) =>
+    url.replace(/^https?:\/\//, "");
 
   function statusColor(status: string) {
     switch (status) {
@@ -76,6 +74,26 @@ export default async function UserPage(
     }
   }
 
+  const SocialPill = ({
+    href,
+    children,
+    label,
+  }: {
+    href: string;
+    children: React.ReactNode;
+    label: string;
+  }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white rounded-full text-sm font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50 transition-all duration-200"
+    >
+      {children}
+      {label}
+    </a>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
@@ -85,8 +103,8 @@ export default async function UserPage(
           <Image
             src="/logo.png"
             alt="Stated"
-            width={120}
-            height={120}
+            width={130}
+            height={130}
             className="mx-auto"
           />
           <div className="text-blue-600 font-bold text-3xl mt-4">
@@ -94,10 +112,10 @@ export default async function UserPage(
           </div>
         </div>
 
-        {/* Profile */}
+        {/* Profile Section */}
         <div className="text-center">
 
-          <div className="w-36 h-36 mx-auto mb-5 rounded-full overflow-hidden border-4 border-white shadow-md">
+          <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <Image
               src={avatarUrl}
               alt="avatar"
@@ -126,36 +144,60 @@ export default async function UserPage(
             </p>
           )}
 
-          {/* Stats */}
-          <div className="flex justify-center gap-8 mt-6 text-sm text-gray-600">
-            <div>
-              <div className="font-semibold text-gray-900">
-                {commitments?.length || 0}
-              </div>
-              Commitments
-            </div>
-            <div>
-              <div className="font-semibold text-gray-900">
-                {profileViews || 0}
-              </div>
-              Profile Views
-            </div>
+          {/* Social Links */}
+          <div className="mt-8 flex justify-center flex-wrap gap-3">
+
+            {profile.website && (
+              <SocialPill href={profile.website} label={cleanUrl(profile.website)}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20" />
+                  <path d="M12 2a15 15 0 010 20" />
+                </svg>
+              </SocialPill>
+            )}
+
+            {profile.linkedin && (
+              <SocialPill href={profile.linkedin} label="LinkedIn">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 3h4v18H4zM6 1a2 2 0 110 4 2 2 0 010-4zM10 8h4v2h.1c.6-1.1 2-2.2 4.1-2.2 4.4 0 5.2 2.9 5.2 6.6V21h-4v-5.3c0-1.3 0-3-1.8-3s-2 1.4-2 2.9V21h-4z"/>
+                </svg>
+              </SocialPill>
+            )}
+
+            {profile.twitter && (
+              <SocialPill href={profile.twitter} label="Twitter">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22 5.8c-.7.3-1.5.5-2.3.6a4 4 0 001.8-2.2 8 8 0 01-2.6 1A4 4 0 0012 8.4 11.3 11.3 0 013 4.9a4 4 0 001.2 5.3 3.8 3.8 0 01-1.8-.5v.1a4 4 0 003.2 4 4 4 0 01-1.8.1 4 4 0 003.7 2.7A8 8 0 012 19.5a11.3 11.3 0 006.2 1.8c7.4 0 11.4-6.1 11.4-11.4v-.5A8 8 0 0022 5.8z"/>
+                </svg>
+              </SocialPill>
+            )}
+
+            {profile.github && (
+              <SocialPill href={profile.github} label="GitHub">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 .5A12 12 0 000 12.7a12.2 12.2 0 008.2 11.6c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.6-1.5-1.5-1.9-1.5-1.9-1.2-.8.1-.8.1-.8 1.3.1 2 .1 2 .1 1.1 2 3 1.5 3.7 1.1.1-.9.4-1.5.7-1.8-2.7-.3-5.6-1.4-5.6-6.2 0-1.4.5-2.6 1.3-3.6-.1-.3-.6-1.6.1-3.4 0 0 1.1-.3 3.6 1.4a12.3 12.3 0 016.6 0c2.5-1.7 3.6-1.4 3.6-1.4.7 1.8.2 3.1.1 3.4.8 1 1.3 2.2 1.3 3.6 0 4.8-2.9 5.9-5.6 6.2.5.4.8 1.2.8 2.5v3.7c0 .3.2.7.8.6A12.2 12.2 0 0024 12.7 12 12 0 0012 .5z"/>
+                </svg>
+              </SocialPill>
+            )}
+
           </div>
 
-          <ShareProfileButton username={profile.username} />
+          <div className="mt-8">
+            <ShareProfileButton username={profile.username} />
+          </div>
         </div>
 
         {/* Commitments */}
-        <div className="mt-14">
-          <h2 className="text-2xl font-bold mb-8 text-center text-gray-900">
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
           </h2>
 
           {commitments && commitments.length > 0 ? (
-            <div className="space-y-10">
+            <div className="space-y-8">
               {await Promise.all(
                 commitments.map(async (c) => {
-
                   const { count: commitmentViews } = await supabase
                     .from("commitment_views")
                     .select("*", { count: "exact", head: true })
@@ -164,7 +206,7 @@ export default async function UserPage(
                   return (
                     <div
                       key={c.id}
-                      className="bg-white border rounded-xl p-6 shadow-md"
+                      className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
                     >
                       <div className="font-semibold text-lg text-gray-900 mb-2">
                         {c.text}
@@ -178,7 +220,7 @@ export default async function UserPage(
                         Created {new Date(c.created_at).toLocaleDateString()}
                       </div>
 
-                      <div className="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                      <div className="text-xs text-gray-500 mt-4 flex items-center gap-1">
                         👁 {commitmentViews || 0} views
                       </div>
                     </div>
