@@ -22,7 +22,7 @@ export default async function UserPage(
 
   const profile = profiles[0];
 
-  // 👁 Increment profile view
+  // 👁 Increment profile view (optional but safe)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
@@ -117,23 +117,6 @@ export default async function UserPage(
               {profile.website}
             </a>
           )}
-
-          {/* Share */}
-          <div className="mt-6">
-            <button
-              onClick={() =>
-                navigator.share
-                  ? navigator.share({
-                      title: profile.display_name || profile.username,
-                      url: `https://app.stated.in/u/${profile.username}`,
-                    })
-                  : alert("Copy link from address bar")
-              }
-              className="text-sm border px-4 py-2 rounded-lg hover:bg-gray-100"
-            >
-              Share Profile
-            </button>
-          </div>
         </div>
 
         {/* Commitments */}
@@ -208,4 +191,4 @@ export default async function UserPage(
       </div>
     </div>
   );
-}
+                                }
