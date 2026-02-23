@@ -29,20 +29,23 @@ export default async function UserPage({ params }: PageProps) {
 
   const profile = profiles[0];
 
-  // Fetch public commitments
+  // ✅ FIXED: Use visibility column
   const { data: commitments } = await supabase
     .from("commitments")
-    .select("id, text, status, created_at, view_count")
+    .select("id, text, status, created_at")
     .eq("user_id", profile.id)
-    .eq("is_public", true)
+    .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
   // Insert profile view (ignore failure silently)
-  await supabase.from("profile_views").insert({
-    profile_id: profile.id,
-  }).catch(() => {});
+  await supabase
+    .from("profile_views")
+    .insert({
+      profile_id: profile.id,
+    })
+    .catch(() => {});
 
-  // Increment commitment views
+  // Insert commitment views
   if (commitments) {
     for (const c of commitments) {
       await supabase
