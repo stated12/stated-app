@@ -36,7 +36,6 @@ export default async function Dashboard() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // ✅ Fetch updates
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
   const { data: updates } =
@@ -48,27 +47,30 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
-  const { count: profileViews } = await supabase
-    .from("profile_views")
-    .select("*", { count: "exact", head: true })
-    .eq("profile_id", user.id);
-
-  const { count: commitmentViews } = await supabase
-    .from("commitment_views")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
-
-  const credits = profile?.credits ?? 0;
+  // Only fetch analytics if Pro
   const isPro = !!profile?.plan_key;
 
-  const total = commitments?.length ?? 0;
+  const { count: profileViews } = isPro
+    ? await supabase
+        .from("profile_views")
+        .select("*", { count: "exact", head: true })
+        .eq("profile_id", user.id)
+    : { count: 0 };
 
+  const { count: commitmentViews } = isPro
+    ? await supabase
+        .from("commitment_views")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+    : { count: 0 };
+
+  const credits = profile?.credits ?? 0;
+
+  const total = commitments?.length ?? 0;
   const active =
     commitments?.filter((c) => c.status === "active").length ?? 0;
-
   const completed =
     commitments?.filter((c) => c.status === "completed").length ?? 0;
-
   const paused =
     commitments?.filter(
       (c) => c.status === "paused" || c.status === "withdrawn"
@@ -142,9 +144,36 @@ export default async function Dashboard() {
           </div>
         </div>
 
+        {/* CREDITS */}
+        <div className="bg-white rounded-xl shadow p-5 flex justify-between items-center">
+          <div className="font-medium">
+            Credits remaining: {credits}
+          </div>
+          <Link
+            href="/upgrade"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Buy credits
+          </Link>
+        </div>
+
         {/* ANALYTICS */}
-        <div className="bg-white rounded-xl shadow p-5 relative">
-          <div className="font-semibold mb-3">Analytics</div>
+        <div
+          className={`bg-white rounded-xl shadow p-5 relative ${
+            isPro ? "border border-blue-200" : ""
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-semibold flex items-center gap-2">
+              Analytics
+              {!isPro && <span>🔒</span>}
+              {isPro && (
+                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                  PRO
+                </span>
+              )}
+            </div>
+          </div>
 
           {isPro ? (
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -156,22 +185,34 @@ export default async function Dashboard() {
               <div>Paused / Withdrawn: {paused}</div>
             </div>
           ) : (
-            <div className="text-sm text-gray-500">
-              Upgrade to unlock analytics
+            <div className="relative">
+              <div className="blur-sm select-none text-sm text-gray-500">
+                Profile views: 124
+                <br />
+                Commitment views: 89
+                <br />
+                Active: 3
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Link
+                  href="/upgrade"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+                >
+                  Upgrade to unlock analytics
+                </Link>
+              </div>
             </div>
           )}
         </div>
 
         {/* CREATE BUTTON */}
         <Link
-          href="/commitment/new"
-          className={`block text-center py-3 rounded-lg text-white font-medium ${
-            credits === 0
-              ? "bg-gray-400 pointer-events-none"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
+          href={credits === 0 ? "/upgrade" : "/commitment/new"}
+          className="block text-center py-3 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
         >
-          {credits === 0 ? "No credits remaining" : "Create Commitment"}
+          {credits === 0
+            ? "No credits left – Buy credits"
+            : "Create Commitment (1 credit)"}
         </Link>
 
         {/* COMMITMENTS */}
@@ -191,7 +232,6 @@ export default async function Dashboard() {
                   <span className="ml-1 font-medium">{c.status}</span>
                 </div>
 
-                {/* Timeline Updates */}
                 {commitmentUpdates.length > 0 && (
                   <div className="mt-4 space-y-3 border-t pt-4">
                     {commitmentUpdates.map((u) => (
@@ -228,6 +268,7 @@ export default async function Dashboard() {
             );
           })}
         </div>
+
       </div>
     </div>
   );
