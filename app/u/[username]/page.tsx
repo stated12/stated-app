@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import ShareProfileButton from "@/components/ShareProfileButton";
+import { Globe, Linkedin, Twitter, Github, Youtube } from "lucide-react";
 
 export default async function UserPage(
   { params }: { params: Promise<{ username: string }> }
@@ -74,23 +75,36 @@ export default async function UserPage(
     }
   }
 
-  const SocialPill = ({
+  const SocialLink = ({
     href,
-    children,
     label,
+    children,
   }: {
     href: string;
-    children: React.ReactNode;
     label: string;
+    children: React.ReactNode;
   }) => (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white rounded-full text-sm font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50 transition-all duration-200"
+      className="
+        flex items-center gap-2
+        px-4 py-2
+        text-sm font-medium
+        rounded-full
+        border border-gray-200
+        bg-white
+        text-gray-700
+        hover:bg-gray-50
+        hover:border-gray-300
+        hover:shadow-sm
+        hover:-translate-y-[1px]
+        transition-all duration-200
+      "
     >
       {children}
-      {label}
+      <span>{label}</span>
     </a>
   );
 
@@ -103,8 +117,8 @@ export default async function UserPage(
           <Image
             src="/logo.png"
             alt="Stated"
-            width={130}
-            height={130}
+            width={120}
+            height={120}
             className="mx-auto"
           />
           <div className="text-blue-600 font-bold text-3xl mt-4">
@@ -112,7 +126,7 @@ export default async function UserPage(
           </div>
         </div>
 
-        {/* Profile Section */}
+        {/* Profile */}
         <div className="text-center">
 
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -148,37 +162,48 @@ export default async function UserPage(
           <div className="mt-8 flex justify-center flex-wrap gap-3">
 
             {profile.website && (
-              <SocialPill href={profile.website} label={cleanUrl(profile.website)}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M2 12h20" />
-                  <path d="M12 2a15 15 0 010 20" />
-                </svg>
-              </SocialPill>
+              <SocialLink
+                href={profile.website}
+                label={cleanUrl(profile.website)}
+              >
+                <Globe size={16} />
+              </SocialLink>
             )}
 
             {profile.linkedin && (
-              <SocialPill href={profile.linkedin} label="LinkedIn">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 3h4v18H4zM6 1a2 2 0 110 4 2 2 0 010-4zM10 8h4v2h.1c.6-1.1 2-2.2 4.1-2.2 4.4 0 5.2 2.9 5.2 6.6V21h-4v-5.3c0-1.3 0-3-1.8-3s-2 1.4-2 2.9V21h-4z"/>
-                </svg>
-              </SocialPill>
+              <SocialLink
+                href={profile.linkedin}
+                label="LinkedIn"
+              >
+                <Linkedin size={16} />
+              </SocialLink>
             )}
 
             {profile.twitter && (
-              <SocialPill href={profile.twitter} label="Twitter">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M22 5.8c-.7.3-1.5.5-2.3.6a4 4 0 001.8-2.2 8 8 0 01-2.6 1A4 4 0 0012 8.4 11.3 11.3 0 013 4.9a4 4 0 001.2 5.3 3.8 3.8 0 01-1.8-.5v.1a4 4 0 003.2 4 4 4 0 01-1.8.1 4 4 0 003.7 2.7A8 8 0 012 19.5a11.3 11.3 0 006.2 1.8c7.4 0 11.4-6.1 11.4-11.4v-.5A8 8 0 0022 5.8z"/>
-                </svg>
-              </SocialPill>
+              <SocialLink
+                href={profile.twitter}
+                label="Twitter"
+              >
+                <Twitter size={16} />
+              </SocialLink>
             )}
 
             {profile.github && (
-              <SocialPill href={profile.github} label="GitHub">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 .5A12 12 0 000 12.7a12.2 12.2 0 008.2 11.6c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.6-1.5-1.5-1.9-1.5-1.9-1.2-.8.1-.8.1-.8 1.3.1 2 .1 2 .1 1.1 2 3 1.5 3.7 1.1.1-.9.4-1.5.7-1.8-2.7-.3-5.6-1.4-5.6-6.2 0-1.4.5-2.6 1.3-3.6-.1-.3-.6-1.6.1-3.4 0 0 1.1-.3 3.6 1.4a12.3 12.3 0 016.6 0c2.5-1.7 3.6-1.4 3.6-1.4.7 1.8.2 3.1.1 3.4.8 1 1.3 2.2 1.3 3.6 0 4.8-2.9 5.9-5.6 6.2.5.4.8 1.2.8 2.5v3.7c0 .3.2.7.8.6A12.2 12.2 0 0024 12.7 12 12 0 0012 .5z"/>
-                </svg>
-              </SocialPill>
+              <SocialLink
+                href={profile.github}
+                label="GitHub"
+              >
+                <Github size={16} />
+              </SocialLink>
+            )}
+
+            {profile.youtube && (
+              <SocialLink
+                href={profile.youtube}
+                label="YouTube"
+              >
+                <Youtube size={16} />
+              </SocialLink>
             )}
 
           </div>
