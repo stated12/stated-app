@@ -23,7 +23,6 @@ export default function SignupPage() {
   const [error, setError] = useState("");
 
 
-
   // CHECK USERNAME AVAILABILITY
   useEffect(() => {
 
@@ -51,7 +50,6 @@ export default function SignupPage() {
     };
 
     const timeout = setTimeout(checkUsername, 400);
-
     return () => clearTimeout(timeout);
 
   }, [username, supabase]);
@@ -62,8 +60,26 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
 
     e.preventDefault();
-
     setError("");
+
+    const form = e.target as HTMLFormElement;
+
+    // 🔒 Honeypot check (hidden bot field)
+    const honeypot =
+      (form.elements.namedItem("website") as HTMLInputElement)?.value;
+
+    if (honeypot) {
+      return; // silently ignore bots
+    }
+
+    // 🔒 Basic email sanity check
+    if (
+      email.length > 80 ||
+      !email.includes("@") ||
+      email.includes("scrap-transport")
+    ) {
+      return;
+    }
 
     if (usernameStatus !== "available") {
       setError("Username is not available");
@@ -74,7 +90,6 @@ export default function SignupPage() {
 
     try {
 
-      // CREATE AUTH USER WITH METADATA (trigger will create profile)
       const { data, error: authError } =
         await supabase.auth.signUp({
 
@@ -97,17 +112,15 @@ export default function SignupPage() {
         return;
       }
 
-      const user = data.user;
-
-      if (!user) {
+      if (!data?.user) {
         setError("Signup failed");
         setLoading(false);
         return;
       }
 
+      const user = data.user;
 
       // ENSURE PROFILE EXISTS AND SET CREDITS = 2
-      // safe with trigger because of upsert
       await supabase
         .from("profiles")
         .upsert({
@@ -115,20 +128,15 @@ export default function SignupPage() {
           username: username.toLowerCase(),
           display_name: username,
           account_type: accountType,
-          credits: 2,   // ✅ FIXED HERE
+          credits: 2,
         });
-
 
       router.push("/dashboard");
 
     } catch (err) {
-
       setError("Unexpected error");
-
     } finally {
-
       setLoading(false);
-
     }
 
   }
@@ -149,7 +157,13 @@ export default function SignupPage() {
           Make commitments. Stay accountable. Build trust publicly.
         </div>
 
-
+        {/* 🔒 Hidden Honeypot Field */}
+        <input
+          type="text"
+          name="website"
+          autoComplete="off"
+          style={{ display: "none" }}
+        />
 
         {/* USERNAME */}
 
@@ -235,7 +249,6 @@ export default function SignupPage() {
           >
             Individual
           </button>
-
 
           <button
             type="button"
