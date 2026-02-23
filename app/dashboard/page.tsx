@@ -59,14 +59,17 @@ export default async function Dashboard() {
     ).length ?? 0;
 
   const avatar =
-    profile?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      profile?.display_name || "User"
-    )}&background=2563eb&color=fff`;
+    profile?.avatar_url &&
+    profile.avatar_url.startsWith("http")
+      ? profile.avatar_url
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          profile?.display_name || profile?.username || "User"
+        )}&background=2563eb&color=fff`;
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
+
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <div>
@@ -84,8 +87,8 @@ export default async function Dashboard() {
           <div className="flex items-center gap-4">
             <Image
               src={avatar}
-              width={64}
-              height={64}
+              width={72}
+              height={72}
               alt="avatar"
               className="rounded-full object-cover"
             />
@@ -99,8 +102,9 @@ export default async function Dashboard() {
                 {profile?.bio || "No bio added"}
               </div>
 
+              {/* FIXED DOMAIN */}
               <div className="text-xs text-gray-400 mt-1">
-                stated.in/u/{profile?.username}
+                app.stated.in/u/{profile?.username}
               </div>
             </div>
           </div>
@@ -186,7 +190,7 @@ export default async function Dashboard() {
             const today = new Date();
 
             let progress = 0;
-            let daysLeft = 0; // ✅ always number
+            let daysLeft = 0;
 
             if (end) {
               const totalDays =
@@ -200,10 +204,7 @@ export default async function Dashboard() {
               if (totalDays > 0) {
                 progress = Math.min(
                   100,
-                  Math.max(
-                    0,
-                    (passedDays / totalDays) * 100
-                  )
+                  Math.max(0, (passedDays / totalDays) * 100)
                 );
               }
 
@@ -253,6 +254,7 @@ export default async function Dashboard() {
                   ).toLocaleDateString()}
                 </div>
 
+                {/* ACTIVE ACTIONS */}
                 {c.status === "active" && (
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <Link
@@ -274,6 +276,25 @@ export default async function Dashboard() {
                       className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
                     >
                       Pause
+                    </Link>
+
+                    <Link
+                      href={`/commitment/${c.id}/withdraw`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
+                      Withdraw
+                    </Link>
+                  </div>
+                )}
+
+                {/* PAUSED ACTIONS */}
+                {c.status === "paused" && (
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    <Link
+                      href={`/commitment/${c.id}/resume`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
+                      Resume
                     </Link>
 
                     <Link
