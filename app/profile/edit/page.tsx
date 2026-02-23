@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function EditProfilePage() {
-
   const supabase = createClient();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string>("");
 
   const [profile, setProfile] = useState({
     display_name: "",
@@ -33,33 +32,18 @@ export default function EditProfilePage() {
   // =============================
 
   function isValidUrl(url: string) {
-
     if (!url) return true;
-
     try {
       const parsed = new URL(url);
-
-      return (
-        parsed.protocol === "http:" ||
-        parsed.protocol === "https:"
-      );
-
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
     } catch {
-
       return false;
-
     }
   }
 
   function validateAvatar(file: File) {
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
-
-    const maxSize = 2 * 1024 * 1024; // 2MB
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 2 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       return "Only JPG, PNG, WEBP allowed";
@@ -72,38 +56,30 @@ export default function EditProfilePage() {
     return null;
   }
 
-
   // =============================
   // LOAD PROFILE
   // =============================
 
   useEffect(() => {
-
     async function loadProfile() {
-
-      const { data: { user } } =
-        await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
-
         router.push("/login");
         return;
-
       }
 
-      const { data, error } =
-        await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
       if (error) {
-
         setError("Failed to load profile");
-
       } else if (data) {
-
         setProfile({
           display_name: data.display_name || "",
           bio: data.bio || "",
@@ -115,82 +91,75 @@ export default function EditProfilePage() {
           avatar_url: data.avatar_url || "",
         });
 
+        setPreview(data.avatar_url || "");
       }
 
       setLoading(false);
-
     }
 
     loadProfile();
-
   }, [router, supabase]);
 
+  // =============================
+  // HANDLE FILE CHANGE (PREVIEW)
+  // =============================
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validationError = validateAvatar(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError("");
+    setAvatarFile(file);
+    setPreview(URL.createObjectURL(file));
+  }
 
   // =============================
   // UPLOAD AVATAR
   // =============================
 
   async function uploadAvatar(userId: string) {
+    if (!avatarFile) return profile.avatar_url;
 
-    if (!avatarFile)
-      return profile.avatar_url;
+    const fileExt = avatarFile.name.split(".").pop();
+    const filePath = `${userId}/avatar.${fileExt}`;
 
-    const validationError =
-      validateAvatar(avatarFile);
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, avatarFile, {
+        upsert: true,
+      });
 
-    if (validationError)
-      throw new Error(validationError);
+    if (error) throw new Error(error.message);
 
-    const fileExt =
-      avatarFile.name.split(".").pop();
-
-    const filePath =
-      `${userId}/avatar.${fileExt}`;
-
-    const { error } =
-      await supabase.storage
-        .from("avatars")
-        .upload(filePath, avatarFile, {
-          upsert: true,
-        });
-
-    if (error)
-      throw new Error(error.message);
-
-    const { data } =
-      supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
 
     return data.publicUrl;
-
   }
-
 
   // =============================
   // SAVE PROFILE
   // =============================
 
-  async function handleSave(
-    e: React.FormEvent
-  ) {
-
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-
     setSaving(true);
     setError("");
     setSuccess("");
 
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { data: { user } } =
-        await supabase.auth.getUser();
-
-      if (!user)
-        throw new Error("Not logged in");
-
-
-      // URL validation
+      if (!user) throw new Error("Not logged in");
 
       if (
         !isValidUrl(profile.website) ||
@@ -199,72 +168,33 @@ export default function EditProfilePage() {
         !isValidUrl(profile.github) ||
         !isValidUrl(profile.youtube)
       ) {
-        throw new Error(
-          "All URLs must start with https://"
-        );
+        throw new Error("All URLs must start with https://");
       }
 
+      const avatar_url = await uploadAvatar(user.id);
 
-      const avatar_url =
-        await uploadAvatar(user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          ...profile,
+          avatar_url,
+        })
+        .eq("id", user.id);
 
-
-      const { error } =
-        await supabase
-          .from("profiles")
-          .update({
-            display_name:
-              profile.display_name.trim(),
-
-            bio:
-              profile.bio.trim(),
-
-            website:
-              profile.website.trim(),
-
-            linkedin:
-              profile.linkedin.trim(),
-
-            twitter:
-              profile.twitter.trim(),
-
-            github:
-              profile.github.trim(),
-
-            youtube:
-              profile.youtube.trim(),
-
-            avatar_url,
-
-          })
-          .eq("id", user.id);
-
-
-      if (error)
-        throw new Error(error.message);
-
+      if (error) throw new Error(error.message);
 
       setSuccess("Profile saved");
 
       setTimeout(() => {
-
         router.push("/dashboard");
-
         router.refresh();
-
       }, 800);
-
-
     } catch (err: any) {
-
       setError(err.message);
-
     }
 
     setSaving(false);
-
   }
-
 
   // =============================
   // UI
@@ -277,204 +207,84 @@ export default function EditProfilePage() {
       </div>
     );
 
-
   return (
-
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-
       <div className="w-full max-w-md bg-white shadow rounded-xl p-6">
-
-
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">
+        <h1 className="text-3xl font-bold text-center text-blue-600 mb-4">
           Edit Profile
         </h1>
 
+        <form onSubmit={handleSave} className="space-y-4">
 
-        <form
-          onSubmit={handleSave}
-          className="space-y-4"
-        >
-
-
-          {/* Avatar */}
-
-          <div className="flex flex-col items-center">
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center space-y-3">
 
             <img
-              src={
-                profile.avatar_url ||
-                "/default-avatar.png"
-              }
-              className="w-20 h-20 rounded-full object-cover mb-2"
+              src={preview || "/default-avatar.png"}
+              className="w-24 h-24 rounded-full object-cover border"
             />
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                setAvatarFile(
-                  e.target.files?.[0] || null
-                )
-              }
-            />
+            <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm font-medium">
+              Change Avatar
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
 
+            <p className="text-xs text-gray-500">
+              JPG, PNG, WEBP • Max 2MB
+            </p>
           </div>
 
-
-          {/* Display name */}
-
-          <input
-            type="text"
-            placeholder="Display name"
-            value={profile.display_name}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                display_name:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* Bio */}
+          {/* Inputs */}
+          {[
+            ["Display name", "display_name"],
+            ["Website https://", "website"],
+            ["LinkedIn https://", "linkedin"],
+            ["Twitter/X https://", "twitter"],
+            ["GitHub https://", "github"],
+            ["YouTube https://", "youtube"],
+          ].map(([placeholder, key]) => (
+            <input
+              key={key}
+              type="text"
+              placeholder={placeholder}
+              value={(profile as any)[key]}
+              onChange={(e) =>
+                setProfile({ ...profile, [key]: e.target.value })
+              }
+              className="w-full border px-3 py-2 rounded"
+            />
+          ))}
 
           <textarea
             placeholder="Bio"
             value={profile.bio}
             onChange={(e) =>
-              setProfile({
-                ...profile,
-                bio:
-                  e.target.value,
-              })
+              setProfile({ ...profile, bio: e.target.value })
             }
             className="w-full border px-3 py-2 rounded"
           />
-
-
-          {/* Website */}
-
-          <input
-            type="text"
-            placeholder="Website https://"
-            value={profile.website}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                website:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* LinkedIn */}
-
-          <input
-            type="text"
-            placeholder="LinkedIn https://"
-            value={profile.linkedin}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                linkedin:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* Twitter */}
-
-          <input
-            type="text"
-            placeholder="Twitter/X https://"
-            value={profile.twitter}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                twitter:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* GitHub */}
-
-          <input
-            type="text"
-            placeholder="GitHub https://"
-            value={profile.github}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                github:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* YouTube */}
-
-          <input
-            type="text"
-            placeholder="YouTube https://"
-            value={profile.youtube}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                youtube:
-                  e.target.value,
-              })
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-
-
-          {/* Error */}
 
           {error && (
-            <p className="text-red-500 text-sm">
-              {error}
-            </p>
+            <p className="text-red-500 text-sm">{error}</p>
           )}
-
-
-          {/* Success */}
 
           {success && (
-            <p className="text-green-600 text-sm">
-              {success}
-            </p>
+            <p className="text-green-600 text-sm">{success}</p>
           )}
-
-
-          {/* Submit */}
 
           <button
             disabled={saving}
             className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
           >
-            {saving
-              ? "Saving..."
-              : "Save Profile"}
+            {saving ? "Saving..." : "Save Profile"}
           </button>
-
-
         </form>
-
       </div>
-
     </div>
-
   );
-
 }
