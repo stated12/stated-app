@@ -24,12 +24,21 @@ export default async function Dashboard() {
     );
   }
 
+  // =============================
+  // PROFILE
+  // =============================
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
+  const isPro = !!profile?.plan_key;
+  const credits = profile?.credits ?? 0;
+
+  // =============================
+  // COMMITMENTS
+  // =============================
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
@@ -38,6 +47,9 @@ export default async function Dashboard() {
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
+  // =============================
+  // UPDATES
+  // =============================
   const { data: updates } =
     commitmentIds.length > 0
       ? await supabase
@@ -47,9 +59,11 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
-  const isPro = !!profile?.plan_key;
+  // =============================
+  // ANALYTICS
+  // =============================
 
-  // ✅ Profile views
+  // Profile Views (safe with eq)
   const { count: profileViews } = isPro
     ? await supabase
         .from("profile_views")
@@ -57,24 +71,28 @@ export default async function Dashboard() {
         .eq("profile_id", user.id)
     : { count: 0 };
 
-  // ✅ Commitment views (FIXED — sum by commitment ids)
+  // ✅ Commitment Views (FIXED aggregation)
   let commitmentViews = 0;
+
   if (isPro && commitmentIds.length > 0) {
-    const { count } = await supabase
+    const { data } = await supabase
       .from("commitment_views")
-      .select("*", { count: "exact", head: true })
+      .select("commitment_id")
       .in("commitment_id", commitmentIds);
 
-    commitmentViews = count ?? 0;
+    commitmentViews = data?.length ?? 0;
   }
 
-  const credits = profile?.credits ?? 0;
-
+  // =============================
+  // STATS
+  // =============================
   const total = commitments?.length ?? 0;
   const active =
     commitments?.filter((c) => c.status === "active").length ?? 0;
+
   const completed =
     commitments?.filter((c) => c.status === "completed").length ?? 0;
+
   const paused =
     commitments?.filter(
       (c) => c.status === "paused" || c.status === "withdrawn"
@@ -91,7 +109,7 @@ export default async function Dashboard() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Image
@@ -110,12 +128,15 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          <Link href="/logout" className="text-sm text-gray-500 hover:underline">
+          <Link
+            href="/logout"
+            className="text-sm text-gray-500 hover:underline"
+          >
             Logout
           </Link>
         </div>
 
-        {/* PROFILE CARD */}
+        {/* ================= PROFILE CARD ================= */}
         <div className="bg-white rounded-xl shadow p-5">
           <div className="flex items-center gap-4">
             <div className="w-[72px] h-[72px] relative">
@@ -137,9 +158,11 @@ export default async function Dashboard() {
                   </span>
                 )}
               </div>
+
               <div className="text-gray-600 text-sm">
                 {profile?.bio || "No bio added"}
               </div>
+
               <div className="text-xs text-gray-400 mt-1">
                 app.stated.in/u/{profile?.username}
               </div>
@@ -153,12 +176,14 @@ export default async function Dashboard() {
             >
               Edit profile
             </Link>
+
             <Link
               href={`/u/${profile?.username}`}
               className="border px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Public profile
             </Link>
+
             {!isPro && (
               <Link
                 href="/upgrade"
@@ -170,11 +195,12 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* CREDITS */}
+        {/* ================= CREDITS ================= */}
         <div className="bg-white rounded-xl shadow p-5 flex justify-between items-center">
           <div className="font-medium">
             Credits remaining: {credits}
           </div>
+
           <Link
             href="/upgrade"
             className="text-sm text-blue-600 hover:underline"
@@ -183,7 +209,7 @@ export default async function Dashboard() {
           </Link>
         </div>
 
-        {/* ANALYTICS */}
+        {/* ================= ANALYTICS ================= */}
         <div
           className={`bg-white rounded-xl shadow p-5 ${
             isPro ? "border border-blue-200" : ""
@@ -217,6 +243,7 @@ export default async function Dashboard() {
                 <br />
                 Active: 3
               </div>
+
               <div className="absolute inset-0 flex items-center justify-center">
                 <Link
                   href="/upgrade"
@@ -229,7 +256,7 @@ export default async function Dashboard() {
           )}
         </div>
 
-        {/* CREATE BUTTON */}
+        {/* ================= CREATE BUTTON ================= */}
         <Link
           href={credits === 0 ? "/upgrade" : "/commitment/new"}
           className="block text-center py-3 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
@@ -239,7 +266,7 @@ export default async function Dashboard() {
             : "Create Commitment (1 credit)"}
         </Link>
 
-        {/* COMMITMENTS */}
+        {/* ================= COMMITMENTS ================= */}
         <div className="space-y-4">
           <div className="font-semibold">Your commitments</div>
 
@@ -274,16 +301,31 @@ export default async function Dashboard() {
 
                 {c.status === "active" && (
                   <div className="flex gap-2 mt-4 flex-wrap">
-                    <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                    <Link
+                      href={`/commitment/${c.id}/update`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
                       Add update
                     </Link>
-                    <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+
+                    <Link
+                      href={`/commitment/${c.id}/complete`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
                       Complete
                     </Link>
-                    <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+
+                    <Link
+                      href={`/commitment/${c.id}/pause`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
                       Pause
                     </Link>
-                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+
+                    <Link
+                      href={`/commitment/${c.id}/withdraw`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
                       Withdraw
                     </Link>
                   </div>
