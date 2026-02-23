@@ -4,7 +4,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import ShareProfileButton from "@/components/ShareProfileButton";
-import { Globe, Linkedin, Twitter, Github, Youtube } from "lucide-react";
 
 export default async function UserPage(
   { params }: { params: Promise<{ username: string }> }
@@ -78,11 +77,11 @@ export default async function UserPage(
   const SocialLink = ({
     href,
     label,
-    children,
+    icon,
   }: {
     href: string;
     label: string;
-    children: React.ReactNode;
+    icon: React.ReactNode;
   }) => (
     <a
       href={href}
@@ -103,7 +102,7 @@ export default async function UserPage(
         transition-all duration-200
       "
     >
-      {children}
+      {icon}
       <span>{label}</span>
     </a>
   );
@@ -165,45 +164,52 @@ export default async function UserPage(
               <SocialLink
                 href={profile.website}
                 label={cleanUrl(profile.website)}
-              >
-                <Globe size={16} />
-              </SocialLink>
+                icon={
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20" />
+                    <path d="M12 2a15 15 0 010 20" />
+                  </svg>
+                }
+              />
             )}
 
             {profile.linkedin && (
               <SocialLink
                 href={profile.linkedin}
                 label="LinkedIn"
-              >
-                <Linkedin size={16} />
-              </SocialLink>
-            )}
-
-            {profile.twitter && (
-              <SocialLink
-                href={profile.twitter}
-                label="Twitter"
-              >
-                <Twitter size={16} />
-              </SocialLink>
+                icon={
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M4 3h4v18H4zM6 1a2 2 0 110 4 2 2 0 010-4zM10 8h4v2h.1c.6-1.1 2-2.2 4.1-2.2 4.4 0 5.2 2.9 5.2 6.6V21h-4v-5.3c0-1.3 0-3-1.8-3s-2 1.4-2 2.9V21h-4z"/>
+                  </svg>
+                }
+              />
             )}
 
             {profile.github && (
               <SocialLink
                 href={profile.github}
                 label="GitHub"
-              >
-                <Github size={16} />
-              </SocialLink>
-            )}
-
-            {profile.youtube && (
-              <SocialLink
-                href={profile.youtube}
-                label="YouTube"
-              >
-                <Youtube size={16} />
-              </SocialLink>
+                icon={
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 .5A12 12 0 000 12.7a12.2 12.2 0 008.2 11.6c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.6-1.5-1.5-1.9-1.5-1.9-1.2-.8.1-.8.1-.8 1.3.1 2 .1 2 .1 1.1 2 3 1.5 3.7 1.1.1-.9.4-1.5.7-1.8-2.7-.3-5.6-1.4-5.6-6.2 0-1.4.5-2.6 1.3-3.6-.1-.3-.6-1.6.1-3.4 0 0 1.1-.3 3.6 1.4a12.3 12.3 0 016.6 0c2.5-1.7 3.6-1.4 3.6-1.4.7 1.8.2 3.1.1 3.4.8 1 1.3 2.2 1.3 3.6 0 4.8-2.9 5.9-5.6 6.2.5.4.8 1.2.8 2.5v3.7c0 .3.2.7.8.6A12.2 12.2 0 0024 12.7 12 12 0 0012 .5z"/>
+                  </svg>
+                }
+              />
             )}
 
           </div>
