@@ -36,7 +36,7 @@ export default async function Dashboard() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // ✅ Fetch all updates for user's commitments
+  // ✅ Fetch updates
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
   const { data: updates } =
@@ -48,8 +48,31 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
+  const { count: profileViews } = await supabase
+    .from("profile_views")
+    .select("*", { count: "exact", head: true })
+    .eq("profile_id", user.id);
+
+  const { count: commitmentViews } = await supabase
+    .from("commitment_views")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
   const credits = profile?.credits ?? 0;
   const isPro = !!profile?.plan_key;
+
+  const total = commitments?.length ?? 0;
+
+  const active =
+    commitments?.filter((c) => c.status === "active").length ?? 0;
+
+  const completed =
+    commitments?.filter((c) => c.status === "completed").length ?? 0;
+
+  const paused =
+    commitments?.filter(
+      (c) => c.status === "paused" || c.status === "withdrawn"
+    ).length ?? 0;
 
   const avatar =
     profile?.avatar_url?.trim()
@@ -61,6 +84,17 @@ export default async function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
+
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Stated</h1>
+            <div className="text-sm text-gray-500">Dashboard</div>
+          </div>
+          <Link href="/logout" className="text-sm text-gray-500">
+            Logout
+          </Link>
+        </div>
 
         {/* PROFILE CARD */}
         <div className="bg-white rounded-xl shadow p-5">
@@ -76,22 +110,68 @@ export default async function Dashboard() {
             </div>
 
             <div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold flex items-center gap-2">
                 {profile?.display_name || "No name set"}
+                {isPro && (
+                  <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                    PRO
+                  </span>
+                )}
               </div>
               <div className="text-gray-600 text-sm">
                 {profile?.bio || "No bio added"}
               </div>
+              <div className="text-xs text-gray-400 mt-1">
+                app.stated.in/u/{profile?.username}
+              </div>
             </div>
           </div>
+
+          <div className="flex gap-3 pt-4 flex-wrap">
+            <Link href="/profile/edit" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+              Edit profile
+            </Link>
+            <Link href={`/u/${profile?.username}`} className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+              Public profile
+            </Link>
+            {!isPro && (
+              <Link href="/upgrade" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+                Upgrade
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* ANALYTICS */}
+        <div className="bg-white rounded-xl shadow p-5 relative">
+          <div className="font-semibold mb-3">Analytics</div>
+
+          {isPro ? (
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>Profile views: {profileViews ?? 0}</div>
+              <div>Total commitments: {total}</div>
+              <div>Commitment views: {commitmentViews ?? 0}</div>
+              <div>Active: {active}</div>
+              <div>Completed: {completed}</div>
+              <div>Paused / Withdrawn: {paused}</div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">
+              Upgrade to unlock analytics
+            </div>
+          )}
         </div>
 
         {/* CREATE BUTTON */}
         <Link
           href="/commitment/new"
-          className="block text-center py-3 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
+          className={`block text-center py-3 rounded-lg text-white font-medium ${
+            credits === 0
+              ? "bg-gray-400 pointer-events-none"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          Create Commitment
+          {credits === 0 ? "No credits remaining" : "Create Commitment"}
         </Link>
 
         {/* COMMITMENTS */}
@@ -100,81 +180,46 @@ export default async function Dashboard() {
 
           {commitments?.map((c) => {
             const commitmentUpdates =
-              updates?.filter(
-                (u) => u.commitment_id === c.id
-              ) || [];
+              updates?.filter((u) => u.commitment_id === c.id) || [];
 
             return (
-              <div
-                key={c.id}
-                className="bg-white rounded-xl shadow p-4"
-              >
-                <div className="font-medium text-base">
-                  {c.text}
-                </div>
+              <div key={c.id} className="bg-white rounded-xl shadow p-4">
+                <div className="font-medium text-base">{c.text}</div>
 
                 <div className="text-sm text-gray-500 mt-1 capitalize">
                   Status:
-                  <span className="ml-1 font-medium">
-                    {c.status}
-                  </span>
+                  <span className="ml-1 font-medium">{c.status}</span>
                 </div>
 
-                {/* STATUS COMMENT (pause/withdraw) */}
-                {c.comment && (
-                  <div className="mt-2 text-sm bg-gray-100 p-2 rounded">
-                    {c.comment}
-                  </div>
-                )}
-
-                {/* UPDATES SECTION */}
+                {/* Timeline Updates */}
                 {commitmentUpdates.length > 0 && (
-                  <div className="mt-4 space-y-2 border-t pt-3">
-                    <div className="text-sm font-medium text-gray-700">
-                      Updates
-                    </div>
-
+                  <div className="mt-4 space-y-3 border-t pt-4">
                     {commitmentUpdates.map((u) => (
-                      <div
-                        key={u.id}
-                        className="text-sm bg-gray-50 p-2 rounded"
-                      >
-                        <div>{u.text}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(
-                            u.created_at
-                          ).toLocaleDateString()}
+                      <div key={u.id} className="relative pl-6">
+                        <div className="absolute left-0 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
+                        <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
+                          <div className="text-sm">{u.content}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* ACTIONS */}
                 {c.status === "active" && (
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <Link
-                      href={`/commitment/${c.id}/update`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Add update
                     </Link>
-                    <Link
-                      href={`/commitment/${c.id}/complete`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Complete
                     </Link>
-                    <Link
-                      href={`/commitment/${c.id}/pause`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Pause
                     </Link>
-                    <Link
-                      href={`/commitment/${c.id}/withdraw`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Withdraw
                     </Link>
                   </div>
