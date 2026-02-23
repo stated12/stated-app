@@ -2,13 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-interface PageProps {
-  params: {
-    username: string;
-  };
-}
-
-export default async function UserPage({ params }: PageProps) {
+export default async function UserPage({
+  params,
+}: {
+  params: { username: string };
+}) {
   const supabase = await createClient();
 
   const usernameParam = params?.username;
@@ -17,24 +15,52 @@ export default async function UserPage({ params }: PageProps) {
     notFound();
   }
 
-  // Case-insensitive username lookup
-  const { data: profile, error } = await supabase
+  // ✅ SAFE username lookup (no .single())
+  const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
-    .ilike("username", usernameParam)
-    .single();
+    .ilike("username", usernameParam);
 
-  if (error || !profile) {
+  if (!profiles || profiles.length === 0) {
     notFound();
   }
 
-  // Fetch only public commitments
+  const profile = profiles[0];
+
+  // ✅ Increment profile view count
+  await supabase.from("profile_views").insert({
+    profile_id: profile.id,
+  });
+
+  // ✅ Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
     .eq("user_id", profile.id)
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
+
+  const commitmentIds = commitments?.map((c) => c.id) || [];
+
+  // ✅ Fetch updates
+  const { data: updates } =
+    commitmentIds.length > 0
+      ? await supabase
+          .from("commitment_updates")
+          .select("*")
+          .in("commitment_id", commitmentIds)
+          .order("created_at", { ascending: false })
+      : { data: [] };
+
+  // ✅ Insert commitment views
+  if (commitmentIds.length > 0) {
+    const viewRows = commitmentIds.map((id) => ({
+      commitment_id: id,
+      user_id: profile.id,
+    }));
+
+    await supabase.from("commitment_views").insert(viewRows);
+  }
 
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
@@ -52,14 +78,14 @@ export default async function UserPage({ params }: PageProps) {
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white shadow rounded-2xl p-8">
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="text-2xl font-bold text-blue-600">
+        {/* Stated Branding */}
+        <div className="text-center mb-10">
+          <div className="text-3xl font-bold text-blue-600">
             Stated
           </div>
         </div>
 
-        {/* Profile Section */}
+        {/* Profile */}
         <div className="text-center">
 
           <Image
@@ -100,7 +126,6 @@ export default async function UserPage({ params }: PageProps) {
             </a>
           )}
 
-          {/* Share Button */}
           <div className="mt-6">
             <button
               onClick={() =>
@@ -126,25 +151,61 @@ export default async function UserPage({ params }: PageProps) {
           </h2>
 
           {commitments && commitments.length > 0 ? (
-            <div className="space-y-4">
-              {commitments.map((c) => (
-                <div
-                  key={c.id}
-                  className="border rounded-xl p-5"
-                >
-                  <div className="font-medium mb-2">
-                    {c.text}
-                  </div>
+            <div className="space-y-6">
+              {commitments.map((c) => {
+                const commitmentUpdates =
+                  updates?.filter(
+                    (u) => u.commitment_id === c.id
+                  ) || [];
 
-                  <div className="text-sm text-gray-500 capitalize">
-                    Status: {c.status}
-                  </div>
+                return (
+                  <div
+                    key={c.id}
+                    className="border rounded-xl p-6"
+                  >
+                    <div className="font-medium text-lg mb-2">
+                      {c.text}
+                    </div>
 
-                  <div className="text-xs text-gray-400 mt-2">
-                    Created {new Date(c.created_at).toLocaleDateString()}
+                    <div className="text-sm text-gray-500 capitalize">
+                      Status: {c.status}
+                    </div>
+
+                    <div className="text-xs text-gray-400 mt-2">
+                      Created{" "}
+                      {new Date(
+                        c.created_at
+                      ).toLocaleDateString()}
+                    </div>
+
+                    {/* Timeline */}
+                    {commitmentUpdates.length > 0 && (
+                      <div className="mt-6 space-y-4 border-t pt-6">
+                        {commitmentUpdates.map((u) => (
+                          <div
+                            key={u.id}
+                            className="relative pl-6"
+                          >
+                            <div className="absolute left-0 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
+
+                            <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                              <div className="text-sm">
+                                {u.content}
+                              </div>
+
+                              <div className="text-xs text-gray-400 mt-1">
+                                {new Date(
+                                  u.created_at
+                                ).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="border rounded-xl p-5 text-gray-500 text-center">
