@@ -3,6 +3,18 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import ShareProfileButton from "@/components/ShareProfileButton";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ username: string }> }
+) {
+  const { username } = await params;
+
+  return {
+    title: `${username} on Stated`,
+    description: `View ${username}'s public commitments on Stated.`,
+  };
+}
 
 export default async function UserPage(
   { params }: { params: Promise<{ username: string }> }
@@ -14,7 +26,6 @@ export default async function UserPage(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 🔎 Fetch profile (case insensitive)
   const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
@@ -26,12 +37,10 @@ export default async function UserPage(
 
   const profile = profiles[0];
 
-  // 👁 Track profile view (non-blocking)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
 
-  // 📌 Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -41,7 +50,6 @@ export default async function UserPage(
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
-  // 📍 Fetch updates for those commitments
   const { data: updates } =
     commitmentIds.length > 0
       ? await supabase
@@ -58,14 +66,24 @@ export default async function UserPage(
           profile.display_name || profile.username || "User"
         )}&background=2563eb&color=fff`;
 
-  function normalizeUrl(url?: string | null) {
-    if (!url) return null;
-    return url.startsWith("http") ? url : `https://${url}`;
+  function statusColor(status: string) {
+    switch (status) {
+      case "active":
+        return "text-green-600";
+      case "completed":
+        return "text-blue-600";
+      case "paused":
+        return "text-yellow-600";
+      case "withdrawn":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-12">
-      <div className="max-w-2xl mx-auto bg-white shadow rounded-2xl p-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
 
         {/* Branding */}
         <div className="text-center mb-10">
@@ -84,53 +102,51 @@ export default async function UserPage(
         {/* Profile Header */}
         <div className="text-center">
 
-          <Image
-            src={avatarUrl}
-            alt="avatar"
-            width={120}
-            height={120}
-            className="rounded-full mx-auto mb-4 object-cover"
-          />
+          {/* Perfect Circle Avatar */}
+          <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border">
+            <Image
+              src={avatarUrl}
+              alt="avatar"
+              width={128}
+              height={128}
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-2xl font-bold text-gray-900">
             {profile.display_name || profile.username}
             {profile.plan_key && (
-              <span className="ml-2 text-blue-600 text-sm font-medium">
+              <span className="ml-2 text-blue-600 text-sm font-semibold">
                 PRO
               </span>
             )}
           </h1>
 
-          <div className="text-gray-600 font-medium">
+          <div className="text-gray-700 font-medium">
             @{profile.username}
           </div>
 
           {profile.bio && (
-            <p className="mt-4 text-gray-700">
+            <p className="mt-4 text-gray-800">
               {profile.bio}
             </p>
           )}
 
-          {profile.website && (
-            <a
-              href={normalizeUrl(profile.website)!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block mt-3 text-blue-600 hover:underline"
-            >
-              {profile.website}
-            </a>
-          )}
+          <ShareProfileButton username={profile.username} />
         </div>
 
         {/* Commitments */}
         <div className="mt-12">
-          <h2 className="text-xl font-semibold mb-6 text-center">
+          <h2 className="text-xl font-bold mb-6 text-center text-gray-900">
             Public Commitments
           </h2>
 
           {commitments && commitments.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-8 relative">
+
+              {/* Vertical Timeline Line */}
+              <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
               {commitments.map((c) => {
                 const commitmentUpdates =
                   updates?.filter(
@@ -138,56 +154,50 @@ export default async function UserPage(
                   ) || [];
 
                 return (
-                  <div
-                    key={c.id}
-                    className="border rounded-xl p-6 shadow-sm"
-                  >
-                    <div className="font-medium text-lg mb-2">
-                      {c.text}
-                    </div>
+                  <div key={c.id} className="relative pl-10">
 
-                    <div className="text-sm text-gray-500 capitalize">
-                      Status: {c.status}
-                    </div>
+                    <div className="bg-white border rounded-xl p-6 shadow-md">
+                      <div className="font-semibold text-lg text-gray-900 mb-2">
+                        {c.text}
+                      </div>
 
-                    <div className="text-xs text-gray-400 mt-2">
-                      Created{" "}
-                      {new Date(
-                        c.created_at
-                      ).toLocaleDateString()}
-                    </div>
+                      <div className={`text-sm capitalize ${statusColor(c.status)}`}>
+                        Status: {c.status}
+                      </div>
 
-                    {/* Timeline */}
-                    {commitmentUpdates.length > 0 && (
-                      <div className="mt-6 space-y-4 border-t pt-6">
-                        {commitmentUpdates.map((u) => (
-                          <div
-                            key={u.id}
-                            className="relative pl-6"
-                          >
-                            <div className="absolute left-0 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
+                      <div className="text-xs text-gray-600 mt-2">
+                        Created {new Date(c.created_at).toLocaleDateString()}
+                      </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
-                              <div className="text-sm">
-                                {u.content}
-                              </div>
+                      {commitmentUpdates.length > 0 && (
+                        <div className="mt-6 space-y-4 border-t pt-6">
+                          {commitmentUpdates.map((u) => (
+                            <div key={u.id} className="relative pl-6">
+                              <div className="absolute -left-6 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
 
-                              <div className="text-xs text-gray-400 mt-1">
-                                {new Date(
-                                  u.created_at
-                                ).toLocaleDateString()}
+                              <div className="bg-gray-100 rounded-lg p-4 shadow-sm">
+                                <div className="text-sm text-gray-900">
+                                  {u.content}
+                                </div>
+
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {new Date(
+                                    u.created_at
+                                  ).toLocaleDateString()}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
+
+                    </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="border rounded-xl p-5 text-gray-500 text-center">
+            <div className="border rounded-xl p-6 text-gray-700 text-center">
               No public commitments yet.
             </div>
           )}
