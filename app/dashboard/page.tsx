@@ -47,9 +47,9 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
-  // Only fetch analytics if Pro
   const isPro = !!profile?.plan_key;
 
+  // ✅ Profile views
   const { count: profileViews } = isPro
     ? await supabase
         .from("profile_views")
@@ -57,12 +57,16 @@ export default async function Dashboard() {
         .eq("profile_id", user.id)
     : { count: 0 };
 
-  const { count: commitmentViews } = isPro
-    ? await supabase
-        .from("commitment_views")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-    : { count: 0 };
+  // ✅ Commitment views (FIXED — sum by commitment ids)
+  let commitmentViews = 0;
+  if (isPro && commitmentIds.length > 0) {
+    const { count } = await supabase
+      .from("commitment_views")
+      .select("*", { count: "exact", head: true })
+      .in("commitment_id", commitmentIds);
+
+    commitmentViews = count ?? 0;
+  }
 
   const credits = profile?.credits ?? 0;
 
@@ -89,11 +93,24 @@ export default async function Dashboard() {
 
         {/* HEADER */}
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Stated</h1>
-            <div className="text-sm text-gray-500">Dashboard</div>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Stated logo"
+              width={40}
+              height={40}
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-blue-600">
+                Stated
+              </h1>
+              <div className="text-sm text-gray-500">
+                Dashboard
+              </div>
+            </div>
           </div>
-          <Link href="/logout" className="text-sm text-gray-500">
+
+          <Link href="/logout" className="text-sm text-gray-500 hover:underline">
             Logout
           </Link>
         </div>
@@ -130,14 +147,23 @@ export default async function Dashboard() {
           </div>
 
           <div className="flex gap-3 pt-4 flex-wrap">
-            <Link href="/profile/edit" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+            <Link
+              href="/profile/edit"
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
               Edit profile
             </Link>
-            <Link href={`/u/${profile?.username}`} className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+            <Link
+              href={`/u/${profile?.username}`}
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
               Public profile
             </Link>
             {!isPro && (
-              <Link href="/upgrade" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
+              <Link
+                href="/upgrade"
+                className="border px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
                 Upgrade
               </Link>
             )}
@@ -159,27 +185,25 @@ export default async function Dashboard() {
 
         {/* ANALYTICS */}
         <div
-          className={`bg-white rounded-xl shadow p-5 relative ${
+          className={`bg-white rounded-xl shadow p-5 ${
             isPro ? "border border-blue-200" : ""
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-semibold flex items-center gap-2">
-              Analytics
-              {!isPro && <span>🔒</span>}
-              {isPro && (
-                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                  PRO
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="font-semibold">Analytics</div>
+            {!isPro && <span>🔒</span>}
+            {isPro && (
+              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                PRO
+              </span>
+            )}
           </div>
 
           {isPro ? (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>Profile views: {profileViews ?? 0}</div>
               <div>Total commitments: {total}</div>
-              <div>Commitment views: {commitmentViews ?? 0}</div>
+              <div>Commitment views: {commitmentViews}</div>
               <div>Active: {active}</div>
               <div>Completed: {completed}</div>
               <div>Paused / Withdrawn: {paused}</div>
