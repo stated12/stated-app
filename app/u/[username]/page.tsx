@@ -1,16 +1,14 @@
 export const dynamic = "force-dynamic";
 
-export default function UserPage(
-  props: {
-    params: { username: string };
-  }
+export default async function UserPage(
+  { params }: { params: Promise<{ username: string }> }
 ) {
-  const username = props.params?.username;
+  const resolvedParams = await params;
 
   return (
     <div style={{ padding: 40 }}>
       <h1>Username param:</h1>
-      <pre>{JSON.stringify(username)}</pre>
+      <pre>{JSON.stringify(resolvedParams)}</pre>
     </div>
   );
 }
