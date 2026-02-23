@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: {
@@ -10,53 +11,30 @@ interface PageProps {
 export default async function UserPage({ params }: PageProps) {
   const supabase = await createClient();
 
-  const username = params?.username?.toLowerCase();
+  const usernameParam = params?.username;
 
-  if (!username) {
-    return <div className="p-10">Profile not found</div>;
+  if (!usernameParam) {
+    notFound();
   }
 
-  // Fetch profile safely
-  const { data: profiles } = await supabase
+  // Case-insensitive username lookup
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("username", username)
-    .limit(1);
+    .ilike("username", usernameParam)
+    .single();
 
-  if (!profiles || profiles.length === 0) {
-    return <div className="p-10">Profile not found</div>;
+  if (error || !profile) {
+    notFound();
   }
 
-  const profile = profiles[0];
-
-  // ✅ FIXED: Use visibility column
+  // Fetch only public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
     .eq("user_id", profile.id)
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
-
-  // Insert profile view (ignore failure silently)
-  await supabase
-    .from("profile_views")
-    .insert({
-      profile_id: profile.id,
-    })
-    .catch(() => {});
-
-  // Insert commitment views
-  if (commitments) {
-    for (const c of commitments) {
-      await supabase
-        .from("commitment_views")
-        .insert({
-          commitment_id: c.id,
-          user_id: profile.id,
-        })
-        .catch(() => {});
-    }
-  }
 
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
@@ -70,51 +48,34 @@ export default async function UserPage({ params }: PageProps) {
     return url.startsWith("http") ? url : `https://${url}`;
   }
 
-  function SocialLink({
-    label,
-    value,
-  }: {
-    label: string;
-    value?: string | null;
-  }) {
-    const url = normalizeUrl(value);
-    if (!url) return null;
-
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:underline text-sm"
-      >
-        {label}
-      </a>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white px-6 py-10">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-6 py-12">
+      <div className="max-w-2xl mx-auto bg-white shadow rounded-2xl p-8">
 
-        <div className="text-xl font-semibold mb-8 text-blue-600">
-          Stated
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="text-2xl font-bold text-blue-600">
+            Stated
+          </div>
         </div>
 
-        {/* Profile Header */}
-        <div className="text-center mb-10">
+        {/* Profile Section */}
+        <div className="text-center">
 
           <Image
             src={avatarUrl}
             alt="avatar"
-            width={110}
-            height={110}
+            width={120}
+            height={120}
             className="rounded-full mx-auto mb-4 object-cover"
           />
 
           <h1 className="text-2xl font-semibold">
             {profile.display_name || profile.username}
             {profile.plan_key && (
-              <span className="ml-2 text-blue-600 text-sm">PRO</span>
+              <span className="ml-2 text-blue-600 text-sm font-medium">
+                PRO
+              </span>
             )}
           </h1>
 
@@ -139,20 +100,28 @@ export default async function UserPage({ params }: PageProps) {
             </a>
           )}
 
-          {/* Social links */}
-          <div className="flex justify-center gap-4 mt-4 flex-wrap">
-            <SocialLink label="LinkedIn" value={profile.linkedin} />
-            <SocialLink label="Twitter" value={profile.twitter} />
-            <SocialLink label="GitHub" value={profile.github} />
-            <SocialLink label="YouTube" value={profile.youtube} />
-            <SocialLink label="Instagram" value={profile.instagram} />
+          {/* Share Button */}
+          <div className="mt-6">
+            <button
+              onClick={() =>
+                navigator.share
+                  ? navigator.share({
+                      title: profile.display_name || profile.username,
+                      url: `https://app.stated.in/u/${profile.username}`,
+                    })
+                  : alert("Copy link from address bar")
+              }
+              className="text-sm border px-4 py-2 rounded-lg hover:bg-gray-100"
+            >
+              Share Profile
+            </button>
           </div>
 
         </div>
 
         {/* Commitments */}
-        <div>
-          <h2 className="text-xl font-semibold mb-6">
+        <div className="mt-12">
+          <h2 className="text-xl font-semibold mb-6 text-center">
             Commitments
           </h2>
 
@@ -170,11 +139,15 @@ export default async function UserPage({ params }: PageProps) {
                   <div className="text-sm text-gray-500 capitalize">
                     Status: {c.status}
                   </div>
+
+                  <div className="text-xs text-gray-400 mt-2">
+                    Created {new Date(c.created_at).toLocaleDateString()}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="border rounded-xl p-5 text-gray-500">
+            <div className="border rounded-xl p-5 text-gray-500 text-center">
               No commitments yet.
             </div>
           )}
