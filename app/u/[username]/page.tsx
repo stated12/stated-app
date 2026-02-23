@@ -1,16 +1,20 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export default async function UserPage(
   { params }: { params: Promise<{ username: string }> }
 ) {
   const { username } = await params;
-  const supabase = await createClient();
 
-  // 🔎 Fetch profile
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // 🔎 Fetch profile (case insensitive)
   const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
@@ -22,7 +26,7 @@ export default async function UserPage(
 
   const profile = profiles[0];
 
-  // 👁 Increment profile view (optional but safe)
+  // 👁 Track profile view (non-blocking)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
@@ -37,7 +41,7 @@ export default async function UserPage(
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
-  // 📍 Fetch updates
+  // 📍 Fetch updates for those commitments
   const { data: updates } =
     commitmentIds.length > 0
       ? await supabase
@@ -63,8 +67,8 @@ export default async function UserPage(
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white shadow rounded-2xl p-8">
 
-        {/* Logo + Branding */}
-        <div className="text-center mb-8">
+        {/* Branding */}
+        <div className="text-center mb-10">
           <Image
             src="/logo.png"
             alt="Stated"
@@ -77,7 +81,7 @@ export default async function UserPage(
           </div>
         </div>
 
-        {/* Profile */}
+        {/* Profile Header */}
         <div className="text-center">
 
           <Image
@@ -97,7 +101,7 @@ export default async function UserPage(
             )}
           </h1>
 
-          <div className="text-gray-500">
+          <div className="text-gray-600 font-medium">
             @{profile.username}
           </div>
 
@@ -122,7 +126,7 @@ export default async function UserPage(
         {/* Commitments */}
         <div className="mt-12">
           <h2 className="text-xl font-semibold mb-6 text-center">
-            Commitments
+            Public Commitments
           </h2>
 
           {commitments && commitments.length > 0 ? (
@@ -136,7 +140,7 @@ export default async function UserPage(
                 return (
                   <div
                     key={c.id}
-                    className="border rounded-xl p-6"
+                    className="border rounded-xl p-6 shadow-sm"
                   >
                     <div className="font-medium text-lg mb-2">
                       {c.text}
@@ -153,6 +157,7 @@ export default async function UserPage(
                       ).toLocaleDateString()}
                     </div>
 
+                    {/* Timeline */}
                     {commitmentUpdates.length > 0 && (
                       <div className="mt-6 space-y-4 border-t pt-6">
                         {commitmentUpdates.map((u) => (
@@ -183,7 +188,7 @@ export default async function UserPage(
             </div>
           ) : (
             <div className="border rounded-xl p-5 text-gray-500 text-center">
-              No commitments yet.
+              No public commitments yet.
             </div>
           )}
         </div>
@@ -191,4 +196,4 @@ export default async function UserPage(
       </div>
     </div>
   );
-                                }
+}
