@@ -6,7 +6,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CommitmentUpdatePage() {
-
   const supabase = createClient();
   const router = useRouter();
   const params = useParams();
@@ -19,11 +18,18 @@ export default function CommitmentUpdatePage() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
 
+  // ================= PLAN LIMITS =================
+  const UPDATE_LIMITS: Record<string, number> = {
+    free: 5,
+    individual: 10,
+    company_starter: 5,
+    company_growth: 10,
+    company_scale: 15,
+  };
+
   // VERIFY USER OWNS COMMITMENT
   useEffect(() => {
-
     async function verifyOwnership() {
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -51,13 +57,9 @@ export default function CommitmentUpdatePage() {
     }
 
     verifyOwnership();
-
   }, [commitmentId, router, supabase]);
 
-
-
   async function submitUpdate() {
-
     if (!content.trim()) {
       setError("Write your progress update");
       return;
@@ -75,6 +77,31 @@ export default function CommitmentUpdatePage() {
       return;
     }
 
+    // ================= GET USER PROFILE =================
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan_key")
+      .eq("id", user.id)
+      .single();
+
+    const planKey = profile?.plan_key || "free";
+    const limit = UPDATE_LIMITS[planKey] ?? 5;
+
+    // ================= COUNT EXISTING UPDATES =================
+    const { count } = await supabase
+      .from("commitment_updates")
+      .select("*", { count: "exact", head: true })
+      .eq("commitment_id", commitmentId);
+
+    if ((count ?? 0) >= limit) {
+      setError(
+        `Update limit reached (${limit}). Upgrade your plan to add more updates.`
+      );
+      setLoading(false);
+      return;
+    }
+
+    // ================= INSERT UPDATE =================
     const { error } = await supabase
       .from("commitment_updates")
       .insert({
@@ -92,8 +119,6 @@ export default function CommitmentUpdatePage() {
     router.push("/dashboard");
   }
 
-
-
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -101,8 +126,6 @@ export default function CommitmentUpdatePage() {
       </div>
     );
   }
-
-
 
   if (error === "Commitment not found") {
     return (
@@ -112,12 +135,8 @@ export default function CommitmentUpdatePage() {
     );
   }
 
-
-
   return (
-
     <div className="min-h-screen bg-gray-50 flex justify-center items-center p-4">
-
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
 
         <Link href="/dashboard">
@@ -130,11 +149,9 @@ export default function CommitmentUpdatePage() {
           Add progress update
         </div>
 
-
         <div className="text-sm bg-gray-100 p-3 rounded mb-4">
           {commitmentText}
         </div>
-
 
         <textarea
           value={content}
@@ -144,13 +161,11 @@ export default function CommitmentUpdatePage() {
           rows={4}
         />
 
-
         {error && (
           <div className="text-red-500 text-sm mb-3">
             {error}
           </div>
         )}
-
 
         <button
           onClick={submitUpdate}
@@ -161,9 +176,6 @@ export default function CommitmentUpdatePage() {
         </button>
 
       </div>
-
     </div>
-
   );
-
 }
