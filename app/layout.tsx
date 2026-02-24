@@ -1,4 +1,5 @@
 import InstallPrompt from "@/components/InstallPrompt";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -19,7 +20,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   themeColor: "#1E4ED8",
   icons: {
-    icon: "/icons/icon-192.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
     apple: "/icons/icon-180.png",
   },
 };
@@ -32,12 +37,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-white`}
       >
         <main className="flex-1">
           {children}
         </main>
 
+        {/* PWA */}
+        <ServiceWorkerRegister />
         <InstallPrompt />
 
         {/* Global Footer */}
