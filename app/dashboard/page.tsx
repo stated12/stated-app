@@ -116,7 +116,6 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Right Side Controls */}
           <div className="flex items-center gap-4">
             <InstallButton />
             <Link
@@ -161,6 +160,7 @@ export default async function Dashboard() {
             </div>
           </div>
 
+          {/* ACTION BUTTONS */}
           <div className="flex gap-3 pt-4 flex-wrap">
             <Link
               href="/profile/edit"
@@ -174,6 +174,13 @@ export default async function Dashboard() {
               className="border px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               Public profile
+            </Link>
+
+            <Link
+              href="/billing"
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              Billing
             </Link>
 
             {!isPro && (
