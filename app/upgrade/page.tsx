@@ -1,202 +1,257 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-
-const supabase = createClient();
-
-type Plan = {
-  key: string;
-  name: string;
-  price: number;
-  credits: number;
-  popular?: boolean;
-};
-
-const PLANS: Plan[] = [
-  { key: "individual", name: "Individual Pro", price: 499, credits: 20, popular: true },
-  { key: "company_starter", name: "Company Starter", price: 1999, credits: 25 },
-  { key: "company_growth", name: "Company Growth", price: 2999, credits: 50 },
-  { key: "company_scale", name: "Company Scale", price: 4999, credits: 75 },
-];
-
-const CREDIT_PACKS: Plan[] = [
-  { key: "pack_10", name: "10 credits", price: 199, credits: 10 },
-  { key: "pack_25", name: "25 credits", price: 399, credits: 25 },
-  { key: "pack_50", name: "50 credits", price: 699, credits: 50 },
-];
 
 export default function UpgradePage() {
-  const router = useRouter();
-
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState(false);
+  const supabase = createClient();
+  const [currentPlan, setCurrentPlan] = useState<string>("free");
+  const [loadingPlan, setLoadingPlan] = useState(true);
 
   useEffect(() => {
-    loadProfile();
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("plan_key")
+        .eq("id", user.id)
+        .single();
+
+      setCurrentPlan(data?.plan_key || "free");
+      setLoadingPlan(false);
+    }
+
+    loadProfile();
   }, []);
 
-  async function loadProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setProfile(data);
-    setLoading(false);
-  }
-
-  async function purchase(plan: Plan) {
-    setBuying(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    // ✅ Correct API path
-    const orderRes = await fetch("/api/razorpay/create-order", {
+  async function handlePurchase(planKey: string) {
+    const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planKey: plan.key }),
+      body: JSON.stringify({ planKey }),
     });
 
-    const orderData = await orderRes.json();
+    const data = await res.json();
 
-    if (!orderData.orderId) {
-      alert("Order creation failed");
-      setBuying(false);
-      return;
-    }
+    if (!data.orderId) return alert("Payment initialization failed");
 
     const options = {
-      key: orderData.key, // ✅ use key from API
-      amount: orderData.amount,
+      key: data.key,
+      amount: data.amount,
       currency: "INR",
-      order_id: orderData.orderId,
+      order_id: data.orderId,
       handler: async function (response: any) {
-        // ✅ Correct verify path
-        const verifyRes = await fetch("/api/razorpay/verify-payment", {
+        await fetch("/api/verify-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...response,
-            planKey: plan.key,
-            userId: user.id,
+            planKey,
           }),
         });
 
-        const verifyData = await verifyRes.json();
-
-        if (verifyData.success) {
-          router.push("/dashboard");
-        } else {
-          alert("Payment verification failed");
-        }
+        window.location.href = "/dashboard";
       },
-      theme: { color: "#2563eb" },
+      theme: { color: "#1E4ED8" },
     };
 
-    const rzp = new (window as any).Razorpay(options);
-    rzp.open();
-
-    setBuying(false);
+    const razor = new (window as any).Razorpay(options);
+    razor.open();
   }
 
-  if (loading) return <div className="p-6 text-center">Loading...</div>;
+  function PlanCard({
+    title,
+    price,
+    features,
+    planKey,
+    highlight = false,
+  }: any) {
+    const isCurrent = currentPlan === planKey;
 
-  const isPro = !!profile?.plan_key;
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-xl mx-auto space-y-8">
-
-        <h1 className="text-3xl font-bold">Upgrade Stated</h1>
-
-        {!isPro && (
-          <>
-            <div className="bg-white p-5 rounded-xl shadow">
-              <h2 className="font-semibold mb-3">Pro unlocks:</h2>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>✔ Analytics dashboard</li>
-                <li>✔ Profile & commitment views</li>
-                <li>✔ Followers (coming soon)</li>
-                <li>✔ Pro badge</li>
-                <li>✔ Lifetime access</li>
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              {PLANS.map((plan) => (
-                <div key={plan.key} className="bg-white p-5 rounded-xl shadow border">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-semibold">{plan.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {plan.credits} credits included
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => purchase(plan)}
-                      disabled={buying}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                    >
-                      ₹{plan.price}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {isPro && (
-          <div className="bg-green-100 p-4 rounded-lg text-green-700">
-            You are a Pro member 🎉
+    return (
+      <div
+        className={`rounded-xl p-6 shadow bg-white flex flex-col justify-between ${
+          highlight ? "border-2 border-blue-600 scale-105" : ""
+        }`}
+      >
+        {highlight && (
+          <div className="text-xs font-semibold text-blue-600 mb-2">
+            ⭐ Most Popular
           </div>
         )}
 
         <div>
-          <h2 className="text-lg font-semibold mb-4">Buy credit packs</h2>
-          <div className="space-y-4">
-            {CREDIT_PACKS.map((pack) => (
-              <div key={pack.key} className="bg-white p-5 rounded-xl shadow">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="font-semibold">{pack.name}</div>
-                    <div className="text-sm text-gray-600">
-                      Add {pack.credits} credits
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => purchase(pack)}
-                    disabled={buying}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    ₹{pack.price}
-                  </button>
+          <div className="text-lg font-semibold">{title}</div>
+          <div className="text-2xl font-bold mt-2">₹{price}</div>
+
+          <ul className="mt-4 space-y-2 text-sm text-gray-600">
+            {features.map((f: string, i: number) => (
+              <li key={i}>• {f}</li>
+            ))}
+          </ul>
+        </div>
+
+        <button
+          disabled={isCurrent || loadingPlan}
+          onClick={() => handlePurchase(planKey)}
+          className={`mt-6 py-2 rounded-lg font-medium ${
+            isCurrent
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          {isCurrent ? "Current Plan" : "Choose Plan"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 px-4 py-10">
+      <div className="max-w-6xl mx-auto space-y-16">
+
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Stated" width={40} height={40} />
+            <div>
+              <div className="text-2xl font-bold text-blue-600">
+                Stated
+              </div>
+              <div className="text-sm text-gray-500">
+                Upgrade Your Plan
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/dashboard"
+            className="text-sm text-gray-500 hover:underline"
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
+
+        {/* HERO */}
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold">
+            Unlock More Commitment Power
+          </h1>
+          <p className="text-gray-600 mt-3">
+            Get more updates, advanced analytics, and increased visibility.
+          </p>
+        </div>
+
+        {/* PLANS */}
+        <div className="grid md:grid-cols-3 gap-8">
+
+          <PlanCard
+            title="Free"
+            price="0"
+            planKey="free"
+            features={[
+              "2 starter credits",
+              "5 updates per commitment",
+              "Public profile",
+              "Commitment views",
+              "Analytics locked",
+            ]}
+          />
+
+          <PlanCard
+            title="Pro Individual"
+            price="499"
+            planKey="individual"
+            highlight
+            features={[
+              "20 credits included",
+              "10 updates per commitment",
+              "Analytics unlocked",
+              "PRO badge",
+              "Priority visibility",
+            ]}
+          />
+
+          <PlanCard
+            title="Company Starter"
+            price="1999"
+            planKey="company_starter"
+            features={[
+              "25 credits included",
+              "5 updates per commitment",
+              "Company profile",
+              "Business analytics",
+            ]}
+          />
+
+          <PlanCard
+            title="Company Growth"
+            price="2999"
+            planKey="company_growth"
+            features={[
+              "50 credits included",
+              "10 updates per commitment",
+              "Advanced analytics",
+              "Higher visibility",
+            ]}
+          />
+
+          <PlanCard
+            title="Company Scale"
+            price="4999"
+            planKey="company_scale"
+            features={[
+              "75 credits included",
+              "15 updates per commitment",
+              "Full analytics suite",
+              "Priority visibility",
+            ]}
+          />
+
+        </div>
+
+        {/* CREDIT PACKS */}
+        <div>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            Need Extra Credits?
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { title: "Pack 10", price: 199, key: "pack_10" },
+              { title: "Pack 25", price: 399, key: "pack_25" },
+              { title: "Pack 50", price: 699, key: "pack_50" },
+            ].map((pack) => (
+              <div
+                key={pack.key}
+                className="bg-white rounded-xl shadow p-6 text-center"
+              >
+                <div className="font-semibold">{pack.title}</div>
+                <div className="text-2xl font-bold mt-2">
+                  ₹{pack.price}
                 </div>
+                <button
+                  onClick={() => handlePurchase(pack.key)}
+                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Buy Pack
+                </button>
               </div>
             ))}
           </div>
+        </div>
+
+        {/* TRUST SECTION */}
+        <div className="text-center text-sm text-gray-500 border-t pt-8">
+          Secure payments via Razorpay • Instant credit activation •
+          Receipt emailed automatically • No subscription lock-in
         </div>
 
       </div>
