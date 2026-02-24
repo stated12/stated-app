@@ -1,3 +1,4 @@
+import InstallPrompt from "@/components/InstallPrompt";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -72,7 +73,7 @@ export default function RootLayout({
             © {new Date().getFullYear()} Stated
           </div>
         </footer>
-      </body>
+      <InstallPrompt /></body>
     </html>
   );
 }
