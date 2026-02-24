@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Stated",
   description: "Make commitments. Stay accountable. Build trust publicly.",
+  manifest: "/manifest.json",
+  themeColor: "#1E4ED8",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-180.png",
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +43,7 @@ export default function RootLayout({
             <a
               href="https://stated.in/privacy"
               target="_blank"
+              rel="noopener noreferrer"
               className="hover:underline"
             >
               Privacy Policy
@@ -45,6 +52,7 @@ export default function RootLayout({
             <a
               href="https://stated.in/terms"
               target="_blank"
+              rel="noopener noreferrer"
               className="hover:underline"
             >
               Terms of Service
@@ -53,6 +61,7 @@ export default function RootLayout({
             <a
               href="https://stated.in/refund"
               target="_blank"
+              rel="noopener noreferrer"
               className="hover:underline"
             >
               Refund Policy
