@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import InstallButton from "@/components/InstallButton";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -24,9 +25,7 @@ export default async function Dashboard() {
     );
   }
 
-  // =============================
-  // PROFILE
-  // =============================
+  // ================= PROFILE =================
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
@@ -36,9 +35,7 @@ export default async function Dashboard() {
   const isPro = !!profile?.plan_key;
   const credits = profile?.credits ?? 0;
 
-  // =============================
-  // COMMITMENTS
-  // =============================
+  // ================= COMMITMENTS =================
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
@@ -47,9 +44,7 @@ export default async function Dashboard() {
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
-  // =============================
-  // UPDATES
-  // =============================
+  // ================= UPDATES =================
   const { data: updates } =
     commitmentIds.length > 0
       ? await supabase
@@ -59,11 +54,7 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
-  // =============================
-  // ANALYTICS
-  // =============================
-
-  // Profile Views (safe with eq)
+  // ================= ANALYTICS =================
   const { count: profileViews } = isPro
     ? await supabase
         .from("profile_views")
@@ -71,7 +62,6 @@ export default async function Dashboard() {
         .eq("profile_id", user.id)
     : { count: 0 };
 
-  // ✅ Commitment Views (FIXED aggregation)
   let commitmentViews = 0;
 
   if (isPro && commitmentIds.length > 0) {
@@ -83,9 +73,7 @@ export default async function Dashboard() {
     commitmentViews = data?.length ?? 0;
   }
 
-  // =============================
-  // STATS
-  // =============================
+  // ================= STATS =================
   const total = commitments?.length ?? 0;
   const active =
     commitments?.filter((c) => c.status === "active").length ?? 0;
@@ -128,12 +116,16 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          <Link
-            href="/logout"
-            className="text-sm text-gray-500 hover:underline"
-          >
-            Logout
-          </Link>
+          {/* Right Side Controls */}
+          <div className="flex items-center gap-4">
+            <InstallButton />
+            <Link
+              href="/logout"
+              className="text-sm text-gray-500 hover:underline"
+            >
+              Logout
+            </Link>
+          </div>
         </div>
 
         {/* ================= PROFILE CARD ================= */}
@@ -301,31 +293,16 @@ export default async function Dashboard() {
 
                 {c.status === "active" && (
                   <div className="flex gap-2 mt-4 flex-wrap">
-                    <Link
-                      href={`/commitment/${c.id}/update`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Add update
                     </Link>
-
-                    <Link
-                      href={`/commitment/${c.id}/complete`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Complete
                     </Link>
-
-                    <Link
-                      href={`/commitment/${c.id}/pause`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Pause
                     </Link>
-
-                    <Link
-                      href={`/commitment/${c.id}/withdraw`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
+                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
                       Withdraw
                     </Link>
                   </div>
