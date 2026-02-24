@@ -38,6 +38,8 @@ export default function RootLayout({
           {children}
         </main>
 
+        <InstallPrompt />
+
         {/* Global Footer */}
         <footer className="border-t py-6 text-center text-sm text-gray-500 bg-white">
           <div className="space-x-4">
@@ -73,7 +75,7 @@ export default function RootLayout({
             © {new Date().getFullYear()} Stated
           </div>
         </footer>
-      <InstallPrompt /></body>
+      </body>
     </html>
   );
 }
