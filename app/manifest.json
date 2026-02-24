@@ -1,6 +1,14 @@
 {
   "name": "Stated",
   "short_name": "Stated",
+  "description": "Make commitments. Stay accountable. Build trust publicly.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1E4ED8",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -11,9 +19,14 @@
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "theme_color": "#1E4ED8",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "categories": ["productivity", "business"],
+  "lang": "en"
 }
