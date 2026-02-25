@@ -18,25 +18,7 @@ export default async function ResumeCommitment({
     redirect("/login");
   }
 
-  // First check commitment exists and belongs to user
-  const { data: commitment, error: fetchError } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("id", params.id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (fetchError || !commitment) {
-    redirect("/dashboard");
-  }
-
-  // Only resume if currently paused
-  if (commitment.status !== "paused") {
-    redirect("/dashboard");
-  }
-
-  // Update status
-  const { error: updateError } = await supabase
+  const { error } = await supabase
     .from("commitments")
     .update({
       status: "active",
@@ -45,12 +27,10 @@ export default async function ResumeCommitment({
     .eq("id", params.id)
     .eq("user_id", user.id);
 
-  if (updateError) {
-    console.error("Resume error:", updateError);
-    redirect("/dashboard");
+  if (error) {
+    console.error("Resume error:", error);
   }
 
-  // Log update
   await supabase.from("commitment_updates").insert({
     commitment_id: params.id,
     user_id: user.id,
