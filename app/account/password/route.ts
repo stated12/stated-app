@@ -9,64 +9,58 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
   }
 
   const formData = await request.formData();
   const password = String(formData.get("password") || "");
   const confirmPassword = String(formData.get("confirm_password") || "");
 
-  // ✅ 1. Check match
+  // ✅ Match check
   if (password !== confirmPassword) {
-    return NextResponse.redirect(
-      new URL(
-        "/account?error=Passwords do not match",
-        request.url
-      )
+    return NextResponse.json(
+      { error: "Passwords do not match" },
+      { status: 400 }
     );
   }
 
-  // ✅ 2. Length check
+  // ✅ Minimum length
   if (password.length < 8) {
-    return NextResponse.redirect(
-      new URL(
-        "/account?error=Password must be at least 8 characters",
-        request.url
-      )
+    return NextResponse.json(
+      { error: "Password must be at least 8 characters" },
+      { status: 400 }
     );
   }
 
-  // ✅ 3. Strength check
+  // ✅ Strength validation
   const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
 
   if (!strongRegex.test(password)) {
-    return NextResponse.redirect(
-      new URL(
-        "/account?error=Password must include uppercase, lowercase and a number",
-        request.url
-      )
+    return NextResponse.json(
+      {
+        error:
+          "Password must include uppercase, lowercase and a number",
+      },
+      { status: 400 }
     );
   }
 
-  // ✅ 4. Update password
   const { error } = await supabase.auth.updateUser({
     password,
   });
 
   if (error) {
-    return NextResponse.redirect(
-      new URL(
-        "/account?error=Password update failed",
-        request.url
-      )
+    return NextResponse.json(
+      { error: "Password update failed" },
+      { status: 500 }
     );
   }
 
-  return NextResponse.redirect(
-    new URL(
-      "/account?success=Password updated successfully",
-      request.url
-    )
-  );
+  return NextResponse.json({
+    success: "Password updated successfully",
+  });
 }
