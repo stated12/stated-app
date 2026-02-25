@@ -17,7 +17,26 @@ export async function POST(
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const { error } = await supabase
+  // 🔎 Step 1: Check current commitment status
+  const { data: commitment, error: fetchError } = await supabase
+    .from("commitments")
+    .select("status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (fetchError || !commitment) {
+    console.error("Fetch error:", fetchError);
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // 🛑 If already active (or not paused), do nothing
+  if (commitment.status !== "paused") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // ✅ Step 2: Update status to active
+  const { error: updateError } = await supabase
     .from("commitments")
     .update({
       status: "active",
@@ -26,15 +45,23 @@ export async function POST(
     .eq("id", id)
     .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Resume error:", error);
+  if (updateError) {
+    console.error("Resume update error:", updateError);
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  await supabase.from("commitment_updates").insert({
-    commitment_id: id,
-    user_id: user.id,
-    content: "Commitment resumed",
-  });
+  // 📝 Step 3: Insert resume log (only once)
+  const { error: insertError } = await supabase
+    .from("commitment_updates")
+    .insert({
+      commitment_id: id,
+      user_id: user.id,
+      content: "Commitment resumed",
+    });
+
+  if (insertError) {
+    console.error("Resume log insert error:", insertError);
+  }
 
   return NextResponse.redirect(new URL("/dashboard", request.url));
 }
