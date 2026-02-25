@@ -49,7 +49,12 @@ export default async function AccountPage({
         <div className="bg-white rounded-xl shadow p-5">
           <div className="font-semibold mb-4">Change Password</div>
 
-          <form action="/account/password" method="POST" className="space-y-4">
+          <form
+            action="/account/password"
+            method="POST"
+            className="space-y-4"
+            target="_self"
+          >
             <input
               type="password"
               name="password"
@@ -92,7 +97,7 @@ export default async function AccountPage({
             This action permanently deletes your profile, commitments, and data.
           </div>
 
-          <form action="/account/delete" method="POST">
+          <form action="/account/delete" method="POST" target="_self">
             <button
               type="submit"
               className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
