@@ -1,38 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function PasswordForm() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
+
+    const form = e.target as HTMLFormElement;
 
     const res = await fetch("/account/password", {
       method: "POST",
-      body: new FormData(e.target as HTMLFormElement),
+      body: new FormData(form),
     });
 
-    const text = await res.text();
-
-    if (res.redirected) {
-      router.push(res.url);
-      return;
-    }
+    const data = await res.json();
+    setLoading(false);
 
     if (!res.ok) {
-      setError("Something went wrong");
+      setError(data.error);
       return;
     }
 
-    setSuccess("Password updated successfully");
+    setSuccess(data.success);
     setPassword("");
     setConfirm("");
   }
@@ -58,7 +56,6 @@ export default function PasswordForm() {
           type="password"
           name="password"
           required
-          minLength={8}
           placeholder="New password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -69,7 +66,6 @@ export default function PasswordForm() {
           type="password"
           name="confirm_password"
           required
-          minLength={8}
           placeholder="Confirm new password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -83,9 +79,10 @@ export default function PasswordForm() {
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
         >
-          Update Password
+          {loading ? "Updating..." : "Update Password"}
         </button>
       </form>
     </div>
