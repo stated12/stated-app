@@ -16,14 +16,19 @@ export default async function ResumeCommitment({
     redirect("/login");
   }
 
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("commitments")
-    .update({ status: "active" })
+    .update({
+      status: "active",
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", params.id)
-    .eq("user_id", user.id); // 🔥 critical
+    .eq("user_id", user.id)
+    .eq("status", "paused")
+    .select("*", { count: "exact" });
 
-  if (error) {
-    console.error(error);
+  if (error || count === 0) {
+    console.error("Resume failed:", error);
   }
 
   redirect("/dashboard");
