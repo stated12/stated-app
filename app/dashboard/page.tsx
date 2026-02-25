@@ -18,12 +18,39 @@ type Commitment = {
   };
 };
 
+function timeAgo(date: string) {
+  const seconds = Math.floor(
+    (new Date().getTime() - new Date(date).getTime()) / 1000
+  );
+
+  const intervals: any = {
+    year: 31536000,
+    month: 2592000,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+  };
+
+  for (const key in intervals) {
+    const interval = Math.floor(seconds / intervals[key]);
+    if (interval > 1) {
+      return `${interval} ${key}s ago`;
+    }
+    if (interval === 1) {
+      return `1 ${key} ago`;
+    }
+  }
+
+  return "Just now";
+}
+
 export default function DashboardFeed() {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     loadInitial();
@@ -102,8 +129,11 @@ export default function DashboardFeed() {
                   c.profiles.display_name || c.profiles.username
                 )}&background=2563eb&color=fff`;
 
+          const isLong = c.text.length > 180;
+          const showFull = expanded === c.id;
+
           return (
-            <div key={c.id} className="bg-white rounded-xl shadow p-5">
+            <div key={c.id} className="bg-white rounded-xl shadow p-5 hover:shadow-md transition">
 
               <div className="flex items-center gap-3 mb-3">
                 <Link href={`/u/${c.profiles.username}`}>
@@ -129,18 +159,30 @@ export default function DashboardFeed() {
                     </span>
                   )}
                   <div className="text-xs text-gray-500">
-                    @{c.profiles.username}
+                    @{c.profiles.username} · {timeAgo(c.created_at)}
                   </div>
                 </div>
               </div>
 
-              <div className="text-base mb-3">
-                {c.text}
+              <div className="text-base mb-3 whitespace-pre-wrap">
+                {isLong && !showFull
+                  ? c.text.slice(0, 180) + "..."
+                  : c.text}
+                {isLong && (
+                  <button
+                    onClick={() =>
+                      setExpanded(showFull ? null : c.id)
+                    }
+                    className="ml-2 text-blue-600 text-sm"
+                  >
+                    {showFull ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                  {c.status}
+                  Active
                 </span>
                 <div className="text-gray-500">
                   {c.views} views
