@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
+
   const supabase = await createClient();
 
   const {
@@ -21,7 +23,7 @@ export async function POST(
       status: "active",
       updated_at: new Date().toISOString(),
     })
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id);
 
   if (error) {
@@ -29,7 +31,7 @@ export async function POST(
   }
 
   await supabase.from("commitment_updates").insert({
-    commitment_id: params.id,
+    commitment_id: id,
     user_id: user.id,
     content: "Commitment resumed",
   });
