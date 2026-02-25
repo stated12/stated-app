@@ -276,10 +276,19 @@ export default async function Dashboard() {
 
                 {c.status === "paused" && (
                   <div className="flex gap-2 mt-4 flex-wrap">
-                    <Link href={`/commitment/${c.id}/resume`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
-                      Resume
-                    </Link>
-                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                    <form action={`/commitment/${c.id}/resume`} method="POST">
+                      <button
+                        type="submit"
+                        className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                      >
+                        Resume
+                      </button>
+                    </form>
+
+                    <Link
+                      href={`/commitment/${c.id}/withdraw`}
+                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
+                    >
                       Withdraw
                     </Link>
                   </div>
