@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import InstallButton from "@/components/InstallButton";
+import ImpressionTracker from "@/components/ImpressionTracker";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -25,7 +26,6 @@ export default async function Dashboard() {
     );
   }
 
-  // PROFILE
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
@@ -35,7 +35,6 @@ export default async function Dashboard() {
   const isPro = !!profile?.plan_key;
   const credits = profile?.credits ?? 0;
 
-  // COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
@@ -44,7 +43,6 @@ export default async function Dashboard() {
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
-  // UPDATES
   const { data: updates } =
     commitmentIds.length > 0
       ? await supabase
@@ -54,7 +52,6 @@ export default async function Dashboard() {
           .order("created_at", { ascending: false })
       : { data: [] };
 
-  // ANALYTICS
   const { count: profileViews } = isPro
     ? await supabase
         .from("profile_views")
@@ -73,7 +70,6 @@ export default async function Dashboard() {
     commitmentViews = data?.length ?? 0;
   }
 
-  // STATS
   const total = commitments?.length ?? 0;
   const active =
     commitments?.filter((c) => c.status === "active").length ?? 0;
@@ -95,7 +91,8 @@ export default async function Dashboard() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* HEADER */}
+        <ImpressionTracker commitmentIds={commitmentIds} />
+
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="Stated logo" width={40} height={40} />
@@ -113,7 +110,6 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* PROFILE CARD */}
         <div className="bg-white rounded-xl shadow p-5">
           <div className="flex items-center gap-4">
             <div className="w-[72px] h-[72px] relative">
@@ -167,7 +163,6 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* CREDITS */}
         <div className="bg-white rounded-xl shadow p-5 flex justify-between items-center">
           <div className="font-medium">
             Credits remaining: {credits}
@@ -181,7 +176,6 @@ export default async function Dashboard() {
           </Link>
         </div>
 
-        {/* ANALYTICS */}
         <div className={`bg-white rounded-xl shadow p-5 ${isPro ? "border border-blue-200" : ""}`}>
           <div className="flex items-center gap-2 mb-4">
             <div className="font-semibold">Analytics</div>
@@ -208,7 +202,6 @@ export default async function Dashboard() {
           )}
         </div>
 
-        {/* CREATE BUTTON */}
         <Link
           href={credits === 0 ? "/upgrade" : "/commitment/new"}
           className="block text-center py-3 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
@@ -218,7 +211,6 @@ export default async function Dashboard() {
             : "Create Commitment (1 credit)"}
         </Link>
 
-        {/* COMMITMENTS */}
         <div className="space-y-4">
           <div className="font-semibold">Your commitments</div>
 
