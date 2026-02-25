@@ -4,12 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import PasswordForm from "./PasswordForm";
+import DeleteAccountForm from "./DeleteAccountForm";
 
-export default async function AccountPage({
-  searchParams,
-}: {
-  searchParams?: { success?: string; error?: string };
-}) {
+export default async function AccountPage() {
   const supabase = await createClient();
 
   const {
@@ -26,20 +23,6 @@ export default async function AccountPage({
 
         <h1 className="text-2xl font-bold">Account Settings</h1>
 
-        {/* SUCCESS MESSAGE */}
-        {searchParams?.success && (
-          <div className="bg-green-100 text-green-700 text-sm p-3 rounded-lg">
-            {searchParams.success}
-          </div>
-        )}
-
-        {/* ERROR MESSAGE */}
-        {searchParams?.error && (
-          <div className="bg-red-100 text-red-700 text-sm p-3 rounded-lg">
-            {searchParams.error}
-          </div>
-        )}
-
         {/* EMAIL */}
         <div className="bg-white rounded-xl shadow p-5">
           <div className="font-semibold mb-2">Email</div>
@@ -49,25 +32,8 @@ export default async function AccountPage({
         {/* CHANGE PASSWORD */}
         <PasswordForm />
 
-        {/* DELETE ACCOUNT */}
-        <div className="bg-white rounded-xl shadow p-5 border border-red-200">
-          <div className="font-semibold text-red-600 mb-2">
-            Delete Account
-          </div>
-
-          <div className="text-sm text-gray-600 mb-4">
-            This action permanently deletes your profile, commitments, and data.
-          </div>
-
-          <form action="/account/delete" method="POST">
-            <button
-              type="submit"
-              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-            >
-              Delete Account Permanently
-            </button>
-          </form>
-        </div>
+        {/* SAFE DELETE ACCOUNT */}
+        <DeleteAccountForm />
 
         <Link href="/dashboard" className="text-sm text-blue-600">
           ← Back to dashboard
