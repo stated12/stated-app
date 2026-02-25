@@ -8,10 +8,23 @@ export default async function ResumeCommitment({
 }) {
   const supabase = await createClient();
 
-  await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
     .from("commitments")
     .update({ status: "active" })
-    .eq("id", params.id);
+    .eq("id", params.id)
+    .eq("user_id", user.id); // 🔥 critical
+
+  if (error) {
+    console.error(error);
+  }
 
   redirect("/dashboard");
 }
