@@ -43,9 +43,6 @@ export default async function AccountPage({
         <div className="bg-white rounded-xl shadow p-5">
           <div className="font-semibold mb-2">Email</div>
           <div className="text-sm text-gray-600">{user.email}</div>
-          <div className="text-xs text-gray-400 mt-2">
-            Email change requires verification. (We can add later)
-          </div>
         </div>
 
         {/* CHANGE PASSWORD */}
