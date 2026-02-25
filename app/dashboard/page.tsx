@@ -1,296 +1,144 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
-import InstallButton from "@/components/InstallButton";
-import ImpressionTracker from "@/components/ImpressionTracker";
+import Link from "next/link";
 
-export default async function Dashboard() {
-  const supabase = await createClient();
+type Commitment = {
+  id: string;
+  text: string;
+  status: string;
+  created_at: string;
+  views: number;
+  profiles: {
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    plan_key: string | null;
+  };
+};
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function DashboardFeed() {
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Link
-          href="/login"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
-        >
-          Login
-        </Link>
-      </div>
-    );
+  useEffect(() => {
+    loadInitial();
+  }, []);
+
+  async function loadInitial() {
+    const res = await fetch("/api/feed");
+    const data = await res.json();
+    setCommitments(data);
+    if (data.length > 0) {
+      setCursor(data[data.length - 1].created_at);
+    }
+    triggerImpressions(data);
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  const isPro = !!profile?.plan_key;
-  const credits = profile?.credits ?? 0;
-
-  const { data: commitments } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const commitmentIds = commitments?.map((c) => c.id) || [];
-
-  const { data: updates } =
-    commitmentIds.length > 0
-      ? await supabase
-          .from("commitment_updates")
-          .select("*")
-          .in("commitment_id", commitmentIds)
-          .order("created_at", { ascending: false })
-      : { data: [] };
-
-  const { count: profileViews } = isPro
-    ? await supabase
-        .from("profile_views")
-        .select("*", { count: "exact", head: true })
-        .eq("profile_id", user.id)
-    : { count: 0 };
-
-  let commitmentViews = 0;
-
-  if (isPro && commitmentIds.length > 0) {
-    const { data } = await supabase
-      .from("commitment_views")
-      .select("commitment_id")
-      .in("commitment_id", commitmentIds);
-
-    commitmentViews = data?.length ?? 0;
+  async function loadMore() {
+    if (!cursor) return;
+    setLoading(true);
+    const res = await fetch(`/api/feed?cursor=${cursor}`);
+    const data = await res.json();
+    setCommitments((prev) => [...prev, ...data]);
+    if (data.length > 0) {
+      setCursor(data[data.length - 1].created_at);
+    }
+    triggerImpressions(data);
+    setLoading(false);
   }
 
-  const total = commitments?.length ?? 0;
-  const active =
-    commitments?.filter((c) => c.status === "active").length ?? 0;
-  const completed =
-    commitments?.filter((c) => c.status === "completed").length ?? 0;
-  const paused =
-    commitments?.filter(
-      (c) => c.status === "paused" || c.status === "withdrawn"
-    ).length ?? 0;
+  function triggerImpressions(data: Commitment[]) {
+    if (!data || data.length === 0) return;
 
-  const avatar =
-    profile?.avatar_url?.trim()
-      ? profile.avatar_url.trim()
-      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          profile?.display_name || profile?.username || "User"
-        )}&background=2563eb&color=fff`;
+    const ids = data.map((c) => c.id);
+    const sessionKey = "viewed_" + ids.join("_");
+
+    if (sessionStorage.getItem(sessionKey)) return;
+
+    fetch("/api/impression", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commitmentIds: ids }),
+    });
+
+    sessionStorage.setItem(sessionKey, "true");
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
 
-        <ImpressionTracker commitmentIds={commitmentIds} />
+      <div className="space-y-4">
+        {commitments.map((c) => {
+          const avatar =
+            c.profiles.avatar_url?.trim()
+              ? c.profiles.avatar_url.trim()
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  c.profiles.display_name || c.profiles.username
+                )}&background=2563eb&color=fff`;
 
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Stated logo" width={40} height={40} />
-            <div>
-              <h1 className="text-2xl font-bold text-blue-600">Stated</h1>
-              <div className="text-sm text-gray-500">Dashboard</div>
-            </div>
-          </div>
+          return (
+            <div key={c.id} className="bg-white rounded-xl shadow p-5">
 
-          <div className="flex items-center gap-4">
-            <InstallButton />
-            <Link href="/logout" className="text-sm text-gray-500 hover:underline">
-              Logout
-            </Link>
-          </div>
-        </div>
+              <div className="flex items-center gap-3 mb-3">
+                <Link href={`/u/${c.profiles.username}`}>
+                  <Image
+                    src={avatar}
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                </Link>
 
-        <div className="bg-white rounded-xl shadow p-5">
-          <div className="flex items-center gap-4">
-            <div className="w-[72px] h-[72px] relative">
-              <Image
-                src={avatar}
-                alt="avatar"
-                fill
-                sizes="72px"
-                className="rounded-full object-cover"
-              />
-            </div>
-
-            <div>
-              <div className="text-lg font-semibold flex items-center gap-2">
-                {profile?.display_name || "No name set"}
-                {isPro && (
-                  <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                    PRO
-                  </span>
-                )}
-              </div>
-
-              <div className="text-gray-600 text-sm">
-                {profile?.bio || "No bio added"}
-              </div>
-
-              <div className="text-xs text-gray-400 mt-1">
-                app.stated.in/u/{profile?.username}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4 flex-wrap">
-            <Link href="/profile/edit" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
-              Edit profile
-            </Link>
-            <Link href={`/u/${profile?.username}`} className="border px-4 py-2 rounded-lg hover:bg-gray-50">
-              Public profile
-            </Link>
-            <Link href="/billing" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
-              Billing
-            </Link>
-            <Link href="/account" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
-              Account settings
-            </Link>
-            {!isPro && (
-              <Link href="/upgrade" className="border px-4 py-2 rounded-lg hover:bg-gray-50">
-                Upgrade
-              </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 flex justify-between items-center">
-          <div className="font-medium">
-            Credits remaining: {credits}
-          </div>
-
-          <Link
-            href="/upgrade"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Buy credits
-          </Link>
-        </div>
-
-        <div className={`bg-white rounded-xl shadow p-5 ${isPro ? "border border-blue-200" : ""}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="font-semibold">Analytics</div>
-            {isPro && (
-              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                PRO
-              </span>
-            )}
-          </div>
-
-          {isPro ? (
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>Profile views: {profileViews ?? 0}</div>
-              <div>Total commitments: {total}</div>
-              <div>Commitment views: {commitmentViews}</div>
-              <div>Active: {active}</div>
-              <div>Completed: {completed}</div>
-              <div>Paused / Withdrawn: {paused}</div>
-            </div>
-          ) : (
-            <div className="text-sm text-gray-500">
-              Upgrade to unlock analytics insights.
-            </div>
-          )}
-        </div>
-
-        <Link
-          href={credits === 0 ? "/upgrade" : "/commitment/new"}
-          className="block text-center py-3 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
-        >
-          {credits === 0
-            ? "No credits left – Buy credits"
-            : "Create Commitment (1 credit)"}
-        </Link>
-
-        <div className="space-y-4">
-          <div className="font-semibold">Your commitments</div>
-
-          {commitments?.length === 0 && (
-            <div className="text-sm text-gray-500">
-              No commitments yet.
-            </div>
-          )}
-
-          {commitments?.map((c) => {
-            const commitmentUpdates =
-              updates?.filter((u) => u.commitment_id === c.id) || [];
-
-            return (
-              <div key={c.id} className="bg-white rounded-xl shadow p-4">
-                <div className="font-medium text-base">{c.text}</div>
-
-                <div className="text-sm text-gray-500 mt-1 capitalize">
-                  Status:
-                  <span className="ml-1 font-medium">{c.status}</span>
+                <div>
+                  <Link
+                    href={`/u/${c.profiles.username}`}
+                    className="font-medium"
+                  >
+                    {c.profiles.display_name || c.profiles.username}
+                  </Link>
+                  {c.profiles.plan_key && (
+                    <span className="ml-2 text-xs text-blue-600 font-medium">
+                      PRO
+                    </span>
+                  )}
+                  <div className="text-xs text-gray-500">
+                    @{c.profiles.username}
+                  </div>
                 </div>
-
-                {commitmentUpdates.length > 0 && (
-                  <div className="mt-4 space-y-3 border-t pt-4">
-                    {commitmentUpdates.map((u) => (
-                      <div key={u.id} className="relative pl-6">
-                        <div className="absolute left-0 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
-                        <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                          <div className="text-sm">{u.content}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {new Date(u.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {c.status === "active" && (
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
-                      Add update
-                    </Link>
-                    <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
-                      Complete
-                    </Link>
-                    <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
-                      Pause
-                    </Link>
-                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
-                      Withdraw
-                    </Link>
-                  </div>
-                )}
-
-                {c.status === "paused" && (
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    <form action={`/commitment/${c.id}/resume`} method="POST">
-                      <button
-                        type="submit"
-                        className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                      >
-                        Resume
-                      </button>
-                    </form>
-
-                    <Link
-                      href={`/commitment/${c.id}/withdraw`}
-                      className="text-sm border px-3 py-1 rounded hover:bg-gray-50"
-                    >
-                      Withdraw
-                    </Link>
-                  </div>
-                )}
               </div>
-            );
-          })}
-        </div>
 
+              <div className="text-base mb-3">
+                {c.text}
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <div>
+                  {new Date(c.created_at).toLocaleDateString()}
+                </div>
+                <div>
+                  {c.views} views
+                </div>
+              </div>
+
+            </div>
+          );
+        })}
       </div>
+
+      <div className="text-center">
+        <button
+          onClick={loadMore}
+          disabled={loading}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+        >
+          {loading ? "Loading..." : "Load More"}
+        </button>
+      </div>
+
     </div>
   );
 }
