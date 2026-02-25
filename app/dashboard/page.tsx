@@ -182,14 +182,9 @@ export default async function Dashboard() {
         </div>
 
         {/* ANALYTICS */}
-        <div
-          className={`bg-white rounded-xl shadow p-5 ${
-            isPro ? "border border-blue-200" : ""
-          }`}
-        >
+        <div className={`bg-white rounded-xl shadow p-5 ${isPro ? "border border-blue-200" : ""}`}>
           <div className="flex items-center gap-2 mb-4">
             <div className="font-semibold">Analytics</div>
-            {!isPro && <span>🔒</span>}
             {isPro && (
               <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
                 PRO
@@ -207,23 +202,8 @@ export default async function Dashboard() {
               <div>Paused / Withdrawn: {paused}</div>
             </div>
           ) : (
-            <div className="relative">
-              <div className="blur-sm select-none text-sm text-gray-500">
-                Profile views: 124
-                <br />
-                Commitment views: 89
-                <br />
-                Active: 3
-              </div>
-
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Link
-                  href="/upgrade"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Upgrade to unlock analytics
-                </Link>
-              </div>
+            <div className="text-sm text-gray-500">
+              Upgrade to unlock analytics insights.
             </div>
           )}
         </div>
@@ -238,8 +218,76 @@ export default async function Dashboard() {
             : "Create Commitment (1 credit)"}
         </Link>
 
-        {/* COMMITMENTS LIST (unchanged logic below) */}
-        {/* Keep your existing commitments rendering block here */}
+        {/* COMMITMENTS */}
+        <div className="space-y-4">
+          <div className="font-semibold">Your commitments</div>
+
+          {commitments?.length === 0 && (
+            <div className="text-sm text-gray-500">
+              No commitments yet.
+            </div>
+          )}
+
+          {commitments?.map((c) => {
+            const commitmentUpdates =
+              updates?.filter((u) => u.commitment_id === c.id) || [];
+
+            return (
+              <div key={c.id} className="bg-white rounded-xl shadow p-4">
+                <div className="font-medium text-base">{c.text}</div>
+
+                <div className="text-sm text-gray-500 mt-1 capitalize">
+                  Status:
+                  <span className="ml-1 font-medium">{c.status}</span>
+                </div>
+
+                {commitmentUpdates.length > 0 && (
+                  <div className="mt-4 space-y-3 border-t pt-4">
+                    {commitmentUpdates.map((u) => (
+                      <div key={u.id} className="relative pl-6">
+                        <div className="absolute left-0 top-2 w-3 h-3 bg-blue-600 rounded-full"></div>
+                        <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
+                          <div className="text-sm">{u.content}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {c.status === "active" && (
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Add update
+                    </Link>
+                    <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Complete
+                    </Link>
+                    <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Pause
+                    </Link>
+                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Withdraw
+                    </Link>
+                  </div>
+                )}
+
+                {c.status === "paused" && (
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <Link href={`/commitment/${c.id}/resume`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Resume
+                    </Link>
+                    <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded hover:bg-gray-50">
+                      Withdraw
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
       </div>
     </div>
