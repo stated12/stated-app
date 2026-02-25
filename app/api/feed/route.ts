@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const cursor = searchParams.get("cursor");
+  const q = searchParams.get("q");
 
   const supabase = await createClient();
 
@@ -28,6 +29,12 @@ export async function GET(request: Request) {
 
   if (cursor) {
     query = query.lt("created_at", cursor);
+  }
+
+  if (q) {
+    query = query.or(
+      `text.ilike.%${q}%,profiles.username.ilike.%${q}%,profiles.display_name.ilike.%${q}%`
+    );
   }
 
   const { data, error } = await query;
