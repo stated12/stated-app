@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import PasswordForm from "./PasswordForm";
 
 export default async function AccountPage({
   searchParams,
@@ -46,46 +47,7 @@ export default async function AccountPage({
         </div>
 
         {/* CHANGE PASSWORD */}
-        <div className="bg-white rounded-xl shadow p-5">
-          <div className="font-semibold mb-4">Change Password</div>
-
-          <form
-            action="/account/password"
-            method="POST"
-            className="space-y-4"
-            target="_self"
-          >
-            <input
-              type="password"
-              name="password"
-              required
-              minLength={8}
-              placeholder="New password"
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-
-            <input
-              type="password"
-              name="confirm_password"
-              required
-              minLength={8}
-              placeholder="Confirm new password"
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-
-            <div className="text-xs text-gray-400">
-              Password must be at least 8 characters and include uppercase,
-              lowercase and a number.
-            </div>
-
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-            >
-              Update Password
-            </button>
-          </form>
-        </div>
+        <PasswordForm />
 
         {/* DELETE ACCOUNT */}
         <div className="bg-white rounded-xl shadow p-5 border border-red-200">
@@ -97,7 +59,7 @@ export default async function AccountPage({
             This action permanently deletes your profile, commitments, and data.
           </div>
 
-          <form action="/account/delete" method="POST" target="_self">
+          <form action="/account/delete" method="POST">
             <button
               type="submit"
               className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
