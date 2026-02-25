@@ -2,11 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   const { searchParams } = new URL(request.url);
   const cursor = searchParams.get("cursor");
-  const q = searchParams.get("q");
-
-  const supabase = await createClient();
 
   let query = supabase
     .from("commitments")
@@ -19,81 +17,76 @@ export async function GET(request: Request) {
     query = query.lt("created_at", cursor);
   }
 
-  if (q) {
-    query = query.ilike("text", `%${q}%`);
-  }
-
   const { data: commitments, error } = await query;
 
   if (error) {
-    return NextResponse.json([]);
+    return NextResponse.json([], { status: 500 });
   }
 
   if (!commitments || commitments.length === 0) {
     return NextResponse.json([]);
   }
 
-  const userIds = commitments
+  const userOwnerIds = commitments
     .filter((c) => c.owner_type === "user")
     .map((c) => c.owner_id);
 
-  const companyIds = commitments
+  const companyOwnerIds = commitments
     .filter((c) => c.owner_type === "company")
     .map((c) => c.owner_id);
 
-  const { data: users } =
-    userIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, username, display_name, avatar_url, plan_key, deleted_at")
-          .in("id", userIds)
-      : { data: [] };
+  const { data: profiles } = userOwnerIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url, plan_key")
+        .in("id", userOwnerIds)
+    : { data: [] };
 
-  const { data: companies } =
-    companyIds.length > 0
-      ? await supabase
-          .from("companies")
-          .select("id, username, name, avatar_url, deleted_at")
-          .in("id", companyIds)
-      : { data: [] };
+  const { data: companies } = companyOwnerIds.length
+    ? await supabase
+        .from("companies")
+        .select("id, username, name, avatar_url, plan_key")
+        .in("id", companyOwnerIds)
+    : { data: [] };
 
-  const result = commitments.map((c) => {
+  const feed = commitments.map((c) => {
+    let identity: any = null;
+
     if (c.owner_type === "user") {
-      const user = users?.find((u) => u.id === c.owner_id);
-
-      return {
-        id: c.id,
-        text: c.text,
-        created_at: c.created_at,
-        views: c.views,
-        owner_type: "user",
-        author: {
-          username: user?.username || "deleted",
-          display_name:
-            user?.deleted_at ? "Deleted User" : user?.display_name || user?.username,
-          avatar_url: user?.avatar_url,
-          plan_key: user?.plan_key,
-        },
-      };
-    } else {
-      const company = companies?.find((co) => co.id === c.owner_id);
-
-      return {
-        id: c.id,
-        text: c.text,
-        created_at: c.created_at,
-        views: c.views,
-        owner_type: "company",
-        author: {
-          username: company?.username || "deleted",
-          display_name:
-            company?.deleted_at ? "Deleted Company" : company?.name,
-          avatar_url: company?.avatar_url,
-          plan_key: null,
-        },
-      };
+      const profile = profiles?.find((p) => p.id === c.owner_id);
+      if (profile) {
+        identity = {
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          plan_key: profile.plan_key,
+          type: "user",
+        };
+      }
     }
+
+    if (c.owner_type === "company") {
+      const company = companies?.find((co) => co.id === c.owner_id);
+      if (company) {
+        identity = {
+          username: company.username,
+          display_name: company.name,
+          avatar_url: company.avatar_url,
+          plan_key: company.plan_key,
+          type: "company",
+        };
+      }
+    }
+
+    return {
+      id: c.id,
+      text: c.text,
+      status: c.status,
+      created_at: c.created_at,
+      views: c.views ?? 0,
+      identity,
+    };
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json(feed);
 }
