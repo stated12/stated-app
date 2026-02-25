@@ -7,14 +7,14 @@ import Link from "next/link";
 type Commitment = {
   id: string;
   text: string;
-  status: string;
   created_at: string;
   views: number;
-  profiles: {
+  identity: {
     username: string;
     display_name: string;
     avatar_url: string | null;
     plan_key: string | null;
+    type: "user" | "company";
   };
 };
 
@@ -33,110 +33,94 @@ function timeAgo(date: string) {
 
   for (const key in intervals) {
     const interval = Math.floor(seconds / intervals[key]);
-    if (interval > 1) {
-      return `${interval} ${key}s ago`;
-    }
-    if (interval === 1) {
-      return `1 ${key} ago`;
-    }
+    if (interval > 1) return `${interval} ${key}s ago`;
+    if (interval === 1) return `1 ${key} ago`;
   }
 
   return "Just now";
 }
 
-export default function DashboardFeed() {
+export default function Dashboard() {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     loadInitial();
   }, []);
 
-  async function loadInitial(query?: string) {
-    const url = query ? `/api/feed?q=${query}` : "/api/feed";
-    const res = await fetch(url);
+  async function loadInitial() {
+    const res = await fetch("/api/feed");
     const data = await res.json();
     setCommitments(data);
+
     if (data.length > 0) {
       setCursor(data[data.length - 1].created_at);
     }
+
     setHasMore(data.length === 25);
     triggerImpressions(data);
   }
 
   async function loadMore() {
     if (!cursor || !hasMore) return;
+
     setLoading(true);
-    const url = search
-      ? `/api/feed?cursor=${cursor}&q=${search}`
-      : `/api/feed?cursor=${cursor}`;
-    const res = await fetch(url);
+
+    const res = await fetch(`/api/feed?cursor=${cursor}`);
     const data = await res.json();
+
     setCommitments((prev) => [...prev, ...data]);
+
     if (data.length > 0) {
       setCursor(data[data.length - 1].created_at);
     }
+
     if (data.length < 25) {
       setHasMore(false);
     }
+
     triggerImpressions(data);
     setLoading(false);
   }
 
   function triggerImpressions(data: Commitment[]) {
     if (!data || data.length === 0) return;
+
     const ids = data.map((c) => c.id);
     const sessionKey = "viewed_" + ids.join("_");
+
     if (sessionStorage.getItem(sessionKey)) return;
+
     fetch("/api/impression", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ commitmentIds: ids }),
     });
-    sessionStorage.setItem(sessionKey, "true");
-  }
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setCursor(null);
-    setHasMore(true);
-    loadInitial(search);
+    sessionStorage.setItem(sessionKey, "true");
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
-      <form onSubmit={handleSearch} className="mb-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search people, companies or commitments"
-          className="w-full border rounded-lg px-4 py-2 text-sm"
-        />
-      </form>
-
       <div className="space-y-4">
         {commitments.map((c) => {
           const avatar =
-            c.profiles.avatar_url?.trim()
-              ? c.profiles.avatar_url.trim()
+            c.identity.avatar_url?.trim()
+              ? c.identity.avatar_url.trim()
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  c.profiles.display_name || c.profiles.username
+                  c.identity.display_name || c.identity.username
                 )}&background=2563eb&color=fff`;
 
-          const isLong = c.text.length > 180;
-          const showFull = expanded === c.id;
-
           return (
-            <div key={c.id} className="bg-white rounded-xl shadow p-5 hover:shadow-md transition">
-
+            <div
+              key={c.id}
+              className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
+            >
               <div className="flex items-center gap-3 mb-3">
-                <Link href={`/u/${c.profiles.username}`}>
+                <Link href={`/u/${c.identity.username}`}>
                   <Image
                     src={avatar}
                     alt="avatar"
@@ -147,48 +131,40 @@ export default function DashboardFeed() {
                 </Link>
 
                 <div>
-                  <Link
-                    href={`/u/${c.profiles.username}`}
-                    className="font-medium"
-                  >
-                    {c.profiles.display_name || c.profiles.username}
-                  </Link>
-                  {c.profiles.plan_key && (
-                    <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">
-                      PRO
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/u/${c.identity.username}`}
+                      className="font-medium"
+                    >
+                      {c.identity.display_name || c.identity.username}
+                    </Link>
+
+                    {c.identity.type === "company" && (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                        COMPANY
+                      </span>
+                    )}
+
+                    {c.identity.type === "user" && c.identity.plan_key && (
+                      <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+
                   <div className="text-xs text-gray-500">
-                    @{c.profiles.username} · {timeAgo(c.created_at)}
+                    @{c.identity.username} · {timeAgo(c.created_at)}
                   </div>
                 </div>
               </div>
 
               <div className="text-base mb-3 whitespace-pre-wrap">
-                {isLong && !showFull
-                  ? c.text.slice(0, 180) + "..."
-                  : c.text}
-                {isLong && (
-                  <button
-                    onClick={() =>
-                      setExpanded(showFull ? null : c.id)
-                    }
-                    className="ml-2 text-blue-600 text-sm"
-                  >
-                    {showFull ? "Show less" : "Read more"}
-                  </button>
-                )}
+                {c.text}
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                  Active
-                </span>
-                <div className="text-gray-500">
-                  {c.views} views
-                </div>
+              <div className="text-sm text-gray-500">
+                {c.views} views
               </div>
-
             </div>
           );
         })}
