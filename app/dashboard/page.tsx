@@ -23,28 +23,31 @@ export default function DashboardFeed() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadInitial();
   }, []);
 
-  async function loadInitial() {
-    const res = await fetch("/api/feed");
+  async function loadInitial(query?: string) {
+    const url = query ? `/api/feed?q=${query}` : "/api/feed";
+    const res = await fetch(url);
     const data = await res.json();
     setCommitments(data);
     if (data.length > 0) {
       setCursor(data[data.length - 1].created_at);
     }
-    if (data.length < 25) {
-      setHasMore(false);
-    }
+    setHasMore(data.length === 25);
     triggerImpressions(data);
   }
 
   async function loadMore() {
     if (!cursor || !hasMore) return;
     setLoading(true);
-    const res = await fetch(`/api/feed?cursor=${cursor}`);
+    const url = search
+      ? `/api/feed?cursor=${cursor}&q=${search}`
+      : `/api/feed?cursor=${cursor}`;
+    const res = await fetch(url);
     const data = await res.json();
     setCommitments((prev) => [...prev, ...data]);
     if (data.length > 0) {
@@ -59,23 +62,36 @@ export default function DashboardFeed() {
 
   function triggerImpressions(data: Commitment[]) {
     if (!data || data.length === 0) return;
-
     const ids = data.map((c) => c.id);
     const sessionKey = "viewed_" + ids.join("_");
-
     if (sessionStorage.getItem(sessionKey)) return;
-
     fetch("/api/impression", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ commitmentIds: ids }),
     });
-
     sessionStorage.setItem(sessionKey, "true");
+  }
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setCursor(null);
+    setHasMore(true);
+    loadInitial(search);
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+
+      <form onSubmit={handleSearch} className="mb-4">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search people, companies or commitments"
+          className="w-full border rounded-lg px-4 py-2 text-sm"
+        />
+      </form>
 
       <div className="space-y-4">
         {commitments.map((c) => {
