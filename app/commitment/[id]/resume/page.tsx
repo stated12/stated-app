@@ -16,7 +16,7 @@ export default async function ResumeCommitment({
     redirect("/login");
   }
 
-  const { error, count } = await supabase
+  const { error } = await supabase
     .from("commitments")
     .update({
       status: "active",
@@ -24,11 +24,10 @@ export default async function ResumeCommitment({
     })
     .eq("id", params.id)
     .eq("user_id", user.id)
-    .eq("status", "paused")
-    .select("*", { count: "exact" });
+    .eq("status", "paused"); // only resume if paused
 
-  if (error || count === 0) {
-    console.error("Resume failed:", error);
+  if (error) {
+    console.error("Resume error:", error.message);
   }
 
   redirect("/dashboard");
