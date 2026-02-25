@@ -16,19 +16,18 @@ export default async function ResumeCommitment({
     redirect("/login");
   }
 
-  const { error } = await supabase
+  console.log("User ID:", user.id);
+  console.log("Commitment ID:", params.id);
+
+  const { data, error } = await supabase
     .from("commitments")
-    .update({
-      status: "active",
-      updated_at: new Date().toISOString(),
-    })
+    .update({ status: "active" })
     .eq("id", params.id)
     .eq("user_id", user.id)
-    .eq("status", "paused"); // only resume if paused
+    .select();
 
-  if (error) {
-    console.error("Resume error:", error.message);
-  }
+  console.log("Update result:", data);
+  console.log("Update error:", error);
 
   redirect("/dashboard");
 }
