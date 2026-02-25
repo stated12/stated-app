@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -16,18 +18,44 @@ export default async function ResumeCommitment({
     redirect("/login");
   }
 
-  console.log("User ID:", user.id);
-  console.log("Commitment ID:", params.id);
-
-  const { data, error } = await supabase
+  // First check commitment exists and belongs to user
+  const { data: commitment, error: fetchError } = await supabase
     .from("commitments")
-    .update({ status: "active" })
+    .select("*")
     .eq("id", params.id)
     .eq("user_id", user.id)
-    .select();
+    .single();
 
-  console.log("Update result:", data);
-  console.log("Update error:", error);
+  if (fetchError || !commitment) {
+    redirect("/dashboard");
+  }
+
+  // Only resume if currently paused
+  if (commitment.status !== "paused") {
+    redirect("/dashboard");
+  }
+
+  // Update status
+  const { error: updateError } = await supabase
+    .from("commitments")
+    .update({
+      status: "active",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", params.id)
+    .eq("user_id", user.id);
+
+  if (updateError) {
+    console.error("Resume error:", updateError);
+    redirect("/dashboard");
+  }
+
+  // Log update
+  await supabase.from("commitment_updates").insert({
+    commitment_id: params.id,
+    user_id: user.id,
+    content: "Commitment resumed",
+  });
 
   redirect("/dashboard");
 }
