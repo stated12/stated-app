@@ -1,42 +1,60 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    async function load() {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+      if (!user) {
+        redirect("/login");
+      }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user?.id)
+        .single();
+
+      setProfile(data);
+    }
+
+    load();
+  }, []);
+
+  if (!profile) return null;
 
   const avatar =
-    profile?.avatar_url?.trim()
+    profile.avatar_url?.trim()
       ? profile.avatar_url.trim()
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          profile?.display_name || profile?.username || "User"
+          profile.display_name || profile.username
         )}&background=2563eb&color=fff`;
 
-  const isPro = !!profile?.plan_key;
+  const isPro = !!profile.plan_key;
 
   return (
     <div className="min-h-screen flex bg-gray-50">
 
-      <aside className="w-64 bg-white border-r p-6 hidden md:flex flex-col">
+      <aside
+        className={`fixed md:static top-0 left-0 h-full w-64 bg-white border-r p-6 flex flex-col transition-transform duration-300 z-50
+        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
 
         <div className="flex items-center gap-2 mb-8">
           <Image src="/logo.png" alt="Stated" width={32} height={32} />
@@ -53,7 +71,7 @@ export default async function DashboardLayout({
           />
           <div>
             <div className="font-medium">
-              {profile?.display_name || profile?.username}
+              {profile.display_name || profile.username}
             </div>
             {isPro && (
               <div className="text-xs text-blue-600 font-medium">PRO</div>
@@ -73,14 +91,16 @@ export default async function DashboardLayout({
 
       </aside>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col w-full">
 
-        <div className="bg-white border-b px-6 py-4">
-          <input
-            type="text"
-            placeholder="Search people, companies or commitments"
-            className="w-full border rounded-lg px-4 py-2 text-sm"
-          />
+        <div className="bg-white border-b px-4 py-4 flex items-center justify-between md:hidden">
+          <button
+            onClick={() => setOpen(!open)}
+            className="text-xl font-bold"
+          >
+            ☰
+          </button>
+          <Image src="/logo.png" alt="Stated" width={28} height={28} />
         </div>
 
         <div className="p-6">{children}</div>
