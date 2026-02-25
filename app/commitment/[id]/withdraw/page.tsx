@@ -6,7 +6,6 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function WithdrawCommitmentPage() {
-
   const supabase = createClient();
   const router = useRouter();
   const params = useParams();
@@ -18,13 +17,11 @@ export default function WithdrawCommitmentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // LOAD COMMITMENT
   useEffect(() => {
     loadCommitment();
   }, []);
 
   async function loadCommitment() {
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -54,9 +51,7 @@ export default function WithdrawCommitmentPage() {
     setCommitment(data);
   }
 
-  // WITHDRAW COMMITMENT
   async function handleWithdraw() {
-
     setError("");
 
     if (!reason.trim()) {
@@ -67,28 +62,30 @@ export default function WithdrawCommitmentPage() {
     setLoading(true);
 
     try {
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
 
-      // UPDATE STATUS
-      const { error: updateError } = await supabase
+      // 🔥 UPDATE STATUS (with select to verify row updated)
+      const { data: updatedRows, error: updateError } = await supabase
         .from("commitments")
         .update({
           status: "withdrawn",
           updated_at: new Date().toISOString(),
         })
         .eq("id", commitmentId)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .select();
 
       if (updateError) throw updateError;
 
-      // SAVE UPDATE ENTRY
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error("Update failed or not authorized");
+      }
+
+      // 🔥 LOG WITHDRAWAL
       const { error: logError } = await supabase
         .from("commitment_updates")
         .insert({
@@ -102,15 +99,10 @@ export default function WithdrawCommitmentPage() {
       router.push("/dashboard");
 
     } catch (err: any) {
-
-      setError(err.message);
-
+      setError(err.message || "Something went wrong");
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   if (error && !commitment) {
@@ -130,9 +122,7 @@ export default function WithdrawCommitmentPage() {
   }
 
   return (
-
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-
       <div className="w-full max-w-md bg-white rounded-xl shadow p-6">
 
         <Link href="/dashboard">
@@ -171,9 +161,6 @@ export default function WithdrawCommitmentPage() {
         </button>
 
       </div>
-
     </div>
-
   );
-
 }
