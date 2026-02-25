@@ -22,6 +22,7 @@ export default function DashboardFeed() {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     loadInitial();
@@ -34,17 +35,23 @@ export default function DashboardFeed() {
     if (data.length > 0) {
       setCursor(data[data.length - 1].created_at);
     }
+    if (data.length < 25) {
+      setHasMore(false);
+    }
     triggerImpressions(data);
   }
 
   async function loadMore() {
-    if (!cursor) return;
+    if (!cursor || !hasMore) return;
     setLoading(true);
     const res = await fetch(`/api/feed?cursor=${cursor}`);
     const data = await res.json();
     setCommitments((prev) => [...prev, ...data]);
     if (data.length > 0) {
       setCursor(data[data.length - 1].created_at);
+    }
+    if (data.length < 25) {
+      setHasMore(false);
     }
     triggerImpressions(data);
     setLoading(false);
@@ -101,7 +108,7 @@ export default function DashboardFeed() {
                     {c.profiles.display_name || c.profiles.username}
                   </Link>
                   {c.profiles.plan_key && (
-                    <span className="ml-2 text-xs text-blue-600 font-medium">
+                    <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">
                       PRO
                     </span>
                   )}
@@ -115,11 +122,11 @@ export default function DashboardFeed() {
                 {c.text}
               </div>
 
-              <div className="flex items-center justify-between text-sm text-gray-500">
-                <div>
-                  {new Date(c.created_at).toLocaleDateString()}
-                </div>
-                <div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                  {c.status}
+                </span>
+                <div className="text-gray-500">
                   {c.views} views
                 </div>
               </div>
@@ -129,15 +136,17 @@ export default function DashboardFeed() {
         })}
       </div>
 
-      <div className="text-center">
-        <button
-          onClick={loadMore}
-          disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-        >
-          {loading ? "Loading..." : "Load More"}
-        </button>
-      </div>
+      {hasMore && (
+        <div className="text-center">
+          <button
+            onClick={loadMore}
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+          >
+            {loading ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
 
     </div>
   );
