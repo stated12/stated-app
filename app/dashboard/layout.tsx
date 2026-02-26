@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function DashboardLayout({
   children,
@@ -51,11 +52,11 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-gray-50">
 
+      {/* SIDEBAR */}
       <aside
         className={`fixed md:static top-0 left-0 h-full w-64 bg-white border-r p-6 flex flex-col transition-transform duration-300 z-50
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-
         <div className="flex items-center gap-2 mb-8">
           <Image src="/logo.png" alt="Stated" width={32} height={32} />
           <span className="text-xl font-bold text-blue-600">Stated</span>
@@ -88,11 +89,17 @@ export default function DashboardLayout({
           {!isPro && <Link href="/upgrade">Upgrade</Link>}
           <Link href="/logout">Logout</Link>
         </nav>
-
       </aside>
 
+      {/* MAIN */}
       <main className="flex-1 flex flex-col w-full">
 
+        {/* TOP BAR (DESKTOP) */}
+        <div className="hidden md:flex justify-end items-center bg-white border-b px-6 py-4">
+          <NotificationBell />
+        </div>
+
+        {/* TOP BAR (MOBILE) */}
         <div className="bg-white border-b px-4 py-4 flex items-center justify-between md:hidden">
           <button
             onClick={() => setOpen(!open)}
@@ -100,13 +107,16 @@ export default function DashboardLayout({
           >
             ☰
           </button>
+
           <Image src="/logo.png" alt="Stated" width={28} height={28} />
+
+          <NotificationBell />
         </div>
 
+        {/* CONTENT */}
         <div className="p-6">{children}</div>
 
       </main>
-
     </div>
   );
 }
