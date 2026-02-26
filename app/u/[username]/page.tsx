@@ -2,24 +2,21 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import ShareProfileButton from "@/components/ShareProfileButton";
+import ReputationCard from "@/components/ReputationCard";
 
-export default async function UserPage(
-  { params }: { params: Promise<{ username: string }> }
-) {
-  const { username } = await params;
+export default async function UserPage({
+  params,
+}: {
+  params: { username: string };
+}) {
+  const supabase = await createClient();
 
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  // PROFILE
   const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
-    .ilike("username", username);
+    .ilike("username", params.username);
 
   if (!profiles || profiles.length === 0) {
     notFound();
@@ -27,12 +24,10 @@ export default async function UserPage(
 
   const profile = profiles[0];
 
-  // Track profile view (not shown publicly)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
 
-  // PUBLIC COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -40,24 +35,12 @@ export default async function UserPage(
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
-  // Track commitment views
-  if (commitments) {
-    for (const c of commitments) {
-      await supabase.from("commitment_views").insert({
-        commitment_id: c.id,
-      });
-    }
-  }
-
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
       ? profile.avatar_url
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           profile.display_name || profile.username || "User"
         )}&background=2563eb&color=fff`;
-
-  const cleanUrl = (url: string) =>
-    url.replace(/^https?:\/\//, "");
 
   function statusColor(status: string) {
     switch (status) {
@@ -73,6 +56,9 @@ export default async function UserPage(
         return "text-gray-600";
     }
   }
+
+  const cleanUrl = (url: string) =>
+    url.replace(/^https?:\/\//, "");
 
   const SocialLink = ({
     href,
@@ -157,7 +143,6 @@ export default async function UserPage(
             </p>
           )}
 
-          {/* Social Links */}
           <div className="mt-8 flex justify-center flex-wrap gap-3">
 
             {profile.website && (
@@ -211,13 +196,15 @@ export default async function UserPage(
                 }
               />
             )}
-
           </div>
 
           <div className="mt-8">
             <ShareProfileButton username={profile.username} />
           </div>
         </div>
+
+        {/* Reputation */}
+        <ReputationCard userId={profile.id} />
 
         {/* Commitments */}
         <div className="mt-16">
