@@ -21,14 +21,17 @@ export default async function CompanyPublicPage({
 
   if (!company) return notFound();
 
+  // 🔥 SHOW ALL PUBLIC COMMITMENTS (not just active)
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
     .eq("company_id", company.id)
-    .eq("status", "active")
     .order("created_at", { ascending: false });
 
-  const commitmentIds = commitments?.map((c) => c.id) || [];
+  const commitmentIds =
+    commitments
+      ?.filter((c) => c.status === "active")
+      .map((c) => c.id) || [];
 
   const logo =
     company.logo_url?.trim()
@@ -37,12 +40,31 @@ export default async function CompanyPublicPage({
           company.name
         )}&background=2563eb&color=fff`;
 
+  // STATUS COLOR HELPER
+  function statusColor(status: string) {
+    switch (status) {
+      case "active":
+        return "text-green-600";
+      case "completed":
+        return "text-blue-600";
+      case "paused":
+        return "text-yellow-600";
+      case "withdrawn":
+        return "text-gray-600";
+      case "expired":
+        return "text-red-700 font-semibold";
+      default:
+        return "text-gray-500";
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
       <div className="max-w-3xl mx-auto space-y-8">
 
         <ImpressionTracker commitmentIds={commitmentIds} />
 
+        {/* Company Card */}
         <div className="bg-white rounded-xl shadow p-6">
           <div className="flex items-center gap-4">
             <Image
@@ -74,12 +96,14 @@ export default async function CompanyPublicPage({
           </div>
         </div>
 
+        {/* Reputation */}
         <ReputationCard companyId={company.id} />
 
+        {/* Commitments */}
         <div className="space-y-4">
           {commitments?.length === 0 && (
             <div className="text-sm text-gray-500">
-              No active commitments.
+              No commitments yet.
             </div>
           )}
 
@@ -88,7 +112,7 @@ export default async function CompanyPublicPage({
               key={c.id}
               className="bg-white rounded-xl shadow p-5"
             >
-              <div className="text-base mb-3">
+              <div className="text-base mb-2">
                 {c.text}
               </div>
 
@@ -96,8 +120,15 @@ export default async function CompanyPublicPage({
                 <div>
                   {new Date(c.created_at).toLocaleDateString()}
                 </div>
-                <div>
-                  {c.views || 0} views
+
+                <div className="flex items-center gap-3">
+                  <span className={statusColor(c.status)}>
+                    {c.status}
+                  </span>
+
+                  <span>
+                    👁 {c.views || 0}
+                  </span>
                 </div>
               </div>
             </div>
