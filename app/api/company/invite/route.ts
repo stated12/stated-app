@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   const supabase = await createClient();
-  const { companyId, email, role } = await req.json();
 
   const {
     data: { user },
@@ -13,39 +13,83 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: ownerCheck } = await supabase
+  const body = await request.json();
+  const { email, role } = body;
+
+  if (!email || !role) {
+    return NextResponse.json(
+      { error: "Email and role required" },
+      { status: 400 }
+    );
+  }
+
+  // Check if user is owner
+  const { data: membership } = await supabase
     .from("company_members")
-    .select("*")
-    .eq("company_id", companyId)
+    .select("company_id, role")
     .eq("user_id", user.id)
     .eq("role", "owner")
     .single();
 
-  if (!ownerCheck) {
-    return NextResponse.json({ error: "Only owner allowed" }, { status: 403 });
+  if (!membership) {
+    return NextResponse.json(
+      { error: "Only owner can invite members" },
+      { status: 403 }
+    );
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", email)
+  const companyId = membership.company_id;
+
+  // Get company limits
+  const { data: company } = await supabase
+    .from("companies")
+    .select("member_limit")
+    .eq("id", companyId)
     .single();
 
-  if (!profile) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (!company) {
+    return NextResponse.json(
+      { error: "Company not found" },
+      { status: 404 }
+    );
   }
 
-  const { error } = await supabase
+  // Count current members
+  const { count } = await supabase
     .from("company_members")
-    .insert({
-      company_id: companyId,
-      user_id: profile.id,
-      role,
-    });
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", companyId);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  if ((count || 0) >= company.member_limit) {
+    return NextResponse.json(
+      { error: "Member limit reached. Upgrade plan to add more members." },
+      { status: 400 }
+    );
   }
+
+  // Prevent duplicate invite
+  const { data: existingInvite } = await supabase
+    .from("company_invites")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingInvite) {
+    return NextResponse.json(
+      { error: "Invite already sent to this email" },
+      { status: 400 }
+    );
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  await supabase.from("company_invites").insert({
+    company_id: companyId,
+    email,
+    role,
+    token,
+  });
 
   return NextResponse.json({ success: true });
 }
