@@ -1,42 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage() {
-
   const supabase = createClient();
   const router = useRouter();
 
   const [text, setText] = useState("");
   const [duration, setDuration] = useState("1 week");
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [company, setCompany] = useState<any>(null);
-  const [postAs, setPostAs] = useState("user");
 
   useEffect(() => {
-    async function fetchCompany() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("owner_id", user.id)
-        .maybeSingle();
-
-      if (data) setCompany(data);
-    }
-
-    fetchCompany();
+    loadCompanies();
   }, []);
 
-  async function createCommitment() {
+  async function loadCompanies() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("company_members")
+      .select("company_id, companies(*)")
+      .eq("user_id", user.id);
+
+    if (data) {
+      const mapped = data.map((item: any) => item.companies);
+      setCompanies(mapped);
+    }
+  }
+
+  async function createCommitment() {
     if (!text.trim()) {
       alert("Enter commitment");
       return;
@@ -45,7 +45,7 @@ export default function CreateCommitmentPage() {
     setLoading(true);
 
     const {
-      data: { user }
+      data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
@@ -53,12 +53,19 @@ export default function CreateCommitmentPage() {
       return;
     }
 
-    let owner_id = user.id;
-    let owner_type = "user";
+    if (selectedCompanyId) {
+      const { data: membership } = await supabase
+        .from("company_members")
+        .select("*")
+        .eq("company_id", selectedCompanyId)
+        .eq("user_id", user.id)
+        .single();
 
-    if (postAs === "company" && company) {
-      owner_id = company.id;
-      owner_type = "company";
+      if (!membership) {
+        alert("Not allowed to post for this company");
+        setLoading(false);
+        return;
+      }
     }
 
     const { error } = await supabase
@@ -66,66 +73,70 @@ export default function CreateCommitmentPage() {
       .insert({
         text,
         duration,
-        owner_id,
-        owner_type,
-        status: "active"
+        user_id: selectedCompanyId ? null : user.id,
+        company_id: selectedCompanyId || null,
+        status: "active",
       });
 
     if (error) {
-      alert("Error creating commitment");
+      alert(error.message);
       setLoading(false);
       return;
     }
 
+    setLoading(false);
     router.push("/dashboard");
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-
+    <div className="max-w-xl mx-auto py-10 space-y-6">
       <h1 className="text-2xl font-bold">Create Commitment</h1>
 
-      {company && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Post As</label>
-          <select
-            value={postAs}
-            onChange={(e) => setPostAs(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-          >
-            <option value="user">Myself</option>
-            <option value="company">{company.name}</option>
-          </select>
-        </div>
-      )}
+      <div className="space-y-2">
+        <label className="font-medium">Post As</label>
+        <select
+          value={selectedCompanyId || "self"}
+          onChange={(e) =>
+            setSelectedCompanyId(
+              e.target.value === "self" ? null : e.target.value
+            )
+          }
+          className="w-full border rounded-lg px-4 py-2"
+        >
+          <option value="self">Myself</option>
+          {companies.map((company) => (
+            <option key={company.id} value={company.id}>
+              {company.name} (@{company.username})
+            </option>
+          ))}
+        </select>
+      </div>
 
       <textarea
+        placeholder="Enter your commitment..."
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="State your commitment..."
-        rows={4}
-        className="w-full border rounded-lg px-3 py-2"
+        className="w-full border rounded-lg px-4 py-3"
       />
 
       <select
         value={duration}
         onChange={(e) => setDuration(e.target.value)}
-        className="w-full border rounded-lg px-3 py-2"
+        className="w-full border rounded-lg px-4 py-2"
       >
         <option>1 week</option>
-        <option>30 days</option>
-        <option>90 days</option>
-        <option>6 months</option>
+        <option>2 weeks</option>
+        <option>1 month</option>
+        <option>3 months</option>
       </select>
 
       <button
         onClick={createCommitment}
         disabled={loading}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg w-full"
       >
-        {loading ? "Publishing..." : "Publish Commitment"}
+        {loading ? "Creating..." : "Create Commitment"}
       </button>
-
     </div>
   );
 }
