@@ -26,6 +26,8 @@ export default function ReputationCard({
 
   return (
     <div className="bg-white rounded-xl shadow p-5 mt-6">
+      
+      {/* Header */}
       <div className="flex justify-between items-center mb-3">
         <div className="font-semibold text-lg">
           Reputation
@@ -35,17 +37,26 @@ export default function ReputationCard({
         </div>
       </div>
 
+      {/* Score */}
       <div className="text-3xl font-bold mb-2">
         {data.score}
       </div>
 
+      {/* Completion Rate */}
       <div className="text-sm text-gray-600 mb-4">
         Completion Rate: {data.completionRate}%
       </div>
 
-      <div className="text-sm text-gray-500">
-        {data.completed} completed · {data.active} active · {data.withdrawn} withdrawn
+      {/* Breakdown */}
+      <div className="text-sm text-gray-500 space-x-2">
+        <span>{data.completed} completed</span> ·
+        <span>{data.active} active</span> ·
+        <span>{data.withdrawn} withdrawn</span> ·
+        <span className="text-red-600 font-medium">
+          {data.expired} expired
+        </span>
       </div>
+
     </div>
   );
 }
