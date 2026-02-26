@@ -6,46 +6,83 @@ export async function GET(request: Request) {
   const userId = searchParams.get("userId");
   const companyId = searchParams.get("companyId");
 
-  const supabase = await createClient();
-
-  let query = supabase
-    .from("commitments")
-    .select("status");
-
-  if (companyId) {
-    query = query.eq("company_id", companyId);
-  } else if (userId) {
-    query = query.eq("user_id", userId);
-  } else {
+  // 🚫 Prevent invalid state
+  if ((!userId && !companyId) || (userId && companyId)) {
     return NextResponse.json(null);
   }
 
-  const { data } = await query;
+  const supabase = await createClient();
 
-  const completed =
-    data?.filter((c: any) => c.status === "completed").length ?? 0;
+  // ================= FETCH COMMITMENTS =================
 
-  const active =
-    data?.filter((c: any) => c.status === "active").length ?? 0;
+  let commitmentQuery = supabase
+    .from("commitments")
+    .select("id, status, views")
+    .eq("visibility", "public");
 
-  const withdrawn =
-    data?.filter((c: any) => c.status === "withdrawn").length ?? 0;
+  if (companyId) {
+    commitmentQuery = commitmentQuery.eq("company_id", companyId);
+  } else {
+    commitmentQuery = commitmentQuery.eq("user_id", userId);
+  }
+
+  const { data: commitments } = await commitmentQuery;
+
+  if (!commitments || commitments.length === 0) {
+    return NextResponse.json({
+      score: 0,
+      badge: "Beginner",
+      completionRate: 0,
+      completed: 0,
+      active: 0,
+      withdrawn: 0,
+    });
+  }
+
+  // ================= COUNT STATUS =================
+
+  const completed = commitments.filter(c => c.status === "completed").length;
+  const active = commitments.filter(c => c.status === "active").length;
+  const withdrawn = commitments.filter(c => c.status === "withdrawn").length;
 
   const total = completed + active + withdrawn;
 
   const completionRate =
     total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  let bonus = 0;
+  // ================= COUNT UPDATES =================
 
-  if (completionRate >= 80) bonus = 10;
-  else if (completionRate >= 60) bonus = 5;
+  const commitmentIds = commitments.map(c => c.id);
+
+  const { count: updateCount } = await supabase
+    .from("commitment_updates")
+    .select("*", { count: "exact", head: true })
+    .in("commitment_id", commitmentIds);
+
+  // ================= CALCULATE VIEWS BONUS =================
+
+  const totalViews =
+    commitments.reduce((sum, c) => sum + (c.views || 0), 0);
+
+  const viewsBonus = Math.floor(totalViews / 50);
+
+  // ================= BONUS FOR COMPLETION RATE =================
+
+  let rateBonus = 0;
+  if (completionRate >= 80) rateBonus = 10;
+  else if (completionRate >= 60) rateBonus = 5;
+
+  // ================= FINAL SCORE =================
 
   const score =
     completed * 10 +
-    active * 2 -
-    withdrawn * 3 +
-    bonus;
+    active * 2 +
+    (updateCount || 0) * 2 +
+    viewsBonus -
+    withdrawn * 5 +
+    rateBonus;
+
+  // ================= BADGE SYSTEM =================
 
   let badge = "Beginner";
 
