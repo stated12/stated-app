@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") || "latest";
   const category = searchParams.get("category");
   const cursor = searchParams.get("cursor");
+  const search = searchParams.get("search");
 
   const supabase = await createClient();
 
@@ -37,10 +38,8 @@ export async function GET(request: Request) {
     .eq("status", "active")
     .limit(25);
 
-  if (type === "trending") {
-    query = query.order("views", { ascending: false });
-  } else {
-    query = query.order("created_at", { ascending: false });
+  if (search) {
+    query = query.ilike("text", `%${search}%`);
   }
 
   if (category) {
@@ -49,6 +48,12 @@ export async function GET(request: Request) {
 
   if (cursor) {
     query = query.lt("created_at", cursor);
+  }
+
+  if (type === "trending") {
+    query = query.order("views", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
   }
 
   const { data, error } = await query;
