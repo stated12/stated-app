@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
 
 export default function InvitePage() {
   const supabase = createClient();
@@ -18,45 +17,70 @@ export default function InvitePage() {
 
     setLoading(true);
 
-    const check = await fetch("/api/company/member", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "invite_check" }),
-    });
+    try {
+      // ✅ Check member limit first
+      const check = await fetch("/api/company/member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "invite_check" }),
+      });
 
-    if (!check.ok) {
-      const data = await check.json();
-      alert(data.error);
-      setLoading(false);
-      return;
+      if (!check.ok) {
+        const data = await check.json();
+        alert(data.error || "Invite limit reached");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Get logged-in user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      // ✅ Get company owned by user
+      const { data: company, error: companyError } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("owner_id", user.id)
+        .single();
+
+      if (companyError || !company) {
+        alert("Company not found");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Generate token (NO uuid package needed)
+      const token = crypto.randomUUID();
+
+      // ✅ Insert invite
+      const { error: insertError } = await supabase
+        .from("company_invites")
+        .insert({
+          company_id: company.id,
+          email,
+          role,
+          token,
+        });
+
+      if (insertError) {
+        alert("Failed to create invite");
+        setLoading(false);
+        return;
+      }
+
+      alert(`${window.location.origin}/invite/${token}`);
+      setEmail("");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { data: company } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("owner_id", user.id)
-      .single();
-
-    const token = uuidv4();
-
-    await supabase.from("company_invites").insert({
-      company_id: company.id,
-      email,
-      role,
-      token,
-    });
-
-    alert(`${window.location.origin}/invite/${token}`);
-    setEmail("");
     setLoading(false);
   }
 
