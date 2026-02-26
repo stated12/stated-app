@@ -5,30 +5,45 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
+type UserType = "individual" | "company";
+
 export default function UpgradePage() {
   const supabase = createClient();
+
   const [currentPlan, setCurrentPlan] = useState<string>("free");
+  const [userType, setUserType] = useState<UserType>("individual");
   const [loadingPlan, setLoadingPlan] = useState(true);
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadData() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
 
-      const { data } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("plan_key")
         .eq("id", user.id)
         .single();
 
-      setCurrentPlan(data?.plan_key || "free");
+      setCurrentPlan(profile?.plan_key || "free");
+
+      const { data: companyMember } = await supabase
+        .from("company_members")
+        .select("company_id, role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (companyMember) {
+        setUserType("company");
+      }
+
       setLoadingPlan(false);
     }
 
-    loadProfile();
+    loadData();
   }, []);
 
   async function handlePurchase(planKey: string) {
@@ -40,7 +55,10 @@ export default function UpgradePage() {
 
     const data = await res.json();
 
-    if (!data.orderId) return alert("Payment initialization failed");
+    if (!data.orderId) {
+      alert("Payment initialization failed");
+      return;
+    }
 
     const options = {
       key: data.key,
@@ -78,7 +96,7 @@ export default function UpgradePage() {
     return (
       <div
         className={`rounded-xl p-6 shadow bg-white flex flex-col justify-between ${
-          highlight ? "border-2 border-blue-600 scale-105" : ""
+          highlight ? "border-2 border-blue-600" : ""
         }`}
       >
         {highlight && (
@@ -113,11 +131,92 @@ export default function UpgradePage() {
     );
   }
 
+  const individualPlans = (
+    <div className="grid md:grid-cols-3 gap-8">
+      <PlanCard
+        title="Starter"
+        price="499"
+        planKey="ind_499"
+        features={[
+          "20 Credits",
+          "Public commitments",
+          "View counts visible",
+          "Analytics unlocked",
+        ]}
+      />
+
+      <PlanCard
+        title="Growth"
+        price="899"
+        planKey="ind_899"
+        highlight
+        features={[
+          "40 Credits",
+          "Analytics unlocked",
+          "PRO badge",
+          "Extended dashboard insights",
+        ]}
+      />
+
+      <PlanCard
+        title="Pro Creator"
+        price="1299"
+        planKey="ind_1299"
+        features={[
+          "60 Credits",
+          "Analytics unlocked",
+          "PRO badge",
+          "Completion scoring",
+        ]}
+      />
+    </div>
+  );
+
+  const companyPlans = (
+    <div className="grid md:grid-cols-3 gap-8">
+      <PlanCard
+        title="Team"
+        price="1999"
+        planKey="comp_1999"
+        features={[
+          "Up to 10 members",
+          "25 Shared Credits",
+          "Company dashboard",
+          "Analytics unlocked",
+        ]}
+      />
+
+      <PlanCard
+        title="Growth"
+        price="2999"
+        planKey="comp_2999"
+        highlight
+        features={[
+          "Up to 15 members",
+          "50 Shared Credits",
+          "Analytics unlocked",
+          "Reputation scoring",
+        ]}
+      />
+
+      <PlanCard
+        title="Scale"
+        price="4999"
+        planKey="comp_4999"
+        features={[
+          "Up to 25 members",
+          "75 Shared Credits",
+          "Full analytics",
+          "Advanced reporting ready",
+        ]}
+      />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
       <div className="max-w-6xl mx-auto space-y-16">
 
-        {/* HEADER */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="Stated" width={40} height={40} />
@@ -139,119 +238,52 @@ export default function UpgradePage() {
           </Link>
         </div>
 
-        {/* HERO */}
         <div className="text-center max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold">
-            Unlock More Commitment Power
+            Unlock More Accountability Power
           </h1>
           <p className="text-gray-600 mt-3">
-            Get more updates, advanced analytics, and increased visibility.
+            More credits, analytics access, and team scaling.
           </p>
         </div>
 
-        {/* PLANS */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {userType === "individual" ? individualPlans : companyPlans}
 
-          <PlanCard
-            title="Free"
-            price="0"
-            planKey="free"
-            features={[
-              "2 starter credits",
-              "5 updates per commitment",
-              "Public profile",
-              "Commitment views",
-              "Analytics locked",
-            ]}
-          />
+        {userType === "individual" && (
+          <div>
+            <h2 className="text-2xl font-bold text-center mb-8">
+              Need Extra Credits?
+            </h2>
 
-          <PlanCard
-            title="Pro Individual"
-            price="499"
-            planKey="individual"
-            highlight
-            features={[
-              "20 credits included",
-              "10 updates per commitment",
-              "Analytics unlocked",
-              "PRO badge",
-              "Priority visibility",
-            ]}
-          />
-
-          <PlanCard
-            title="Company Starter"
-            price="1999"
-            planKey="company_starter"
-            features={[
-              "25 credits included",
-              "5 updates per commitment",
-              "Company profile",
-              "Business analytics",
-            ]}
-          />
-
-          <PlanCard
-            title="Company Growth"
-            price="2999"
-            planKey="company_growth"
-            features={[
-              "50 credits included",
-              "10 updates per commitment",
-              "Advanced analytics",
-              "Higher visibility",
-            ]}
-          />
-
-          <PlanCard
-            title="Company Scale"
-            price="4999"
-            planKey="company_scale"
-            features={[
-              "75 credits included",
-              "15 updates per commitment",
-              "Full analytics suite",
-              "Priority visibility",
-            ]}
-          />
-
-        </div>
-
-        {/* CREDIT PACKS */}
-        <div>
-          <h2 className="text-2xl font-bold text-center mb-8">
-            Need Extra Credits?
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title: "Pack 10", price: 199, key: "pack_10" },
-              { title: "Pack 25", price: 399, key: "pack_25" },
-              { title: "Pack 50", price: 699, key: "pack_50" },
-            ].map((pack) => (
-              <div
-                key={pack.key}
-                className="bg-white rounded-xl shadow p-6 text-center"
-              >
-                <div className="font-semibold">{pack.title}</div>
-                <div className="text-2xl font-bold mt-2">
-                  ₹{pack.price}
-                </div>
-                <button
-                  onClick={() => handlePurchase(pack.key)}
-                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { title: "Pack 10", price: 199, key: "pack_10" },
+                { title: "Pack 25", price: 399, key: "pack_25" },
+                { title: "Pack 50", price: 699, key: "pack_50" },
+              ].map((pack) => (
+                <div
+                  key={pack.key}
+                  className="bg-white rounded-xl shadow p-6 text-center"
                 >
-                  Buy Pack
-                </button>
-              </div>
-            ))}
+                  <div className="font-semibold">{pack.title}</div>
+                  <div className="text-2xl font-bold mt-2">
+                    ₹{pack.price}
+                  </div>
+                  <button
+                    onClick={() => handlePurchase(pack.key)}
+                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Buy Pack
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* TRUST SECTION */}
         <div className="text-center text-sm text-gray-500 border-t pt-8">
-          Secure payments via Razorpay • Instant credit activation •
-          Receipt emailed automatically • No subscription lock-in
+          Secure payments via Razorpay • Instant activation •
+          One-time purchase • No subscription lock-in
         </div>
 
       </div>
