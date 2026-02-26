@@ -18,7 +18,6 @@ export default function CommitmentUpdatePage() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
 
-  // ================= PLAN LIMITS =================
   const UPDATE_LIMITS: Record<string, number> = {
     free: 5,
     individual: 10,
@@ -27,7 +26,6 @@ export default function CommitmentUpdatePage() {
     company_scale: 15,
   };
 
-  // VERIFY USER OWNS COMMITMENT
   useEffect(() => {
     async function verifyOwnership() {
       const {
@@ -77,7 +75,7 @@ export default function CommitmentUpdatePage() {
       return;
     }
 
-    // ================= GET USER PROFILE =================
+    // GET PROFILE
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan_key")
@@ -87,7 +85,7 @@ export default function CommitmentUpdatePage() {
     const planKey = profile?.plan_key || "free";
     const limit = UPDATE_LIMITS[planKey] ?? 5;
 
-    // ================= COUNT EXISTING UPDATES =================
+    // COUNT EXISTING UPDATES
     const { count } = await supabase
       .from("commitment_updates")
       .select("*", { count: "exact", head: true })
@@ -101,8 +99,8 @@ export default function CommitmentUpdatePage() {
       return;
     }
 
-    // ================= INSERT UPDATE =================
-    const { error } = await supabase
+    // INSERT UPDATE
+    const { error: insertError } = await supabase
       .from("commitment_updates")
       .insert({
         commitment_id: commitmentId,
@@ -110,11 +108,21 @@ export default function CommitmentUpdatePage() {
         content: content.trim(),
       });
 
-    if (error) {
-      setError(error.message);
+    if (insertError) {
+      setError(insertError.message);
       setLoading(false);
       return;
     }
+
+    // 🔔 INSERT NOTIFICATION (NEW)
+    await supabase.from("notifications").insert({
+      user_id: user.id,
+      type: "update",
+      title: "📈 Progress Updated",
+      message: "You added a new progress update.",
+      link: "/dashboard/my",
+      read: false,
+    });
 
     router.push("/dashboard");
   }
