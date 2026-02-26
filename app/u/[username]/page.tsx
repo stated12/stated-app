@@ -42,6 +42,7 @@ export default async function UserPage({
           profile.display_name || profile.username || "User"
         )}&background=2563eb&color=fff`;
 
+  // 🔥 UPDATED STATUS COLOR SUPPORT
   function statusColor(status: string) {
     switch (status) {
       case "active":
@@ -51,9 +52,11 @@ export default async function UserPage({
       case "paused":
         return "text-yellow-600";
       case "withdrawn":
-        return "text-red-600";
-      default:
         return "text-gray-600";
+      case "expired":
+        return "text-red-700 font-semibold";
+      default:
+        return "text-gray-500";
     }
   }
 
