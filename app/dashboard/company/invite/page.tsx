@@ -18,6 +18,19 @@ export default function InvitePage() {
 
     setLoading(true);
 
+    const check = await fetch("/api/company/member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "invite_check" }),
+    });
+
+    if (!check.ok) {
+      const data = await check.json();
+      alert(data.error);
+      setLoading(false);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -33,29 +46,17 @@ export default function InvitePage() {
       .eq("owner_id", user.id)
       .single();
 
-    if (!company) {
-      alert("No company found");
-      setLoading(false);
-      return;
-    }
-
     const token = uuidv4();
 
-    const { error } = await supabase.from("company_invites").insert({
+    await supabase.from("company_invites").insert({
       company_id: company.id,
       email,
       role,
       token,
     });
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Invite created. Share this link manually for now:");
-      alert(`${window.location.origin}/invite/${token}`);
-      setEmail("");
-    }
-
+    alert(`${window.location.origin}/invite/${token}`);
+    setEmail("");
     setLoading(false);
   }
 
