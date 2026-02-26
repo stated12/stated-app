@@ -18,7 +18,6 @@ export default function PauseCommitmentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // LOAD COMMITMENT
   useEffect(() => {
     loadCommitment();
   }, []);
@@ -54,7 +53,6 @@ export default function PauseCommitmentPage() {
     setCommitment(data);
   }
 
-  // PAUSE COMMITMENT
   async function handlePause() {
 
     setError("");
@@ -72,11 +70,9 @@ export default function PauseCommitmentPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
 
-      // UPDATE STATUS
+      // 1️⃣ Update Status
       const { error: updateError } = await supabase
         .from("commitments")
         .update({
@@ -88,7 +84,7 @@ export default function PauseCommitmentPage() {
 
       if (updateError) throw updateError;
 
-      // INSERT UPDATE ENTRY
+      // 2️⃣ Log Update Entry
       const { error: logError } = await supabase
         .from("commitment_updates")
         .insert({
@@ -98,6 +94,16 @@ export default function PauseCommitmentPage() {
         });
 
       if (logError) throw logError;
+
+      // 3️⃣ Insert Notification (NEW)
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "pause",
+        title: "⏸ Commitment Paused",
+        message: "You paused one of your commitments.",
+        link: "/dashboard/my",
+        read: false,
+      });
 
       router.push("/dashboard");
 
