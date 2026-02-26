@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  link: string | null;
+  created_at: string;
+  read: boolean;
+};
+
 export default function NotificationBell() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -12,9 +21,13 @@ export default function NotificationBell() {
   }, []);
 
   async function fetchNotifications() {
-    const res = await fetch("/api/notifications");
-    const data = await res.json();
-    setNotifications(data);
+    try {
+      const res = await fetch("/api/notifications");
+      const data = await res.json();
+      setNotifications(data || []);
+    } catch (err) {
+      console.error("Bell fetch error:", err);
+    }
   }
 
   async function markRead(id: string) {
@@ -26,20 +39,21 @@ export default function NotificationBell() {
 
     setNotifications((prev) =>
       prev.map((n) =>
-        n.id === id ? { ...n, is_read: true } : n
+        n.id === id ? { ...n, read: true } : n
       )
     );
   }
 
   const unreadCount = notifications.filter(
-    (n) => !n.is_read
+    (n) => !n.read
   ).length;
 
   return (
     <div className="relative">
+
       <button
         onClick={() => setOpen(!open)}
-        className="relative"
+        className="relative text-xl"
       >
         🔔
         {unreadCount > 0 && (
@@ -51,6 +65,7 @@ export default function NotificationBell() {
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-xl p-4 z-50">
+
           <div className="font-semibold mb-3">
             Notifications
           </div>
@@ -65,12 +80,13 @@ export default function NotificationBell() {
             <div
               key={n.id}
               className={`mb-3 text-sm ${
-                n.is_read ? "text-gray-500" : "font-medium"
+                n.read ? "text-gray-500" : "font-medium"
               }`}
             >
               <Link
-                href={n.link || "#"}
+                href={n.link || "/dashboard"}
                 onClick={() => markRead(n.id)}
+                className="block hover:text-blue-600"
               >
                 {n.title}
               </Link>
@@ -83,6 +99,7 @@ export default function NotificationBell() {
           >
             View all
           </Link>
+
         </div>
       )}
     </div>
