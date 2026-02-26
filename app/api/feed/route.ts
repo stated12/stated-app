@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       companies:company_id (
         username,
         name,
-        logo_url
+        avatar_url
       )
     `
     )
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
           identity: {
             username: c.companies.username,
             display_name: c.companies.name,
-            avatar_url: c.companies.logo_url,
+            avatar_url: c.companies.avatar_url,
             plan_key: null,
             type: "company",
           },
