@@ -7,6 +7,7 @@ import Link from "next/link";
 type Commitment = {
   id: string;
   text: string;
+  category: string;
   created_at: string;
   views: number;
   identity: {
@@ -53,6 +54,7 @@ export default function Dashboard() {
   async function loadInitial() {
     const res = await fetch("/api/feed");
     const data = await res.json();
+
     setCommitments(data);
 
     if (data.length > 0) {
@@ -114,13 +116,18 @@ export default function Dashboard() {
                   c.identity.display_name || c.identity.username
                 )}&background=2563eb&color=fff`;
 
+          const profileLink =
+            c.identity.type === "company"
+              ? `/c/${c.identity.username}`
+              : `/u/${c.identity.username}`;
+
           return (
             <div
               key={c.id}
               className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
             >
               <div className="flex items-center gap-3 mb-3">
-                <Link href={`/u/${c.identity.username}`}>
+                <Link href={profileLink}>
                   <Image
                     src={avatar}
                     alt="avatar"
@@ -132,10 +139,7 @@ export default function Dashboard() {
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <Link
-                      href={`/u/${c.identity.username}`}
-                      className="font-medium"
-                    >
+                    <Link href={profileLink} className="font-medium">
                       {c.identity.display_name || c.identity.username}
                     </Link>
 
@@ -157,6 +161,14 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+
+              {c.category && (
+                <div className="mb-2">
+                  <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded">
+                    {c.category}
+                  </span>
+                </div>
+              )}
 
               <div className="text-base mb-3 whitespace-pre-wrap">
                 {c.text}
