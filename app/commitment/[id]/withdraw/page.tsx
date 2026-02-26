@@ -68,7 +68,7 @@ export default function WithdrawCommitmentPage() {
 
       if (!user) throw new Error("Not authenticated");
 
-      // 🔥 UPDATE STATUS (with select to verify row updated)
+      // 1️⃣ Update status
       const { data: updatedRows, error: updateError } = await supabase
         .from("commitments")
         .update({
@@ -85,7 +85,7 @@ export default function WithdrawCommitmentPage() {
         throw new Error("Update failed or not authorized");
       }
 
-      // 🔥 LOG WITHDRAWAL
+      // 2️⃣ Log withdrawal
       const { error: logError } = await supabase
         .from("commitment_updates")
         .insert({
@@ -95,6 +95,16 @@ export default function WithdrawCommitmentPage() {
         });
 
       if (logError) throw logError;
+
+      // 3️⃣ Insert Notification (NEW)
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "withdraw",
+        title: "❌ Commitment Withdrawn",
+        message: "You withdrew one of your commitments.",
+        link: "/dashboard/my",
+        read: false,
+      });
 
       router.push("/dashboard");
 
