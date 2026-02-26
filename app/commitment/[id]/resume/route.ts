@@ -17,7 +17,7 @@ export async function POST(
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 🔎 Step 1: Check current commitment status
+  // 1️⃣ Check current status
   const { data: commitment, error: fetchError } = await supabase
     .from("commitments")
     .select("status")
@@ -30,12 +30,11 @@ export async function POST(
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 🛑 If already active (or not paused), do nothing
   if (commitment.status !== "paused") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // ✅ Step 2: Update status to active
+  // 2️⃣ Update status to active
   const { error: updateError } = await supabase
     .from("commitments")
     .update({
@@ -50,7 +49,7 @@ export async function POST(
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 📝 Step 3: Insert resume log (only once)
+  // 3️⃣ Insert resume log
   const { error: insertError } = await supabase
     .from("commitment_updates")
     .insert({
@@ -62,6 +61,16 @@ export async function POST(
   if (insertError) {
     console.error("Resume log insert error:", insertError);
   }
+
+  // 4️⃣ Insert Notification (NEW)
+  await supabase.from("notifications").insert({
+    user_id: user.id,
+    type: "resume",
+    title: "▶️ Commitment Resumed",
+    message: "Your paused commitment is now active again.",
+    link: "/dashboard/my",
+    read: false,
+  });
 
   return NextResponse.redirect(new URL("/dashboard", request.url));
 }
