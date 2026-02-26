@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   } else if (userId) {
     query = query.eq("user_id", userId);
   } else {
-    return NextResponse.json({ score: 0, badge: "Beginner" });
+    return NextResponse.json(null);
   }
 
   const { data } = await query;
@@ -31,10 +31,21 @@ export async function GET(request: Request) {
   const withdrawn =
     data?.filter((c: any) => c.status === "withdrawn").length ?? 0;
 
+  const total = completed + active + withdrawn;
+
+  const completionRate =
+    total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  let bonus = 0;
+
+  if (completionRate >= 80) bonus = 10;
+  else if (completionRate >= 60) bonus = 5;
+
   const score =
     completed * 10 +
     active * 2 -
-    withdrawn * 3;
+    withdrawn * 3 +
+    bonus;
 
   let badge = "Beginner";
 
@@ -46,6 +57,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     score,
     badge,
+    completionRate,
     completed,
     active,
     withdrawn,
