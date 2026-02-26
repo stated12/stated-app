@@ -26,7 +26,6 @@ export default function NewCommitmentPage() {
   }, []);
 
   async function loadProfile() {
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -51,7 +50,6 @@ export default function NewCommitmentPage() {
 
   // CALCULATE END DATE
   function calculateEndDate() {
-
     const start = new Date();
 
     switch (duration) {
@@ -81,6 +79,46 @@ export default function NewCommitmentPage() {
     return start.toISOString();
   }
 
+  // 🔎 Extract duration from text (smart detection)
+  function extractDaysFromText(input: string): number | null {
+    const match = input.match(/(\d+)\s*(day|days|week|weeks|month|months|year|years)/i);
+    if (!match) return null;
+
+    const value = parseInt(match[1]);
+    const unit = match[2].toLowerCase();
+
+    switch (unit) {
+      case "day":
+      case "days":
+        return value;
+      case "week":
+      case "weeks":
+        return value * 7;
+      case "month":
+      case "months":
+        return value * 30;
+      case "year":
+      case "years":
+        return value * 365;
+      default:
+        return null;
+    }
+  }
+
+  // 🔎 Convert selected dropdown duration to days
+  function durationToDays(): number {
+    switch (duration) {
+      case "1 week": return 7;
+      case "2 weeks": return 14;
+      case "3 weeks": return 21;
+      case "1 month": return 30;
+      case "3 months": return 90;
+      case "6 months": return 180;
+      case "1 year": return 365;
+      default: return 7;
+    }
+  }
+
   // CREATE COMMITMENT
   async function createCommitment() {
 
@@ -105,9 +143,25 @@ export default function NewCommitmentPage() {
 
     try {
 
-      const endDate = calculateEndDate();
+      // 🧠 SMART DURATION VALIDATION
+      const textDays = extractDaysFromText(text);
+      const selectedDays = durationToDays();
 
-      // INSERT COMMITMENT (FIXED - NO view_count)
+      if (textDays && Math.abs(textDays - selectedDays) > 14) {
+        const proceed = confirm(
+          `Your commitment mentions ~${textDays} days but selected duration is ${selectedDays} days. Continue?`
+        );
+
+        if (!proceed) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      const endDate = calculateEndDate();
+      const now = new Date().toISOString();
+
+      // INSERT COMMITMENT
       const { error: insertError } = await supabase
         .from("commitments")
         .insert({
@@ -117,7 +171,8 @@ export default function NewCommitmentPage() {
           duration,
           status: "active",
           visibility: "public",
-          created_at: new Date().toISOString(),
+          created_at: now,
+          start_date: now,
           end_date: endDate
         });
 
@@ -149,10 +204,8 @@ export default function NewCommitmentPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
 
-        {/* HEADER */}
         <Link href="/dashboard">
           <div className="text-3xl font-bold text-blue-600 mb-2 cursor-pointer">
             Stated
@@ -163,7 +216,6 @@ export default function NewCommitmentPage() {
           Create a public commitment
         </div>
 
-        {/* CREDITS */}
         <div className="mb-4 text-sm">
           Credits remaining:
           <span className="font-semibold ml-1">
@@ -171,7 +223,6 @@ export default function NewCommitmentPage() {
           </span>
         </div>
 
-        {/* TEXT */}
         <textarea
           placeholder="Example: I will publish my book in 90 days"
           value={text}
@@ -179,7 +230,6 @@ export default function NewCommitmentPage() {
           className="w-full border rounded-lg px-3 py-2 mb-3"
         />
 
-        {/* CATEGORY */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -193,7 +243,6 @@ export default function NewCommitmentPage() {
           <option>Business</option>
         </select>
 
-        {/* DURATION */}
         <select
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
@@ -208,14 +257,12 @@ export default function NewCommitmentPage() {
           <option>1 year</option>
         </select>
 
-        {/* ERROR */}
         {error && (
           <div className="text-red-500 text-sm mb-3">
             {error}
           </div>
         )}
 
-        {/* BUTTON */}
         <button
           onClick={createCommitment}
           disabled={loading || credits <= 0}
