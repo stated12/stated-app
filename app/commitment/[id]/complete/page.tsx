@@ -18,7 +18,6 @@ export default function CompleteCommitmentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // LOAD COMMITMENT
   useEffect(() => {
     loadCommitment();
   }, []);
@@ -54,7 +53,6 @@ export default function CompleteCommitmentPage() {
     setCommitment(data);
   }
 
-  // COMPLETE COMMITMENT
   async function handleComplete() {
 
     setError("");
@@ -66,11 +64,9 @@ export default function CompleteCommitmentPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
 
-      // UPDATE STATUS
+      // 1️⃣ Update Status
       const { error: updateError } = await supabase
         .from("commitments")
         .update({
@@ -83,7 +79,7 @@ export default function CompleteCommitmentPage() {
 
       if (updateError) throw updateError;
 
-      // SAVE UPDATE ENTRY
+      // 2️⃣ Log Update Entry
       const completionText =
         note.trim()
           ? `Commitment completed: ${note}`
@@ -98,6 +94,16 @@ export default function CompleteCommitmentPage() {
         });
 
       if (logError) throw logError;
+
+      // 3️⃣ Insert Notification (NEW)
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "completion",
+        title: "🎉 Commitment Completed",
+        message: "You successfully completed your commitment.",
+        link: "/dashboard/my",
+        read: false,
+      });
 
       router.push("/dashboard");
 
