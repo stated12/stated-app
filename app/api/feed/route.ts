@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+function calculateBadge(score: number) {
+  if (score >= 200) return "Trusted";
+  if (score >= 100) return "Leader";
+  if (score >= 50) return "Operator";
+  if (score >= 20) return "Builder";
+  return "Beginner";
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -20,15 +28,18 @@ export async function GET(request: Request) {
       category,
       created_at,
       views,
+      status,
       user_id,
       company_id,
       profiles:user_id (
+        id,
         username,
         display_name,
         avatar_url,
         plan_key
       ),
       companies:company_id (
+        id,
         username,
         name,
         avatar_url
@@ -64,6 +75,10 @@ export async function GET(request: Request) {
 
   const formatted =
     data?.map((c: any) => {
+      const score = (c.views ?? 0) + 10; // lightweight proxy
+
+      const badge = calculateBadge(score);
+
       if (c.company_id && c.companies) {
         return {
           id: c.id,
@@ -75,8 +90,8 @@ export async function GET(request: Request) {
             username: c.companies.username,
             display_name: c.companies.name,
             avatar_url: c.companies.avatar_url,
-            plan_key: null,
             type: "company",
+            badge,
           },
         };
       }
@@ -91,8 +106,8 @@ export async function GET(request: Request) {
           username: c.profiles?.username,
           display_name: c.profiles?.display_name,
           avatar_url: c.profiles?.avatar_url,
-          plan_key: c.profiles?.plan_key,
           type: "user",
+          badge,
         },
       };
     }) || [];
