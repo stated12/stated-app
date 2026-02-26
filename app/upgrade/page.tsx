@@ -5,14 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
-type UserType = "individual" | "company";
-
 export default function UpgradePage() {
   const supabase = createClient();
 
   const [currentPlan, setCurrentPlan] = useState<string>("free");
-  const [userType, setUserType] = useState<UserType>("individual");
-  const [loadingPlan, setLoadingPlan] = useState(true);
+  const [credits, setCredits] = useState<number>(0);
+  const [userType, setUserType] = useState<"individual" | "company_member" | "company_owner">("individual");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
@@ -24,30 +23,35 @@ export default function UpgradePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("plan_key")
+        .select("plan_key, credits")
         .eq("id", user.id)
         .single();
 
       setCurrentPlan(profile?.plan_key || "free");
+      setCredits(profile?.credits || 0);
 
-      const { data: companyMember } = await supabase
+      const { data: membership } = await supabase
         .from("company_members")
-        .select("company_id, role")
+        .select("role")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (companyMember) {
-        setUserType("company");
+      if (membership) {
+        if (membership.role === "owner") {
+          setUserType("company_owner");
+        } else {
+          setUserType("company_member");
+        }
       }
 
-      setLoadingPlan(false);
+      setLoading(false);
     }
 
     loadData();
   }, []);
 
   async function handlePurchase(planKey: string) {
-    const res = await fetch("/api/create-order", {
+    const res = await fetch("/api/razorpay/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ planKey }),
@@ -66,7 +70,7 @@ export default function UpgradePage() {
       currency: "INR",
       order_id: data.orderId,
       handler: async function (response: any) {
-        await fetch("/api/verify-payment", {
+        await fetch("/api/razorpay/verify-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -117,7 +121,7 @@ export default function UpgradePage() {
         </div>
 
         <button
-          disabled={isCurrent || loadingPlan}
+          disabled={isCurrent || loading}
           onClick={() => handlePurchase(planKey)}
           className={`mt-6 py-2 rounded-lg font-medium ${
             isCurrent
@@ -132,44 +136,80 @@ export default function UpgradePage() {
   }
 
   const individualPlans = (
-    <div className="grid md:grid-cols-3 gap-8">
-      <PlanCard
-        title="Starter"
-        price="499"
-        planKey="ind_499"
-        features={[
-          "20 Credits",
-          "Public commitments",
-          "View counts visible",
-          "Analytics unlocked",
-        ]}
-      />
+    <>
+      <div className="text-center text-sm text-gray-600 mb-8">
+        You currently have <span className="font-semibold">{credits}</span> credits.
+      </div>
 
-      <PlanCard
-        title="Growth"
-        price="899"
-        planKey="ind_899"
-        highlight
-        features={[
-          "40 Credits",
-          "Analytics unlocked",
-          "PRO badge",
-          "Extended dashboard insights",
-        ]}
-      />
+      <div className="grid md:grid-cols-3 gap-8">
+        <PlanCard
+          title="Starter"
+          price="499"
+          planKey="ind_499"
+          features={[
+            "20 credits",
+            "Analytics unlocked",
+            "Completion tracking",
+            "Public commitment views",
+          ]}
+        />
 
-      <PlanCard
-        title="Pro Creator"
-        price="1299"
-        planKey="ind_1299"
-        features={[
-          "60 Credits",
-          "Analytics unlocked",
-          "PRO badge",
-          "Completion scoring",
-        ]}
-      />
-    </div>
+        <PlanCard
+          title="Growth"
+          price="899"
+          planKey="ind_899"
+          highlight
+          features={[
+            "40 credits",
+            "Analytics unlocked",
+            "PRO badge",
+            "Extended dashboard insights",
+          ]}
+        />
+
+        <PlanCard
+          title="Pro Creator"
+          price="1299"
+          planKey="ind_1299"
+          features={[
+            "60 credits",
+            "Analytics unlocked",
+            "PRO badge",
+            "Completion scoring",
+          ]}
+        />
+      </div>
+
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-center mb-8">
+          Extra Credit Packs
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { title: "10 Credits", price: 199, key: "pack_10" },
+            { title: "25 Credits", price: 399, key: "pack_25" },
+            { title: "50 Credits", price: 699, key: "pack_50" },
+          ].map((pack) => (
+            <div
+              key={pack.key}
+              className="bg-white rounded-xl shadow p-6 text-center"
+            >
+              <div className="font-semibold">{pack.title}</div>
+              <div className="text-2xl font-bold mt-2">
+                ₹{pack.price}
+              </div>
+              <button
+                onClick={() => handlePurchase(pack.key)}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Buy Pack
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 
   const companyPlans = (
@@ -179,10 +219,10 @@ export default function UpgradePage() {
         price="1999"
         planKey="comp_1999"
         features={[
+          "25 shared credits",
           "Up to 10 members",
-          "25 Shared Credits",
-          "Company dashboard",
-          "Analytics unlocked",
+          "Company analytics",
+          "Team dashboard",
         ]}
       />
 
@@ -192,9 +232,9 @@ export default function UpgradePage() {
         planKey="comp_2999"
         highlight
         features={[
+          "50 shared credits",
           "Up to 15 members",
-          "50 Shared Credits",
-          "Analytics unlocked",
+          "Company analytics",
           "Reputation scoring",
         ]}
       />
@@ -204,9 +244,9 @@ export default function UpgradePage() {
         price="4999"
         planKey="comp_4999"
         features={[
+          "75 shared credits",
           "Up to 25 members",
-          "75 Shared Credits",
-          "Full analytics",
+          "Full analytics suite",
           "Advanced reporting ready",
         ]}
       />
@@ -247,43 +287,18 @@ export default function UpgradePage() {
           </p>
         </div>
 
-        {userType === "individual" ? individualPlans : companyPlans}
+        {userType === "individual" && individualPlans}
 
-        {userType === "individual" && (
-          <div>
-            <h2 className="text-2xl font-bold text-center mb-8">
-              Need Extra Credits?
-            </h2>
+        {userType === "company_owner" && companyPlans}
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { title: "Pack 10", price: 199, key: "pack_10" },
-                { title: "Pack 25", price: 399, key: "pack_25" },
-                { title: "Pack 50", price: 699, key: "pack_50" },
-              ].map((pack) => (
-                <div
-                  key={pack.key}
-                  className="bg-white rounded-xl shadow p-6 text-center"
-                >
-                  <div className="font-semibold">{pack.title}</div>
-                  <div className="text-2xl font-bold mt-2">
-                    ₹{pack.price}
-                  </div>
-                  <button
-                    onClick={() => handlePurchase(pack.key)}
-                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    Buy Pack
-                  </button>
-                </div>
-              ))}
-            </div>
+        {userType === "company_member" && (
+          <div className="text-center text-gray-600">
+            Only the company owner can upgrade the company plan.
           </div>
         )}
 
         <div className="text-center text-sm text-gray-500 border-t pt-8">
-          Secure payments via Razorpay • Instant activation •
-          One-time purchase • No subscription lock-in
+          Secure payments via Razorpay • One-time payment • Instant activation • No subscription lock-in
         </div>
 
       </div>
