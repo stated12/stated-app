@@ -14,8 +14,8 @@ type Commitment = {
     username: string;
     display_name: string;
     avatar_url: string | null;
-    plan_key: string | null;
     type: "user" | "company";
+    badge?: string;
   };
 };
 
@@ -127,9 +127,25 @@ export default function Dashboard() {
     sessionStorage.setItem(sessionKey, "true");
   }
 
+  function badgeColor(badge?: string) {
+    switch (badge) {
+      case "Trusted":
+        return "bg-purple-100 text-purple-600";
+      case "Leader":
+        return "bg-indigo-100 text-indigo-600";
+      case "Operator":
+        return "bg-blue-100 text-blue-600";
+      case "Builder":
+        return "bg-green-100 text-green-600";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
+      {/* Tabs + Category */}
       <div className="flex justify-between items-center">
         <div className="flex gap-4">
           <button
@@ -168,6 +184,7 @@ export default function Dashboard() {
         </select>
       </div>
 
+      {/* Feed */}
       <div className="space-y-4">
         {commitments.map((c) => {
           const avatar =
@@ -196,9 +213,22 @@ export default function Dashboard() {
                 </Link>
 
                 <div>
-                  <Link href={profileLink} className="font-medium">
-                    {c.identity.display_name || c.identity.username}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={profileLink} className="font-medium">
+                      {c.identity.display_name || c.identity.username}
+                    </Link>
+
+                    {c.identity.badge && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${badgeColor(
+                          c.identity.badge
+                        )}`}
+                      >
+                        {c.identity.badge}
+                      </span>
+                    )}
+                  </div>
+
                   <div className="text-xs text-gray-500">
                     @{c.identity.username} · {timeAgo(c.created_at)}
                   </div>
@@ -211,7 +241,9 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div className="mb-2">{c.text}</div>
+              <div className="mb-2 whitespace-pre-wrap">
+                {c.text}
+              </div>
 
               <div className="text-sm text-gray-500">
                 {c.views} views
