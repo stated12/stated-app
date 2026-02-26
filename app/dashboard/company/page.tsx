@@ -26,6 +26,7 @@ export default async function CompanyDashboardPage() {
     .select(`
       id,
       role,
+      user_id,
       profiles (
         id,
         username,
@@ -44,24 +45,15 @@ export default async function CompanyDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          href={`/c/${company.username}`}
-          className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-        >
+        <Link href={`/c/${company.username}`} className="bg-white rounded-xl shadow p-5 hover:shadow-md transition">
           Public Page
         </Link>
 
-        <Link
-          href="/dashboard/company/insights"
-          className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-        >
+        <Link href="/dashboard/company/insights" className="bg-white rounded-xl shadow p-5 hover:shadow-md transition">
           Company Analytics
         </Link>
 
-        <Link
-          href="/dashboard/company/settings"
-          className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-        >
+        <Link href="/dashboard/company/settings" className="bg-white rounded-xl shadow p-5 hover:shadow-md transition">
           Company Settings
         </Link>
       </div>
@@ -87,35 +79,113 @@ export default async function CompanyDashboardPage() {
                 )}&background=2563eb&color=fff`;
 
           return (
-            <div
+            <MemberRow
               key={m.id}
-              className="bg-white rounded-xl shadow p-4 flex justify-between items-center"
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={avatar}
-                  className="w-10 h-10 rounded-full"
-                />
-
-                <div>
-                  <div className="font-medium">
-                    {m.profiles.display_name ||
-                      m.profiles.username}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    @{m.profiles.username}
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-sm bg-gray-200 px-3 py-1 rounded">
-                {m.role}
-              </div>
-            </div>
+              member={m}
+              isOwner={m.user_id === company.owner_id}
+              isSelf={m.user_id === user.id}
+            />
           );
         })}
       </div>
 
     </div>
+  );
+}
+
+function MemberRow({ member, isOwner, isSelf }: any) {
+  return (
+    <div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
+
+      <div className="flex items-center gap-3">
+        <img
+          src={
+            member.profiles.avatar_url ||
+            `https://ui-avatars.com/api/?name=${member.profiles.username}&background=2563eb&color=fff`
+          }
+          className="w-10 h-10 rounded-full"
+        />
+
+        <div>
+          <div className="font-medium">
+            {member.profiles.display_name ||
+              member.profiles.username}
+          </div>
+          <div className="text-xs text-gray-500">
+            @{member.profiles.username}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+
+        {isOwner ? (
+          <div className="text-sm bg-black text-white px-3 py-1 rounded">
+            owner
+          </div>
+        ) : (
+          <>
+            <RoleSelector memberId={member.id} currentRole={member.role} disabled={isSelf} />
+            <RemoveButton memberId={member.id} disabled={isSelf} />
+          </>
+        )}
+
+      </div>
+
+    </div>
+  );
+}
+
+function RoleSelector({ memberId, currentRole, disabled }: any) {
+  async function changeRole(role: string) {
+    await fetch("/api/company/member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "role",
+        memberId,
+        role,
+      }),
+    });
+    window.location.reload();
+  }
+
+  return (
+    <select
+      disabled={disabled}
+      defaultValue={currentRole}
+      onChange={(e) => changeRole(e.target.value)}
+      className="border rounded px-2 py-1 text-sm"
+    >
+      <option value="member">member</option>
+      <option value="admin">admin</option>
+    </select>
+  );
+}
+
+function RemoveButton({ memberId, disabled }: any) {
+  async function remove() {
+    if (!confirm("Remove this member?")) return;
+
+    await fetch("/api/company/member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "remove",
+        memberId,
+      }),
+    });
+
+    window.location.reload();
+  }
+
+  return (
+    <button
+      disabled={disabled}
+      onClick={remove}
+      className="text-red-600 text-sm"
+    >
+      Remove
+    </button>
   );
 }
