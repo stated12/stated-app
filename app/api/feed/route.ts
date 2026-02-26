@@ -1,12 +1,63 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-function calculateBadge(score: number) {
-  if (score >= 200) return "Trusted";
-  if (score >= 100) return "Leader";
-  if (score >= 50) return "Operator";
-  if (score >= 20) return "Builder";
-  return "Beginner";
+async function calculateReputation(supabase: any, userId?: string, companyId?: string) {
+  let query = supabase
+    .from("commitments")
+    .select("id, status, views")
+    .eq("visibility", "public");
+
+  if (companyId) {
+    query = query.eq("company_id", companyId);
+  } else {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data: commitments } = await query;
+
+  if (!commitments || commitments.length === 0) {
+    return { badge: "Beginner" };
+  }
+
+  const completed = commitments.filter(c => c.status === "completed").length;
+  const active = commitments.filter(c => c.status === "active").length;
+  const withdrawn = commitments.filter(c => c.status === "withdrawn").length;
+
+  const commitmentIds = commitments.map(c => c.id);
+
+  const { count: updateCount } = await supabase
+    .from("commitment_updates")
+    .select("*", { count: "exact", head: true })
+    .in("commitment_id", commitmentIds);
+
+  const totalViews =
+    commitments.reduce((sum, c) => sum + (c.views || 0), 0);
+
+  const viewsBonus = Math.floor(totalViews / 50);
+
+  const total = completed + active + withdrawn;
+  const completionRate =
+    total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  let rateBonus = 0;
+  if (completionRate >= 80) rateBonus = 10;
+  else if (completionRate >= 60) rateBonus = 5;
+
+  const score =
+    completed * 10 +
+    active * 2 +
+    (updateCount || 0) * 2 +
+    viewsBonus -
+    withdrawn * 5 +
+    rateBonus;
+
+  let badge = "Beginner";
+  if (score >= 200) badge = "Trusted";
+  else if (score >= 100) badge = "Leader";
+  else if (score >= 50) badge = "Operator";
+  else if (score >= 20) badge = "Builder";
+
+  return { badge };
 }
 
 export async function GET(request: Request) {
@@ -15,51 +66,32 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") || "latest";
   const category = searchParams.get("category");
   const cursor = searchParams.get("cursor");
-  const search = searchParams.get("search");
 
   const supabase = await createClient();
 
   let query = supabase
     .from("commitments")
-    .select(
-      `
+    .select(`
       id,
       text,
       category,
       created_at,
       views,
-      status,
       user_id,
       company_id,
       profiles:user_id (
-        id,
         username,
         display_name,
-        avatar_url,
-        plan_key
+        avatar_url
       ),
       companies:company_id (
-        id,
         username,
         name,
-        avatar_url
+        logo_url
       )
-    `
-    )
+    `)
     .eq("status", "active")
     .limit(25);
-
-  if (search) {
-    query = query.ilike("text", `%${search}%`);
-  }
-
-  if (category) {
-    query = query.eq("category", category);
-  }
-
-  if (cursor) {
-    query = query.lt("created_at", cursor);
-  }
 
   if (type === "trending") {
     query = query.order("views", { ascending: false });
@@ -67,19 +99,22 @@ export async function GET(request: Request) {
     query = query.order("created_at", { ascending: false });
   }
 
+  if (category) query = query.eq("category", category);
+  if (cursor) query = query.lt("created_at", cursor);
+
   const { data, error } = await query;
 
-  if (error) {
-    return NextResponse.json([]);
-  }
+  if (error || !data) return NextResponse.json([]);
 
-  const formatted =
-    data?.map((c: any) => {
-      const score = (c.views ?? 0) + 10; // lightweight proxy
-
-      const badge = calculateBadge(score);
-
+  const formatted = await Promise.all(
+    data.map(async (c: any) => {
       if (c.company_id && c.companies) {
+        const reputation = await calculateReputation(
+          supabase,
+          undefined,
+          c.company_id
+        );
+
         return {
           id: c.id,
           text: c.text,
@@ -89,12 +124,18 @@ export async function GET(request: Request) {
           identity: {
             username: c.companies.username,
             display_name: c.companies.name,
-            avatar_url: c.companies.avatar_url,
+            avatar_url: c.companies.logo_url,
             type: "company",
-            badge,
+            badge: reputation.badge,
           },
         };
       }
+
+      const reputation = await calculateReputation(
+        supabase,
+        c.user_id,
+        undefined
+      );
 
       return {
         id: c.id,
@@ -107,10 +148,11 @@ export async function GET(request: Request) {
           display_name: c.profiles?.display_name,
           avatar_url: c.profiles?.avatar_url,
           type: "user",
-          badge,
+          badge: reputation.badge,
         },
       };
-    }) || [];
+    })
+  );
 
   return NextResponse.json(formatted);
 }
