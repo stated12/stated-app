@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import CommitmentFeed from "@/components/CommitmentFeed";
 
 type Profile = {
   id: string;
@@ -12,22 +13,11 @@ type Profile = {
   account_type?: "individual" | "company";
 };
 
-type Commitment = {
-  id: string;
-  text: string;
-  status: string;
-  created_at: string;
-  user_id: string;
-  profiles: Profile[] | Profile | null;
-};
-
 export default function ExplorePage() {
   const supabase = createClient();
 
   const [people, setPeople] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<Profile[]>([]);
-  const [trending, setTrending] = useState<Commitment[]>([]);
-  const [recent, setRecent] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +26,6 @@ export default function ExplorePage() {
 
   async function loadExplore() {
     try {
-      // FEATURED PEOPLE
       const { data: peopleData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
@@ -45,7 +34,6 @@ export default function ExplorePage() {
 
       if (peopleData) setPeople(peopleData);
 
-      // FEATURED COMPANIES
       const { data: companyData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
@@ -53,49 +41,6 @@ export default function ExplorePage() {
         .limit(4);
 
       if (companyData) setCompanies(companyData);
-
-      // TRENDING
-      const { data: trendingData } = await supabase
-        .from("commitments")
-        .select(`
-          id,
-          text,
-          status,
-          created_at,
-          user_id,
-          profiles (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq("status", "active")
-        .limit(6);
-
-      if (trendingData) setTrending(trendingData);
-
-      // RECENT
-      const { data: recentData } = await supabase
-        .from("commitments")
-        .select(`
-          id,
-          text,
-          status,
-          created_at,
-          user_id,
-          profiles (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(6);
-
-      if (recentData) setRecent(recentData);
-
     } catch (error) {
       console.error(error);
     }
@@ -103,15 +48,7 @@ export default function ExplorePage() {
     setLoading(false);
   }
 
-  function normalizeProfile(
-    profileData: Profile[] | Profile | null
-  ): Profile | null {
-    if (!profileData) return null;
-    if (Array.isArray(profileData)) return profileData[0] ?? null;
-    return profileData;
-  }
-
-  function avatar(profile: Profile | null) {
+  function avatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -176,7 +113,7 @@ export default function ExplorePage() {
             {companies.map((company) => (
               <Link
                 key={company.id}
-                href={`/u/${company.username}`}
+                href={`/c/${company.username}`}
                 className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
               >
                 <img
@@ -195,82 +132,16 @@ export default function ExplorePage() {
           </div>
         </section>
 
-        {/* TRENDING */}
+        {/* UNIFIED FEED */}
         <section>
           <div className="text-lg font-semibold mb-4">
-            Trending commitments
+            Explore commitments
           </div>
 
-          <div className="space-y-4">
-            {trending.map((commitment) => {
-              const profile = normalizeProfile(commitment.profiles);
-
-              return (
-                <Link
-                  key={commitment.id}
-                  href={`/commitment/${commitment.id}`}
-                  className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <img
-                      src={avatar(profile)}
-                      className="w-8 h-8 rounded-full object-cover"
-                      alt=""
-                    />
-                    <div className="text-sm font-medium">
-                      {profile?.display_name || profile?.username}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      @{profile?.username}
-                    </div>
-                  </div>
-
-                  <div className="font-medium">
-                    {commitment.text}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* RECENT */}
-        <section>
-          <div className="text-lg font-semibold mb-4">
-            Recent commitments
-          </div>
-
-          <div className="space-y-4">
-            {recent.map((commitment) => {
-              const profile = normalizeProfile(commitment.profiles);
-
-              return (
-                <Link
-                  key={commitment.id}
-                  href={`/commitment/${commitment.id}`}
-                  className="block bg-white p-5 rounded-xl shadow hover:shadow-md transition"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <img
-                      src={avatar(profile)}
-                      className="w-8 h-8 rounded-full object-cover"
-                      alt=""
-                    />
-                    <div className="text-sm font-medium">
-                      {profile?.display_name || profile?.username}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      @{profile?.username}
-                    </div>
-                  </div>
-
-                  <div className="font-medium">
-                    {commitment.text}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <CommitmentFeed
+            endpoint="/api/feed"
+            showFilters={false}
+          />
         </section>
 
       </div>
