@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import ImpressionTracker from "@/components/ImpressionTracker";
+import ReputationCard from "@/components/ReputationCard";
 
 export default async function CompanyPublicPage({
   params,
@@ -30,8 +31,8 @@ export default async function CompanyPublicPage({
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
   const logo =
-    company.avatar_url?.trim()
-      ? company.avatar_url.trim()
+    company.logo_url?.trim()
+      ? company.logo_url.trim()
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           company.name
         )}&background=2563eb&color=fff`;
@@ -72,6 +73,8 @@ export default async function CompanyPublicPage({
             </div>
           </div>
         </div>
+
+        <ReputationCard companyId={company.id} />
 
         <div className="space-y-4">
           {commitments?.length === 0 && (
