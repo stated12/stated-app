@@ -9,15 +9,18 @@ import ReputationCard from "@/components/ReputationCard";
 export default async function UserPage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
+  // ✅ Next 16 async params fix
+  const { username } = await params;
+
   const supabase = await createClient();
 
   // Case-insensitive username match
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .ilike("username", params.username)
+    .ilike("username", username)
     .maybeSingle();
 
   if (!profile) {
