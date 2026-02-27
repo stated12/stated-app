@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-async function calculateReputation(supabase: any, userId?: string, companyId?: string) {
+type CommitmentRow = {
+  id: string;
+  status: "completed" | "active" | "withdrawn" | "expired";
+  views: number | null;
+};
+
+type UpdateCountResponse = {
+  count: number | null;
+};
+
+async function calculateReputation(
+  supabase: any,
+  userId?: string,
+  companyId?: string
+) {
   let query = supabase
     .from("commitments")
     .select("id, status, views")
@@ -9,29 +23,43 @@ async function calculateReputation(supabase: any, userId?: string, companyId?: s
 
   if (companyId) {
     query = query.eq("company_id", companyId);
-  } else {
+  } else if (userId) {
     query = query.eq("user_id", userId);
   }
 
-  const { data: commitments } = await query;
+  const { data } = await query;
 
-  if (!commitments || commitments.length === 0) {
+  const commitments: CommitmentRow[] = data ?? [];
+
+  if (commitments.length === 0) {
     return { badge: "Beginner" };
   }
 
-  const completed = commitments.filter(c => c.status === "completed").length;
-  const active = commitments.filter(c => c.status === "active").length;
-  const withdrawn = commitments.filter(c => c.status === "withdrawn").length;
+  const completed = commitments.filter(
+    (c: CommitmentRow) => c.status === "completed"
+  ).length;
 
-  const commitmentIds = commitments.map(c => c.id);
+  const active = commitments.filter(
+    (c: CommitmentRow) => c.status === "active"
+  ).length;
 
-  const { count: updateCount } = await supabase
+  const withdrawn = commitments.filter(
+    (c: CommitmentRow) => c.status === "withdrawn"
+  ).length;
+
+  const commitmentIds = commitments.map(
+    (c: CommitmentRow) => c.id
+  );
+
+  const { count } = await supabase
     .from("commitment_updates")
     .select("*", { count: "exact", head: true })
     .in("commitment_id", commitmentIds);
 
-  const totalViews =
-    commitments.reduce((sum, c) => sum + (c.views || 0), 0);
+  const totalViews = commitments.reduce(
+    (sum: number, c: CommitmentRow) => sum + (c.views || 0),
+    0
+  );
 
   const viewsBonus = Math.floor(totalViews / 50);
 
@@ -46,7 +74,7 @@ async function calculateReputation(supabase: any, userId?: string, companyId?: s
   const score =
     completed * 10 +
     active * 2 +
-    (updateCount || 0) * 2 +
+    (count || 0) * 2 +
     viewsBonus -
     withdrawn * 5 +
     rateBonus;
