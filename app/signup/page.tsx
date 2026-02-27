@@ -55,7 +55,7 @@ export default function SignupPage() {
 
     const timeout = setTimeout(checkUsername, 400);
     return () => clearTimeout(timeout);
-  }, [username]);
+  }, [username, supabase]);
 
   /* ---------------- SIGNUP ---------------- */
 
@@ -80,7 +80,7 @@ export default function SignupPage() {
     const lower = username.toLowerCase();
 
     try {
-      /* 1️⃣ Create Auth User */
+      // 1️⃣ Create Auth User
       const { data: authData, error: authError } =
         await supabase.auth.signUp({
           email,
@@ -89,18 +89,16 @@ export default function SignupPage() {
 
       if (authError) {
         setError(authError.message);
-        setLoading(false);
         return;
       }
 
       const user = authData?.user;
       if (!user) {
         setError("Signup failed");
-        setLoading(false);
         return;
       }
 
-      /* 2️⃣ Insert Profile */
+      // 2️⃣ Insert Profile
       const { error: profileError } = await supabase
         .from("profiles")
         .insert({
@@ -113,14 +111,12 @@ export default function SignupPage() {
         });
 
       if (profileError) {
-        // Cleanup auth user if profile fails
         await supabase.auth.signOut();
         setError("Could not create profile. Please try again.");
-        setLoading(false);
         return;
       }
 
-      /* 3️⃣ If Company Account */
+      // 3️⃣ If Company
       if (accountType === "company") {
         const { data: company, error: companyError } =
           await supabase
@@ -137,7 +133,6 @@ export default function SignupPage() {
 
         if (companyError || !company) {
           setError("Could not create company.");
-          setLoading(false);
           return;
         }
 
@@ -178,9 +173,7 @@ export default function SignupPage() {
           maxLength={20}
           onChange={(e) =>
             setUsername(
-              e.target.value
-                .toLowerCase()
-                .replace(/[^a-z0-9_]/g, "")
+              e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
             )
           }
           style={styles.input}
@@ -277,3 +270,85 @@ export default function SignupPage() {
     </div>
   );
 }
+
+/* ---------------- STYLES ---------------- */
+
+const styles: any = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#f5f5f5",
+  },
+  card: {
+    width: 400,
+    background: "#fff",
+    padding: 32,
+    borderRadius: 12,
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+  },
+  brand: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#2563eb",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  tagline: {
+    textAlign: "center",
+    marginBottom: 24,
+    color: "#555",
+  },
+  input: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    border: "1px solid #ddd",
+  },
+  url: {
+    fontSize: 12,
+    marginBottom: 4,
+    color: "#666",
+  },
+  usernameStatus: {
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  accountTypeContainer: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 16,
+  },
+  accountTypeButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    border: "none",
+    cursor: "pointer",
+  },
+  submit: {
+    width: "100%",
+    padding: 14,
+    borderRadius: 8,
+    border: "none",
+    background: "#2563eb",
+    color: "#fff",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+  error: {
+    color: "red",
+    marginBottom: 12,
+  },
+  login: {
+    textAlign: "center",
+    marginTop: 16,
+  },
+  loginLink: {
+    color: "#2563eb",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+};
