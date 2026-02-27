@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+type CommitmentRow = {
+  status: "completed" | "active" | "withdrawn" | "expired";
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
@@ -22,17 +26,19 @@ export async function GET(request: Request) {
 
   const { data } = await query;
 
+  const commitments: CommitmentRow[] = data ?? [];
+
   const completed =
-    data?.filter((c: any) => c.status === "completed").length ?? 0;
+    commitments.filter((c) => c.status === "completed").length;
 
   const active =
-    data?.filter((c: any) => c.status === "active").length ?? 0;
+    commitments.filter((c) => c.status === "active").length;
 
   const withdrawn =
-    data?.filter((c: any) => c.status === "withdrawn").length ?? 0;
+    commitments.filter((c) => c.status === "withdrawn").length;
 
   const expired =
-    data?.filter((c: any) => c.status === "expired").length ?? 0;
+    commitments.filter((c) => c.status === "expired").length;
 
   const total = completed + active + withdrawn + expired;
 
@@ -49,7 +55,7 @@ export async function GET(request: Request) {
     completed * 10 +
     active * 2 -
     withdrawn * 3 -
-    expired * 8 +   // 🔥 stronger penalty
+    expired * 8 +
     bonus;
 
   let badge = "Beginner";
