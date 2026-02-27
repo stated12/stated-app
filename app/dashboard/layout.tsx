@@ -18,6 +18,7 @@ export default function DashboardLayout({
   useEffect(() => {
     async function load() {
       const supabase = await createClient();
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -57,11 +58,13 @@ export default function DashboardLayout({
         className={`fixed md:static top-0 left-0 h-full w-64 bg-white border-r p-6 flex flex-col transition-transform duration-300 z-50
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
+        {/* Logo */}
         <div className="flex items-center gap-2 mb-8">
           <Image src="/logo.png" alt="Stated" width={32} height={32} />
           <span className="text-xl font-bold text-blue-600">Stated</span>
         </div>
 
+        {/* Profile */}
         <Link href="/profile/edit" className="flex items-center gap-3 mb-6">
           <Image
             src={avatar}
@@ -75,19 +78,48 @@ export default function DashboardLayout({
               {profile.display_name || profile.username}
             </div>
             {isPro && (
-              <div className="text-xs text-blue-600 font-medium">PRO</div>
+              <div className="text-xs text-blue-600 font-medium">
+                PRO
+              </div>
             )}
           </div>
         </Link>
 
+        {/* Navigation */}
         <nav className="flex flex-col gap-3 text-sm">
+
           <Link href="/dashboard">Feed</Link>
-          <Link href="/dashboard/my">My Commitments</Link>
-          <Link href="/dashboard/insights">Insights</Link>
-          <Link href="/billing">Billing</Link>
-          <Link href="/account">Account Settings</Link>
-          {!isPro && <Link href="/upgrade">Upgrade</Link>}
-          <Link href="/logout">Logout</Link>
+
+          <Link href="/dashboard/my">
+            My Commitments
+          </Link>
+
+          <Link href="/dashboard/insights">
+            Insights
+          </Link>
+
+          <Link href="/billing">
+            Billing
+          </Link>
+
+          <Link href="/account">
+            Account Settings
+          </Link>
+
+          <Link href="/dashboard/support">
+            Support
+          </Link>
+
+          {!isPro && (
+            <Link href="/upgrade">
+              Upgrade
+            </Link>
+          )}
+
+          <Link href="/logout">
+            Logout
+          </Link>
+
         </nav>
       </aside>
 
@@ -113,8 +145,10 @@ export default function DashboardLayout({
           <NotificationBell />
         </div>
 
-        {/* CONTENT */}
-        <div className="p-6">{children}</div>
+        {/* PAGE CONTENT */}
+        <div className="p-6">
+          {children}
+        </div>
 
       </main>
     </div>
