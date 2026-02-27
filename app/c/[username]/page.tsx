@@ -9,19 +9,22 @@ import ReputationCard from "@/components/ReputationCard";
 export default async function CompanyPublicPage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
+  // ✅ Next 16 async params fix
+  const { username } = await params;
+
   const supabase = await createClient();
 
   const { data: company } = await supabase
     .from("companies")
     .select("*")
-    .eq("username", params.username)
+    .eq("username", username)
     .single();
 
   if (!company) return notFound();
 
-  // 🔥 SHOW ALL PUBLIC COMMITMENTS (not just active)
+  // 🔥 SHOW ALL PUBLIC COMMITMENTS
   const { data: commitments } = await supabase
     .from("commitments")
     .select("*")
@@ -40,7 +43,6 @@ export default async function CompanyPublicPage({
           company.name
         )}&background=2563eb&color=fff`;
 
-  // STATUS COLOR HELPER
   function statusColor(status: string) {
     switch (status) {
       case "active":
