@@ -55,7 +55,7 @@ export default function SignupPage() {
 
     const timeout = setTimeout(checkUsername, 400);
     return () => clearTimeout(timeout);
-  }, [username, supabase]);
+  }, [username]);
 
   /* ---------------- SIGNUP ---------------- */
 
@@ -89,19 +89,31 @@ export default function SignupPage() {
 
       if (authError) {
         setError(authError.message);
+        setLoading(false);
         return;
       }
 
       const user = authData?.user;
+
       if (!user) {
         setError("Signup failed");
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 IMPORTANT: ensure session is ready (fixes RLS failure)
+      const { data: sessionData } =
+        await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        setError("Authentication session not ready. Please try again.");
+        setLoading(false);
         return;
       }
 
       // 2️⃣ Insert Profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
+      const { error: profileError } =
+        await supabase.from("profiles").insert({
           id: user.id,
           username: lower,
           display_name: username,
@@ -111,12 +123,12 @@ export default function SignupPage() {
         });
 
       if (profileError) {
-        await supabase.auth.signOut();
         setError("Could not create profile. Please try again.");
+        setLoading(false);
         return;
       }
 
-      // 3️⃣ If Company
+      // 3️⃣ Company Setup
       if (accountType === "company") {
         const { data: company, error: companyError } =
           await supabase
@@ -124,6 +136,7 @@ export default function SignupPage() {
             .insert({
               username: lower,
               name: username,
+              owner_id: user.id,
               plan_key: "free",
               credits: 2,
               member_limit: 2,
@@ -133,6 +146,7 @@ export default function SignupPage() {
 
         if (companyError || !company) {
           setError("Could not create company.");
+          setLoading(false);
           return;
         }
 
@@ -147,11 +161,12 @@ export default function SignupPage() {
       }
 
       router.push("/dashboard");
-    } catch {
+
+    } catch (err) {
       setError("Unexpected error. Please try again.");
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }
 
   /* ---------------- UI ---------------- */
@@ -173,7 +188,9 @@ export default function SignupPage() {
           maxLength={20}
           onChange={(e) =>
             setUsername(
-              e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+              e.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9_]/g, "")
             )
           }
           style={styles.input}
@@ -270,8 +287,6 @@ export default function SignupPage() {
     </div>
   );
 }
-
-/* ---------------- STYLES ---------------- */
 
 const styles: any = {
   container: {
