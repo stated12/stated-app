@@ -21,8 +21,10 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /* ---------------- USERNAME CHECK ---------------- */
+
   useEffect(() => {
-    if (!username || username.length < 3) {
+    if (username.length < 3 || username.length > 20) {
       setUsernameStatus("idle");
       return;
     }
@@ -53,10 +55,14 @@ export default function SignupPage() {
 
     const timeout = setTimeout(checkUsername, 400);
     return () => clearTimeout(timeout);
-  }, [username, supabase]);
+  }, [username]);
+
+  /* ---------------- SIGNUP ---------------- */
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+
     setError("");
 
     if (usernameStatus !== "available") {
@@ -64,10 +70,18 @@ export default function SignupPage() {
       return;
     }
 
+    if (username.length < 3 || username.length > 20) {
+      setError("Username must be 3–20 characters");
+      return;
+    }
+
     setLoading(true);
 
+    const lower = username.toLowerCase();
+
     try {
-      const { data, error: authError } =
+      /* 1️⃣ Create Auth User */
+      const { data: authData, error: authError } =
         await supabase.auth.signUp({
           email,
           password,
@@ -79,36 +93,53 @@ export default function SignupPage() {
         return;
       }
 
-      if (!data?.user) {
+      const user = authData?.user;
+      if (!user) {
         setError("Signup failed");
         setLoading(false);
         return;
       }
 
-      const user = data.user;
-      const lower = username.toLowerCase();
+      /* 2️⃣ Insert Profile */
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          username: lower,
+          display_name: username,
+          account_type: accountType,
+          credits: 2,
+          plan_key: "free",
+        });
 
-      await supabase.from("profiles").insert({
-        id: user.id,
-        username: lower,
-        display_name: username,
-        account_type: accountType,
-        credits: 2,
-        plan_key: "free",
-      });
+      if (profileError) {
+        // Cleanup auth user if profile fails
+        await supabase.auth.signOut();
+        setError("Could not create profile. Please try again.");
+        setLoading(false);
+        return;
+      }
 
+      /* 3️⃣ If Company Account */
       if (accountType === "company") {
-        const { data: company } = await supabase
-          .from("companies")
-          .insert({
-            username: lower,
-            name: username,
-            plan_key: "free",
-            credits: 2,
-            member_limit: 2,
-          })
-          .select()
-          .single();
+        const { data: company, error: companyError } =
+          await supabase
+            .from("companies")
+            .insert({
+              username: lower,
+              name: username,
+              plan_key: "free",
+              credits: 2,
+              member_limit: 2,
+            })
+            .select()
+            .single();
+
+        if (companyError || !company) {
+          setError("Could not create company.");
+          setLoading(false);
+          return;
+        }
 
         await supabase.from("company_members").insert({
           company_id: company.id,
@@ -117,15 +148,18 @@ export default function SignupPage() {
         });
 
         router.push("/dashboard/company");
-      } else {
-        router.push("/dashboard");
+        return;
       }
+
+      router.push("/dashboard");
     } catch {
-      setError("Unexpected error");
+      setError("Unexpected error. Please try again.");
     } finally {
       setLoading(false);
     }
   }
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div style={styles.container}>
@@ -141,17 +175,24 @@ export default function SignupPage() {
           value={username}
           required
           minLength={3}
+          maxLength={20}
           onChange={(e) =>
             setUsername(
-              e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+              e.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9_]/g, "")
             )
           }
           style={styles.input}
         />
 
         <div style={styles.url}>
-          stated.app/{accountType === "company" ? "c" : "u"}/
+          app.stated.in/{accountType === "company" ? "c" : "u"}/
           {username || "username"}
+        </div>
+
+        <div style={{ fontSize: 12, marginBottom: 6, color: "#777" }}>
+          This will be your permanent public profile URL and cannot be changed.
         </div>
 
         <div style={styles.usernameStatus}>
@@ -236,83 +277,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-const styles: any = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#f5f5f5",
-  },
-  card: {
-    width: 400,
-    background: "#fff",
-    padding: 32,
-    borderRadius: 12,
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  },
-  brand: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#2563eb",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  tagline: {
-    textAlign: "center",
-    marginBottom: 24,
-    color: "#555",
-  },
-  input: {
-    width: "100%",
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-  },
-  url: {
-    fontSize: 12,
-    marginBottom: 4,
-    color: "#666",
-  },
-  usernameStatus: {
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  accountTypeContainer: {
-    display: "flex",
-    gap: 12,
-    marginBottom: 16,
-  },
-  accountTypeButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-  },
-  submit: {
-    width: "100%",
-    padding: 14,
-    borderRadius: 8,
-    border: "none",
-    background: "#2563eb",
-    color: "#fff",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-  error: {
-    color: "red",
-    marginBottom: 12,
-  },
-  login: {
-    textAlign: "center",
-    marginTop: 16,
-  },
-  loginLink: {
-    color: "#2563eb",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-};
