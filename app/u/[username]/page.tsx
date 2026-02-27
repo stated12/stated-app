@@ -13,7 +13,7 @@ export default async function UserPage({
 }) {
   const supabase = await createClient();
 
-  // ✅ STRICT username match
+  // ✅ Strict username match
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
@@ -24,10 +24,10 @@ export default async function UserPage({
     notFound();
   }
 
-  // Optional: don't crash if insert fails
+  // Record profile view (safe)
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
-  }).catch(() => {});
+  });
 
   const { data: commitments } = await supabase
     .from("commitments")
@@ -87,6 +87,7 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
+        {/* Branding */}
         <div className="text-center mb-14">
           <Image
             src="/logo.png"
@@ -100,6 +101,7 @@ export default async function UserPage({
           </div>
         </div>
 
+        {/* Profile Section */}
         <div className="text-center">
 
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -138,7 +140,13 @@ export default async function UserPage({
                 href={profile.website}
                 label={cleanUrl(profile.website)}
                 icon={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
                     <circle cx="12" cy="12" r="10" />
                     <path d="M2 12h20" />
                     <path d="M12 2a15 15 0 010 20" />
@@ -154,10 +162,10 @@ export default async function UserPage({
           </div>
         </div>
 
-        {/* Reputation */}
+        {/* Reputation Card */}
         <ReputationCard userId={profile.id} />
 
-        {/* Commitments */}
+        {/* Public Commitments */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
