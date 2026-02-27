@@ -17,18 +17,18 @@ export default async function UserPage({
   params: { username: string };
 }) {
 
-  // Fetch profile (case-sensitive exact match)
+  // ✅ Case-insensitive username match
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("username", params.username)
+    .ilike("username", params.username)
     .maybeSingle();
 
   if (!profile) {
     notFound();
   }
 
-  // Log profile view (non-blocking, no crash)
+  // Log profile view (non-blocking)
   supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
