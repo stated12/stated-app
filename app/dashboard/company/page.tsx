@@ -44,9 +44,14 @@ export default async function CompanyDashboardPage() {
     .eq("owner_id", user.id)
     .single();
 
-  const company = companyData as Company | null;
+  if (!companyData) redirect("/dashboard");
 
-  if (!company) redirect("/dashboard");
+  const company: Company = {
+    id: String(companyData.id),
+    name: String(companyData.name),
+    username: String(companyData.username),
+    owner_id: String(companyData.owner_id),
+  };
 
   const { data: membersData } = await supabase
     .from("company_members")
@@ -63,7 +68,21 @@ export default async function CompanyDashboardPage() {
     `)
     .eq("company_id", company.id);
 
-  const members = (membersData ?? []) as Member[];
+  // 🔥 SAFE NORMALIZATION (no unsafe casting)
+  const members: Member[] =
+    (membersData ?? []).map((m: any) => ({
+      id: String(m.id),
+      role: String(m.role),
+      user_id: String(m.user_id),
+      profiles: m.profiles
+        ? {
+            id: String(m.profiles.id),
+            username: String(m.profiles.username),
+            display_name: m.profiles.display_name ?? null,
+            avatar_url: m.profiles.avatar_url ?? null,
+          }
+        : null,
+    }));
 
   return (
     <div className="max-w-4xl mx-auto space-y-10">
