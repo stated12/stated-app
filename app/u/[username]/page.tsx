@@ -1,25 +1,19 @@
-console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("SUPABASE KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0,10));
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import ShareProfileButton from "@/components/ShareProfileButton";
 import ReputationCard from "@/components/ReputationCard";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default async function UserPage({
   params,
 }: {
   params: { username: string };
 }) {
+  const supabase = await createClient();
 
-  // ✅ Case-insensitive username match
+  // Case-insensitive username match
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
@@ -94,7 +88,6 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
-        {/* Branding */}
         <div className="text-center mb-14">
           <Image
             src="/logo.png"
@@ -108,9 +101,7 @@ export default async function UserPage({
           </div>
         </div>
 
-        {/* Profile */}
         <div className="text-center">
-
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <Image
               src={avatarUrl}
@@ -141,7 +132,6 @@ export default async function UserPage({
           )}
 
           <div className="mt-8 flex justify-center flex-wrap gap-3">
-
             {profile.website && (
               <SocialLink
                 href={profile.website}
@@ -165,7 +155,6 @@ export default async function UserPage({
                 icon={<span>💻</span>}
               />
             )}
-
           </div>
 
           <div className="mt-8">
@@ -173,12 +162,10 @@ export default async function UserPage({
           </div>
         </div>
 
-        {/* Reputation */}
         <div className="mt-10">
           <ReputationCard userId={profile.id} />
         </div>
 
-        {/* Commitments */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
