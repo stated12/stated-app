@@ -13,18 +13,45 @@ export default async function UserPage({
 }) {
   const supabase = await createClient();
 
-  // ✅ Strict username match
-  const { data: profile, error } = await supabase
+  // 🔎 DEBUG VERSION (NO .single())
+  const { data: profiles, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("username", params.username)
-    .single();
+    .eq("username", params.username);
 
-  if (error || !profile) {
-    notFound();
+  console.log("USERNAME PARAM:", params.username);
+  console.log("PROFILES RESULT:", profiles);
+  console.log("ERROR RESULT:", error);
+
+  // If nothing returned
+  if (!profiles || profiles.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-4">
+            No profile found (debug mode)
+          </h1>
+          <p>Check Vercel logs for details.</p>
+        </div>
+      </div>
+    );
   }
 
-  // Record profile view (safe)
+  if (profiles.length > 1) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-4">
+            Duplicate usernames detected
+          </h1>
+          <p>Profiles count: {profiles.length}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const profile = profiles[0];
+
   await supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
@@ -60,154 +87,43 @@ export default async function UserPage({
     }
   }
 
-  const cleanUrl = (url: string) =>
-    url.replace(/^https?:\/\//, "");
-
-  const SocialLink = ({
-    href,
-    label,
-    icon,
-  }: {
-    href: string;
-    label: string;
-    icon: React.ReactNode;
-  }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
-    >
-      {icon}
-      <span>{label}</span>
-    </a>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
-        {/* Branding */}
-        <div className="text-center mb-14">
-          <Image
-            src="/logo.png"
-            alt="Stated"
-            width={120}
-            height={120}
-            className="mx-auto"
-          />
-          <div className="text-blue-600 font-bold text-3xl mt-4">
-            Stated
-          </div>
-        </div>
-
-        {/* Profile Section */}
-        <div className="text-center">
-
-          <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
-            <Image
-              src={avatarUrl}
-              alt="avatar"
-              width={144}
-              height={144}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold">
             {profile.display_name || profile.username}
-            {profile.plan_key && (
-              <span className="ml-3 text-blue-600 text-sm font-semibold">
-                PRO
-              </span>
-            )}
           </h1>
-
-          <div className="text-gray-600 font-medium mt-1">
-            @{profile.username}
-          </div>
-
-          {profile.bio && (
-            <p className="mt-4 text-gray-800 max-w-md mx-auto">
-              {profile.bio}
-            </p>
-          )}
-
-          <div className="mt-8 flex justify-center flex-wrap gap-3">
-
-            {profile.website && (
-              <SocialLink
-                href={profile.website}
-                label={cleanUrl(profile.website)}
-                icon={
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M2 12h20" />
-                    <path d="M12 2a15 15 0 010 20" />
-                  </svg>
-                }
-              />
-            )}
-
-          </div>
-
-          <div className="mt-8">
-            <ShareProfileButton username={profile.username} />
-          </div>
+          <p className="text-gray-600">@{profile.username}</p>
         </div>
 
-        {/* Reputation Card */}
         <ReputationCard userId={profile.id} />
 
-        {/* Public Commitments */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-6 text-center">
             Public Commitments
           </h2>
 
           {commitments && commitments.length > 0 ? (
-            <div className="space-y-8">
-              {await Promise.all(
-                commitments.map(async (c) => {
-                  const { count } = await supabase
-                    .from("commitment_views")
-                    .select("*", { count: "exact", head: true })
-                    .eq("commitment_id", c.id);
-
-                  return (
-                    <div
-                      key={c.id}
-                      className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
-                    >
-                      <div className="font-semibold text-lg text-gray-900 mb-2">
-                        {c.text}
-                      </div>
-
-                      <div className={`text-sm capitalize ${statusColor(c.status)}`}>
-                        Status: {c.status}
-                      </div>
-
-                      <div className="text-xs text-gray-600 mt-2">
-                        Created {new Date(c.created_at).toLocaleDateString()}
-                      </div>
-
-                      <div className="text-xs text-gray-500 mt-4">
-                        👁 {count || 0} views
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+            <div className="space-y-6">
+              {commitments.map((c) => (
+                <div
+                  key={c.id}
+                  className="border rounded-xl p-6 shadow-sm"
+                >
+                  <div className="font-semibold text-lg mb-2">
+                    {c.text}
+                  </div>
+                  <div className={`text-sm capitalize ${statusColor(c.status)}`}>
+                    Status: {c.status}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="border rounded-xl p-6 text-gray-700 text-center">
-              No public commitments yet.
+            <div className="text-center text-gray-600">
+              No public commitments.
             </div>
           )}
         </div>
