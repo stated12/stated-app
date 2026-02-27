@@ -3,22 +3,19 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
- * Authenticated server client (uses cookies)
- * Use ONLY in route handlers or protected areas
+ * Authenticated server client (for protected routes / dashboard / API)
  */
 export async function createClient() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies(); // ❗ no await
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: any) =>
-          cookieStore.set(name, value, options),
-        remove: (name: string, options: any) =>
-          cookieStore.set(name, "", { ...options, maxAge: 0 }),
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
       },
     }
   );
@@ -26,7 +23,7 @@ export async function createClient() {
 
 /**
  * Public server client (NO cookies, NO auth)
- * Safe for public pages like /u/[username]
+ * Use for public pages like /u/[username]
  */
 export function createPublicServerClient() {
   return createSupabaseClient(
