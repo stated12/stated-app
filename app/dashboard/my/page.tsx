@@ -3,6 +3,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
+type Commitment = {
+  id: string;
+  text: string;
+  status: "active" | "paused" | "completed" | "withdrawn" | "expired";
+  created_at: string;
+};
+
+type CommitmentUpdate = {
+  id: string;
+  commitment_id: string;
+  content: string;
+  created_at: string;
+};
+
 export default async function MyCommitmentsPage() {
   const supabase = await createClient();
 
@@ -14,21 +35,25 @@ export default async function MyCommitmentsPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  const { data: commitments } = await supabase
+  const profile = profileData as Profile | null;
+
+  const { data: commitmentsData } = await supabase
     .from("commitments")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const commitmentIds = commitments?.map((c) => c.id) || [];
+  const commitments = (commitmentsData ?? []) as Commitment[];
 
-  const { data: updates } =
+  const commitmentIds = commitments.map((c) => c.id);
+
+  const { data: updatesData } =
     commitmentIds.length > 0
       ? await supabase
           .from("commitment_updates")
@@ -36,6 +61,8 @@ export default async function MyCommitmentsPage() {
           .in("commitment_id", commitmentIds)
           .order("created_at", { ascending: false })
       : { data: [] };
+
+  const updates = (updatesData ?? []) as CommitmentUpdate[];
 
   const avatar =
     profile?.avatar_url?.trim()
@@ -46,7 +73,6 @@ export default async function MyCommitmentsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-
       <div className="bg-white rounded-xl shadow p-5">
         <div className="flex items-center gap-4">
           <Image
@@ -75,15 +101,16 @@ export default async function MyCommitmentsPage() {
       </Link>
 
       <div className="space-y-4">
-        {commitments?.length === 0 && (
+        {commitments.length === 0 && (
           <div className="text-sm text-gray-500">
             No commitments yet.
           </div>
         )}
 
-        {commitments?.map((c) => {
-          const commitmentUpdates =
-            updates?.filter((u) => u.commitment_id === c.id) || [];
+        {commitments.map((c) => {
+          const commitmentUpdates = updates.filter(
+            (u) => u.commitment_id === c.id
+          );
 
           return (
             <div key={c.id} className="bg-white rounded-xl shadow p-4">
@@ -109,16 +136,28 @@ export default async function MyCommitmentsPage() {
 
               {c.status === "active" && (
                 <div className="flex gap-2 mt-4 flex-wrap">
-                  <Link href={`/commitment/${c.id}/update`} className="text-sm border px-3 py-1 rounded">
+                  <Link
+                    href={`/commitment/${c.id}/update`}
+                    className="text-sm border px-3 py-1 rounded"
+                  >
                     Add update
                   </Link>
-                  <Link href={`/commitment/${c.id}/complete`} className="text-sm border px-3 py-1 rounded">
+                  <Link
+                    href={`/commitment/${c.id}/complete`}
+                    className="text-sm border px-3 py-1 rounded"
+                  >
                     Complete
                   </Link>
-                  <Link href={`/commitment/${c.id}/pause`} className="text-sm border px-3 py-1 rounded">
+                  <Link
+                    href={`/commitment/${c.id}/pause`}
+                    className="text-sm border px-3 py-1 rounded"
+                  >
                     Pause
                   </Link>
-                  <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded">
+                  <Link
+                    href={`/commitment/${c.id}/withdraw`}
+                    className="text-sm border px-3 py-1 rounded"
+                  >
                     Withdraw
                   </Link>
                 </div>
@@ -126,12 +165,21 @@ export default async function MyCommitmentsPage() {
 
               {c.status === "paused" && (
                 <div className="flex gap-2 mt-4 flex-wrap">
-                  <form action={`/commitment/${c.id}/resume`} method="POST">
-                    <button type="submit" className="text-sm border px-3 py-1 rounded">
+                  <form
+                    action={`/commitment/${c.id}/resume`}
+                    method="POST"
+                  >
+                    <button
+                      type="submit"
+                      className="text-sm border px-3 py-1 rounded"
+                    >
                       Resume
                     </button>
                   </form>
-                  <Link href={`/commitment/${c.id}/withdraw`} className="text-sm border px-3 py-1 rounded">
+                  <Link
+                    href={`/commitment/${c.id}/withdraw`}
+                    className="text-sm border px-3 py-1 rounded"
+                  >
                     Withdraw
                   </Link>
                 </div>
@@ -140,7 +188,6 @@ export default async function MyCommitmentsPage() {
           );
         })}
       </div>
-
     </div>
   );
 }
