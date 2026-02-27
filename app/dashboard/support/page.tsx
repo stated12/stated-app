@@ -3,218 +3,125 @@
 import { useState } from "react";
 
 export default function SupportPage() {
-  const [subject, setSubject] = useState("Reputation & Scoring Issue");
+  const [category, setCategory] = useState("general");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
 
-  function getHelperText(selected: string) {
-    switch (selected) {
-      case "Billing & Subscription":
-        return `Type your concern clearly.
-
-If this relates to a payment, include:
-• Email used for payment
-• Payment date and time
-• Payment method
-• Payment reference ID (if available)`;
-
-      case "Commitment Issue":
-        return `Type your concern clearly.
-
-If this relates to a specific commitment, include:
-• Commitment text
-• Deadline
-• Current status shown`;
-
-      case "Reputation & Scoring Issue":
-        return `Type your concern clearly.
-
-If you believe your score is incorrect, include:
-• Commitment text (if relevant)
-• Current score displayed
-• Expected outcome`;
-
-      case "Company & Member Access":
-        return `Type your concern clearly.
-
-If this relates to company access, include:
-• Company name
-• Role (owner/admin/member)
-• Description of the issue`;
-
-      case "Technical Bug":
-        return `Type your concern clearly.
-
-Include:
-• Page where issue occurred
-• What you expected to happen
-• What actually happened`;
-
-      case "Account & Access":
-        return `Type your concern clearly.
-
-Include:
-• Email used for account
-• Description of access issue`;
-
-      case "Report Integrity Concern":
-        return `Type your concern clearly.
-
-If reporting misuse or integrity concerns, include:
-• Username or company involved
-• Description of the concern
-• Any relevant details`;
-
-      default:
-        return `Type your concern clearly and include relevant details.`;
-    }
-  }
-
-  async function handleSubmit() {
-    setError("");
-    setSuccess(false);
-
-    if (!message.trim()) {
-      setError("Please describe your issue.");
-      return;
-    }
+  async function submitTicket() {
+    if (!message.trim()) return;
 
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/support", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subject,
-          message,
-        }),
-      });
+    await fetch("/api/support", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category,
+        message,
+      }),
+    });
 
-      if (!res.ok) {
-        throw new Error("Failed to submit request.");
-      }
-
-      setSuccess(true);
-      setMessage("");
-    } catch (err: any) {
-      setError(err.message);
-    }
-
+    setSuccess(true);
+    setMessage("");
     setLoading(false);
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 space-y-10">
+    <div className="max-w-2xl mx-auto space-y-10">
 
-      <h1 className="text-2xl font-bold">Support</h1>
-
-      {/* FAQ SECTION */}
-      <div className="bg-white rounded-xl shadow p-6 space-y-6">
-        <h2 className="font-semibold text-lg">Frequently Asked Questions</h2>
-
-        <div>
-          <div className="font-medium">How is reputation calculated?</div>
-          <div className="text-sm text-gray-600">
-            Reputation is based on your commitment history.
-            Completed commitments increase your score.
-            Withdrawn commitments reduce it.
-            Higher completion rates receive a bonus adjustment.
-            The same logic applies equally to all users.
-          </div>
-        </div>
-
-        <div>
-          <div className="font-medium">What happens when a deadline passes?</div>
-          <div className="text-sm text-gray-600">
-            If a commitment reaches its end date and is not marked completed,
-            it is automatically marked as expired. Expired commitments may
-            impact your reputation score.
-          </div>
-        </div>
-
-        <div>
-          <div className="font-medium">Why can’t commitments be edited?</div>
-          <div className="text-sm text-gray-600">
-            Commitment text and duration cannot be edited after creation.
-            This preserves the integrity of the public record and prevents
-            retroactive modification.
-          </div>
-        </div>
-
-        <div>
-          <div className="font-medium">How do billing and credits work?</div>
-          <div className="text-sm text-gray-600">
-            Credits are deducted when a commitment is created.
-            If a payment succeeds but credits are not updated,
-            submit a billing request with payment details.
-          </div>
-        </div>
-
-        <div>
-          <div className="font-medium">Can commitments be deleted?</div>
-          <div className="text-sm text-gray-600">
-            Public commitments cannot be deleted.
-            They can only change status. This ensures historical
-            consistency and credibility.
-          </div>
-        </div>
-
-        <div>
-          <div className="font-medium">What if I believe something is incorrect?</div>
-          <div className="text-sm text-gray-600">
-            Submit a support request under the appropriate category.
-            All disputes are reviewed manually.
-          </div>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold mb-2">Support</h1>
+        <p className="text-gray-600 text-sm">
+          Need help? Submit your issue below and our team will review it.
+        </p>
       </div>
 
-      {/* SUPPORT FORM */}
-      <div className="bg-white rounded-xl shadow p-6 space-y-6">
-        <h2 className="font-semibold text-lg">Submit a Request</h2>
+      {/* FORM */}
+      <div className="bg-white rounded-xl shadow p-6 space-y-4">
 
         <select
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           className="w-full border rounded px-3 py-2"
         >
-          <option>Reputation & Scoring Issue</option>
-          <option>Commitment Issue</option>
-          <option>Billing & Subscription</option>
-          <option>Company & Member Access</option>
-          <option>Technical Bug</option>
-          <option>Account & Access</option>
-          <option>Report Integrity Concern</option>
-          <option>Other</option>
+          <option value="general">General Question</option>
+          <option value="commitment">Commitment Issue</option>
+          <option value="billing">Billing / Credits</option>
+          <option value="technical">Technical Problem</option>
+          <option value="account">Account Issue</option>
         </select>
 
         <textarea
-          placeholder={getHelperText(subject)}
+          placeholder={`Type your concern below.
+
+Please include:
+- What happened?
+- Which commitment (if relevant)?
+- Screenshots (if billing issue include payment ID)
+- Steps to reproduce the issue`}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
-          className="w-full border rounded px-3 py-2 whitespace-pre-line"
+          className="w-full border rounded px-3 py-2"
         />
 
-        {error && <div className="text-red-500 text-sm">{error}</div>}
         {success && (
           <div className="text-green-600 text-sm">
-            Your request has been recorded. Support typically responds within 24–48 hours.
+            Support request submitted successfully.
           </div>
         )}
 
         <button
-          onClick={handleSubmit}
+          onClick={submitTicket}
           disabled={loading}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          {loading ? "Submitting..." : "Submit Request"}
+          {loading ? "Submitting..." : "Submit Ticket"}
         </button>
       </div>
+
+      {/* FAQ */}
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold">Frequently Asked Questions</h2>
+
+        <div className="space-y-4 text-sm text-gray-700">
+
+          <div>
+            <div className="font-medium">What is a commitment?</div>
+            <div>
+              A commitment is a public declaration of something you intend to complete
+              within a defined time period. It appears on your public profile.
+            </div>
+          </div>
+
+          <div>
+            <div className="font-medium">Why are my credits not reflecting?</div>
+            <div>
+              If you purchased credits and they are not visible, please include your
+              payment ID and a screenshot in your support request.
+            </div>
+          </div>
+
+          <div>
+            <div className="font-medium">Why did my commitment expire?</div>
+            <div>
+              Commitments automatically expire when the end date passes.
+              You can mark it completed before expiry to maintain reputation.
+            </div>
+          </div>
+
+          <div>
+            <div className="font-medium">Can I edit a commitment?</div>
+            <div>
+              Commitments cannot be edited after creation to preserve integrity.
+              You may withdraw and create a new one.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 }
