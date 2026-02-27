@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { redirect } from "next/navigation";
 import NotificationBell from "@/components/NotificationBell";
 
 export default function DashboardLayout({
@@ -14,10 +14,11 @@ export default function DashboardLayout({
 }) {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     async function load() {
-      const supabase = await createClient();
+      const supabase = createClient();
 
       const {
         data: { user },
@@ -30,7 +31,7 @@ export default function DashboardLayout({
       const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user?.id)
+        .eq("id", user.id)
         .single();
 
       setProfile(data);
@@ -48,7 +49,8 @@ export default function DashboardLayout({
           profile.display_name || profile.username
         )}&background=2563eb&color=fff`;
 
-  const isPro = !!profile.plan_key;
+  const isPro = profile.plan_key === "pro";
+  const isCompany = profile.account_type === "company";
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -65,7 +67,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Profile */}
-        <Link href="/profile/edit" className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-6">
           <Image
             src={avatar}
             alt="avatar"
@@ -83,37 +85,61 @@ export default function DashboardLayout({
               </div>
             )}
           </div>
-        </Link>
+        </div>
 
-        {/* Navigation */}
+        {/* NAVIGATION SWITCH */}
         <nav className="flex flex-col gap-3 text-sm">
 
-          <Link href="/dashboard">Feed</Link>
+          {/* COMPANY DASHBOARD */}
+          {isCompany ? (
+            <>
+              <Link href="/dashboard/company">
+                Public Page
+              </Link>
 
-          <Link href="/dashboard/my">
-            My Commitments
-          </Link>
+              <Link href="/dashboard/company/insights">
+                Company Analytics
+              </Link>
 
-          <Link href="/dashboard/insights">
-            Insights
-          </Link>
+              <Link href="/dashboard/company/settings">
+                Company Settings
+              </Link>
 
-          <Link href="/billing">
-            Billing
-          </Link>
+              <Link href="/dashboard/company/invite">
+                Invite Members
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* INDIVIDUAL DASHBOARD */}
+              <Link href="/dashboard">Feed</Link>
 
-          <Link href="/account">
-            Account Settings
-          </Link>
+              <Link href="/dashboard/my">
+                My Commitments
+              </Link>
 
-          <Link href="/dashboard/support">
-            Support
-          </Link>
+              <Link href="/dashboard/insights">
+                Insights
+              </Link>
 
-          {!isPro && (
-            <Link href="/upgrade">
-              Upgrade
-            </Link>
+              <Link href="/billing">
+                Billing
+              </Link>
+
+              <Link href="/account">
+                Account Settings
+              </Link>
+
+              <Link href="/dashboard/support">
+                Support
+              </Link>
+
+              {!isPro && (
+                <Link href="/upgrade">
+                  Upgrade
+                </Link>
+              )}
+            </>
           )}
 
           <Link href="/logout">
@@ -126,12 +152,12 @@ export default function DashboardLayout({
       {/* MAIN */}
       <main className="flex-1 flex flex-col w-full">
 
-        {/* TOP BAR (DESKTOP) */}
+        {/* TOP BAR DESKTOP */}
         <div className="hidden md:flex justify-end items-center bg-white border-b px-6 py-4">
           <NotificationBell />
         </div>
 
-        {/* TOP BAR (MOBILE) */}
+        {/* TOP BAR MOBILE */}
         <div className="bg-white border-b px-4 py-4 flex items-center justify-between md:hidden">
           <button
             onClick={() => setOpen(!open)}
@@ -145,7 +171,7 @@ export default function DashboardLayout({
           <NotificationBell />
         </div>
 
-        {/* PAGE CONTENT */}
+        {/* CONTENT */}
         <div className="p-6">
           {children}
         </div>
