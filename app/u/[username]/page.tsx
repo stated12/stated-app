@@ -88,7 +88,7 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
-        {/* 🔥 Centralized Profile View Tracking */}
+        {/* 🔥 Profile View Tracking */}
         <ViewTracker type="profile" entityId={profile.id} />
 
         {/* Header */}
@@ -206,6 +206,9 @@ export default async function UserPage({
                       key={c.id}
                       className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
                     >
+                      {/* 🔥 Commitment View Tracking */}
+                      <ViewTracker type="commitment" entityId={c.id} />
+
                       <div className="font-semibold text-lg text-gray-900 mb-2">
                         {c.text}
                       </div>
