@@ -1,3 +1,5 @@
+console.log("PARAM:", params.username);
+console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
