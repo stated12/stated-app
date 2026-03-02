@@ -2,9 +2,11 @@
 const nextConfig = {
   images: {
     domains: [
-      "cijloddrbbgckdembwor.supabase.co",
+      "ui-avatars.com",
+      "lxxcereaiqakpdwukaaz.supabase.co",
     ],
   },
 };
 
 module.exports = nextConfig;
+
