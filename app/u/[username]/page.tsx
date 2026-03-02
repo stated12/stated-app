@@ -29,9 +29,13 @@ export default async function UserPage({
     return notFound();
   }
 
-  supabase.from("profile_views").insert({
-    profile_id: profile.id,
-  });
+  // ✅ FIX: Await profile view insert so it actually executes
+  await supabase
+    .from("profile_views")
+    .insert({
+      profile_id: profile.id,
+    })
+    .throwOnError();
 
   const { data: commitments } = await supabase
     .from("commitments")
@@ -108,7 +112,6 @@ export default async function UserPage({
         {/* Profile Section */}
         <div className="text-center">
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
-            {/* ✅ FIXED AVATAR */}
             <img
               src={avatarUrl}
               alt="avatar"
@@ -135,7 +138,6 @@ export default async function UserPage({
             </p>
           )}
 
-          {/* ✅ UPDATED SOCIAL LINKS */}
           <div className="mt-8 flex justify-center flex-wrap gap-3">
             {profile.website && (
               <SocialLink
