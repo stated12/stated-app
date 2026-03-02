@@ -13,28 +13,31 @@ export default async function UserPage({
 }: {
   params: { username: string };
 }) {
-  const rawUsername = params.username;
+  const supabase = await createClient();
 
-  if (!rawUsername) {
+  // 🔒 Normalize username safely
+  const cleanUsername = params.username?.trim().toLowerCase();
+
+  if (!cleanUsername) {
     return notFound();
   }
 
-  const username = rawUsername.toLowerCase().trim();
-
-  const supabase = await createClient();
-
-  // ✅ Use maybeSingle for stability
-  const { data: profile } = await supabase
+  // 🔒 Stable profile fetch (NO .single())
+  const { data: profileRows } = await supabase
     .from("profiles")
-    .select("*")
-    .eq("username", username)
-    .maybeSingle();
+    .select(
+      "id, username, display_name, avatar_url, bio, plan_key, website, linkedin, github, twitter, youtube"
+    )
+    .eq("username", cleanUsername)
+    .limit(1);
+
+  const profile = profileRows?.[0] ?? null;
 
   if (!profile) {
     return notFound();
   }
 
-  // Fetch public commitments
+  // 🔒 Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -42,7 +45,7 @@ export default async function UserPage({
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
-  // Attach view counts server-side
+  // 🔒 Attach view counts server-side
   const enrichedCommitments =
     commitments && commitments.length > 0
       ? await Promise.all(
@@ -60,6 +63,7 @@ export default async function UserPage({
         )
       : [];
 
+  // 🔒 Avatar fallback logic
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
       ? profile.avatar_url
@@ -94,7 +98,7 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
-        {/* Profile View Tracking */}
+        {/* 🔥 Profile View Tracking (non-blocking client side) */}
         <ViewTracker type="profile" entityId={profile.id} />
 
         {/* Header */}
