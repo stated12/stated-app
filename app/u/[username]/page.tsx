@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ShareProfileButton from "@/components/ShareProfileButton";
 import ReputationCard from "@/components/ReputationCard";
+import ViewTracker from "@/components/ViewTracker";
 
 export default async function UserPage({
   params,
@@ -28,14 +29,6 @@ export default async function UserPage({
   if (error || !profile) {
     return notFound();
   }
-
-  // ✅ FIX: Await profile view insert so it actually executes
-  await supabase
-    .from("profile_views")
-    .insert({
-      profile_id: profile.id,
-    })
-    .throwOnError();
 
   const { data: commitments } = await supabase
     .from("commitments")
@@ -94,6 +87,9 @@ export default async function UserPage({
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
+
+        {/* 🔥 Centralized Profile View Tracking */}
+        <ViewTracker type="profile" entityId={profile.id} />
 
         {/* Header */}
         <div className="text-center mb-14">
