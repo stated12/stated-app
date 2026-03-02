@@ -45,7 +45,19 @@ export async function GET(request: Request) {
   const completionRate =
     total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  // 🔥 UPDATED SCORING LOGIC
+  // ✅ Count profile views
+  let views = 0;
+
+  if (userId) {
+    const { count } = await supabase
+      .from("profile_views")
+      .select("*", { count: "exact", head: true })
+      .eq("profile_id", userId);
+
+    views = count ?? 0;
+  }
+
+  // 🔥 UPDATED SCORING LOGIC (views now included)
   let bonus = 0;
 
   if (completionRate >= 80) bonus = 10;
@@ -56,7 +68,8 @@ export async function GET(request: Request) {
     active * 2 -
     withdrawn * 3 -
     expired * 8 +
-    bonus;
+    bonus +
+    Math.floor(views / 5); // small view bonus
 
   let badge = "Beginner";
 
@@ -73,5 +86,6 @@ export async function GET(request: Request) {
     active,
     withdrawn,
     expired,
+    views, // optional if you want to show later
   });
 }
