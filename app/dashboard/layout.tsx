@@ -42,7 +42,7 @@ export default function DashboardLayout({
     load();
   }, [router]);
 
-  // ✅ Auto close sidebar on route change
+  // Auto close sidebar on route change (mobile fix)
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -58,6 +58,13 @@ export default function DashboardLayout({
 
   const isPro = profile.plan_key === "pro";
   const isCompany = profile.account_type === "company";
+
+  const linkClass = (href: string) =>
+    `px-2 py-1 rounded transition ${
+      pathname === href
+        ? "bg-blue-50 text-blue-600 font-medium"
+        : "text-gray-700 hover:bg-gray-100"
+    }`;
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -81,8 +88,8 @@ export default function DashboardLayout({
           <span className="text-xl font-bold text-blue-600">Stated</span>
         </div>
 
-        {/* Profile */}
-        <Link href="/account" className="flex items-center gap-3 mb-6">
+        {/* PROFILE → NOW LINKS TO EDIT PROFILE */}
+        <Link href="/profile/edit" className="flex items-center gap-3 mb-6">
           <Image
             src={avatar}
             alt="avatar"
@@ -103,28 +110,63 @@ export default function DashboardLayout({
         </Link>
 
         {/* NAVIGATION */}
-        <nav className="flex flex-col gap-3 text-sm">
+        <nav className="flex flex-col gap-2 text-sm">
 
           {isCompany ? (
             <>
-              <Link href="/dashboard/company">Public Page</Link>
-              <Link href="/dashboard/company/insights">Company Analytics</Link>
-              <Link href="/dashboard/company/settings">Company Settings</Link>
-              <Link href="/dashboard/company/invite">Invite Members</Link>
+              <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
+                Public Page
+              </Link>
+
+              <Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
+                Company Analytics
+              </Link>
+
+              <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
+                Company Settings
+              </Link>
+
+              <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
+                Invite Members
+              </Link>
             </>
           ) : (
             <>
-              <Link href="/dashboard">Feed</Link>
-              <Link href="/dashboard/my">My Commitments</Link>
-              <Link href="/dashboard/insights">Insights</Link>
-              <Link href="/billing">Billing</Link>
-              <Link href="/account">Account Settings</Link>
-              <Link href="/dashboard/support">Support</Link>
-              {!isPro && <Link href="/upgrade">Upgrade</Link>}
+              <Link href="/dashboard" className={linkClass("/dashboard")}>
+                Feed
+              </Link>
+
+              <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+                My Commitments
+              </Link>
+
+              <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+                Insights
+              </Link>
+
+              <Link href="/billing" className={linkClass("/billing")}>
+                Billing
+              </Link>
+
+              <Link href="/account" className={linkClass("/account")}>
+                Account Settings
+              </Link>
+
+              <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+                Support
+              </Link>
+
+              {!isPro && (
+                <Link href="/upgrade" className={linkClass("/upgrade")}>
+                  Upgrade
+                </Link>
+              )}
             </>
           )}
 
-          <Link href="/logout">Logout</Link>
+          <Link href="/logout" className="mt-4 text-red-500 hover:text-red-600">
+            Logout
+          </Link>
         </nav>
       </aside>
 
