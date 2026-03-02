@@ -11,7 +11,6 @@ export default async function UserPage({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  // Next 16 async params
   const { username } = await params;
 
   if (!username) {
@@ -20,7 +19,6 @@ export default async function UserPage({
 
   const supabase = await createClient();
 
-  // 🔥 STRICT username match (same logic as company page)
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
@@ -31,12 +29,10 @@ export default async function UserPage({
     return notFound();
   }
 
-  // 🔥 Log profile view (non-blocking)
   supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
 
-  // Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -112,11 +108,10 @@ export default async function UserPage({
         {/* Profile Section */}
         <div className="text-center">
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
-            <Image
+            {/* ✅ FIXED AVATAR */}
+            <img
               src={avatarUrl}
               alt="avatar"
-              width={144}
-              height={144}
               className="w-full h-full object-cover"
             />
           </div>
@@ -140,6 +135,7 @@ export default async function UserPage({
             </p>
           )}
 
+          {/* ✅ UPDATED SOCIAL LINKS */}
           <div className="mt-8 flex justify-center flex-wrap gap-3">
             {profile.website && (
               <SocialLink
@@ -162,6 +158,22 @@ export default async function UserPage({
                 href={profile.github}
                 label="GitHub"
                 icon={<span>💻</span>}
+              />
+            )}
+
+            {profile.twitter && (
+              <SocialLink
+                href={profile.twitter}
+                label="X"
+                icon={<span>✖</span>}
+              />
+            )}
+
+            {profile.youtube && (
+              <SocialLink
+                href={profile.youtube}
+                label="YouTube"
+                icon={<span>▶</span>}
               />
             )}
           </div>
