@@ -2,6 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 
+function getOrCreateSessionId() {
+  const existing = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("stated_sid="))
+    ?.split("=")[1];
+
+  if (existing) return existing;
+
+  const newId = crypto.randomUUID();
+
+  document.cookie = `stated_sid=${newId}; path=/; max-age=${
+    60 * 60 * 24 * 365
+  }; SameSite=Lax`;
+
+  return newId;
+}
+
 export default function ViewTracker({
   type,
   entityId,
@@ -19,8 +36,9 @@ export default function ViewTracker({
       (entries) => {
         const entry = entries[0];
 
-        // Track only if 50% visible
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          const sessionId = getOrCreateSessionId();
+
           fetch("/api/track-view", {
             method: "POST",
             headers: {
@@ -29,6 +47,7 @@ export default function ViewTracker({
             body: JSON.stringify({
               type,
               entityId,
+              sessionId,
             }),
           });
 
