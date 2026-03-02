@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const { type, entityId } = await req.json();
+    const { type, entityId, sessionId } = await req.json();
 
     if (!type || !entityId) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -17,11 +17,7 @@ export async function POST(req: Request) {
 
     const viewerId = user?.id ?? null;
 
-    // 🔥 Stable anonymous session key
-    const sessionKey =
-      viewerId ??
-      req.headers.get("x-forwarded-for") ??
-      "anonymous";
+    const sessionKey = viewerId ? null : sessionId;
 
     const table =
       type === "profile" ? "profile_views" : "commitment_views";
@@ -59,9 +55,9 @@ export async function POST(req: Request) {
       .insert({
         [column]: entityId,
         viewer_id: viewerId,
-        session_key: viewerId ? null : sessionKey,
+        session_key: sessionKey,
       })
-      .throwOnError(); // 🔥 Important
+      .throwOnError();
 
     return NextResponse.json({ success: true });
   } catch (err) {
