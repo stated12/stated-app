@@ -17,9 +17,11 @@ export async function POST(req: Request) {
 
     const viewerId = user?.id ?? null;
 
-    // Generate simple session key for anonymous users
+    // 🔥 Stable anonymous session key
     const sessionKey =
-      viewerId ?? req.headers.get("x-forwarded-for") ?? crypto.randomUUID();
+      viewerId ??
+      req.headers.get("x-forwarded-for") ??
+      "anonymous";
 
     const table =
       type === "profile" ? "profile_views" : "commitment_views";
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
     const column =
       type === "profile" ? "profile_id" : "commitment_id";
 
-    // 🔒 Prevent duplicate within 24 hours
+    // Prevent duplicate within 24h
     const { data: existing } = await supabase
       .from(table)
       .select("id")
@@ -47,19 +49,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    // 🚫 Prevent self view
+    // Prevent self-profile view
     if (viewerId && type === "profile" && viewerId === entityId) {
       return NextResponse.json({ success: true });
     }
 
-    await supabase.from(table).insert({
-      [column]: entityId,
-      viewer_id: viewerId,
-      session_key: viewerId ? null : sessionKey,
-    });
+    await supabase
+      .from(table)
+      .insert({
+        [column]: entityId,
+        viewer_id: viewerId,
+        session_key: viewerId ? null : sessionKey,
+      })
+      .throwOnError(); // 🔥 Important
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    console.error("Tracking failed:", err);
     return NextResponse.json({ error: "Tracking failed" }, { status: 500 });
   }
 }
