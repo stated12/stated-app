@@ -1,5 +1,3 @@
-console.log("PARAM:", params.username);
-console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
@@ -15,31 +13,37 @@ export default async function UserPage({
 }: {
   params: { username: string };
 }) {
+  // ✅ LOGS INSIDE FUNCTION (NO TS ERROR)
+  console.log("RAW PARAM:", params.username);
+  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
   const supabase = await createClient();
 
-  // 🔒 Normalize username safely
   const cleanUsername = params.username?.trim().toLowerCase();
 
+  console.log("CLEAN USERNAME:", cleanUsername);
+
   if (!cleanUsername) {
+    console.log("USERNAME EMPTY");
     return notFound();
   }
 
-  // 🔒 Stable profile fetch (NO .single())
-  const { data: profileRows } = await supabase
+  const { data: profileRows, error } = await supabase
     .from("profiles")
-    .select(
-      "id, username, display_name, avatar_url, bio, plan_key, website, linkedin, github, twitter, youtube"
-    )
+    .select("*")
     .eq("username", cleanUsername)
     .limit(1);
+
+  console.log("PROFILE QUERY RESULT:", profileRows);
+  console.log("PROFILE QUERY ERROR:", error);
 
   const profile = profileRows?.[0] ?? null;
 
   if (!profile) {
+    console.log("PROFILE NOT FOUND IN DB");
     return notFound();
   }
 
-  // 🔒 Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -47,7 +51,6 @@ export default async function UserPage({
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
-  // 🔒 Attach view counts server-side
   const enrichedCommitments =
     commitments && commitments.length > 0
       ? await Promise.all(
@@ -65,7 +68,6 @@ export default async function UserPage({
         )
       : [];
 
-  // 🔒 Avatar fallback logic
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
       ? profile.avatar_url
@@ -100,10 +102,8 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
-        {/* 🔥 Profile View Tracking (non-blocking client side) */}
         <ViewTracker type="profile" entityId={profile.id} />
 
-        {/* Header */}
         <div className="text-center mb-14">
           <Image
             src="/logo.png"
@@ -117,7 +117,6 @@ export default async function UserPage({
           </div>
         </div>
 
-        {/* Profile Section */}
         <div className="text-center">
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <img
@@ -146,59 +145,15 @@ export default async function UserPage({
             </p>
           )}
 
-          <div className="mt-8 flex justify-center flex-wrap gap-3">
-            {profile.website && (
-              <SocialLink
-                href={profile.website}
-                label={cleanUrl(profile.website)}
-                icon={<span>🌐</span>}
-              />
-            )}
-
-            {profile.linkedin && (
-              <SocialLink
-                href={profile.linkedin}
-                label="LinkedIn"
-                icon={<span>🔗</span>}
-              />
-            )}
-
-            {profile.github && (
-              <SocialLink
-                href={profile.github}
-                label="GitHub"
-                icon={<span>💻</span>}
-              />
-            )}
-
-            {profile.twitter && (
-              <SocialLink
-                href={profile.twitter}
-                label="X"
-                icon={<span>✖</span>}
-              />
-            )}
-
-            {profile.youtube && (
-              <SocialLink
-                href={profile.youtube}
-                label="YouTube"
-                icon={<span>▶</span>}
-              />
-            )}
-          </div>
-
           <div className="mt-8">
             <ShareProfileButton username={profile.username} />
           </div>
         </div>
 
-        {/* Reputation */}
         <div className="mt-10">
           <ReputationCard userId={profile.id} />
         </div>
 
-        {/* Commitments */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
