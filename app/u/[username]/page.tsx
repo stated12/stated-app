@@ -13,26 +13,28 @@ export default async function UserPage({
 }: {
   params: { username: string };
 }) {
-  const username = params.username;
+  const rawUsername = params.username;
 
-  if (!username) {
+  if (!rawUsername) {
     return notFound();
   }
+
+  const username = rawUsername.toLowerCase().trim();
 
   const supabase = await createClient();
 
-  // Fetch profile
-  const { data: profile, error } = await supabase
+  // ✅ Use maybeSingle for stability
+  const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("username", username.toLowerCase())
-    .single();
+    .eq("username", username)
+    .maybeSingle();
 
-  if (error || !profile) {
+  if (!profile) {
     return notFound();
   }
 
-  // Fetch commitments
+  // Fetch public commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
