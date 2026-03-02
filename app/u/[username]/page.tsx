@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import ShareProfileButton from "@/components/ShareProfileButton";
 import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
+import CommitmentList from "@/components/CommitmentList";
 
 export default async function UserPage({
   params,
@@ -20,6 +21,7 @@ export default async function UserPage({
 
   const supabase = await createClient();
 
+  // Fetch profile
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
@@ -30,6 +32,7 @@ export default async function UserPage({
     return notFound();
   }
 
+  // Fetch commitments
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id, text, status, created_at")
@@ -37,29 +40,30 @@ export default async function UserPage({
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
+  // Attach view counts server-side
+  const enrichedCommitments =
+    commitments && commitments.length > 0
+      ? await Promise.all(
+          commitments.map(async (c) => {
+            const { count } = await supabase
+              .from("commitment_views")
+              .select("*", { count: "exact", head: true })
+              .eq("commitment_id", c.id);
+
+            return {
+              ...c,
+              views: count || 0,
+            };
+          })
+        )
+      : [];
+
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
       ? profile.avatar_url
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           profile.display_name || profile.username || "User"
         )}&background=2563eb&color=fff`;
-
-  function statusColor(status: string) {
-    switch (status) {
-      case "active":
-        return "text-green-600";
-      case "completed":
-        return "text-blue-600";
-      case "paused":
-        return "text-yellow-600";
-      case "withdrawn":
-        return "text-gray-600";
-      case "expired":
-        return "text-red-700 font-semibold";
-      default:
-        return "text-gray-500";
-    }
-  }
 
   const cleanUrl = (url: string) =>
     url.replace(/^https?:\/\//, "");
@@ -192,43 +196,8 @@ export default async function UserPage({
             Public Commitments
           </h2>
 
-          {commitments && commitments.length > 0 ? (
-            <div className="space-y-8">
-              {await Promise.all(
-                commitments.map(async (c) => {
-                  const { count } = await supabase
-                    .from("commitment_views")
-                    .select("*", { count: "exact", head: true })
-                    .eq("commitment_id", c.id);
-
-                  return (
-                    <div
-                      key={c.id}
-                      className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
-                    >
-                      {/* 🔥 Commitment View Tracking */}
-                      <ViewTracker type="commitment" entityId={c.id} />
-
-                      <div className="font-semibold text-lg text-gray-900 mb-2">
-                        {c.text}
-                      </div>
-
-                      <div className={`text-sm capitalize ${statusColor(c.status)}`}>
-                        Status: {c.status}
-                      </div>
-
-                      <div className="text-xs text-gray-600 mt-2">
-                        Created {new Date(c.created_at).toLocaleDateString()}
-                      </div>
-
-                      <div className="text-xs text-gray-500 mt-4">
-                        👁 {count || 0} views
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+          {enrichedCommitments.length > 0 ? (
+            <CommitmentList commitments={enrichedCommitments} />
           ) : (
             <div className="border rounded-xl p-6 text-gray-700 text-center">
               No public commitments yet.
