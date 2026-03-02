@@ -11,23 +11,27 @@ export default async function UserPage({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  // ✅ Next 16 async params fix
+  // Next 16 async params
   const { username } = await params;
+
+  if (!username) {
+    return notFound();
+  }
 
   const supabase = await createClient();
 
-  // Case-insensitive username match
-  const { data: profile } = await supabase
+  // 🔥 STRICT username match (same logic as company page)
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
-    .ilike("username", username)
-    .maybeSingle();
+    .eq("username", username.toLowerCase())
+    .single();
 
-  if (!profile) {
-    notFound();
+  if (error || !profile) {
+    return notFound();
   }
 
-  // Log profile view (non-blocking)
+  // 🔥 Log profile view (non-blocking)
   supabase.from("profile_views").insert({
     profile_id: profile.id,
   });
@@ -91,6 +95,7 @@ export default async function UserPage({
     <div className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-10">
 
+        {/* Header */}
         <div className="text-center mb-14">
           <Image
             src="/logo.png"
@@ -104,6 +109,7 @@ export default async function UserPage({
           </div>
         </div>
 
+        {/* Profile Section */}
         <div className="text-center">
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <Image
@@ -117,7 +123,7 @@ export default async function UserPage({
 
           <h1 className="text-3xl font-bold text-gray-900">
             {profile.display_name || profile.username}
-            {profile.plan_key && (
+            {profile.plan_key === "pro" && (
               <span className="ml-3 text-blue-600 text-sm font-semibold">
                 PRO
               </span>
@@ -165,10 +171,12 @@ export default async function UserPage({
           </div>
         </div>
 
+        {/* Reputation */}
         <div className="mt-10">
           <ReputationCard userId={profile.id} />
         </div>
 
+        {/* Commitments */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
