@@ -42,7 +42,7 @@ export default function DashboardLayout({
     load();
   }, [router]);
 
-  // Auto close sidebar on route change (mobile fix)
+  // Auto close sidebar on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -88,14 +88,12 @@ export default function DashboardLayout({
           <span className="text-xl font-bold text-blue-600">Stated</span>
         </div>
 
-        {/* PROFILE → NOW LINKS TO EDIT PROFILE */}
+        {/* PROFILE (avatar now uses <img>) */}
         <Link href="/profile/edit" className="flex items-center gap-3 mb-6">
-          <Image
+          <img
             src={avatar}
             alt="avatar"
-            width={48}
-            height={48}
-            className="rounded-full cursor-pointer"
+            className="w-12 h-12 rounded-full object-cover cursor-pointer"
           />
           <div>
             <div className="font-medium">
