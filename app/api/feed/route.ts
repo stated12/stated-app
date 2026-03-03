@@ -12,18 +12,18 @@ async function calculateReputation(
   userId?: string,
   companyId?: string
 ) {
-  let query = supabase
+  let baseQuery = supabase
     .from("commitments")
     .select("id, status, views")
     .eq("visibility", "public");
 
   if (companyId) {
-    query = query.eq("company_id", companyId);
+    baseQuery = baseQuery.eq("company_id", companyId);
   } else if (userId) {
-    query = query.eq("user_id", userId);
+    baseQuery = baseQuery.eq("user_id", userId);
   }
 
-  const { data } = await query;
+  const { data } = await baseQuery;
   const commitments: CommitmentRow[] = data ?? [];
 
   if (commitments.length === 0) {
@@ -44,10 +44,16 @@ async function calculateReputation(
 
   const commitmentIds = commitments.map((c) => c.id);
 
-  const { count } = await supabase
-    .from("commitment_updates")
-    .select("*", { count: "exact", head: true })
-    .in("commitment_id", commitmentIds);
+  let updatesCount = 0;
+
+  if (commitmentIds.length > 0) {
+    const { count } = await supabase
+      .from("commitment_updates")
+      .select("*", { count: "exact", head: true })
+      .in("commitment_id", commitmentIds);
+
+    updatesCount = count ?? 0;
+  }
 
   const totalViews = commitments.reduce(
     (sum, c) => sum + (c.views || 0),
@@ -67,7 +73,7 @@ async function calculateReputation(
   const score =
     completed * 10 +
     active * 2 +
-    (count || 0) * 2 +
+    updatesCount * 2 +
     viewsBonus -
     withdrawn * 5 +
     rateBonus;
@@ -87,7 +93,9 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") || "latest";
   const category = searchParams.get("category");
   const cursor = searchParams.get("cursor");
-  const queryText = searchParams.get("query");
+
+  // ✅ Support q parameter (used by search page)
+  const searchQuery = searchParams.get("q");
 
   const supabase = await createClient();
 
@@ -115,26 +123,26 @@ export async function GET(request: Request) {
     .eq("status", "active")
     .limit(25);
 
-  // 🔥 Order logic
+  // Order
   if (type === "trending") {
     query = query.order("views", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
   }
 
-  // 🔥 Category filter
+  // Category
   if (category) {
     query = query.eq("category", category);
   }
 
-  // 🔥 Cursor pagination
+  // Cursor pagination
   if (cursor) {
     query = query.lt("created_at", cursor);
   }
 
-  // 🔥 TEXT SEARCH SUPPORT
-  if (queryText) {
-    query = query.ilike("text", `%${queryText}%`);
+  // ✅ TEXT SEARCH
+  if (searchQuery) {
+    query = query.ilike("text", `%${searchQuery}%`);
   }
 
   const { data, error } = await query;
