@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 
 export default function InvitePage() {
-  const supabase = createClient();
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [loading, setLoading] = useState(false);
@@ -17,70 +12,22 @@ export default function InvitePage() {
 
     setLoading(true);
 
-    try {
-      // ✅ Check member limit first
-      const check = await fetch("/api/company/member", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "invite_check" }),
-      });
+    const res = await fetch("/api/company/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, role }),
+    });
 
-      if (!check.ok) {
-        const data = await check.json();
-        alert(data.error || "Invite limit reached");
-        setLoading(false);
-        return;
-      }
+    const data = await res.json();
 
-      // ✅ Get logged-in user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      // ✅ Get company owned by user
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("owner_id", user.id)
-        .single();
-
-      if (companyError || !company) {
-        alert("Company not found");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Generate token (NO uuid package needed)
-      const token = crypto.randomUUID();
-
-      // ✅ Insert invite
-      const { error: insertError } = await supabase
-        .from("company_invites")
-        .insert({
-          company_id: company.id,
-          email,
-          role,
-          token,
-        });
-
-      if (insertError) {
-        alert("Failed to create invite");
-        setLoading(false);
-        return;
-      }
-
-      alert(`${window.location.origin}/invite/${token}`);
-      setEmail("");
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+    if (!res.ok) {
+      alert(data.error || "Failed to create invite");
+      setLoading(false);
+      return;
     }
 
+    alert(data.inviteUrl);
+    setEmail("");
     setLoading(false);
   }
 
