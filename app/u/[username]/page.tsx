@@ -11,11 +11,14 @@ import CommitmentList from "@/components/CommitmentList";
 export default async function UserPage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
+  // ✅ Next 16 async params fix
+  const { username } = await params;
+
   const supabase = createPublicClient();
 
-  const cleanUsername = decodeURIComponent(params.username)
+  const cleanUsername = decodeURIComponent(username)
     .trim()
     .toLowerCase();
 
