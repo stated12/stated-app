@@ -1,12 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const COMPANY_LIMITS: Record<string, number> = {
-  comp_starter_10: 10,
-  comp_growth_15: 15,
-  comp_scale_25: 25,
-};
-
 export async function POST(req: Request) {
   const supabase = await createClient();
   const body = await req.json();
@@ -21,9 +15,10 @@ export async function POST(req: Request) {
 
   const { action, memberId, role } = body;
 
+  // Ensure user is company owner
   const { data: company } = await supabase
     .from("companies")
-    .select("*")
+    .select("id")
     .eq("owner_id", user.id)
     .single();
 
@@ -35,7 +30,8 @@ export async function POST(req: Request) {
     await supabase
       .from("company_members")
       .delete()
-      .eq("id", memberId);
+      .eq("id", memberId)
+      .eq("company_id", company.id);
 
     return NextResponse.json({ success: true });
   }
@@ -48,25 +44,8 @@ export async function POST(req: Request) {
     await supabase
       .from("company_members")
       .update({ role })
-      .eq("id", memberId);
-
-    return NextResponse.json({ success: true });
-  }
-
-  if (action === "invite_check") {
-    const limit = COMPANY_LIMITS[company.plan_key] ?? 10;
-
-    const { count } = await supabase
-      .from("company_members")
-      .select("*", { count: "exact", head: true })
+      .eq("id", memberId)
       .eq("company_id", company.id);
-
-    if ((count ?? 0) >= limit) {
-      return NextResponse.json(
-        { error: "Member limit reached for your plan" },
-        { status: 403 }
-      );
-    }
 
     return NextResponse.json({ success: true });
   }
