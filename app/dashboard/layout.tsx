@@ -48,27 +48,14 @@ export default function DashboardLayout({
 
   if (!profile) return null;
 
-  const avatar =
-    profile.avatar_url?.trim()
-      ? profile.avatar_url.trim()
-      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          profile.display_name || profile.username
-        )}&background=2563eb&color=fff`;
-
   const isPro = profile.plan_key === "pro";
-  const isCompany = profile.account_type === "company";
 
   const linkClass = (href: string) =>
-    `px-3 py-2 rounded-lg text-sm font-medium transition ${
+    `flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition ${
       pathname === href
         ? "bg-blue-100 text-blue-700"
         : "text-gray-700 hover:bg-gray-100"
     }`;
-
-  const bottomActive = (href: string) =>
-    pathname === href
-      ? "text-blue-600"
-      : "text-gray-500";
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -86,22 +73,13 @@ export default function DashboardLayout({
         className={`fixed md:static top-0 left-0 h-full w-72 bg-white border-r flex flex-col transition-transform duration-300 z-50
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        {/* HEADER */}
+        {/* PROFILE */}
         <div className="px-6 pt-8 pb-6 border-b">
-
-          <Link href="/" className="flex flex-col items-center gap-2 mb-6">
-            <Image src="/logo.png" alt="Stated" width={48} height={48} />
-            <span className="text-2xl font-bold text-blue-600 tracking-tight">
-              Stated
-            </span>
-          </Link>
-
-          <Link href="/profile/edit" className="flex items-center gap-3">
-            <img
-              src={avatar}
-              alt="avatar"
-              className="w-12 h-12 rounded-full object-cover"
-            />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+              {profile.display_name?.charAt(0) ||
+                profile.username?.charAt(0)}
+            </div>
             <div>
               <div className="font-semibold text-gray-900">
                 {profile.display_name || profile.username}
@@ -109,111 +87,93 @@ export default function DashboardLayout({
               <div className="text-xs text-gray-500">
                 @{profile.username}
               </div>
-              {isPro && (
-                <div className="text-xs text-blue-600 font-medium mt-1">
-                  PRO
-                </div>
-              )}
             </div>
-          </Link>
-
-          {!isCompany && (
-            <Link
-              href="/dashboard/create"
-              className="block mt-6 bg-blue-600 hover:bg-blue-700 text-white text-center py-2.5 rounded-lg font-medium transition"
-            >
-              + Create Commitment
-            </Link>
-          )}
+          </div>
         </div>
 
-        {/* NAVIGATION */}
-        <nav className="flex-1 px-6 py-6 space-y-2 overflow-y-auto">
+        {/* NAV */}
+        <nav className="flex-1 px-4 py-6 space-y-2">
 
-          {!isCompany ? (
-            <>
-              <Link href="/dashboard" className={linkClass("/dashboard")}>
-                Feed
-              </Link>
+          <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+            📌 My Commitments
+          </Link>
 
-              <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
-                My Commitments
-              </Link>
+          <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+            📊 Insights
+          </Link>
 
-              <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
-                Insights
-              </Link>
+          <Link href="/billing" className={linkClass("/billing")}>
+            💳 Billing
+          </Link>
 
-              <Link href="/billing" className={linkClass("/billing")}>
-                Billing
-              </Link>
+          <Link href="/account" className={linkClass("/account")}>
+            ⚙️ Account Settings
+          </Link>
 
-              <Link href="/account" className={linkClass("/account")}>
-                Account Settings
-              </Link>
+          <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+            🛟 Support
+          </Link>
 
-              <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
-                Support
-              </Link>
-
-              {!isPro && (
-                <Link href="/upgrade" className={linkClass("/upgrade")}>
-                  Upgrade
-                </Link>
-              )}
-            </>
-          ) : (
-            <>
-              <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
-                Public Page
-              </Link>
-
-              <Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
-                Analytics
-              </Link>
-
-              <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
-                Settings
-              </Link>
-
-              <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
-                Invite Members
-              </Link>
-            </>
+          {!isPro && (
+            <Link href="/upgrade" className={linkClass("/upgrade")}>
+              🚀 Upgrade
+            </Link>
           )}
 
         </nav>
 
         {/* LOGOUT */}
-        <div className="px-6 pb-6 border-t">
-          <Link
-            href="/logout"
-            className="block mt-4 text-sm text-red-500 hover:text-red-600 font-medium"
+        <div className="px-4 pb-6 border-t">
+          <button
+            onClick={async () => {
+              const supabase = createClient();
+              await supabase.auth.signOut();
+              router.push("/");
+            }}
+            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg"
           >
-            Logout
-          </Link>
+            🚪 Logout
+          </button>
         </div>
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 flex flex-col pb-20 md:pb-0">
+      <main className="flex-1 flex flex-col pb-16">
 
-        {/* DESKTOP TOP BAR */}
-        <div className="hidden md:flex justify-end items-center bg-white border-b px-8 py-4">
-          <NotificationBell />
-        </div>
+        {/* MOBILE HEADER */}
+        <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
-        {/* MOBILE TOP BAR */}
-        <div className="bg-white border-b px-4 py-4 flex items-center justify-between md:hidden">
-          <button
-            onClick={() => setOpen(!open)}
-            className="text-xl font-bold"
-          >
+          <button onClick={() => setOpen(!open)}>
             ☰
           </button>
 
-          <Link href="/">
-            <Image src="/logo.png" alt="Stated" width={36} height={36} />
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="Stated"
+              width={36}
+              height={36}
+            />
+            <span className="font-bold text-blue-600 text-lg">
+              Stated
+            </span>
+          </Link>
+
+          <NotificationBell />
+        </div>
+
+        {/* DESKTOP HEADER */}
+        <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="Stated"
+              width={40}
+              height={40}
+            />
+            <span className="font-bold text-blue-600 text-xl">
+              Stated
+            </span>
           </Link>
 
           <NotificationBell />
@@ -222,28 +182,6 @@ export default function DashboardLayout({
         {/* CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
-        </div>
-
-        {/* MOBILE BOTTOM NAV */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
-
-          <Link href="/dashboard" className={`flex flex-col items-center text-xs ${bottomActive("/dashboard")}`}>
-            <span className="text-lg">🏠</span>
-            Home
-          </Link>
-
-          <Link href="/dashboard/search" className={`flex flex-col items-center text-xs ${bottomActive("/dashboard/search")}`}>
-            <span className="text-lg">🔍</span>
-            Search
-          </Link>
-
-          <Link
-            href="/dashboard/create"
-            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow"
-          >
-            + Create
-          </Link>
-
         </div>
 
       </main>
