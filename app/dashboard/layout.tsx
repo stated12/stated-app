@@ -20,7 +20,6 @@ export default function DashboardLayout({
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -57,6 +56,9 @@ export default function DashboardLayout({
         : "text-gray-700 hover:bg-gray-100"
     }`;
 
+  const bottomActive = (href: string) =>
+    pathname === href ? "text-blue-600" : "text-gray-500";
+
   return (
     <div className="min-h-screen flex bg-gray-50">
 
@@ -92,7 +94,7 @@ export default function DashboardLayout({
         </div>
 
         {/* NAV */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
 
           <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
             📌 My Commitments
@@ -119,7 +121,6 @@ export default function DashboardLayout({
               🚀 Upgrade
             </Link>
           )}
-
         </nav>
 
         {/* LOGOUT */}
@@ -138,7 +139,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 flex flex-col pb-16">
+      <main className="flex-1 flex flex-col pb-20">
 
         {/* MOBILE HEADER */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
@@ -151,10 +152,10 @@ export default function DashboardLayout({
             <Image
               src="/logo.png"
               alt="Stated"
-              width={36}
-              height={36}
+              width={48}
+              height={48}
             />
-            <span className="font-bold text-blue-600 text-lg">
+            <span className="font-bold text-blue-600 text-2xl tracking-tight">
               Stated
             </span>
           </Link>
@@ -164,14 +165,14 @@ export default function DashboardLayout({
 
         {/* DESKTOP HEADER */}
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <Image
               src="/logo.png"
               alt="Stated"
-              width={40}
-              height={40}
+              width={50}
+              height={50}
             />
-            <span className="font-bold text-blue-600 text-xl">
+            <span className="font-bold text-blue-600 text-2xl tracking-tight">
               Stated
             </span>
           </Link>
@@ -182,6 +183,34 @@ export default function DashboardLayout({
         {/* CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
+        </div>
+
+        {/* MOBILE BOTTOM NAV */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
+
+          <Link
+            href="/dashboard"
+            className={`flex flex-col items-center text-xs ${bottomActive("/dashboard")}`}
+          >
+            <span className="text-lg">🏠</span>
+            Home
+          </Link>
+
+          <Link
+            href="/dashboard/search"
+            className={`flex flex-col items-center text-xs ${bottomActive("/dashboard/search")}`}
+          >
+            <span className="text-lg">🔍</span>
+            Search
+          </Link>
+
+          <Link
+            href="/dashboard/create"
+            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow"
+          >
+            + Create
+          </Link>
+
         </div>
 
       </main>
