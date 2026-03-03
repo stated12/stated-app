@@ -13,8 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { email, role } = body;
+  const { email, role } = await request.json();
 
   if (!email || !role) {
     return NextResponse.json(
@@ -23,34 +22,17 @@ export async function POST(request: Request) {
     );
   }
 
-  // Check if user is owner
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("company_id, role")
-    .eq("user_id", user.id)
-    .eq("role", "owner")
-    .single();
-
-  if (!membership) {
-    return NextResponse.json(
-      { error: "Only owner can invite members" },
-      { status: 403 }
-    );
-  }
-
-  const companyId = membership.company_id;
-
-  // Get company limits
+  // Must be owner
   const { data: company } = await supabase
     .from("companies")
-    .select("member_limit")
-    .eq("id", companyId)
+    .select("id, member_limit")
+    .eq("owner_id", user.id)
     .single();
 
   if (!company) {
     return NextResponse.json(
-      { error: "Company not found" },
-      { status: 404 }
+      { error: "Only owner can invite members" },
+      { status: 403 }
     );
   }
 
@@ -58,9 +40,9 @@ export async function POST(request: Request) {
   const { count } = await supabase
     .from("company_members")
     .select("*", { count: "exact", head: true })
-    .eq("company_id", companyId);
+    .eq("company_id", company.id);
 
-  if ((count || 0) >= company.member_limit) {
+  if ((count ?? 0) >= company.member_limit) {
     return NextResponse.json(
       { error: "Member limit reached. Upgrade plan to add more members." },
       { status: 400 }
@@ -71,7 +53,7 @@ export async function POST(request: Request) {
   const { data: existingInvite } = await supabase
     .from("company_invites")
     .select("id")
-    .eq("company_id", companyId)
+    .eq("company_id", company.id)
     .eq("email", email)
     .maybeSingle();
 
@@ -85,11 +67,14 @@ export async function POST(request: Request) {
   const token = crypto.randomBytes(32).toString("hex");
 
   await supabase.from("company_invites").insert({
-    company_id: companyId,
+    company_id: company.id,
     email,
     role,
     token,
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    inviteUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`,
+  });
 }
