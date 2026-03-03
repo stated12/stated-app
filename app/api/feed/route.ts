@@ -7,10 +7,6 @@ type CommitmentRow = {
   views: number | null;
 };
 
-type UpdateCountResponse = {
-  count: number | null;
-};
-
 async function calculateReputation(
   supabase: any,
   userId?: string,
@@ -28,7 +24,6 @@ async function calculateReputation(
   }
 
   const { data } = await query;
-
   const commitments: CommitmentRow[] = data ?? [];
 
   if (commitments.length === 0) {
@@ -36,20 +31,18 @@ async function calculateReputation(
   }
 
   const completed = commitments.filter(
-    (c: CommitmentRow) => c.status === "completed"
+    (c) => c.status === "completed"
   ).length;
 
   const active = commitments.filter(
-    (c: CommitmentRow) => c.status === "active"
+    (c) => c.status === "active"
   ).length;
 
   const withdrawn = commitments.filter(
-    (c: CommitmentRow) => c.status === "withdrawn"
+    (c) => c.status === "withdrawn"
   ).length;
 
-  const commitmentIds = commitments.map(
-    (c: CommitmentRow) => c.id
-  );
+  const commitmentIds = commitments.map((c) => c.id);
 
   const { count } = await supabase
     .from("commitment_updates")
@@ -57,7 +50,7 @@ async function calculateReputation(
     .in("commitment_id", commitmentIds);
 
   const totalViews = commitments.reduce(
-    (sum: number, c: CommitmentRow) => sum + (c.views || 0),
+    (sum, c) => sum + (c.views || 0),
     0
   );
 
@@ -94,6 +87,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") || "latest";
   const category = searchParams.get("category");
   const cursor = searchParams.get("cursor");
+  const queryText = searchParams.get("query");
 
   const supabase = await createClient();
 
@@ -121,18 +115,34 @@ export async function GET(request: Request) {
     .eq("status", "active")
     .limit(25);
 
+  // 🔥 Order logic
   if (type === "trending") {
     query = query.order("views", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
   }
 
-  if (category) query = query.eq("category", category);
-  if (cursor) query = query.lt("created_at", cursor);
+  // 🔥 Category filter
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  // 🔥 Cursor pagination
+  if (cursor) {
+    query = query.lt("created_at", cursor);
+  }
+
+  // 🔥 TEXT SEARCH SUPPORT
+  if (queryText) {
+    query = query.ilike("text", `%${queryText}%`);
+  }
 
   const { data, error } = await query;
 
-  if (error || !data) return NextResponse.json([]);
+  if (error || !data) {
+    console.error("Feed error:", error);
+    return NextResponse.json([]);
+  }
 
   const formatted = await Promise.all(
     data.map(async (c: any) => {
