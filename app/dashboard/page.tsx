@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 
 type Commitment = {
   id: string;
@@ -10,8 +8,6 @@ type Commitment = {
   category: string;
   created_at: string;
   views?: number;
-  user_id?: string | null;
-  company_id?: string | null;
 };
 
 function timeAgo(date: string) {
@@ -73,22 +69,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 pt-4 pb-20 space-y-6">
-
-      {/* HEADER */}
-      <div className="flex items-center justify-center relative mb-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="Stated"
-            width={42}
-            height={42}
-          />
-          <span className="text-xl font-bold text-blue-600 tracking-tight">
-            Stated
-          </span>
-        </Link>
-      </div>
+    <div className="max-w-xl mx-auto px-4 pt-6 pb-20 space-y-6">
 
       {/* TITLE */}
       <div>
@@ -103,7 +84,6 @@ export default function Dashboard() {
       {/* FILTER CARD */}
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
 
-        {/* Tabs */}
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("latest")}
@@ -128,7 +108,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Category */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -177,11 +156,6 @@ export default function Dashboard() {
             No commitments yet
           </div>
         )}
-      </div>
-
-      {/* FOOTER */}
-      <div className="pt-10 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} Stated. Built for builders.
       </div>
     </div>
   );
