@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 type CommitmentRow = {
   id: string;
   status: "completed" | "active" | "withdrawn" | "expired";
   views: number | null;
 };
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 async function calculateReputation(
   supabase: any,
@@ -93,11 +100,9 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") || "latest";
   const category = searchParams.get("category");
   const cursor = searchParams.get("cursor");
-
-  // ✅ Support q parameter (used by search page)
   const searchQuery = searchParams.get("q");
 
-  const supabase = await createClient();
+  const supabase = getSupabase();
 
   let query = supabase
     .from("commitments")
@@ -121,6 +126,7 @@ export async function GET(request: Request) {
       )
     `)
     .eq("status", "active")
+    .eq("visibility", "public")
     .limit(25);
 
   // Order
@@ -135,12 +141,12 @@ export async function GET(request: Request) {
     query = query.eq("category", category);
   }
 
-  // Cursor pagination
+  // Cursor
   if (cursor) {
     query = query.lt("created_at", cursor);
   }
 
-  // ✅ TEXT SEARCH
+  // Text search
   if (searchQuery) {
     query = query.ilike("text", `%${searchQuery}%`);
   }
