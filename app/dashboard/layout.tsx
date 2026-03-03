@@ -42,7 +42,6 @@ export default function DashboardLayout({
     load();
   }, [router]);
 
-  // Auto close sidebar on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -60,11 +59,16 @@ export default function DashboardLayout({
   const isCompany = profile.account_type === "company";
 
   const linkClass = (href: string) =>
-    `px-2 py-1 rounded transition ${
+    `px-3 py-2 rounded-lg text-sm font-medium transition ${
       pathname === href
-        ? "bg-blue-50 text-blue-600 font-medium"
+        ? "bg-blue-100 text-blue-700"
         : "text-gray-700 hover:bg-gray-100"
     }`;
+
+  const bottomActive = (href: string) =>
+    pathname === href
+      ? "text-blue-600"
+      : "text-gray-500";
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -79,56 +83,54 @@ export default function DashboardLayout({
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full w-64 bg-white border-r p-6 flex flex-col transition-transform duration-300 z-50
+        className={`fixed md:static top-0 left-0 h-full w-72 bg-white border-r flex flex-col transition-transform duration-300 z-50
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <Image src="/logo.png" alt="Stated" width={32} height={32} />
-          <span className="text-xl font-bold text-blue-600">Stated</span>
+        {/* HEADER */}
+        <div className="px-6 pt-8 pb-6 border-b">
+
+          <Link href="/" className="flex flex-col items-center gap-2 mb-6">
+            <Image src="/logo.png" alt="Stated" width={48} height={48} />
+            <span className="text-2xl font-bold text-blue-600 tracking-tight">
+              Stated
+            </span>
+          </Link>
+
+          <Link href="/profile/edit" className="flex items-center gap-3">
+            <img
+              src={avatar}
+              alt="avatar"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div>
+              <div className="font-semibold text-gray-900">
+                {profile.display_name || profile.username}
+              </div>
+              <div className="text-xs text-gray-500">
+                @{profile.username}
+              </div>
+              {isPro && (
+                <div className="text-xs text-blue-600 font-medium mt-1">
+                  PRO
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {!isCompany && (
+            <Link
+              href="/dashboard/create"
+              className="block mt-6 bg-blue-600 hover:bg-blue-700 text-white text-center py-2.5 rounded-lg font-medium transition"
+            >
+              + Create Commitment
+            </Link>
+          )}
         </div>
 
-        {/* PROFILE (avatar now uses <img>) */}
-        <Link href="/profile/edit" className="flex items-center gap-3 mb-6">
-          <img
-            src={avatar}
-            alt="avatar"
-            className="w-12 h-12 rounded-full object-cover cursor-pointer"
-          />
-          <div>
-            <div className="font-medium">
-              {profile.display_name || profile.username}
-            </div>
-            {isPro && (
-              <div className="text-xs text-blue-600 font-medium">
-                PRO
-              </div>
-            )}
-          </div>
-        </Link>
-
         {/* NAVIGATION */}
-        <nav className="flex flex-col gap-2 text-sm">
+        <nav className="flex-1 px-6 py-6 space-y-2 overflow-y-auto">
 
-          {isCompany ? (
-            <>
-              <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
-                Public Page
-              </Link>
-
-              <Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
-                Company Analytics
-              </Link>
-
-              <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
-                Company Settings
-              </Link>
-
-              <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
-                Invite Members
-              </Link>
-            </>
-          ) : (
+          {!isCompany ? (
             <>
               <Link href="/dashboard" className={linkClass("/dashboard")}>
                 Feed
@@ -160,19 +162,44 @@ export default function DashboardLayout({
                 </Link>
               )}
             </>
+          ) : (
+            <>
+              <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
+                Public Page
+              </Link>
+
+              <Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
+                Analytics
+              </Link>
+
+              <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
+                Settings
+              </Link>
+
+              <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
+                Invite Members
+              </Link>
+            </>
           )}
 
-          <Link href="/logout" className="mt-4 text-red-500 hover:text-red-600">
+        </nav>
+
+        {/* LOGOUT */}
+        <div className="px-6 pb-6 border-t">
+          <Link
+            href="/logout"
+            className="block mt-4 text-sm text-red-500 hover:text-red-600 font-medium"
+          >
             Logout
           </Link>
-        </nav>
+        </div>
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 flex flex-col w-full">
+      <main className="flex-1 flex flex-col pb-20 md:pb-0">
 
         {/* DESKTOP TOP BAR */}
-        <div className="hidden md:flex justify-end items-center bg-white border-b px-6 py-4">
+        <div className="hidden md:flex justify-end items-center bg-white border-b px-8 py-4">
           <NotificationBell />
         </div>
 
@@ -185,14 +212,38 @@ export default function DashboardLayout({
             ☰
           </button>
 
-          <Image src="/logo.png" alt="Stated" width={28} height={28} />
+          <Link href="/">
+            <Image src="/logo.png" alt="Stated" width={36} height={36} />
+          </Link>
 
           <NotificationBell />
         </div>
 
         {/* CONTENT */}
-        <div className="p-6">
+        <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
+        </div>
+
+        {/* MOBILE BOTTOM NAV */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
+
+          <Link href="/dashboard" className={`flex flex-col items-center text-xs ${bottomActive("/dashboard")}`}>
+            <span className="text-lg">🏠</span>
+            Home
+          </Link>
+
+          <Link href="/dashboard/search" className={`flex flex-col items-center text-xs ${bottomActive("/dashboard/search")}`}>
+            <span className="text-lg">🔍</span>
+            Search
+          </Link>
+
+          <Link
+            href="/dashboard/create"
+            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow"
+          >
+            + Create
+          </Link>
+
         </div>
 
       </main>
