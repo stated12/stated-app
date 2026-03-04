@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 type Commitment = {
   id: string;
@@ -8,6 +10,9 @@ type Commitment = {
   category: string;
   created_at: string;
   views?: number;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
 };
 
 function timeAgo(date: string) {
@@ -136,18 +141,57 @@ export default function Dashboard() {
               key={c.id}
               className="bg-white rounded-2xl shadow-sm p-5 transition hover:shadow-md"
             >
+
+              {/* AUTHOR */}
+              <Link
+                href={`/u/${c.username}`}
+                className="flex items-center gap-3 mb-3"
+              >
+
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+
+                  {c.avatar_url ? (
+                    <Image
+                      src={c.avatar_url}
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                    />
+                  ) : (
+                    c.display_name?.charAt(0) ||
+                    c.username?.charAt(0)
+                  )}
+
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {c.display_name || c.username}
+                  </div>
+
+                  <div className="text-xs text-gray-500">
+                    @{c.username}
+                  </div>
+                </div>
+
+              </Link>
+
+              {/* META */}
               <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
                 <span>{c.category}</span>
                 <span>{timeAgo(c.created_at)}</span>
               </div>
 
+              {/* TEXT */}
               <div className="text-gray-900 text-base mb-3 leading-relaxed">
                 {c.text}
               </div>
 
+              {/* VIEWS */}
               <div className="text-xs text-gray-500">
                 👁 {c.views ?? 0} views
               </div>
+
             </div>
           ))}
 
@@ -156,7 +200,9 @@ export default function Dashboard() {
             No commitments yet
           </div>
         )}
+
       </div>
+
     </div>
   );
 }
