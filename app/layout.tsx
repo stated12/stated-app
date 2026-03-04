@@ -1,8 +1,8 @@
 import InstallPrompt from "@/components/InstallPrompt";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import GlobalFooter from "@/components/GlobalFooter";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,60 +35,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const headersList = headers();
-  const pathname = headersList.get("x-invoke-path") || "";
-  const isDashboard = pathname.startsWith("/dashboard");
-
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-white`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-white`}>
         <main className="flex-1">
           {children}
         </main>
 
-        {/* PWA */}
         <ServiceWorkerRegister />
         <InstallPrompt />
 
-        {/* Footer ONLY outside dashboard */}
-        {!isDashboard && (
-          <footer className="border-t py-6 text-center text-sm text-gray-500 bg-white">
-            <div className="space-x-4">
-              <a
-                href="https://stated.in/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                Privacy Policy
-              </a>
-
-              <a
-                href="https://stated.in/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                Terms of Service
-              </a>
-
-              <a
-                href="https://stated.in/refund"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                Refund Policy
-              </a>
-            </div>
-
-            <div className="mt-2">
-              © {new Date().getFullYear()} Stated
-            </div>
-          </footer>
-        )}
+        <GlobalFooter />
       </body>
     </html>
   );
