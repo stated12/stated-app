@@ -21,7 +21,19 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("commitments")
-      .select("*")
+      .select(`
+        id,
+        text,
+        category,
+        created_at,
+        views,
+        user_id,
+        profiles (
+          username,
+          display_name,
+          avatar_url
+        )
+      `)
       .eq("status", "active")
       .eq("visibility", "public")
       .limit(25);
@@ -50,7 +62,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error });
     }
 
-    return NextResponse.json(data);
+    const feed = data?.map((item: any) => ({
+      id: item.id,
+      text: item.text,
+      category: item.category,
+      created_at: item.created_at,
+      views: item.views || 0,
+      user_id: item.user_id,
+      username: item.profiles?.username || null,
+      display_name: item.profiles?.display_name || null,
+      avatar_url: item.profiles?.avatar_url || null,
+    }));
+
+    return NextResponse.json(feed);
   } catch (err: any) {
     return NextResponse.json({
       success: false,
