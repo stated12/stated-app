@@ -34,9 +34,10 @@ export default async function UserPage({
     return notFound();
   }
 
+  // ✅ Only change here: added end_date and completed_at
   const { data: commitments } = await supabase
     .from("commitments")
-    .select("id, text, status, created_at")
+    .select("id, text, status, created_at, end_date, completed_at")
     .eq("user_id", profile.id)
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
