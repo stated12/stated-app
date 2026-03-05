@@ -52,10 +52,10 @@ export default function DashboardLayout({
   const isPro = profile.plan_key === "pro";
 
   const linkClass = (href: string) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-[15px] font-medium transition ${
+    `flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-semibold transition ${
       pathname === href
         ? "bg-blue-100 text-blue-700"
-        : "text-gray-700 hover:bg-gray-100"
+        : "text-gray-800 hover:bg-gray-100"
     }`;
 
   const bottomActive = (href: string) =>
@@ -74,7 +74,7 @@ export default function DashboardLayout({
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed md:static top-0 left-0 h-screen w-72 bg-white border-r flex flex-col transition-transform duration-300 z-50
+        className={`fixed md:static top-0 left-0 h-screen w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
 
@@ -113,7 +113,6 @@ export default function DashboardLayout({
 
           </Link>
 
-          {/* VIEW PROFILE */}
           <Link
             href={`/u/${profile.username}`}
             className="block mt-3 text-xs text-blue-600 hover:underline"
@@ -163,7 +162,7 @@ export default function DashboardLayout({
               await supabase.auth.signOut();
               router.push("/");
             }}
-            className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-red-500 hover:bg-red-50 rounded-lg"
+            className="w-full text-left px-4 py-3 text-[15px] font-semibold text-red-600 hover:bg-red-50 rounded-lg"
           >
             🚪 Logout
           </button>
@@ -173,7 +172,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 flex flex-col pb-20">
+      <main className="flex-1 flex flex-col pb-24">
 
         {/* MOBILE HEADER */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
@@ -243,7 +242,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/create"
-            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow"
+            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold shadow"
           >
             + Create
           </Link>
