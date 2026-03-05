@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import ViewTracker from "@/components/ViewTracker";
 
 type Commitment = {
   id: string;
@@ -87,7 +88,6 @@ export default function CommitmentFeed({
     setCommitments(data);
     setCursor(data.length ? data[data.length - 1].created_at : null);
     setHasMore(data.length === 25);
-    triggerImpressions(data);
   }
 
   async function loadMore() {
@@ -113,25 +113,7 @@ export default function CommitmentFeed({
       setHasMore(false);
     }
 
-    triggerImpressions(data);
     setLoading(false);
-  }
-
-  function triggerImpressions(data: Commitment[]) {
-    if (!data || data.length === 0) return;
-
-    const ids = data.map((c) => c.id);
-    const sessionKey = "viewed_" + ids.join("_");
-
-    if (sessionStorage.getItem(sessionKey)) return;
-
-    fetch("/api/impression", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ commitmentIds: ids }),
-    });
-
-    sessionStorage.setItem(sessionKey, "true");
   }
 
   return (
@@ -194,8 +176,16 @@ export default function CommitmentFeed({
           return (
             <div
               key={c.id}
-              className="bg-white rounded-xl shadow p-5"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative"
             >
+
+              {/* VIEW TRACKER */}
+              <ViewTracker
+                type="commitment"
+                entityId={c.id}
+              />
+
+              {/* HEADER */}
               <div className="flex items-center gap-3 mb-3">
                 <Link href={profileLink}>
                   <Image
@@ -223,19 +213,23 @@ export default function CommitmentFeed({
                 </div>
               </div>
 
+              {/* CATEGORY */}
               {c.category && (
                 <div className="text-xs text-blue-600 mb-2">
                   {c.category}
                 </div>
               )}
 
-              <div className="mb-2 whitespace-pre-wrap">
+              {/* TEXT */}
+              <div className="mb-3 whitespace-pre-wrap text-gray-800">
                 {c.text}
               </div>
 
+              {/* VIEWS */}
               <div className="text-sm text-gray-500">
                 👁 {c.views} views
               </div>
+
             </div>
           );
         })}
