@@ -18,8 +18,17 @@ export default async function InsightsPage() {
     .eq("id", user.id)
     .single();
 
-  // ✅ Correct PRO detection
-  const isPro = profile?.plan_key === "pro";
+  // ✅ PRO plan detection
+  const PRO_PLANS = [
+    "ind_499",
+    "ind_899",
+    "ind_1299",
+    "comp_1999",
+    "comp_2999",
+    "comp_4999",
+  ];
+
+  const isPro = PRO_PLANS.includes(profile?.plan_key);
 
   const { data: commitments } = await supabase
     .from("commitments")
