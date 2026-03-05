@@ -7,24 +7,37 @@ export async function POST(req: Request) {
     const { planKey } = await req.json();
 
     if (!planKey) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid plan selected" },
+        { status: 400 }
+      );
     }
 
+    // Pricing map (must match upgrade page plan keys)
     const PRICE_MAP: Record<string, number> = {
-      individual: 499,
-      company_starter: 1999,
-      company_growth: 2999,
-      company_scale: 4999,
+      ind_499: 499,
+      ind_899: 899,
+      ind_1299: 1299,
+
+      comp_1999: 1999,
+      comp_2999: 2999,
+      comp_4999: 4999,
+
       pack_10: 199,
       pack_25: 399,
       pack_50: 699,
     };
 
+    // Credits granted per purchase
     const CREDIT_MAP: Record<string, number> = {
-      individual: 20,
-      company_starter: 25,
-      company_growth: 50,
-      company_scale: 75,
+      ind_499: 20,
+      ind_899: 40,
+      ind_1299: 60,
+
+      comp_1999: 25,
+      comp_2999: 50,
+      comp_4999: 75,
+
       pack_10: 10,
       pack_25: 25,
       pack_50: 50,
@@ -34,9 +47,13 @@ export async function POST(req: Request) {
     const credits = CREDIT_MAP[planKey];
 
     if (!price || !credits) {
-      return NextResponse.json({ error: "Plan not found" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Plan not found" },
+        { status: 400 }
+      );
     }
 
+    // Get logged in user
     const supabase = await createClient();
 
     const {
@@ -44,16 +61,21 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
+    // Initialize Razorpay
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
 
+    // Create Razorpay order
     const order = await razorpay.orders.create({
-      amount: price * 100,
+      amount: price * 100, // paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
       notes: {
@@ -69,10 +91,13 @@ export async function POST(req: Request) {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Razorpay order error:", error);
+
     return NextResponse.json(
-      { error: "Order creation failed" },
+      {
+        error: error?.message || "Order creation failed",
+      },
       { status: 500 }
     );
   }
