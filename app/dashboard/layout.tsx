@@ -52,10 +52,10 @@ export default function DashboardLayout({
   const isPro = profile.plan_key === "pro";
 
   const linkClass = (href: string) => {
-    return `flex items-center gap-3 px-4 py-3 rounded-lg text-[16px] font-semibold transition ${
+    return `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
       pathname === href
         ? "bg-blue-100 text-blue-700"
-        : "text-gray-800 hover:bg-gray-100"
+        : "text-gray-900 hover:bg-gray-100"
     }`;
   };
 
@@ -73,11 +73,12 @@ export default function DashboardLayout({
       )}
 
       <aside
-        className={`fixed md:static top-0 left-0 h-screen w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50 ${
+        className={`fixed md:static top-0 left-0 h-screen w-72 bg-white border-r flex flex-col transition-transform duration-300 z-50 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
 
+        {/* PROFILE */}
         <div className="px-6 pt-8 pb-5 border-b">
 
           <Link href="/profile/edit" className="flex items-center gap-3">
@@ -121,37 +122,43 @@ export default function DashboardLayout({
 
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        {/* NAV SCROLL AREA */}
+        <div className="flex-1 overflow-y-auto">
 
-          <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
-            📌 My Commitments
-          </Link>
+          <nav className="px-4 py-6 space-y-2">
 
-          <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
-            📊 Insights
-          </Link>
-
-          <Link href="/billing" className={linkClass("/billing")}>
-            💳 Billing
-          </Link>
-
-          <Link href="/account" className={linkClass("/account")}>
-            ⚙️ Account Settings
-          </Link>
-
-          <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
-            🛟 Support
-          </Link>
-
-          {!isPro && (
-            <Link href="/upgrade" className={linkClass("/upgrade")}>
-              🚀 Upgrade
+            <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+              📌 My Commitments
             </Link>
-          )}
 
-        </nav>
+            <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+              📊 Insights
+            </Link>
 
-        <div className="px-4 py-6 border-t">
+            <Link href="/billing" className={linkClass("/billing")}>
+              💳 Billing
+            </Link>
+
+            <Link href="/account" className={linkClass("/account")}>
+              ⚙️ Account Settings
+            </Link>
+
+            <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+              🛟 Support
+            </Link>
+
+            {!isPro && (
+              <Link href="/upgrade" className={linkClass("/upgrade")}>
+                🚀 Upgrade
+              </Link>
+            )}
+
+          </nav>
+
+        </div>
+
+        {/* LOGOUT */}
+        <div className="px-4 py-4 border-t bg-white">
 
           <button
             onClick={async () => {
@@ -159,7 +166,7 @@ export default function DashboardLayout({
               await supabase.auth.signOut();
               router.push("/");
             }}
-            className="w-full text-left px-4 py-3 text-[16px] font-semibold text-red-600 hover:bg-red-50 rounded-lg"
+            className="w-full text-left px-5 py-3 text-[16px] font-bold text-red-600 hover:bg-red-50 rounded-lg"
           >
             🚪 Logout
           </button>
@@ -168,8 +175,10 @@ export default function DashboardLayout({
 
       </aside>
 
+      {/* MAIN */}
       <main className="flex-1 flex flex-col pb-24">
 
+        {/* MOBILE HEADER */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
           <button onClick={() => setOpen(!open)}>
@@ -187,6 +196,7 @@ export default function DashboardLayout({
 
         </div>
 
+        {/* DESKTOP HEADER */}
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -200,10 +210,12 @@ export default function DashboardLayout({
 
         </div>
 
+        {/* CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
 
+        {/* MOBILE BOTTOM NAV */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
 
           <Link
@@ -224,7 +236,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/create"
-            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold shadow"
+            className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow"
           >
             + Create
           </Link>
