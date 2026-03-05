@@ -10,6 +10,8 @@ export default function CommitmentList({
     text: string;
     status: string;
     created_at: string;
+    completed_at?: string;
+    end_date?: string;
     views: number;
   }[];
 }) {
@@ -30,6 +32,22 @@ export default function CommitmentList({
     }
   }
 
+  function getDateLabel(c: any) {
+    if (c.status === "completed" && c.completed_at) {
+      const completed = new Date(c.completed_at);
+      const created = new Date(c.created_at);
+
+      const days = Math.ceil(
+        (completed.getTime() - created.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      return `Completed ${completed.toLocaleDateString()} (${days} days)`;
+    }
+
+    return `Created ${new Date(c.created_at).toLocaleDateString()}`;
+  }
+
   return (
     <div className="space-y-8">
       {commitments.map((c) => (
@@ -48,7 +66,7 @@ export default function CommitmentList({
           </div>
 
           <div className="text-xs text-gray-600 mt-2">
-            Created {new Date(c.created_at).toLocaleDateString()}
+            {getDateLabel(c)}
           </div>
 
           <div className="text-xs text-gray-500 mt-4">
