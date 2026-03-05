@@ -27,11 +27,41 @@ export default function SearchClient() {
   const [companies, setCompanies] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
 
+  /* -----------------------------
+     Run search when URL changes
+  ------------------------------*/
+
   useEffect(() => {
     if (queryParam) {
       searchProfiles(queryParam);
+    } else {
+      setPeople([]);
+      setCompanies([]);
     }
   }, [queryParam]);
+
+  /* -----------------------------
+     Debounced typing search
+  ------------------------------*/
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const q = query.trim();
+
+      if (!q) {
+        router.push("/search");
+        return;
+      }
+
+      router.push(`/search?q=${encodeURIComponent(q)}`);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [query]);
+
+  /* -----------------------------
+     Database search
+  ------------------------------*/
 
   async function searchProfiles(searchQuery: string) {
     const q = searchQuery.trim();
@@ -68,6 +98,10 @@ export default function SearchClient() {
     setLoading(false);
   }
 
+  /* -----------------------------
+     Manual search submit
+  ------------------------------*/
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
 
@@ -77,6 +111,10 @@ export default function SearchClient() {
 
     router.push(`/search?q=${encodeURIComponent(q)}`);
   }
+
+  /* -----------------------------
+     Avatar helper
+  ------------------------------*/
 
   function avatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
@@ -97,6 +135,7 @@ export default function SearchClient() {
       <div className="max-w-4xl mx-auto space-y-10">
 
         {/* SEARCH BAR */}
+
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
@@ -105,12 +144,14 @@ export default function SearchClient() {
             placeholder="Search people, companies or commitments"
             className="flex-1 border rounded-lg px-4 py-2"
           />
+
           <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">
             Search
           </button>
         </form>
 
         {/* PEOPLE */}
+
         {queryParam && (
           <div>
             <h2 className="text-lg font-semibold mb-4">People</h2>
@@ -152,6 +193,7 @@ export default function SearchClient() {
         )}
 
         {/* COMPANIES */}
+
         {queryParam && companies.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Companies</h2>
@@ -185,6 +227,7 @@ export default function SearchClient() {
         )}
 
         {/* COMMITMENTS */}
+
         <div>
           <h2 className="text-lg font-semibold mb-4">Commitments</h2>
 
