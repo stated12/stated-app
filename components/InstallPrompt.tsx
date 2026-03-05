@@ -23,7 +23,8 @@ export default function InstallPrompt() {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () =>
+      window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstall = async () => {
@@ -32,6 +33,7 @@ export default function InstallPrompt() {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
 
+    localStorage.setItem("install-dismissed", "true");
     setShow(false);
   };
 
@@ -45,14 +47,17 @@ export default function InstallPrompt() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-md mb-4 bg-white rounded-2xl shadow-2xl p-5 border">
+
         <div className="font-semibold text-gray-900 mb-1">
           Install Stated
         </div>
+
         <div className="text-sm text-gray-600 mb-4">
-          Add Stated to your home screen for a faster, app-like experience.
+          Track your commitments faster.
         </div>
 
         <div className="flex justify-end gap-3">
+
           <button
             onClick={handleDismiss}
             className="text-sm text-gray-500 hover:text-gray-700"
@@ -66,6 +71,7 @@ export default function InstallPrompt() {
           >
             Install
           </button>
+
         </div>
       </div>
     </div>
