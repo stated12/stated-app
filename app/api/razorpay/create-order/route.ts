@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createClient();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     }
 
     const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
 
@@ -69,6 +70,10 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    return NextResponse.json({ error: "Order creation failed" }, { status: 500 });
+    console.error("Razorpay order error:", error);
+    return NextResponse.json(
+      { error: "Order creation failed" },
+      { status: 500 }
+    );
   }
 }
