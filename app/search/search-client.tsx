@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import CommitmentFeed from "@/components/CommitmentFeed";
@@ -16,29 +15,24 @@ type Profile = {
 };
 
 export default function SearchClient() {
-  const supabase = createClient();
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const queryParam = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(queryParam);
+
+  const [top, setTop] = useState<Profile[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  /* Search when URL changes */
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (queryParam) {
-      searchProfiles(queryParam);
-    } else {
-      setPeople([]);
-      setCompanies([]);
+      search(queryParam);
     }
   }, [queryParam]);
-
-  /* Debounced typing search */
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -55,74 +49,28 @@ export default function SearchClient() {
     return () => clearTimeout(delay);
   }, [query]);
 
-  /* Database search */
-
-  async function searchProfiles(searchQuery: string) {
-    const q = searchQuery.trim();
-
-    if (!q) {
-      setPeople([]);
-      setCompanies([]);
-      return;
-    }
-
+  async function search(q: string) {
     setLoading(true);
 
-    /* Search username */
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
 
-    const { data: usernameResults } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url, account_type")
-      .ilike("username", `%${q}%`)
-      .limit(12);
-
-    /* Search display name */
-
-    const { data: nameResults } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url, account_type")
-      .ilike("display_name", `%${q}%`)
-      .limit(12);
-
-    /* Merge results without duplicates */
-
-    const combined = [...(usernameResults || []), ...(nameResults || [])];
-
-    const uniqueProfiles = Array.from(
-      new Map(combined.map((p) => [p.id, p])).values()
-    );
-
-    const individuals =
-      uniqueProfiles.filter((p) => p.account_type !== "company") || [];
-
-    const companyProfiles =
-      uniqueProfiles.filter((p) => p.account_type === "company") || [];
-
-    setPeople(individuals);
-    setCompanies(companyProfiles);
+      setTop(data.top || []);
+      setPeople(data.people || []);
+      setCompanies(data.companies || []);
+    } catch (err) {
+      console.error("Search error:", err);
+    }
 
     setLoading(false);
   }
-
-  /* Manual submit search */
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-
-    const q = query.trim();
-
-    if (!q) return;
-
-    router.push(`/search?q=${encodeURIComponent(q)}`);
-  }
-
-  /* Avatar helper */
 
   function avatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      profile?.display_name || profile?.username || "User"
+      profile.display_name || profile.username
     )}&background=2563eb&color=fff`;
   }
 
@@ -134,48 +82,46 @@ export default function SearchClient() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
+
       <div className="max-w-4xl mx-auto space-y-10">
 
         {/* SEARCH BAR */}
 
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search people, companies or commitments"
-            className="flex-1 border rounded-lg px-4 py-2"
-          />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search people, companies or commitments"
+          className="w-full border rounded-lg px-4 py-3"
+        />
 
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">
-            Search
-          </button>
-        </form>
+        {/* TOP RESULTS */}
 
-        {/* PEOPLE */}
-
-        {queryParam && (
+        {queryParam && top.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">People</h2>
 
-            {loading ? (
-              <div className="text-gray-500">Searching...</div>
-            ) : people.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {people.map((profile) => (
-                  <Link
-                    key={profile.id}
-                    href={profileLink(profile)}
-                    className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
-                  >
-                    <Image
-                      src={avatar(profile)}
-                      alt="avatar"
-                      width={60}
-                      height={60}
-                      className="rounded-full mx-auto mb-2"
-                    />
+            <h2 className="text-lg font-semibold mb-4">
+              Top Results
+            </h2>
 
+            <div className="space-y-3">
+
+              {top.map((profile) => (
+                <Link
+                  key={profile.id}
+                  href={profileLink(profile)}
+                  className="flex items-center gap-3 bg-white p-3 rounded-lg shadow"
+                >
+
+                  <Image
+                    src={avatar(profile)}
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+
+                  <div>
                     <div className="font-medium">
                       {profile.display_name || profile.username}
                     </div>
@@ -183,30 +129,34 @@ export default function SearchClient() {
                     <div className="text-sm text-gray-500">
                       @{profile.username}
                     </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-500">
-                No people found for "{queryParam}"
-              </div>
-            )}
+                  </div>
+
+                </Link>
+              ))}
+
+            </div>
+
           </div>
         )}
 
-        {/* COMPANIES */}
+        {/* PEOPLE */}
 
-        {queryParam && companies.length > 0 && (
+        {queryParam && people.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">Companies</h2>
+
+            <h2 className="text-lg font-semibold mb-4">
+              People
+            </h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {companies.map((profile) => (
+
+              {people.map((profile) => (
                 <Link
                   key={profile.id}
                   href={profileLink(profile)}
-                  className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
+                  className="bg-white p-4 rounded-xl shadow text-center"
                 >
+
                   <Image
                     src={avatar(profile)}
                     alt="avatar"
@@ -222,24 +172,74 @@ export default function SearchClient() {
                   <div className="text-sm text-gray-500">
                     @{profile.username}
                   </div>
+
                 </Link>
               ))}
+
             </div>
+
+          </div>
+        )}
+
+        {/* COMPANIES */}
+
+        {queryParam && companies.length > 0 && (
+          <div>
+
+            <h2 className="text-lg font-semibold mb-4">
+              Companies
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+              {companies.map((profile) => (
+                <Link
+                  key={profile.id}
+                  href={profileLink(profile)}
+                  className="bg-white p-4 rounded-xl shadow text-center"
+                >
+
+                  <Image
+                    src={avatar(profile)}
+                    alt="avatar"
+                    width={60}
+                    height={60}
+                    className="rounded-full mx-auto mb-2"
+                  />
+
+                  <div className="font-medium">
+                    {profile.display_name || profile.username}
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    @{profile.username}
+                  </div>
+
+                </Link>
+              ))}
+
+            </div>
+
           </div>
         )}
 
         {/* COMMITMENTS */}
 
         <div>
-          <h2 className="text-lg font-semibold mb-4">Commitments</h2>
+
+          <h2 className="text-lg font-semibold mb-4">
+            Commitments
+          </h2>
 
           <CommitmentFeed
             endpoint={`/api/feed${queryParam ? `?search=${queryParam}` : ""}`}
             showFilters={false}
           />
+
         </div>
 
       </div>
+
     </div>
   );
 }
