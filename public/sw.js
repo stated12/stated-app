@@ -1,4 +1,4 @@
-const CACHE_NAME = "stated-v1";
+const CACHE_NAME = "stated-v2";
 const OFFLINE_URL = "/offline.html";
 
 const urlsToCache = [
@@ -9,7 +9,7 @@ const urlsToCache = [
   "/icons/icon-512.png"
 ];
 
-// Install
+// INSTALL
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -19,7 +19,7 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activate
+// ACTIVATE
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) =>
@@ -32,22 +32,30 @@ self.addEventListener("activate", (event) => {
       )
     )
   );
+
   self.clients.claim();
 });
 
-// Fetch
+// FETCH
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+
+  // NEVER CACHE API CALLS
+  if (request.url.includes("/api/")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Only handle GET
+  if (request.method !== "GET") return;
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((response) => {
+    fetch(request)
+      .then((response) => response)
+      .catch(() =>
+        caches.match(request).then((response) => {
           return response || caches.match(OFFLINE_URL);
-        });
-      })
+        })
+      )
   );
 });
