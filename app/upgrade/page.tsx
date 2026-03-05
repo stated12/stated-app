@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { createClient } from "@/lib/supabase/client";
 
 export default function UpgradePage() {
@@ -10,7 +11,9 @@ export default function UpgradePage() {
 
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [credits, setCredits] = useState<number>(0);
-  const [userType, setUserType] = useState<"individual" | "company_member" | "company_owner">("individual");
+  const [userType, setUserType] = useState<
+    "individual" | "company_member" | "company_owner"
+  >("individual");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,41 +54,59 @@ export default function UpgradePage() {
   }, []);
 
   async function handlePurchase(planKey: string) {
-    const res = await fetch("/api/razorpay/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planKey }),
-    });
+    try {
+      const res = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ planKey }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!data.orderId) {
-      alert("Payment initialization failed");
-      return;
+      if (!res.ok || !data.orderId) {
+        alert(data.error || "Payment initialization failed");
+        return;
+      }
+
+      if (!(window as any).Razorpay) {
+        alert("Payment system failed to load. Please refresh.");
+        return;
+      }
+
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: "INR",
+        order_id: data.orderId,
+
+        handler: async function (response: any) {
+          await fetch("/api/razorpay/verify-payment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...response,
+              planKey,
+            }),
+          });
+
+          window.location.href = "/dashboard";
+        },
+
+        theme: {
+          color: "#1E4ED8",
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed to start.");
     }
-
-    const options = {
-      key: data.key,
-      amount: data.amount,
-      currency: "INR",
-      order_id: data.orderId,
-      handler: async function (response: any) {
-        await fetch("/api/razorpay/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...response,
-            planKey,
-          }),
-        });
-
-        window.location.href = "/dashboard";
-      },
-      theme: { color: "#1E4ED8" },
-    };
-
-    const razor = new (window as any).Razorpay(options);
-    razor.open();
   }
 
   function PlanCard({
@@ -138,7 +159,8 @@ export default function UpgradePage() {
   const individualPlans = (
     <>
       <div className="text-center text-sm text-gray-600 mb-8">
-        You currently have <span className="font-semibold">{credits}</span> credits.
+        You currently have{" "}
+        <span className="font-semibold">{credits}</span> credits.
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -196,9 +218,11 @@ export default function UpgradePage() {
               className="bg-white rounded-xl shadow p-6 text-center"
             >
               <div className="font-semibold">{pack.title}</div>
+
               <div className="text-2xl font-bold mt-2">
                 ₹{pack.price}
               </div>
+
               <button
                 onClick={() => handlePurchase(pack.key)}
                 className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -254,54 +278,60 @@ export default function UpgradePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="max-w-6xl mx-auto space-y-16">
+    <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Stated" width={40} height={40} />
-            <div>
-              <div className="text-2xl font-bold text-blue-600">
-                Stated
-              </div>
-              <div className="text-sm text-gray-500">
-                Upgrade Your Plan
+      <div className="min-h-screen bg-gray-50 px-4 py-10">
+        <div className="max-w-6xl mx-auto space-y-16">
+
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Image src="/logo.png" alt="Stated" width={40} height={40} />
+
+              <div>
+                <div className="text-2xl font-bold text-blue-600">
+                  Stated
+                </div>
+                <div className="text-sm text-gray-500">
+                  Upgrade Your Plan
+                </div>
               </div>
             </div>
+
+            <Link
+              href="/dashboard"
+              className="text-sm text-gray-500 hover:underline"
+            >
+              ← Back to Dashboard
+            </Link>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="text-sm text-gray-500 hover:underline"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
+          <div className="text-center max-w-2xl mx-auto">
+            <h1 className="text-3xl font-bold">
+              Unlock More Accountability Power
+            </h1>
 
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold">
-            Unlock More Accountability Power
-          </h1>
-          <p className="text-gray-600 mt-3">
-            More credits, analytics access, and team scaling.
-          </p>
-        </div>
-
-        {userType === "individual" && individualPlans}
-
-        {userType === "company_owner" && companyPlans}
-
-        {userType === "company_member" && (
-          <div className="text-center text-gray-600">
-            Only the company owner can upgrade the company plan.
+            <p className="text-gray-600 mt-3">
+              More credits, analytics access, and team scaling.
+            </p>
           </div>
-        )}
 
-        <div className="text-center text-sm text-gray-500 border-t pt-8">
-          Secure payments via Razorpay • One-time payment • Instant activation • No subscription lock-in
+          {userType === "individual" && individualPlans}
+
+          {userType === "company_owner" && companyPlans}
+
+          {userType === "company_member" && (
+            <div className="text-center text-gray-600">
+              Only the company owner can upgrade the company plan.
+            </div>
+          )}
+
+          <div className="text-center text-sm text-gray-500 border-t pt-8">
+            Secure payments via Razorpay • One-time payment • Instant activation • No subscription lock-in
+          </div>
+
         </div>
-
       </div>
-    </div>
+    </>
   );
 }
