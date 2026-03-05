@@ -27,9 +27,7 @@ export default function SearchClient() {
   const [companies, setCompanies] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* --------------------------
-     Search when URL changes
-  ---------------------------*/
+  /* Search when URL changes */
 
   useEffect(() => {
     if (queryParam) {
@@ -40,9 +38,7 @@ export default function SearchClient() {
     }
   }, [queryParam]);
 
-  /* --------------------------
-     Debounced typing search
-  ---------------------------*/
+  /* Debounced typing search */
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -59,9 +55,7 @@ export default function SearchClient() {
     return () => clearTimeout(delay);
   }, [query]);
 
-  /* --------------------------
-     Database search
-  ---------------------------*/
+  /* Database search */
 
   async function searchProfiles(searchQuery: string) {
     const q = searchQuery.trim();
@@ -74,34 +68,43 @@ export default function SearchClient() {
 
     setLoading(true);
 
-    const { data, error } = await supabase
+    /* Search username */
+
+    const { data: usernameResults } = await supabase
       .from("profiles")
       .select("id, username, display_name, avatar_url, account_type")
-      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
-      .order("username")
+      .ilike("username", `%${q}%`)
       .limit(12);
 
-    if (error) {
-      console.error("Search error:", error);
-      setPeople([]);
-      setCompanies([]);
-    } else {
-      const individuals =
-        data?.filter((p) => p.account_type !== "company") || [];
+    /* Search display name */
 
-      const companyProfiles =
-        data?.filter((p) => p.account_type === "company") || [];
+    const { data: nameResults } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, account_type")
+      .ilike("display_name", `%${q}%`)
+      .limit(12);
 
-      setPeople(individuals);
-      setCompanies(companyProfiles);
-    }
+    /* Merge results without duplicates */
+
+    const combined = [...(usernameResults || []), ...(nameResults || [])];
+
+    const uniqueProfiles = Array.from(
+      new Map(combined.map((p) => [p.id, p])).values()
+    );
+
+    const individuals =
+      uniqueProfiles.filter((p) => p.account_type !== "company") || [];
+
+    const companyProfiles =
+      uniqueProfiles.filter((p) => p.account_type === "company") || [];
+
+    setPeople(individuals);
+    setCompanies(companyProfiles);
 
     setLoading(false);
   }
 
-  /* --------------------------
-     Manual submit search
-  ---------------------------*/
+  /* Manual submit search */
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -113,9 +116,7 @@ export default function SearchClient() {
     router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
-  /* --------------------------
-     Avatar helper
-  ---------------------------*/
+  /* Avatar helper */
 
   function avatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
