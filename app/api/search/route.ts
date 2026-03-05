@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(req: Request) {
 
@@ -10,6 +10,7 @@ export async function GET(req: Request) {
 
   if (!q) {
     return NextResponse.json({
+      suggestions: [],
       top: [],
       people: [],
       companies: [],
@@ -17,13 +18,20 @@ export async function GET(req: Request) {
     });
   }
 
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  /* PROFILES SEARCH */
 
   const { data: profiles } = await supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, account_type")
     .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
     .limit(10);
+
+  /* COMMITMENTS SEARCH */
 
   const { data: commitments } = await supabase
     .from("commitments")
@@ -42,7 +50,27 @@ export async function GET(req: Request) {
     ...(companies.slice(0, 2)),
   ];
 
+  /* SEARCH SUGGESTIONS */
+
+  const suggestions = [
+    ...people.map((p) => ({
+      type: "person",
+      label: p.display_name || p.username,
+      username: p.username,
+    })),
+    ...companies.map((c) => ({
+      type: "company",
+      label: c.display_name || c.username,
+      username: c.username,
+    })),
+    ...(commitments || []).slice(0, 3).map((c) => ({
+      type: "commitment",
+      label: c.text,
+    })),
+  ].slice(0, 6);
+
   return NextResponse.json({
+    suggestions,
     top,
     people,
     companies,
