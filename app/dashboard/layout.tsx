@@ -65,6 +65,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-gray-50">
 
+      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
@@ -72,13 +73,14 @@ export default function DashboardLayout({
         />
       )}
 
+      {/* Sidebar */}
       <aside
-        className={`fixed md:static top-0 left-0 h-screen w-72 bg-white border-r flex flex-col transition-transform duration-300 z-50 ${
+        className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
 
-        {/* PROFILE */}
+        {/* Profile */}
         <div className="px-6 pt-8 pb-5 border-b">
 
           <Link href="/profile/edit" className="flex items-center gap-3">
@@ -122,43 +124,39 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* NAV SCROLL AREA */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Nav */}
+        <nav className="px-4 py-6 space-y-2 flex-1">
 
-          <nav className="px-4 py-6 space-y-2">
+          <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+            📌 My Commitments
+          </Link>
 
-            <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
-              📌 My Commitments
+          <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+            📊 Insights
+          </Link>
+
+          <Link href="/billing" className={linkClass("/billing")}>
+            💳 Billing
+          </Link>
+
+          <Link href="/account" className={linkClass("/account")}>
+            ⚙️ Account Settings
+          </Link>
+
+          <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+            🛟 Support
+          </Link>
+
+          {!isPro && (
+            <Link href="/upgrade" className={linkClass("/upgrade")}>
+              🚀 Upgrade
             </Link>
+          )}
 
-            <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
-              📊 Insights
-            </Link>
+        </nav>
 
-            <Link href="/billing" className={linkClass("/billing")}>
-              💳 Billing
-            </Link>
-
-            <Link href="/account" className={linkClass("/account")}>
-              ⚙️ Account Settings
-            </Link>
-
-            <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
-              🛟 Support
-            </Link>
-
-            {!isPro && (
-              <Link href="/upgrade" className={linkClass("/upgrade")}>
-                🚀 Upgrade
-              </Link>
-            )}
-
-          </nav>
-
-        </div>
-
-        {/* LOGOUT */}
-        <div className="px-4 py-4 border-t bg-white">
+        {/* Logout (sticky bottom) */}
+        <div className="sticky bottom-0 bg-white border-t px-4 py-3">
 
           <button
             onClick={async () => {
@@ -175,10 +173,10 @@ export default function DashboardLayout({
 
       </aside>
 
-      {/* MAIN */}
+      {/* Main */}
       <main className="flex-1 flex flex-col pb-24">
 
-        {/* MOBILE HEADER */}
+        {/* Mobile header */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
           <button onClick={() => setOpen(!open)}>
@@ -196,7 +194,7 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* DESKTOP HEADER */}
+        {/* Desktop header */}
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -210,12 +208,12 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* CONTENT */}
+        {/* Content */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
 
-        {/* MOBILE BOTTOM NAV */}
+        {/* Bottom mobile nav */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
 
           <Link
