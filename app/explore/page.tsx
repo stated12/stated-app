@@ -32,17 +32,16 @@ export default function ExplorePage() {
         .eq("account_type", "individual")
         .limit(4);
 
-      if (peopleData) setPeople(peopleData);
-
       const { data: companyData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url, account_type")
         .eq("account_type", "company")
         .limit(4);
 
+      if (peopleData) setPeople(peopleData);
       if (companyData) setCompanies(companyData);
     } catch (error) {
-      console.error(error);
+      console.error("Explore load error:", error);
     }
 
     setLoading(false);
@@ -58,15 +57,28 @@ export default function ExplorePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading explore...
+      <div className="min-h-screen bg-gray-50 px-4 py-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white p-4 rounded-xl shadow animate-pulse h-24"
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-10">
+      <div className="max-w-5xl mx-auto space-y-12">
+
+        {/* LOGO */}
 
         <Link href="/">
           <div className="text-2xl font-bold text-blue-600 cursor-pointer">
@@ -74,75 +86,83 @@ export default function ExplorePage() {
           </div>
         </Link>
 
-        {/* FEATURED PEOPLE */}
-        <section>
-          <div className="text-lg font-semibold mb-4">
-            Featured people
-          </div>
+        {/* EXPLORE COMMITMENTS */}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {people.map((person) => (
-              <Link
-                key={person.id}
-                href={`/u/${person.username}`}
-                className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
-              >
-                <img
-                  src={avatar(person)}
-                  className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {person.display_name || person.username}
-                </div>
-                <div className="text-sm text-gray-500">
-                  @{person.username}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* FEATURED COMPANIES */}
-        <section>
-          <div className="text-lg font-semibold mb-4">
-            Featured companies
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {companies.map((company) => (
-              <Link
-                key={company.id}
-                href={`/c/${company.username}`}
-                className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
-              >
-                <img
-                  src={avatar(company)}
-                  className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {company.display_name || company.username}
-                </div>
-                <div className="text-sm text-gray-500">
-                  @{company.username}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* UNIFIED FEED */}
         <section>
           <div className="text-lg font-semibold mb-4">
             Explore commitments
           </div>
 
-          <CommitmentFeed
-            endpoint="/api/feed"
-            showFilters={false}
-          />
+          <CommitmentFeed endpoint="/api/feed" showFilters={false} />
         </section>
+
+        {/* FEATURED PEOPLE */}
+
+        {people.length > 0 && (
+          <section>
+            <div className="text-lg font-semibold mb-4">
+              Featured people
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {people.map((person) => (
+                <Link
+                  key={person.id}
+                  href={`/u/${person.username}`}
+                  className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
+                >
+                  <img
+                    src={avatar(person)}
+                    alt={person.username}
+                    className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
+                  />
+
+                  <div className="font-medium">
+                    {person.display_name || person.username}
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    @{person.username}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* FEATURED COMPANIES */}
+
+        {companies.length > 0 && (
+          <section>
+            <div className="text-lg font-semibold mb-4">
+              Featured companies
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {companies.map((company) => (
+                <Link
+                  key={company.id}
+                  href={`/c/${company.username}`}
+                  className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
+                >
+                  <img
+                    src={avatar(company)}
+                    alt={company.username}
+                    className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
+                  />
+
+                  <div className="font-medium">
+                    {company.display_name || company.username}
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    @{company.username}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
