@@ -1,15 +1,27 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function GlobalFooter() {
   const pathname = usePathname();
 
+  // Hide footer inside dashboard
   if (pathname.startsWith("/dashboard")) return null;
 
   return (
     <footer className="border-t py-6 text-center text-sm text-gray-500 bg-white">
-      <div className="space-x-4">
+      
+      {/* Navigation + Legal Links */}
+      <div className="flex justify-center flex-wrap gap-4">
+
+        <Link
+          href="/"
+          className="hover:underline"
+        >
+          Home
+        </Link>
+
         <a
           href="https://stated.in/privacy"
           target="_blank"
@@ -36,11 +48,14 @@ export default function GlobalFooter() {
         >
           Refund Policy
         </a>
+
       </div>
 
-      <div className="mt-2">
+      {/* Copyright */}
+      <div className="mt-3">
         © {new Date().getFullYear()} Stated
       </div>
+
     </footer>
   );
 }
