@@ -62,6 +62,7 @@ export default function Dashboard() {
 
       if (Array.isArray(data)) {
         setCommitments(data);
+        triggerImpressions(data);
       } else {
         setCommitments([]);
       }
@@ -70,6 +71,32 @@ export default function Dashboard() {
       setCommitments([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function triggerImpressions(data: Commitment[]) {
+    if (!data || data.length === 0) return;
+
+    const ids = data.map((c) => c.id);
+
+    const sessionKey = "viewed_" + ids.join("_");
+
+    if (sessionStorage.getItem(sessionKey)) return;
+
+    try {
+      await fetch("/api/impression", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          commitmentIds: ids,
+        }),
+      });
+
+      sessionStorage.setItem(sessionKey, "true");
+    } catch (err) {
+      console.error("Impression error:", err);
     }
   }
 
