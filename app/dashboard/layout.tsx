@@ -65,7 +65,6 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-gray-50">
 
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
@@ -73,14 +72,14 @@ export default function DashboardLayout({
         />
       )}
 
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <aside
         className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
 
-        {/* Profile */}
+        {/* PROFILE */}
         <div className="px-6 pt-8 pb-5 border-b">
 
           <Link href="/profile/edit" className="flex items-center gap-3">
@@ -124,8 +123,8 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* Nav */}
-        <nav className="px-4 py-6 space-y-2 flex-1">
+        {/* NAV */}
+        <nav className="px-4 py-6 space-y-2">
 
           <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
             📌 My Commitments
@@ -153,30 +152,26 @@ export default function DashboardLayout({
             </Link>
           )}
 
-        </nav>
-
-        {/* Logout (sticky bottom) */}
-        <div className="sticky bottom-0 bg-white border-t px-4 py-3">
-
+          {/* LOGOUT INSIDE NAV */}
           <button
             onClick={async () => {
               const supabase = createClient();
               await supabase.auth.signOut();
               router.push("/");
             }}
-            className="w-full text-left px-5 py-3 text-[16px] font-bold text-red-600 hover:bg-red-50 rounded-lg"
+            className="flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold text-red-600 hover:bg-red-50 w-full text-left"
           >
             🚪 Logout
           </button>
 
-        </div>
+        </nav>
 
       </aside>
 
-      {/* Main */}
+      {/* MAIN */}
       <main className="flex-1 flex flex-col pb-24">
 
-        {/* Mobile header */}
+        {/* MOBILE HEADER */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
           <button onClick={() => setOpen(!open)}>
@@ -194,7 +189,7 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* Desktop header */}
+        {/* DESKTOP HEADER */}
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -208,12 +203,12 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* Content */}
+        {/* CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
 
-        {/* Bottom mobile nav */}
+        {/* MOBILE BOTTOM NAV */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
 
           <Link
