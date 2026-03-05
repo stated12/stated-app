@@ -27,9 +27,9 @@ export default function SearchClient() {
   const [companies, setCompanies] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* -----------------------------
-     Run search when URL changes
-  ------------------------------*/
+  /* --------------------------
+     Search when URL changes
+  ---------------------------*/
 
   useEffect(() => {
     if (queryParam) {
@@ -40,9 +40,9 @@ export default function SearchClient() {
     }
   }, [queryParam]);
 
-  /* -----------------------------
+  /* --------------------------
      Debounced typing search
-  ------------------------------*/
+  ---------------------------*/
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -59,9 +59,9 @@ export default function SearchClient() {
     return () => clearTimeout(delay);
   }, [query]);
 
-  /* -----------------------------
+  /* --------------------------
      Database search
-  ------------------------------*/
+  ---------------------------*/
 
   async function searchProfiles(searchQuery: string) {
     const q = searchQuery.trim();
@@ -78,6 +78,7 @@ export default function SearchClient() {
       .from("profiles")
       .select("id, username, display_name, avatar_url, account_type")
       .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+      .order("username")
       .limit(12);
 
     if (error) {
@@ -98,9 +99,9 @@ export default function SearchClient() {
     setLoading(false);
   }
 
-  /* -----------------------------
-     Manual search submit
-  ------------------------------*/
+  /* --------------------------
+     Manual submit search
+  ---------------------------*/
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -112,9 +113,9 @@ export default function SearchClient() {
     router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
-  /* -----------------------------
+  /* --------------------------
      Avatar helper
-  ------------------------------*/
+  ---------------------------*/
 
   function avatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
