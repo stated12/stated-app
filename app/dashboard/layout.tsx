@@ -49,7 +49,17 @@ export default function DashboardLayout({
 
   if (!profile) return null;
 
-  const isPro = profile.plan_key === "pro";
+  // ✅ Correct PRO detection
+  const PRO_PLANS = [
+    "ind_499",
+    "ind_899",
+    "ind_1299",
+    "comp_1999",
+    "comp_2999",
+    "comp_4999",
+  ];
+
+  const isPro = PRO_PLANS.includes(profile.plan_key);
 
   const linkClass = (href: string) => {
     return `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
@@ -103,13 +113,22 @@ export default function DashboardLayout({
             </div>
 
             <div>
-              <div className="font-semibold text-gray-900">
+
+              {/* NAME + PRO BADGE */}
+              <div className="flex items-center gap-2 font-semibold text-gray-900">
                 {profile.display_name || profile.username}
+
+                {isPro && (
+                  <span className="text-[10px] bg-blue-600 text-white px-2 py-[2px] rounded">
+                    PRO
+                  </span>
+                )}
               </div>
 
               <div className="text-xs text-gray-500">
                 @{profile.username}
               </div>
+
             </div>
 
           </Link>
@@ -152,7 +171,6 @@ export default function DashboardLayout({
             </Link>
           )}
 
-          {/* LOGOUT INSIDE NAV */}
           <button
             onClick={async () => {
               const supabase = createClient();
@@ -203,7 +221,6 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
