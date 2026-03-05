@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Profile = {
   id: string;
   username: string;
   display_name: string;
-  avatar_url: string;
+  avatar_url: string | null;
   account_type?: "individual" | "company";
 };
 
@@ -16,37 +17,41 @@ type Commitment = {
   user_id: string;
 };
 
+type SearchResults = {
+  top: Profile[];
+  people: Profile[];
+  companies: Profile[];
+  commitments: Commitment[];
+};
+
 export default function SearchPage() {
-
   const [query, setQuery] = useState("");
-
-  const [people, setPeople] = useState<Profile[]>([]);
-  const [companies, setCompanies] = useState<Profile[]>([]);
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [results, setResults] = useState<SearchResults>({
+    top: [],
+    people: [],
+    companies: [],
+    commitments: [],
+  });
 
   const [loading, setLoading] = useState(false);
 
-  async function searchAll(searchText: string) {
-
-    if (!searchText.trim()) {
-      setPeople([]);
-      setCompanies([]);
-      setCommitments([]);
+  async function searchAll(q: string) {
+    if (!q.trim()) {
+      setResults({
+        top: [],
+        people: [],
+        companies: [],
+        commitments: [],
+      });
       return;
     }
 
     setLoading(true);
 
-    const res = await fetch(
-      `/api/search?q=${encodeURIComponent(searchText)}`
-    );
-
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
 
-    setPeople(data.people || []);
-    setCompanies(data.companies || []);
-    setCommitments(data.commitments || []);
-
+    setResults(data);
     setLoading(false);
   }
 
@@ -58,6 +63,14 @@ export default function SearchPage() {
     return () => clearTimeout(delay);
   }, [query]);
 
+  function avatar(profile: Profile) {
+    if (profile.avatar_url) return profile.avatar_url;
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      profile.display_name || profile.username
+    )}`;
+  }
+
   return (
     <div className="max-w-xl mx-auto space-y-6">
 
@@ -66,7 +79,7 @@ export default function SearchPage() {
       <div className="bg-white rounded-xl p-4 shadow-sm">
         <input
           type="text"
-          placeholder="Search people, companies or commitments..."
+          placeholder="Search people, companies, commitments..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -79,24 +92,67 @@ export default function SearchPage() {
         </div>
       )}
 
+      {!loading && query && results.top.length === 0 &&
+        results.people.length === 0 &&
+        results.companies.length === 0 &&
+        results.commitments.length === 0 && (
+        <div className="text-center text-gray-500">
+          No results found.
+        </div>
+      )}
+
+      {/* TOP RESULT */}
+
+      {results.top.length > 0 && (
+        <div>
+          <div className="text-sm font-semibold text-gray-500 mb-2">
+            Top Result
+          </div>
+
+          {results.top.map((p) => (
+            <Link
+              key={p.id}
+              href={p.account_type === "company"
+                ? `/c/${p.username}`
+                : `/u/${p.username}`}
+              className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm"
+            >
+              <img
+                src={avatar(p)}
+                className="w-10 h-10 rounded-full"
+              />
+
+              <div>
+                <div className="font-medium">
+                  {p.display_name}
+                </div>
+
+                <div className="text-sm text-gray-500">
+                  @{p.username}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* PEOPLE */}
 
-      {people.length > 0 && (
+      {results.people.length > 0 && (
         <div>
-          <h2 className="font-semibold mb-2">People</h2>
+          <div className="text-sm font-semibold text-gray-500 mb-2">
+            People
+          </div>
 
-          {people.map((p) => (
-            <div key={p.id} className="bg-white p-3 rounded-lg shadow-sm mb-2">
-
-              <div className="flex items-center gap-3">
-
+          <div className="space-y-2">
+            {results.people.map((p) => (
+              <Link
+                key={p.id}
+                href={`/u/${p.username}`}
+                className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm"
+              >
                 <img
-                  src={
-                    p.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      p.display_name
-                    )}`
-                  }
+                  src={avatar(p)}
                   className="w-8 h-8 rounded-full"
                 />
 
@@ -104,83 +160,73 @@ export default function SearchPage() {
                   <div className="font-medium">
                     {p.display_name}
                   </div>
+
                   <div className="text-xs text-gray-500">
                     @{p.username}
                   </div>
                 </div>
-
-              </div>
-
-            </div>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
       {/* COMPANIES */}
 
-      {companies.length > 0 && (
+      {results.companies.length > 0 && (
         <div>
-          <h2 className="font-semibold mb-2">Companies</h2>
+          <div className="text-sm font-semibold text-gray-500 mb-2">
+            Companies
+          </div>
 
-          {companies.map((c) => (
-            <div key={c.id} className="bg-white p-3 rounded-lg shadow-sm mb-2">
-
-              <div className="flex items-center gap-3">
-
+          <div className="space-y-2">
+            {results.companies.map((p) => (
+              <Link
+                key={p.id}
+                href={`/c/${p.username}`}
+                className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm"
+              >
                 <img
-                  src={
-                    c.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      c.display_name
-                    )}`
-                  }
+                  src={avatar(p)}
                   className="w-8 h-8 rounded-full"
                 />
 
                 <div>
                   <div className="font-medium">
-                    {c.display_name}
+                    {p.display_name}
                   </div>
+
                   <div className="text-xs text-gray-500">
-                    @{c.username}
+                    @{p.username}
                   </div>
                 </div>
-
-              </div>
-
-            </div>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
       {/* COMMITMENTS */}
 
-      {commitments.length > 0 && (
+      {results.commitments.length > 0 && (
         <div>
+          <div className="text-sm font-semibold text-gray-500 mb-2">
+            Commitments
+          </div>
 
-          <h2 className="font-semibold mb-2">Commitments</h2>
-
-          {commitments.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white p-4 rounded-xl shadow-sm mb-3"
-            >
-              {item.text}
-            </div>
-          ))}
-
+          <div className="space-y-2">
+            {results.commitments.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white p-3 rounded-xl shadow-sm"
+              >
+                {c.text}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {!loading &&
-        query &&
-        people.length === 0 &&
-        companies.length === 0 &&
-        commitments.length === 0 && (
-          <div className="text-center text-gray-500">
-            No results found.
-          </div>
-        )}
     </div>
   );
 }
