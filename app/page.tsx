@@ -31,8 +31,7 @@ export default async function HomePage() {
         logo_url
       )
     `)
-    .eq("status", "active")
-    .or("visibility.eq.public,visibility.is.null")
+    .not("id","is",null)
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -128,6 +127,7 @@ export default async function HomePage() {
           method="GET"
           className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
         >
+
           <input
             type="text"
             name="q"
@@ -141,6 +141,7 @@ export default async function HomePage() {
           >
             Search
           </button>
+
         </form>
 
         {/* CTA */}
