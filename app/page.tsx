@@ -32,6 +32,7 @@ export default async function HomePage() {
       )
     `)
     .eq("status", "active")
+    .eq("visibility", "public")
     .order("created_at", { ascending: false })
     .limit(6);
 
