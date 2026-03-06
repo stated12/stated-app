@@ -2,18 +2,27 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 async function getCommitments() {
   try {
+
+    const headersList = headers();
+    const host = headersList.get("host");
+
+    const protocol = host?.includes("localhost") ? "http" : "https";
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/api/feed?type=latest`,
+      `${protocol}://${host}/api/feed?type=latest`,
       { cache: "no-store" }
     );
 
     const data = await res.json();
 
     return data.slice(0, 6);
-  } catch {
+
+  } catch (err) {
+    console.error("Homepage feed error:", err);
     return [];
   }
 }
@@ -82,6 +91,8 @@ export default async function HomePage() {
           Build credibility. Track progress. Stay accountable.
         </p>
 
+        {/* SEARCH */}
+
         <form
           action="/search"
           method="GET"
@@ -103,6 +114,8 @@ export default async function HomePage() {
           </button>
 
         </form>
+
+        {/* CTA */}
 
         <Link
           href="/signup"
