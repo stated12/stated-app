@@ -57,7 +57,7 @@ export default async function CompanyDashboardPage() {
     .from("company_members")
     .select("company_id, role")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!membership) redirect("/dashboard");
 
@@ -129,7 +129,8 @@ export default async function CompanyDashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const commitments: Commitment[] = commitmentsData || [];
+  const commitments: Commitment[] =
+    (commitmentsData ?? []) as Commitment[];
 
   /* ---------------- PAGE ---------------- */
 
@@ -144,6 +145,7 @@ export default async function CompanyDashboardPage() {
 
       {/* QUICK LINKS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
         <Link
           href={`/c/${company.username}`}
           className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
@@ -164,10 +166,12 @@ export default async function CompanyDashboardPage() {
         >
           Company Settings
         </Link>
+
       </div>
 
       {/* COMPANY COMMITMENTS */}
       <div>
+
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Company Commitments</h2>
         </div>
@@ -175,14 +179,17 @@ export default async function CompanyDashboardPage() {
         <div className="space-y-4">
 
           {commitments.map((c) => {
+
             const latestUpdate =
               c.commitment_updates?.[0] || null;
 
             return (
+
               <div
                 key={c.id}
                 className="bg-white rounded-xl shadow p-5"
               >
+
                 <div className="font-medium mb-1">
                   {c.text}
                 </div>
@@ -206,7 +213,9 @@ export default async function CompanyDashboardPage() {
                 <div className="text-xs text-gray-400 mt-2">
                   👁 {c.views ?? 0} views
                 </div>
+
               </div>
+
             );
           })}
 
@@ -219,6 +228,7 @@ export default async function CompanyDashboardPage() {
         </div>
 
         <div className="mt-4 flex gap-4">
+
           <Link
             href="/dashboard/create"
             className="text-blue-600 text-sm hover:underline"
@@ -232,23 +242,27 @@ export default async function CompanyDashboardPage() {
           >
             View More
           </Link>
+
         </div>
+
       </div>
 
       {/* MEMBERS */}
       <div>
 
         <div className="flex justify-between items-center mb-4">
+
           <h2 className="text-lg font-semibold">Members</h2>
 
-          {membership.role === "owner" || membership.role === "admin" ? (
+          {(membership.role === "owner" || membership.role === "admin") && (
             <Link
               href="/dashboard/company/invite"
               className="bg-blue-600 text-white px-4 py-2 rounded"
             >
               Invite Member
             </Link>
-          ) : null}
+          )}
+
         </div>
 
         <div className="space-y-4">
@@ -293,19 +307,22 @@ function MemberRow({
   isSelf: boolean;
   canManage: boolean;
 }) {
+
   const avatar =
     member.profiles?.avatar_url?.trim()
       ? member.profiles.avatar_url.trim()
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(
           member.profiles?.display_name ||
-            member.profiles?.username ||
-            "User"
+          member.profiles?.username ||
+          "User"
         )}&background=2563eb&color=fff`;
 
   return (
+
     <div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
 
       <div className="flex items-center gap-3">
+
         <img
           src={avatar}
           alt="avatar"
@@ -315,41 +332,51 @@ function MemberRow({
         <div>
           <div className="font-medium">
             {member.profiles?.display_name ||
-              member.profiles?.username}
+             member.profiles?.username}
           </div>
+
           <div className="text-xs text-gray-500">
             @{member.profiles?.username}
           </div>
         </div>
+
       </div>
 
       <div className="flex items-center gap-3">
 
         {isOwner ? (
+
           <div className="text-sm bg-black text-white px-3 py-1 rounded">
             owner
           </div>
+
         ) : canManage ? (
+
           <>
             <RoleSelector
               memberId={member.id}
               currentRole={member.role}
               disabled={isSelf}
             />
+
             <RemoveButton
               memberId={member.id}
               disabled={isSelf}
             />
           </>
+
         ) : (
+
           <div className="text-xs text-gray-500">
             {member.role}
           </div>
+
         )}
 
       </div>
 
     </div>
+
   );
 }
 
@@ -364,7 +391,9 @@ function RoleSelector({
   currentRole: string;
   disabled: boolean;
 }) {
+
   async function changeRole(role: string) {
+
     await fetch("/api/company/member", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -379,6 +408,7 @@ function RoleSelector({
   }
 
   return (
+
     <select
       disabled={disabled}
       defaultValue={currentRole}
@@ -389,6 +419,7 @@ function RoleSelector({
       <option value="member">member</option>
       <option value="admin">admin</option>
     </select>
+
   );
 }
 
@@ -401,7 +432,9 @@ function RemoveButton({
   memberId: string;
   disabled: boolean;
 }) {
+
   async function remove() {
+
     if (!confirm("Remove this member?")) return;
 
     await fetch("/api/company/member", {
