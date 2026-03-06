@@ -7,7 +7,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
 
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -47,7 +51,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .from("company_members")
         .select("company_id")
         .eq("user_id", user.id)
-        .maybeSingle();
+        .limit(1)
+        .single();
 
       if (membership) {
 
@@ -58,6 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           .single();
 
         setCompany(companyData);
+
       }
 
     }
@@ -89,12 +95,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ? "/dashboard/company/new"
     : "/dashboard/create";
 
-  const linkClass = (href: string) =>
-    `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
+  const linkClass = (href: string) => {
+    return `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
       pathname === href
         ? "bg-blue-100 text-blue-700"
         : "text-gray-900 hover:bg-gray-100"
     }`;
+  };
 
   const avatar =
     isCompany
@@ -103,13 +110,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : profile?.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.username)}`;
 
-  const displayName = isCompany
-    ? company?.name
-    : profile?.display_name || profile?.username;
+  const displayName =
+    isCompany
+      ? company?.name
+      : profile?.display_name || profile?.username;
 
-  const username = isCompany
-    ? company?.username
-    : profile?.username;
+  const username =
+    isCompany
+      ? company?.username
+      : profile?.username;
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -176,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         </div>
 
-        {/* NAV */}
+        {/* NAVIGATION */}
 
         <nav className="px-4 py-6 space-y-2">
 
@@ -282,13 +291,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         </div>
 
-        {/* CONTENT */}
+        {/* DESKTOP HEADER */}
+
+        <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
+
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Stated" width={50} height={50} />
+            <span className="font-bold text-blue-600 text-xl">
+              Stated
+            </span>
+          </Link>
+
+          <NotificationBell />
+
+        </div>
 
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
 
-        {/* MOBILE BOTTOM */}
+        {/* MOBILE BOTTOM NAV */}
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3">
 
