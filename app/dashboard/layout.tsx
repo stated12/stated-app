@@ -35,7 +35,7 @@ export default function DashboardLayout({
         return;
       }
 
-      /* PROFILE */
+      /* ---------- LOAD PROFILE ---------- */
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -45,14 +45,27 @@ export default function DashboardLayout({
 
       setProfile(profileData);
 
-      /* COMPANY MEMBERSHIP */
+      /* ---------- CHECK COMPANY OWNER ---------- */
+
+      const { data: ownedCompany } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (ownedCompany) {
+        setCompany(ownedCompany);
+        return;
+      }
+
+      /* ---------- CHECK COMPANY MEMBER ---------- */
 
       const { data: membership } = await supabase
         .from("company_members")
         .select("company_id")
         .eq("user_id", user.id)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (membership) {
 
@@ -95,13 +108,14 @@ export default function DashboardLayout({
     ? "/dashboard/company/new"
     : "/dashboard/create";
 
-  const linkClass = (href: string) => {
-    return `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
+  const linkClass = (href: string) =>
+    `flex items-center gap-3 px-5 py-3 rounded-lg text-[17px] font-bold transition ${
       pathname === href
         ? "bg-blue-100 text-blue-700"
         : "text-gray-900 hover:bg-gray-100"
     }`;
-  };
+
+  /* ---------- AVATAR ---------- */
 
   const avatar =
     isCompany
@@ -130,7 +144,7 @@ export default function DashboardLayout({
         />
       )}
 
-      {/* SIDEBAR */}
+      {/* ---------- SIDEBAR ---------- */}
 
       <aside
         className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50 ${
@@ -185,7 +199,7 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* NAVIGATION */}
+        {/* ---------- NAV ---------- */}
 
         <nav className="px-4 py-6 space-y-2">
 
@@ -253,6 +267,8 @@ export default function DashboardLayout({
             </>
           )}
 
+          {/* LOGOUT */}
+
           <button
             onClick={async () => {
               const supabase = createClient();
@@ -268,7 +284,7 @@ export default function DashboardLayout({
 
       </aside>
 
-      {/* MAIN */}
+      {/* ---------- MAIN ---------- */}
 
       <main className="flex-1 flex flex-col pb-24">
 
@@ -310,7 +326,7 @@ export default function DashboardLayout({
           {children}
         </div>
 
-        {/* MOBILE BOTTOM NAV */}
+        {/* MOBILE CREATE BUTTON */}
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3">
 
