@@ -32,7 +32,7 @@ export default async function HomePage() {
       )
     `)
     .eq("status", "active")
-    .eq("visibility", "public")
+    .or("visibility.eq.public,visibility.is.null")
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -68,17 +68,11 @@ export default async function HomePage() {
 
       <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
-        <Link
-          href="/explore"
-          className="hover:text-blue-400 transition"
-        >
+        <Link href="/explore" className="hover:text-blue-400 transition">
           Explore
         </Link>
 
-        <Link
-          href="/login"
-          className="hover:text-blue-400 transition"
-        >
+        <Link href="/login" className="hover:text-blue-400 transition">
           Login
         </Link>
 
@@ -134,7 +128,6 @@ export default async function HomePage() {
           method="GET"
           className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
         >
-
           <input
             type="text"
             name="q"
@@ -148,7 +141,6 @@ export default async function HomePage() {
           >
             Search
           </button>
-
         </form>
 
         {/* CTA */}
@@ -247,8 +239,6 @@ export default async function HomePage() {
             </div>
 
           )}
-
-          {/* EXPLORE MORE */}
 
           <div className="text-center mt-10">
 
