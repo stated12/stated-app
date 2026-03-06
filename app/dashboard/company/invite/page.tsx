@@ -3,37 +3,57 @@
 import { useState } from "react";
 
 export default function InvitePage() {
+
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [loading, setLoading] = useState(false);
 
   async function sendInvite() {
-    if (!email) return alert("Enter email");
 
-    setLoading(true);
-
-    const res = await fetch("/api/company/invite", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Failed to create invite");
-      setLoading(false);
+    if (!email.trim()) {
+      alert("Enter email");
       return;
     }
 
-    alert(data.inviteUrl);
-    setEmail("");
+    setLoading(true);
+
+    try {
+
+      const res = await fetch("/api/company/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          role,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to create invite");
+        return;
+      }
+
+      alert(data.inviteUrl);
+
+      setEmail("");
+
+    } catch {
+      alert("Something went wrong");
+    }
+
     setLoading(false);
   }
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      <h1 className="text-xl font-semibold">Invite Member</h1>
+
+      <h1 className="text-xl font-semibold">
+        Invite Member
+      </h1>
 
       <input
         type="email"
@@ -59,6 +79,7 @@ export default function InvitePage() {
       >
         {loading ? "Sending..." : "Create Invite"}
       </button>
+
     </div>
   );
 }
