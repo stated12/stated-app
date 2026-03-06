@@ -18,11 +18,14 @@ export default function UpgradePage() {
 
   useEffect(() => {
     async function loadData() {
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
+
+      /* ---------- PROFILE ---------- */
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -33,20 +36,35 @@ export default function UpgradePage() {
       setCurrentPlan(profile?.plan_key || "free");
       setCredits(profile?.credits || 0);
 
+      /* ---------- CHECK COMPANY OWNER ---------- */
+
+      const { data: ownedCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (ownedCompany) {
+        setUserType("company_owner");
+        setLoading(false);
+        return;
+      }
+
+      /* ---------- CHECK COMPANY MEMBER ---------- */
+
       const { data: membership } = await supabase
         .from("company_members")
-        .select("role")
+        .select("id")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (membership) {
-        if (membership.role === "owner") {
-          setUserType("company_owner");
-        } else {
-          setUserType("company_member");
-        }
+        setUserType("company_member");
+        setLoading(false);
+        return;
       }
 
+      setUserType("individual");
       setLoading(false);
     }
 
@@ -103,6 +121,7 @@ export default function UpgradePage() {
 
       const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
+
     } catch (err) {
       console.error(err);
       alert("Payment failed to start.");
@@ -116,6 +135,7 @@ export default function UpgradePage() {
     planKey,
     highlight = false,
   }: any) {
+
     const isCurrent = currentPlan === planKey;
 
     return (
@@ -162,8 +182,7 @@ export default function UpgradePage() {
   const individualPlans = (
     <>
       <div className="text-center text-sm text-gray-600 mb-8">
-        You currently have{" "}
-        <span className="font-semibold">{credits}</span> credits.
+        You currently have <span className="font-semibold">{credits}</span> credits.
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -209,20 +228,21 @@ export default function UpgradePage() {
 
       {isIndividualPaid && (
         <div className="mt-16">
+
           <h2 className="text-2xl font-bold text-center mb-8">
             Extra Credit Packs
           </h2>
 
           <div className="grid md:grid-cols-3 gap-6">
+
             {[
               { title: "10 Credits", price: 199, key: "pack_10" },
               { title: "25 Credits", price: 399, key: "pack_25" },
               { title: "50 Credits", price: 699, key: "pack_50" },
             ].map((pack) => (
-              <div
-                key={pack.key}
-                className="bg-white rounded-xl shadow p-6 text-center"
-              >
+
+              <div key={pack.key} className="bg-white rounded-xl shadow p-6 text-center">
+
                 <div className="font-semibold">{pack.title}</div>
 
                 <div className="text-2xl font-bold mt-2">
@@ -235,8 +255,11 @@ export default function UpgradePage() {
                 >
                   Buy Pack
                 </button>
+
               </div>
+
             ))}
+
           </div>
         </div>
       )}
@@ -291,31 +314,30 @@ export default function UpgradePage() {
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <div className="min-h-screen bg-gray-50 px-4 py-10">
+
         <div className="max-w-6xl mx-auto space-y-16">
 
           <div className="flex justify-between items-center">
+
             <div className="flex items-center gap-3">
+
               <Image src="/logo.png" alt="Stated" width={40} height={40} />
 
               <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  Stated
-                </div>
-                <div className="text-sm text-gray-500">
-                  Upgrade Your Plan
-                </div>
+                <div className="text-2xl font-bold text-blue-600">Stated</div>
+                <div className="text-sm text-gray-500">Upgrade Your Plan</div>
               </div>
+
             </div>
 
-            <Link
-              href="/dashboard"
-              className="text-sm text-gray-500 hover:underline"
-            >
+            <Link href="/dashboard" className="text-sm text-gray-500 hover:underline">
               ← Back to Dashboard
             </Link>
+
           </div>
 
           <div className="text-center max-w-2xl mx-auto">
+
             <h1 className="text-3xl font-bold">
               Unlock More Accountability Power
             </h1>
@@ -323,6 +345,7 @@ export default function UpgradePage() {
             <p className="text-gray-600 mt-3">
               More credits, analytics access, and team scaling.
             </p>
+
           </div>
 
           {userType === "individual" && individualPlans}
@@ -340,7 +363,8 @@ export default function UpgradePage() {
           </div>
 
         </div>
+
       </div>
     </>
   );
-            }
+}
