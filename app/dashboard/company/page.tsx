@@ -27,6 +27,19 @@ type Member = {
   profiles: Profile | null;
 };
 
+type Commitment = {
+  id: string;
+  text: string;
+  category: string | null;
+  views: number | null;
+  created_at: string;
+  created_by_user_id: string | null;
+  commitment_updates: {
+    text: string | null;
+    created_at: string;
+  }[];
+};
+
 /* ---------------- PAGE ---------------- */
 
 export default async function CompanyDashboardPage() {
@@ -38,10 +51,20 @@ export default async function CompanyDashboardPage() {
 
   if (!user) redirect("/login");
 
+  /* ---------------- COMPANY MEMBERSHIP ---------------- */
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id, role")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership) redirect("/dashboard");
+
   const { data: companyData } = await supabase
     .from("companies")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("id", membership.company_id)
     .single();
 
   if (!companyData) redirect("/dashboard");
@@ -52,6 +75,8 @@ export default async function CompanyDashboardPage() {
     username: String(companyData.username),
     owner_id: String(companyData.owner_id),
   };
+
+  /* ---------------- MEMBERS ---------------- */
 
   const { data: membersData } = await supabase
     .from("company_members")
@@ -68,7 +93,6 @@ export default async function CompanyDashboardPage() {
     `)
     .eq("company_id", company.id);
 
-  // 🔥 SAFE NORMALIZATION (no unsafe casting)
   const members: Member[] =
     (membersData ?? []).map((m: any) => ({
       id: String(m.id),
@@ -84,16 +108,41 @@ export default async function CompanyDashboardPage() {
         : null,
     }));
 
+  /* ---------------- COMMITMENTS ---------------- */
+
+  const { data: commitmentsData } = await supabase
+    .from("commitments")
+    .select(`
+      id,
+      text,
+      category,
+      views,
+      created_at,
+      created_by_user_id,
+      commitment_updates (
+        text,
+        created_at
+      )
+    `)
+    .eq("company_id", company.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const commitments: Commitment[] = commitmentsData || [];
+
+  /* ---------------- PAGE ---------------- */
+
   return (
     <div className="max-w-4xl mx-auto space-y-10">
 
-      {/* Header */}
+      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold">{company.name}</h1>
         <div className="text-sm text-gray-500">@{company.username}</div>
       </div>
 
-      {/* Quick Links */}
+      {/* QUICK LINKS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href={`/c/${company.username}`}
@@ -117,34 +166,114 @@ export default async function CompanyDashboardPage() {
         </Link>
       </div>
 
-      {/* Members Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Members</h2>
+      {/* COMPANY COMMITMENTS */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Company Commitments</h2>
+        </div>
 
-        <Link
-          href="/dashboard/company/invite"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Invite Member
-        </Link>
+        <div className="space-y-4">
+
+          {commitments.map((c) => {
+            const latestUpdate =
+              c.commitment_updates?.[0] || null;
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white rounded-xl shadow p-5"
+              >
+                <div className="font-medium mb-1">
+                  {c.text}
+                </div>
+
+                {c.category && (
+                  <div className="text-xs text-gray-500 mb-2">
+                    {c.category}
+                  </div>
+                )}
+
+                {latestUpdate ? (
+                  <div className="text-sm text-gray-600">
+                    Latest update: {latestUpdate.text}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-400">
+                    No updates yet
+                  </div>
+                )}
+
+                <div className="text-xs text-gray-400 mt-2">
+                  👁 {c.views ?? 0} views
+                </div>
+              </div>
+            );
+          })}
+
+          {commitments.length === 0 && (
+            <div className="text-sm text-gray-500">
+              No commitments yet.
+            </div>
+          )}
+
+        </div>
+
+        <div className="mt-4 flex gap-4">
+          <Link
+            href="/dashboard/create"
+            className="text-blue-600 text-sm hover:underline"
+          >
+            + Create Commitment
+          </Link>
+
+          <Link
+            href={`/c/${company.username}`}
+            className="text-gray-600 text-sm hover:underline"
+          >
+            View More
+          </Link>
+        </div>
       </div>
 
-      {/* Members List */}
-      <div className="space-y-4">
-        {members.map((m) => (
-          <MemberRow
-            key={m.id}
-            member={m}
-            isOwner={m.user_id === company.owner_id}
-            isSelf={m.user_id === user.id}
-          />
-        ))}
+      {/* MEMBERS */}
+      <div>
 
-        {members.length === 0 && (
-          <div className="text-sm text-gray-500">
-            No members yet.
-          </div>
-        )}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Members</h2>
+
+          {membership.role === "owner" || membership.role === "admin" ? (
+            <Link
+              href="/dashboard/company/invite"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Invite Member
+            </Link>
+          ) : null}
+        </div>
+
+        <div className="space-y-4">
+
+          {members.map((m) => (
+            <MemberRow
+              key={m.id}
+              member={m}
+              isOwner={m.user_id === company.owner_id}
+              isSelf={m.user_id === user.id}
+              canManage={
+                membership.role === "owner" ||
+                membership.role === "admin"
+              }
+            />
+          ))}
+
+          {members.length === 0 && (
+            <div className="text-sm text-gray-500">
+              No members yet.
+            </div>
+          )}
+
+        </div>
+
       </div>
 
     </div>
@@ -157,10 +286,12 @@ function MemberRow({
   member,
   isOwner,
   isSelf,
+  canManage,
 }: {
   member: Member;
   isOwner: boolean;
   isSelf: boolean;
+  canManage: boolean;
 }) {
   const avatar =
     member.profiles?.avatar_url?.trim()
@@ -198,7 +329,7 @@ function MemberRow({
           <div className="text-sm bg-black text-white px-3 py-1 rounded">
             owner
           </div>
-        ) : (
+        ) : canManage ? (
           <>
             <RoleSelector
               memberId={member.id}
@@ -210,6 +341,10 @@ function MemberRow({
               disabled={isSelf}
             />
           </>
+        ) : (
+          <div className="text-xs text-gray-500">
+            {member.role}
+          </div>
         )}
 
       </div>
@@ -250,6 +385,7 @@ function RoleSelector({
       onChange={(e) => changeRole(e.target.value)}
       className="border rounded px-2 py-1 text-sm"
     >
+      <option value="viewer">viewer</option>
       <option value="member">member</option>
       <option value="admin">admin</option>
     </select>
