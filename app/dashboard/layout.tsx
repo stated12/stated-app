@@ -12,14 +12,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
 
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+
     async function load() {
+
       const supabase = createClient();
 
       const {
@@ -31,16 +35,27 @@ export default function DashboardLayout({
         return;
       }
 
-      const { data } = await supabase
+      // INDIVIDUAL PROFILE
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      setProfile(data);
+      setProfile(profileData);
+
+      // COMPANY ACCOUNT (IF EXISTS)
+      const { data: companyData } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      setCompany(companyData);
     }
 
     load();
+
   }, [router]);
 
   useEffect(() => {
@@ -49,7 +64,8 @@ export default function DashboardLayout({
 
   if (!profile) return null;
 
-  // ✅ Correct PRO detection
+  const isCompany = !!company;
+
   const PRO_PLANS = [
     "ind_499",
     "ind_899",
@@ -72,6 +88,21 @@ export default function DashboardLayout({
   const bottomActive = (href: string) =>
     pathname === href ? "text-blue-600" : "text-gray-500";
 
+  const avatar =
+    isCompany
+      ? company?.logo_url
+      : profile?.avatar_url;
+
+  const displayName =
+    isCompany
+      ? company?.name
+      : profile?.display_name || profile?.username;
+
+  const username =
+    isCompany
+      ? company?.username
+      : profile?.username;
+
   return (
     <div className="min-h-screen flex bg-gray-50">
 
@@ -83,6 +114,7 @@ export default function DashboardLayout({
       )}
 
       {/* SIDEBAR */}
+
       <aside
         className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col overflow-y-auto transition-transform duration-300 z-50 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -90,23 +122,23 @@ export default function DashboardLayout({
       >
 
         {/* PROFILE */}
+
         <div className="px-6 pt-8 pb-5 border-b">
 
-          <Link href="/profile/edit" className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
 
             <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-semibold">
 
-              {profile.avatar_url ? (
+              {avatar ? (
                 <Image
-                  src={profile.avatar_url}
+                  src={avatar}
                   alt="avatar"
                   width={48}
                   height={48}
                 />
               ) : (
                 <span>
-                  {profile.display_name?.charAt(0) ||
-                    profile.username?.charAt(0)}
+                  {displayName?.charAt(0)}
                 </span>
               )}
 
@@ -114,9 +146,8 @@ export default function DashboardLayout({
 
             <div>
 
-              {/* NAME + PRO BADGE */}
               <div className="flex items-center gap-2 font-semibold text-gray-900">
-                {profile.display_name || profile.username}
+                {displayName}
 
                 {isPro && (
                   <span className="text-[10px] bg-blue-600 text-white px-2 py-[2px] rounded">
@@ -126,15 +157,19 @@ export default function DashboardLayout({
               </div>
 
               <div className="text-xs text-gray-500">
-                @{profile.username}
+                @{username}
               </div>
 
             </div>
 
-          </Link>
+          </div>
 
           <Link
-            href={`/u/${profile.username}`}
+            href={
+              isCompany
+                ? `/c/${company.username}`
+                : `/u/${profile.username}`
+            }
             className="block mt-3 text-xs text-blue-600 hover:underline"
           >
             View Profile
@@ -142,34 +177,73 @@ export default function DashboardLayout({
 
         </div>
 
-        {/* NAV */}
+        {/* NAVIGATION */}
+
         <nav className="px-4 py-6 space-y-2">
 
-          <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
-            📌 My Commitments
-          </Link>
+          {/* COMPANY NAV */}
 
-          <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
-            📊 Insights
-          </Link>
+          {isCompany && (
+            <>
+              <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
+                📌 Company Commitments
+              </Link>
 
-          <Link href="/billing" className={linkClass("/billing")}>
-            💳 Billing
-          </Link>
+              <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+                📊 Insights
+              </Link>
 
-          <Link href="/account" className={linkClass("/account")}>
-            ⚙️ Account Settings
-          </Link>
+              <Link href="/dashboard/team" className={linkClass("/dashboard/team")}>
+                👥 Invite Members
+              </Link>
 
-          <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
-            🛟 Support
-          </Link>
+              <Link href="/account" className={linkClass("/account")}>
+                ⚙️ Account Settings
+              </Link>
 
-          {!isPro && (
-            <Link href="/upgrade" className={linkClass("/upgrade")}>
-              🚀 Upgrade
-            </Link>
+              <Link href="/upgrade" className={linkClass("/upgrade")}>
+                🚀 Upgrade
+              </Link>
+
+              <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+                🛟 Support
+              </Link>
+            </>
           )}
+
+          {/* INDIVIDUAL NAV */}
+
+          {!isCompany && (
+            <>
+              <Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+                📌 My Commitments
+              </Link>
+
+              <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+                📊 Insights
+              </Link>
+
+              <Link href="/billing" className={linkClass("/billing")}>
+                💳 Billing
+              </Link>
+
+              <Link href="/account" className={linkClass("/account")}>
+                ⚙️ Account Settings
+              </Link>
+
+              {!isPro && (
+                <Link href="/upgrade" className={linkClass("/upgrade")}>
+                  🚀 Upgrade
+                </Link>
+              )}
+
+              <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+                🛟 Support
+              </Link>
+            </>
+          )}
+
+          {/* LOGOUT */}
 
           <button
             onClick={async () => {
@@ -187,9 +261,11 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN */}
+
       <main className="flex-1 flex flex-col pb-24">
 
         {/* MOBILE HEADER */}
+
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
           <button onClick={() => setOpen(!open)}>
@@ -208,6 +284,7 @@ export default function DashboardLayout({
         </div>
 
         {/* DESKTOP HEADER */}
+
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -226,6 +303,7 @@ export default function DashboardLayout({
         </div>
 
         {/* MOBILE BOTTOM NAV */}
+
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around items-center py-3 z-50">
 
           <Link
