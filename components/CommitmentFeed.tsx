@@ -5,19 +5,21 @@ import Image from "next/image";
 import Link from "next/link";
 import ViewTracker from "@/components/ViewTracker";
 
+type Identity = {
+  username?: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  plan_key?: string | null;
+  type?: "user" | "company";
+};
+
 type Commitment = {
   id: string;
-  text: string;
-  category: string;
+  text?: string;
+  category?: string;
   created_at: string;
-  views: number;
-  identity: {
-    username: string;
-    display_name: string;
-    avatar_url: string | null;
-    plan_key: string | null;
-    type: "user" | "company";
-  };
+  views?: number;
+  identity?: Identity | null;
 };
 
 function timeAgo(date: string) {
@@ -78,16 +80,34 @@ export default function CommitmentFeed({
   }, [activeTab, category]);
 
   async function loadInitial() {
-    const query = new URLSearchParams();
-    query.append("type", activeTab);
-    if (category) query.append("category", category);
+    try {
+      const query = new URLSearchParams();
+      query.append("type", activeTab);
+      if (category) query.append("category", category);
 
-    const res = await fetch(`${endpoint}?${query.toString()}`);
-    const data = await res.json();
+      const res = await fetch(`${endpoint}?${query.toString()}`);
 
-    setCommitments(data);
-    setCursor(data.length ? data[data.length - 1].created_at : null);
-    setHasMore(data.length === 25);
+      if (!res.ok) {
+        console.error("Feed fetch failed");
+        return;
+      }
+
+      const data = await res.json();
+
+      const safeData = Array.isArray(data) ? data : [];
+
+      setCommitments(safeData);
+
+      setCursor(
+        safeData.length
+          ? safeData[safeData.length - 1]?.created_at
+          : null
+      );
+
+      setHasMore(safeData.length === 25);
+    } catch (err) {
+      console.error("Feed load error:", err);
+    }
   }
 
   async function loadMore() {
@@ -95,22 +115,28 @@ export default function CommitmentFeed({
 
     setLoading(true);
 
-    const query = new URLSearchParams();
-    query.append("type", activeTab);
-    query.append("cursor", cursor);
-    if (category) query.append("category", category);
+    try {
+      const query = new URLSearchParams();
+      query.append("type", activeTab);
+      query.append("cursor", cursor);
+      if (category) query.append("category", category);
 
-    const res = await fetch(`${endpoint}?${query.toString()}`);
-    const data = await res.json();
+      const res = await fetch(`${endpoint}?${query.toString()}`);
+      const data = await res.json();
 
-    setCommitments((prev) => [...prev, ...data]);
+      const safeData = Array.isArray(data) ? data : [];
 
-    if (data.length > 0) {
-      setCursor(data[data.length - 1].created_at);
-    }
+      setCommitments((prev) => [...prev, ...safeData]);
 
-    if (data.length < 25) {
-      setHasMore(false);
+      if (safeData.length > 0) {
+        setCursor(safeData[safeData.length - 1].created_at);
+      }
+
+      if (safeData.length < 25) {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Load more error:", err);
     }
 
     setLoading(false);
@@ -122,6 +148,7 @@ export default function CommitmentFeed({
       {showFilters && (
         <div className="flex justify-between items-center">
           <div className="flex gap-4">
+
             <button
               onClick={() => setActiveTab("latest")}
               className={`px-4 py-2 rounded ${
@@ -143,6 +170,7 @@ export default function CommitmentFeed({
             >
               Trending
             </button>
+
           </div>
 
           <select
@@ -156,22 +184,28 @@ export default function CommitmentFeed({
               </option>
             ))}
           </select>
+
         </div>
       )}
 
       <div className="space-y-4">
+
         {commitments.map((c) => {
+          const identity = c.identity ?? {};
+
           const avatar =
-            c.identity.avatar_url?.trim()
-              ? c.identity.avatar_url.trim()
+            identity.avatar_url?.trim()
+              ? identity.avatar_url.trim()
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  c.identity.display_name || c.identity.username
+                  identity.display_name ||
+                    identity.username ||
+                    "User"
                 )}&background=2563eb&color=fff`;
 
           const profileLink =
-            c.identity.type === "company"
-              ? `/c/${c.identity.username}`
-              : `/u/${c.identity.username}`;
+            identity.type === "company"
+              ? `/c/${identity.username}`
+              : `/u/${identity.username}`;
 
           return (
             <div
@@ -179,14 +213,13 @@ export default function CommitmentFeed({
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative"
             >
 
-              {/* VIEW TRACKER */}
               <ViewTracker
                 type="commitment"
                 entityId={c.id}
               />
 
-              {/* HEADER */}
               <div className="flex items-center gap-3 mb-3">
+
                 <Link href={profileLink}>
                   <Image
                     src={avatar}
@@ -202,41 +235,42 @@ export default function CommitmentFeed({
                     href={profileLink}
                     className="font-medium"
                   >
-                    {c.identity.display_name ||
-                      c.identity.username}
+                    {identity.display_name ||
+                      identity.username ||
+                      "Unknown"}
                   </Link>
 
                   <div className="text-xs text-gray-500">
-                    @{c.identity.username} ·{" "}
+                    @{identity.username || "user"} ·{" "}
                     {timeAgo(c.created_at)}
                   </div>
                 </div>
+
               </div>
 
-              {/* CATEGORY */}
               {c.category && (
                 <div className="text-xs text-blue-600 mb-2">
                   {c.category}
                 </div>
               )}
 
-              {/* TEXT */}
               <div className="mb-3 whitespace-pre-wrap text-gray-800">
-                {c.text}
+                {c.text || ""}
               </div>
 
-              {/* VIEWS */}
               <div className="text-sm text-gray-500">
-                👁 {c.views} views
+                👁 {c.views ?? 0} views
               </div>
 
             </div>
           );
         })}
+
       </div>
 
       {hasMore && (
         <div className="text-center">
+
           <button
             onClick={loadMore}
             disabled={loading}
@@ -244,8 +278,10 @@ export default function CommitmentFeed({
           >
             {loading ? "Loading..." : "Load More"}
           </button>
+
         </div>
       )}
+
     </div>
   );
 }
