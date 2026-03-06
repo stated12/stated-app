@@ -132,6 +132,7 @@ export default function UpgradePage() {
 
         <div>
           <div className="text-lg font-semibold">{title}</div>
+
           <div className="text-2xl font-bold mt-2">₹{price}</div>
 
           <ul className="mt-4 space-y-2 text-sm text-gray-600">
@@ -156,6 +157,8 @@ export default function UpgradePage() {
     );
   }
 
+  const isIndividualPaid = currentPlan.startsWith("ind_");
+
   const individualPlans = (
     <>
       <div className="text-center text-sm text-gray-600 mb-8">
@@ -164,6 +167,7 @@ export default function UpgradePage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
+
         <PlanCard
           title="Starter"
           price="499"
@@ -200,44 +204,48 @@ export default function UpgradePage() {
             "Completion scoring",
           ]}
         />
+
       </div>
 
-      <div className="mt-16">
-        <h2 className="text-2xl font-bold text-center mb-8">
-          Extra Credit Packs
-        </h2>
+      {isIndividualPaid && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-center mb-8">
+            Extra Credit Packs
+          </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { title: "10 Credits", price: 199, key: "pack_10" },
-            { title: "25 Credits", price: 399, key: "pack_25" },
-            { title: "50 Credits", price: 699, key: "pack_50" },
-          ].map((pack) => (
-            <div
-              key={pack.key}
-              className="bg-white rounded-xl shadow p-6 text-center"
-            >
-              <div className="font-semibold">{pack.title}</div>
-
-              <div className="text-2xl font-bold mt-2">
-                ₹{pack.price}
-              </div>
-
-              <button
-                onClick={() => handlePurchase(pack.key)}
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { title: "10 Credits", price: 199, key: "pack_10" },
+              { title: "25 Credits", price: 399, key: "pack_25" },
+              { title: "50 Credits", price: 699, key: "pack_50" },
+            ].map((pack) => (
+              <div
+                key={pack.key}
+                className="bg-white rounded-xl shadow p-6 text-center"
               >
-                Buy Pack
-              </button>
-            </div>
-          ))}
+                <div className="font-semibold">{pack.title}</div>
+
+                <div className="text-2xl font-bold mt-2">
+                  ₹{pack.price}
+                </div>
+
+                <button
+                  onClick={() => handlePurchase(pack.key)}
+                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Buy Pack
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 
   const companyPlans = (
     <div className="grid md:grid-cols-3 gap-8">
+
       <PlanCard
         title="Team"
         price="1999"
@@ -274,6 +282,7 @@ export default function UpgradePage() {
           "Advanced reporting ready",
         ]}
       />
+
     </div>
   );
 
@@ -334,4 +343,4 @@ export default function UpgradePage() {
       </div>
     </>
   );
-}
+            }
