@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+type Identity = {
+  username: string;
+  display_name: string;
+  avatar_url?: string | null;
+  type: "user" | "company";
+};
+
 type Commitment = {
   id: string;
   text: string;
   category: string;
   created_at: string;
   views?: number;
-  username?: string;
-  display_name?: string;
-  avatar_url?: string;
+  identity: Identity;
 };
 
 function timeAgo(date: string) {
@@ -78,7 +83,6 @@ export default function Dashboard() {
     if (!data || data.length === 0) return;
 
     const ids = data.map((c) => c.id);
-
     const sessionKey = "viewed_" + ids.join("_");
 
     if (sessionStorage.getItem(sessionKey)) return;
@@ -163,64 +167,69 @@ export default function Dashboard() {
         )}
 
         {!loading &&
-          commitments.map((c) => (
-            <div
-              key={c.id}
-              className="bg-white rounded-2xl shadow-sm p-5 transition hover:shadow-md"
-            >
+          commitments.map((c) => {
 
-              {/* AUTHOR */}
-              <Link
-                href={`/u/${c.username}`}
-                className="flex items-center gap-3 mb-3"
+            const avatar =
+              c.identity.avatar_url ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                c.identity.display_name || c.identity.username
+              )}&background=2563eb&color=fff`;
+
+            const profileLink =
+              c.identity.type === "company"
+                ? `/c/${c.identity.username}`
+                : `/u/${c.identity.username}`;
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition"
               >
 
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">
+                {/* AUTHOR */}
+                <Link
+                  href={profileLink}
+                  className="flex items-center gap-3 mb-3"
+                >
+                  <Image
+                    src={avatar}
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
 
-                  {c.avatar_url ? (
-                    <Image
-                      src={c.avatar_url}
-                      alt="avatar"
-                      width={40}
-                      height={40}
-                    />
-                  ) : (
-                    c.display_name?.charAt(0) ||
-                    c.username?.charAt(0)
-                  )}
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {c.identity.display_name ||
+                        c.identity.username}
+                    </div>
 
+                    <div className="text-xs text-gray-500">
+                      @{c.identity.username}
+                    </div>
+                  </div>
+                </Link>
+
+                {/* META */}
+                <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                  <span>{c.category}</span>
+                  <span>{timeAgo(c.created_at)}</span>
                 </div>
 
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {c.display_name || c.username}
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    @{c.username}
-                  </div>
+                {/* TEXT */}
+                <div className="text-gray-900 text-base mb-3 leading-relaxed">
+                  {c.text}
                 </div>
 
-              </Link>
+                {/* VIEWS */}
+                <div className="text-xs text-gray-500">
+                  👁 {c.views ?? 0} views
+                </div>
 
-              {/* META */}
-              <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
-                <span>{c.category}</span>
-                <span>{timeAgo(c.created_at)}</span>
               </div>
-
-              {/* TEXT */}
-              <div className="text-gray-900 text-base mb-3 leading-relaxed">
-                {c.text}
-              </div>
-
-              {/* VIEWS */}
-              <div className="text-xs text-gray-500">
-                👁 {c.views ?? 0} views
-              </div>
-
-            </div>
-          ))}
+            );
+          })}
 
         {!loading && commitments.length === 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-6 text-center text-gray-500">
