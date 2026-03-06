@@ -8,42 +8,23 @@ export default async function HomePage() {
   const supabase = await createClient();
 
   /* -----------------------------
-     INDIVIDUAL COMMITMENTS
+     FETCH LATEST COMMITMENTS
   ----------------------------- */
 
-  const { data: individualData } = await supabase
+  const { data: commitmentsData } = await supabase
     .from("commitments")
     .select(`
       id,
       text,
-      status,
       views,
       created_at,
       user_id,
+      company_id,
       profiles:user_id (
         username,
         display_name,
         avatar_url
-      )
-    `)
-    .eq("status", "active")
-    .is("company_id", null)
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  /* -----------------------------
-     COMPANY COMMITMENTS
-  ----------------------------- */
-
-  const { data: companyData } = await supabase
-    .from("commitments")
-    .select(`
-      id,
-      text,
-      status,
-      views,
-      created_at,
-      company_id,
+      ),
       companies:company_id (
         username,
         name,
@@ -51,44 +32,38 @@ export default async function HomePage() {
       )
     `)
     .eq("status", "active")
-    .not("company_id", "is", null)
     .order("created_at", { ascending: false })
-    .limit(3);
+    .limit(6);
 
   /* -----------------------------
      NORMALIZE DATA
   ----------------------------- */
 
-  const individuals =
-    individualData?.map((c: any) => ({
-      id: c.id,
-      text: c.text,
-      views: c.views ?? 0,
-      username: c.profiles?.username,
-      display_name: c.profiles?.display_name,
-      avatar: c.profiles?.avatar_url,
-      type: "user",
-    })) || [];
+  const commitments =
+    commitmentsData?.map((c: any) => {
+      const isCompany = !!c.company_id;
 
-  const companies =
-    companyData?.map((c: any) => ({
-      id: c.id,
-      text: c.text,
-      views: c.views ?? 0,
-      username: c.companies?.username,
-      display_name: c.companies?.name,
-      avatar: c.companies?.logo_url,
-      type: "company",
-    })) || [];
-
-  const commitments = [...individuals, ...companies];
+      return {
+        id: c.id,
+        text: c.text,
+        views: c.views ?? 0,
+        username: isCompany
+          ? c.companies?.username
+          : c.profiles?.username,
+        display_name: isCompany
+          ? c.companies?.name
+          : c.profiles?.display_name,
+        avatar: isCompany
+          ? c.companies?.logo_url
+          : c.profiles?.avatar_url,
+        type: isCompany ? "company" : "user",
+      };
+    }) || [];
 
   return (
     <div className="min-h-screen flex flex-col">
 
-      {/* -----------------------------
-         HEADER
-      ----------------------------- */}
+      {/* HEADER */}
 
       <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
@@ -115,9 +90,7 @@ export default async function HomePage() {
 
       </header>
 
-      {/* -----------------------------
-         HERO SECTION
-      ----------------------------- */}
+      {/* HERO */}
 
       <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
@@ -192,9 +165,7 @@ export default async function HomePage() {
 
       </section>
 
-      {/* -----------------------------
-         RECENT COMMITMENTS
-      ----------------------------- */}
+      {/* RECENT COMMITMENTS */}
 
       <section className="bg-white text-black py-16 px-6">
 
