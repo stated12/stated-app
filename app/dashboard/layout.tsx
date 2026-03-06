@@ -35,7 +35,8 @@ export default function DashboardLayout({
         return;
       }
 
-      // INDIVIDUAL PROFILE
+      /* ---------------- PROFILE ---------------- */
+
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -44,14 +45,26 @@ export default function DashboardLayout({
 
       setProfile(profileData);
 
-      // COMPANY ACCOUNT (IF EXISTS)
-      const { data: companyData } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("owner_id", user.id)
+      /* ---------------- COMPANY MEMBERSHIP ---------------- */
+
+      const { data: membership } = await supabase
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      setCompany(companyData);
+      if (membership) {
+
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("*")
+          .eq("id", membership.company_id)
+          .single();
+
+        setCompany(companyData);
+
+      }
+
     }
 
     load();
@@ -88,10 +101,14 @@ export default function DashboardLayout({
   const bottomActive = (href: string) =>
     pathname === href ? "text-blue-600" : "text-gray-500";
 
+  /* ---------------- AVATAR ---------------- */
+
   const avatar =
     isCompany
-      ? company?.logo_url
-      : profile?.avatar_url;
+      ? company?.logo_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(company?.name || "Company")}&background=2563eb&color=fff`
+      : profile?.avatar_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.display_name || profile?.username)}&background=2563eb&color=fff`;
 
   const displayName =
     isCompany
@@ -127,22 +144,11 @@ export default function DashboardLayout({
 
           <div className="flex items-center gap-3">
 
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-semibold">
-
-              {avatar ? (
-                <Image
-                  src={avatar}
-                  alt="avatar"
-                  width={48}
-                  height={48}
-                />
-              ) : (
-                <span>
-                  {displayName?.charAt(0)}
-                </span>
-              )}
-
-            </div>
+            <img
+              src={avatar}
+              alt="avatar"
+              className="w-12 h-12 rounded-full object-cover"
+            />
 
             <div>
 
@@ -189,15 +195,15 @@ export default function DashboardLayout({
                 📌 Company Commitments
               </Link>
 
-              <Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+              <Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
                 📊 Insights
               </Link>
 
-              <Link href="/dashboard/team" className={linkClass("/dashboard/team")}>
+              <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
                 👥 Invite Members
               </Link>
 
-              <Link href="/account" className={linkClass("/account")}>
+              <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
                 ⚙️ Account Settings
               </Link>
 
