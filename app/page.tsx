@@ -2,34 +2,65 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
-
-async function getCommitments() {
-  try {
-
-    const headersList = headers();
-    const host = headersList.get("host");
-
-    const protocol = host?.includes("localhost") ? "http" : "https";
-
-    const res = await fetch(
-      `${protocol}://${host}/api/feed?type=latest`,
-      { cache: "no-store" }
-    );
-
-    const data = await res.json();
-
-    return data.slice(0, 6);
-
-  } catch (err) {
-    console.error("Homepage feed error:", err);
-    return [];
-  }
-}
+import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
 
-  const commitments = await getCommitments();
+  const supabase = await createClient();
+
+  /* -----------------------------
+     FETCH LATEST COMMITMENTS
+  ----------------------------- */
+
+  const { data: commitmentsData } = await supabase
+    .from("commitments")
+    .select(`
+      id,
+      text,
+      views,
+      created_at,
+      user_id,
+      company_id,
+      profiles:user_id (
+        username,
+        display_name,
+        avatar_url
+      ),
+      companies:company_id (
+        username,
+        name,
+        logo_url
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  /* -----------------------------
+     NORMALIZE DATA
+  ----------------------------- */
+
+  const commitments =
+    commitmentsData?.map((c: any) => {
+
+      const isCompany = !!c.company_id;
+
+      return {
+        id: c.id,
+        text: c.text,
+        views: c.views ?? 0,
+        username: isCompany
+          ? c.companies?.username
+          : c.profiles?.username,
+        display_name: isCompany
+          ? c.companies?.name
+          : c.profiles?.display_name,
+        avatar: isCompany
+          ? c.companies?.logo_url
+          : c.profiles?.avatar_url,
+        type: isCompany ? "company" : "user",
+      };
+
+    }) || [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -147,16 +178,11 @@ export default async function HomePage() {
               {commitments.map((c: any) => {
 
                 const avatar =
-                  c.avatar_url?.trim()
-                    ? c.avatar_url
+                  c.avatar?.trim()
+                    ? c.avatar
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        c.display_name || c.username || "User"
+                        c.display_name || "User"
                       )}&background=2563eb&color=fff`;
-
-                const profileLink =
-                  c.identity?.type === "company"
-                    ? `/c/${c.identity.username}`
-                    : `/u/${c.identity.username}`;
 
                 return (
 
@@ -180,9 +206,9 @@ export default async function HomePage() {
 
                         <div className="flex items-center gap-2 font-semibold mb-1">
 
-                          {c.display_name || c.username}
+                          {c.display_name}
 
-                          {c.identity?.type === "company" && (
+                          {c.type === "company" && (
                             <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
                               COMPANY
                             </span>
@@ -195,7 +221,7 @@ export default async function HomePage() {
                         </div>
 
                         <div className="text-xs text-gray-500">
-                          👁 {c.views || 0} views
+                          👁 {c.views} views
                         </div>
 
                       </div>
