@@ -1,244 +1,156 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-
-type Identity = {
-  username: string;
-  display_name: string;
-  avatar_url?: string | null;
-  type: "user" | "company";
-};
+import { createClient } from "@/lib/supabase/client";
 
 type Commitment = {
   id: string;
   text: string;
   category: string;
   created_at: string;
-  views?: number;
-  identity: Identity;
+  creator_name?: string;
 };
 
-function timeAgo(date: string) {
-  const seconds = Math.floor(
-    (new Date().getTime() - new Date(date).getTime()) / 1000
-  );
+export default function CompanyDashboardPage() {
 
-  if (seconds < 60) return "now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
-}
+  const supabase = createClient();
 
-export default function Dashboard() {
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [activeTab, setActiveTab] =
-    useState<"latest" | "trending">("latest");
-  const [category, setCategory] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [company,setCompany] = useState<any>(null);
+  const [commitments,setCommitments] = useState<Commitment[]>([]);
+  const [loading,setLoading] = useState(true);
 
-  const categories = [
-    "",
-    "Fitness",
-    "Learning",
-    "Writing",
-    "Health",
-    "Finance",
-    "Business",
-    "Product",
-    "Growth",
-  ];
+  useEffect(()=>{
+    loadData();
+  },[]);
 
-  useEffect(() => {
-    loadFeed();
-  }, [activeTab, category]);
+  async function loadData(){
 
-  async function loadFeed() {
-    try {
-      setLoading(true);
+    const {data:{user}} = await supabase.auth.getUser();
 
-      const params = new URLSearchParams();
-      params.append("type", activeTab);
-      if (category) params.append("category", category);
+    if(!user) return;
 
-      const res = await fetch(`/api/feed?${params.toString()}`);
-      const data = await res.json();
+    const {data:membership} = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id",user.id)
+    .maybeSingle();
 
-      if (Array.isArray(data)) {
-        setCommitments(data);
-        triggerImpressions(data);
-      } else {
-        setCommitments([]);
-      }
-    } catch (err) {
-      console.error("Feed error:", err);
-      setCommitments([]);
-    } finally {
-      setLoading(false);
-    }
+    if(!membership) return;
+
+    const {data:companyData} = await supabase
+    .from("companies")
+    .select("*")
+    .eq("id",membership.company_id)
+    .single();
+
+    setCompany(companyData);
+
+    const {data:commitmentsData} = await supabase
+    .from("commitments")
+    .select(`
+      id,
+      text,
+      category,
+      created_at,
+      created_by_user_id,
+      profiles!commitments_created_by_user_id_fkey (
+        display_name,
+        username
+      )
+    `)
+    .eq("company_id",companyData.id)
+    .order("created_at",{ascending:false});
+
+    const formatted =
+    (commitmentsData ?? []).map((c:any)=>({
+
+      id:c.id,
+      text:c.text,
+      category:c.category,
+      created_at:c.created_at,
+      creator_name:
+        c.profiles?.display_name ||
+        c.profiles?.username ||
+        "Member"
+
+    }));
+
+    setCommitments(formatted);
+    setLoading(false);
+
   }
 
-  async function triggerImpressions(data: Commitment[]) {
-    if (!data || data.length === 0) return;
+  if(!company) return null;
 
-    const ids = data.map((c) => c.id);
-    const sessionKey = "viewed_" + ids.join("_");
+  return(
 
-    if (sessionStorage.getItem(sessionKey)) return;
+  <div className="max-w-xl mx-auto py-8 space-y-6">
 
-    try {
-      await fetch("/api/impression", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          commitmentIds: ids,
-        }),
-      });
+  {/* HEADER */}
 
-      sessionStorage.setItem(sessionKey, "true");
-    } catch (err) {
-      console.error("Impression error:", err);
-    }
-  }
+  <div>
 
-  return (
-    <div className="max-w-xl mx-auto px-4 pt-6 pb-20 space-y-6">
+  <h1 className="text-2xl font-bold">
+  {company.name}
+  </h1>
 
-      {/* TITLE */}
-      <div>
-        <h1 className="text-2xl font-bold">
-          Public Commitments
-        </h1>
-        <p className="text-sm text-gray-500">
-          Discover commitments from individuals & companies
-        </p>
-      </div>
+  <div className="text-sm text-gray-500">
+  @{company.username}
+  </div>
 
-      {/* FILTER CARD */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+  </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab("latest")}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition ${
-              activeTab === "latest"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            Latest
-          </button>
+  {/* CREATE BUTTON */}
 
-          <button
-            onClick={() => setActiveTab("trending")}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition ${
-              activeTab === "trending"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            🔥 Trending
-          </button>
-        </div>
+  <Link
+  href="/dashboard/company/create"
+  className="block text-center bg-blue-600 text-white py-3 rounded-lg font-medium"
+  >
+  + Create Commitment
+  </Link>
 
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat || "All Categories"}
-            </option>
-          ))}
-        </select>
-      </div>
+  {/* COMMITMENTS */}
 
-      {/* FEED */}
-      <div className="space-y-4">
+  <div className="space-y-4">
 
-        {loading && (
-          <div className="text-center text-gray-500 py-6">
-            Loading...
-          </div>
-        )}
+  {loading && (
+  <div className="text-center text-gray-500">
+  Loading...
+  </div>
+  )}
 
-        {!loading &&
-          commitments.map((c) => {
+  {!loading && commitments.length === 0 && (
+  <div className="bg-white rounded-xl shadow p-5 text-center text-gray-500">
+  No company commitments yet
+  </div>
+  )}
 
-            const avatar =
-              c.identity.avatar_url ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                c.identity.display_name || c.identity.username
-              )}&background=2563eb&color=fff`;
+  {commitments.map((c)=>(
+  <div
+  key={c.id}
+  className="bg-white rounded-xl shadow p-5"
+  >
 
-            const profileLink =
-              c.identity.type === "company"
-                ? `/c/${c.identity.username}`
-                : `/u/${c.identity.username}`;
+  <div className="text-xs text-gray-500 mb-1">
+  {c.category}
+  </div>
 
-            return (
-              <div
-                key={c.id}
-                className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition"
-              >
+  <div className="text-gray-900 text-base mb-3">
+  {c.text}
+  </div>
 
-                {/* AUTHOR */}
-                <Link
-                  href={profileLink}
-                  className="flex items-center gap-3 mb-3"
-                >
-                  <Image
-                    src={avatar}
-                    alt="avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
+  <div className="text-xs text-gray-500">
+  Created by {c.creator_name}
+  </div>
 
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {c.identity.display_name ||
-                        c.identity.username}
-                    </div>
+  </div>
+  ))}
 
-                    <div className="text-xs text-gray-500">
-                      @{c.identity.username}
-                    </div>
-                  </div>
-                </Link>
+  </div>
 
-                {/* META */}
-                <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
-                  <span>{c.category}</span>
-                  <span>{timeAgo(c.created_at)}</span>
-                </div>
+  </div>
 
-                {/* TEXT */}
-                <div className="text-gray-900 text-base mb-3 leading-relaxed">
-                  {c.text}
-                </div>
+  )
 
-                {/* VIEWS */}
-                <div className="text-xs text-gray-500">
-                  👁 {c.views ?? 0} views
-                </div>
-
-              </div>
-            );
-          })}
-
-        {!loading && commitments.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 text-center text-gray-500">
-            No commitments yet
-          </div>
-        )}
-
-      </div>
-
-    </div>
-  );
 }
