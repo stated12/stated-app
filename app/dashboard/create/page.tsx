@@ -9,17 +9,17 @@ export default function CreateCommitmentPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const [text, setText] = useState("");
-  const [duration, setDuration] = useState("1 week");
-  const [category, setCategory] = useState("");
+  const [text,setText] = useState("");
+  const [duration,setDuration] = useState("1 week");
+  const [category,setCategory] = useState("");
 
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [companies,setCompanies] = useState<any[]>([]);
+  const [selectedCompanyId,setSelectedCompanyId] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [loading,setLoading] = useState(false);
+  const [loadingCompanies,setLoadingCompanies] = useState(true);
 
-  /* ---------------- CATEGORIES ---------------- */
+  /* ---------------- INDIVIDUAL CATEGORIES ---------------- */
 
   const individualCategories = [
     "Fitness",
@@ -29,6 +29,8 @@ export default function CreateCommitmentPage() {
     "Finance",
     "Business",
   ];
+
+  /* ---------------- COMPANY CATEGORIES ---------------- */
 
   const companyCategories = [
     "Marketing",
@@ -41,218 +43,202 @@ export default function CreateCommitmentPage() {
 
   /* ---------------- LOAD COMPANIES ---------------- */
 
-  useEffect(() => {
-    loadCompanies();
-  }, []);
+  useEffect(()=>{
+    loadCompanies()
+  },[])
 
-  async function loadCompanies() {
+  async function loadCompanies(){
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const {data:{user}} = await supabase.auth.getUser()
 
-    if (!user) return;
-
-    const { data: memberships } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id);
-
-    if (!memberships || memberships.length === 0) {
-      setLoadingCompanies(false);
-      return;
+    if(!user){
+      setLoadingCompanies(false)
+      return
     }
 
-    const ids = memberships.map((m: any) => m.company_id);
+    const {data:memberships} = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id",user.id)
 
-    const { data: companiesData } = await supabase
-      .from("companies")
-      .select("id,name,username")
-      .in("id", ids);
+    if(!memberships || memberships.length === 0){
+      setLoadingCompanies(false)
+      return
+    }
 
-    setCompanies(companiesData || []);
-    setLoadingCompanies(false);
+    const ids = memberships.map((m:any)=>m.company_id)
+
+    const {data:companiesData} = await supabase
+    .from("companies")
+    .select("id,name,username")
+    .in("id",ids)
+
+    setCompanies(companiesData || [])
+    setLoadingCompanies(false)
+
   }
 
-  /* ---------------- CREATE ---------------- */
+  /* ---------------- CREATE COMMITMENT ---------------- */
 
-  async function createCommitment() {
+  async function createCommitment(){
 
-    if (!text.trim() || !category) {
-      alert("Fill all required fields");
-      return;
+    if(!text.trim() || !category){
+      alert("Please fill all required fields")
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const {data:{user}} = await supabase.auth.getUser()
 
-    if (!user) {
-      router.push("/login");
-      return;
+    if(!user){
+      router.push("/login")
+      return
     }
 
-    const { error } = await supabase
-      .from("commitments")
-      .insert({
-        text,
-        duration,
-        category,
-        user_id: selectedCompanyId ? null : user.id,
-        company_id: selectedCompanyId || null,
-        status: "active",
-      });
+    const {error} = await supabase
+    .from("commitments")
+    .insert({
+      text,
+      duration,
+      category,
+      user_id: selectedCompanyId ? null : user.id,
+      company_id: selectedCompanyId || null,
+      status: "active",
+    })
 
-    if (error) {
-      alert(error.message);
-      setLoading(false);
-      return;
+    if(error){
+      alert(error.message)
+      setLoading(false)
+      return
     }
 
-    setLoading(false);
-
-    router.push("/dashboard");
+    router.push("/dashboard")
 
   }
 
   /* ---------------- CATEGORY SWITCH ---------------- */
 
-  const categories =
-    selectedCompanyId ? companyCategories : individualCategories;
+  const categories = selectedCompanyId
+  ? companyCategories
+  : individualCategories
 
   /* ---------------- PAGE ---------------- */
 
   return (
 
-    <div className="max-w-xl mx-auto py-10 space-y-6">
+  <div className="max-w-xl mx-auto py-10 space-y-6">
 
-      <h1 className="text-2xl font-bold">
-        Create Commitment
-      </h1>
+  <h1 className="text-2xl font-bold">
+  Create Commitment
+  </h1>
 
-      {/* POST AS */}
+  {/* POST AS */}
 
-      <div>
+  <div>
 
-        <label className="font-medium">
-          Post As
-        </label>
+  <label className="font-medium">
+  Post As
+  </label>
 
-        <select
-          value={selectedCompanyId || "self"}
-          onChange={(e) => {
+  <select
+  value={selectedCompanyId || "self"}
+  onChange={(e)=>{
 
-            const value =
-              e.target.value === "self"
-                ? null
-                : e.target.value;
+  const value =
+  e.target.value === "self"
+  ? null
+  : e.target.value
 
-            setSelectedCompanyId(value);
-            setCategory("");
+  setSelectedCompanyId(value)
+  setCategory("")
 
-          }}
-          className="w-full border rounded-lg px-4 py-2"
-        >
+  }}
+  className="w-full border rounded-lg px-4 py-2"
+  >
 
-          <option value="self">
-            Myself
-          </option>
+  <option value="self">
+  Myself
+  </option>
 
-          {companies.map((company) => (
+  {companies.map((company)=>(
+  <option key={company.id} value={company.id}>
+  {company.name} (@{company.username})
+  </option>
+  ))}
 
-            <option
-              key={company.id}
-              value={company.id}
-            >
-              {company.name} (@{company.username})
-            </option>
+  </select>
 
-          ))}
+  </div>
 
-        </select>
+  {/* TEXT */}
 
-      </div>
+  <textarea
+  placeholder="Enter your commitment..."
+  value={text}
+  onChange={(e)=>setText(e.target.value)}
+  className="w-full border rounded-lg px-4 py-3"
+  />
 
-      {/* TEXT */}
+  {/* CATEGORY */}
 
-      <textarea
-        placeholder="Enter your commitment..."
-        value={text}
-        onChange={(e) =>
-          setText(e.target.value)
-        }
-        className="w-full border rounded-lg px-4 py-3"
-      />
+  <div>
 
-      {/* CATEGORY */}
+  <label className="font-medium">
+  Category
+  </label>
 
-      <div>
+  <select
+  value={category}
+  onChange={(e)=>setCategory(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+  >
 
-        <label className="font-medium">
-          Category
-        </label>
+  <option value="">
+  Select category
+  </option>
 
-        <select
-          value={category}
-          onChange={(e) =>
-            setCategory(e.target.value)
-          }
-          className="w-full border rounded-lg px-4 py-2"
-        >
+  {categories.map((cat)=>(
+  <option key={cat} value={cat}>
+  {cat}
+  </option>
+  ))}
 
-          <option value="">
-            Select category
-          </option>
+  </select>
 
-          {categories.map((cat) => (
+  </div>
 
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+  {/* DURATION */}
 
-          ))}
+  <select
+  value={duration}
+  onChange={(e)=>setDuration(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+  >
 
-        </select>
+  <option>1 week</option>
+  <option>2 weeks</option>
+  <option>1 month</option>
+  <option>3 months</option>
+  <option>6 months</option>
+  <option>1 year</option>
 
-      </div>
+  </select>
 
-      {/* DURATION */}
+  {/* BUTTON */}
 
-      <select
-        value={duration}
-        onChange={(e) =>
-          setDuration(e.target.value)
-        }
-        className="w-full border rounded-lg px-4 py-2"
-      >
+  <button
+  onClick={createCommitment}
+  disabled={loading}
+  className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full"
+  >
 
-        <option>1 week</option>
-        <option>2 weeks</option>
-        <option>1 month</option>
-        <option>3 months</option>
-        <option>6 months</option>
-        <option>1 year</option>
+  {loading ? "Creating..." : "Create Commitment"}
 
-      </select>
+  </button>
 
-      {/* CREATE BUTTON */}
+  </div>
 
-      <button
-        onClick={createCommitment}
-        disabled={loading}
-        className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full"
-      >
-
-        {loading
-          ? "Creating..."
-          : "Create Commitment"}
-
-      </button>
-
-    </div>
-
-  );
+  )
 
 }
