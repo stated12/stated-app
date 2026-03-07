@@ -75,9 +75,11 @@ if(!profile) return null
 
 const isCompany = !!company
 
-/* CREATE ROUTE */
+/* CREATE ROUTE FIX */
 
-const createLink = "/dashboard/create"
+const createLink = isCompany
+? "/dashboard/company/create"
+: "/dashboard/create"
 
 /* SIDEBAR ACTIVE STYLE */
 
@@ -353,4 +355,4 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 
 )
 
-  }
+}
