@@ -138,12 +138,14 @@ export default async function CompanyDashboardPage() {
     <div className="max-w-4xl mx-auto space-y-10">
 
       {/* HEADER */}
+
       <div>
         <h1 className="text-2xl font-bold">{company.name}</h1>
         <div className="text-sm text-gray-500">@{company.username}</div>
       </div>
 
       {/* QUICK LINKS */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         <Link
@@ -170,10 +172,13 @@ export default async function CompanyDashboardPage() {
       </div>
 
       {/* COMPANY COMMITMENTS */}
+
       <div>
 
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Company Commitments</h2>
+          <h2 className="text-lg font-semibold">
+            Company Commitments
+          </h2>
         </div>
 
         <div className="space-y-4">
@@ -181,7 +186,12 @@ export default async function CompanyDashboardPage() {
           {commitments.map((c) => {
 
             const latestUpdate =
-              c.commitment_updates?.[0] || null;
+              c.commitment_updates
+                ?.sort(
+                  (a, b) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+                )[0] || null;
 
             return (
 
@@ -201,13 +211,17 @@ export default async function CompanyDashboardPage() {
                 )}
 
                 {latestUpdate ? (
+
                   <div className="text-sm text-gray-600">
                     Latest update: {latestUpdate.text}
                   </div>
+
                 ) : (
+
                   <div className="text-sm text-gray-400">
                     No updates yet
                   </div>
+
                 )}
 
                 <div className="text-xs text-gray-400 mt-2">
@@ -217,6 +231,7 @@ export default async function CompanyDashboardPage() {
               </div>
 
             );
+
           })}
 
           {commitments.length === 0 && (
@@ -226,6 +241,8 @@ export default async function CompanyDashboardPage() {
           )}
 
         </div>
+
+        {/* CREATE BUTTON */}
 
         <div className="mt-4 flex gap-4">
 
@@ -248,19 +265,25 @@ export default async function CompanyDashboardPage() {
       </div>
 
       {/* MEMBERS */}
+
       <div>
 
         <div className="flex justify-between items-center mb-4">
 
-          <h2 className="text-lg font-semibold">Members</h2>
+          <h2 className="text-lg font-semibold">
+            Members
+          </h2>
 
-          {(membership.role === "owner" || membership.role === "admin") && (
+          {(membership.role === "owner" ||
+            membership.role === "admin") && (
+
             <Link
               href="/dashboard/company/invite"
               className="bg-blue-600 text-white px-4 py-2 rounded"
             >
               Invite Member
             </Link>
+
           )}
 
         </div>
@@ -377,85 +400,5 @@ function MemberRow({
 
     </div>
 
-  );
-}
-
-/* ---------------- ROLE SELECTOR ---------------- */
-
-function RoleSelector({
-  memberId,
-  currentRole,
-  disabled,
-}: {
-  memberId: string;
-  currentRole: string;
-  disabled: boolean;
-}) {
-
-  async function changeRole(role: string) {
-
-    await fetch("/api/company/member", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "role",
-        memberId,
-        role,
-      }),
-    });
-
-    window.location.reload();
-  }
-
-  return (
-
-    <select
-      disabled={disabled}
-      defaultValue={currentRole}
-      onChange={(e) => changeRole(e.target.value)}
-      className="border rounded px-2 py-1 text-sm"
-    >
-      <option value="viewer">viewer</option>
-      <option value="member">member</option>
-      <option value="admin">admin</option>
-    </select>
-
-  );
-}
-
-/* ---------------- REMOVE BUTTON ---------------- */
-
-function RemoveButton({
-  memberId,
-  disabled,
-}: {
-  memberId: string;
-  disabled: boolean;
-}) {
-
-  async function remove() {
-
-    if (!confirm("Remove this member?")) return;
-
-    await fetch("/api/company/member", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "remove",
-        memberId,
-      }),
-    });
-
-    window.location.reload();
-  }
-
-  return (
-    <button
-      disabled={disabled}
-      onClick={remove}
-      className="text-red-600 text-sm"
-    >
-      Remove
-    </button>
   );
 }
