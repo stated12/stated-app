@@ -1,358 +1,371 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname,useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
 export default function DashboardLayout({
-children,
-}:{children:React.ReactNode}){
+  children,
+}: {
+  children: React.ReactNode;
+}) {
 
-const [open,setOpen] = useState(false)
-const [profile,setProfile] = useState<any>(null)
-const [company,setCompany] = useState<any>(null)
+  const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
 
-const pathname = usePathname()
-const router = useRouter()
+  const pathname = usePathname();
+  const router = useRouter();
 
-useEffect(()=>{
+  useEffect(() => {
 
-async function load(){
+    let mounted = true;
 
-const supabase = createClient()
+    async function load() {
 
-const {data:{user}} = await supabase.auth.getUser()
+      const supabase = createClient();
 
-if(!user){
-router.push("/login")
-return
-}
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-/* PROFILE */
+      if (!user) {
+        router.push("/login");
+        return;
+      }
 
-const {data:profileData} = await supabase
-.from("profiles")
-.select("*")
-.eq("id",user.id)
-.single()
+      /* ---------------- PROFILE ---------------- */
 
-setProfile(profileData)
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-/* COMPANY MEMBERSHIP */
+      if (mounted) {
+        setProfile(profileData);
+      }
 
-const {data:membership} = await supabase
-.from("company_members")
-.select("company_id")
-.eq("user_id",user.id)
-.maybeSingle()
+      /* ---------------- COMPANY MEMBERSHIP ---------------- */
 
-if(membership){
+      const { data: membership } = await supabase
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-const {data:companyData} = await supabase
-.from("companies")
-.select("*")
-.eq("id",membership.company_id)
-.single()
+      if (membership) {
 
-setCompany(companyData)
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("*")
+          .eq("id", membership.company_id)
+          .single();
 
-}
+        if (mounted) {
+          setCompany(companyData);
+        }
 
-}
+      }
 
-load()
+    }
 
-},[router])
+    load();
 
-useEffect(()=>{
-setOpen(false)
-},[pathname])
+    return () => {
+      mounted = false;
+    };
 
-if(!profile) return null
+  }, [router]);
 
-const isCompany = !!company
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
-/* CREATE ROUTE FIX */
+  if (!profile) return null;
 
-const createLink = isCompany
-? "/dashboard/company/create"
-: "/dashboard/create"
+  const isCompany = !!company;
 
-/* SIDEBAR ACTIVE STYLE */
+  /* ---------------- CREATE ROUTE ---------------- */
 
-const linkClass = (href:string)=>{
+  const createLink = isCompany
+    ? "/dashboard/company/create"
+    : "/dashboard/create";
 
-const active =
-pathname === href ||
-pathname.startsWith(href + "/")
+  /* ---------------- NAV ACTIVE STYLE ---------------- */
 
-return `flex items-center gap-3 px-5 py-3 rounded-lg font-bold ${
-active
-? "bg-blue-100 text-blue-700"
-: "text-gray-900 hover:bg-gray-100"
-}`
+  const linkClass = (href: string) => {
 
-}
+    const active =
+      pathname === href ||
+      pathname.startsWith(href + "/") ||
+      pathname.startsWith(href);
 
-/* AVATAR */
+    return `flex items-center gap-3 px-5 py-3 rounded-lg font-bold ${
+      active
+        ? "bg-blue-100 text-blue-700"
+        : "text-gray-900 hover:bg-gray-100"
+    }`;
 
-const avatar =
-isCompany
-? company?.logo_url
-: profile?.avatar_url
+  };
 
-const displayName =
-isCompany
-? company?.name
-: profile?.display_name || profile?.username
+  /* ---------------- AVATAR ---------------- */
 
-const username =
-isCompany
-? company?.username
-: profile?.username
+  const avatar =
+    isCompany
+      ? company?.logo_url
+      : profile?.avatar_url;
 
-return(
+  const displayName =
+    isCompany
+      ? company?.name
+      : profile?.display_name || profile?.username;
 
-<div className="min-h-screen flex bg-gray-50">
+  const username =
+    isCompany
+      ? company?.username
+      : profile?.username;
 
-{/* OVERLAY */}
+  return (
 
-{open && (
-<div
-className="fixed inset-0 bg-black/40 z-40 md:hidden"
-onClick={()=>setOpen(false)}
-/>
-)}
+    <div className="min-h-screen flex bg-gray-50">
 
-{/* SIDEBAR */}
+      {/* OVERLAY */}
 
-<aside
-className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${
-open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-}`}
->
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-{/* PROFILE */}
+      {/* SIDEBAR */}
 
-<div className="px-6 pt-8 pb-5 border-b">
+      <aside
+        className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+
+        {/* PROFILE */}
+
+        <div className="px-6 pt-8 pb-5 border-b">
+
+          <div className="flex items-center gap-3">
+
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="font-semibold text-gray-700">
+                  {displayName?.charAt(0)}
+                </span>
+              )}
+
+            </div>
+
+            <div>
+
+              <div className="font-semibold">
+                {displayName}
+              </div>
+
+              <div className="text-xs text-gray-500">
+                @{username}
+              </div>
+
+            </div>
+
+          </div>
+
+          <Link
+            href={isCompany ? `/c/${username}` : `/u/${username}`}
+            className="block mt-3 text-xs text-blue-600"
+          >
+            View Profile
+          </Link>
+
+        </div>
+
+        {/* NAVIGATION */}
+
+        <nav className="px-4 py-6 space-y-2">
+
+          {isCompany ? (
+
+            <>
+              <Link
+                href="/dashboard/company"
+                className={linkClass("/dashboard/company")}
+              >
+                📌 Company Commitments
+              </Link>
+
+              <Link
+                href="/dashboard/company/insights"
+                className={linkClass("/dashboard/company/insights")}
+              >
+                📊 Insights
+              </Link>
+
+              <Link
+                href="/dashboard/company/invite"
+                className={linkClass("/dashboard/company/invite")}
+              >
+                👥 Invite Members
+              </Link>
+
+              <Link
+                href="/dashboard/company/settings"
+                className={linkClass("/dashboard/company/settings")}
+              >
+                ⚙️ Account Settings
+              </Link>
+
+              <Link
+                href="/upgrade"
+                className={linkClass("/upgrade")}
+              >
+                🚀 Upgrade
+              </Link>
+            </>
+
+          ) : (
+
+            <>
+              <Link
+                href="/dashboard/my"
+                className={linkClass("/dashboard/my")}
+              >
+                📌 My Commitments
+              </Link>
 
-<div className="flex items-center gap-3">
+              <Link
+                href="/dashboard/insights"
+                className={linkClass("/dashboard/insights")}
+              >
+                📊 Insights
+              </Link>
 
-<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              <Link
+                href="/billing"
+                className={linkClass("/billing")}
+              >
+                💳 Billing
+              </Link>
 
-{avatar ? (
-<img
-src={avatar}
-alt=""
-className="w-full h-full object-cover"
-/>
-) : (
-<span className="font-semibold text-gray-700">
-{displayName?.charAt(0)}
-</span>
-)}
-
-</div>
-
-<div>
-
-<div className="font-semibold">
-{displayName}
-</div>
-
-<div className="text-xs text-gray-500">
-@{username}
-</div>
-
-</div>
+              <Link
+                href="/account"
+                className={linkClass("/account")}
+              >
+                ⚙️ Account Settings
+              </Link>
 
-</div>
-
-<Link
-href={isCompany ? `/c/${username}` : `/u/${username}`}
-className="block mt-3 text-xs text-blue-600"
->
-View Profile
-</Link>
-
-</div>
-
-{/* NAVIGATION */}
-
-<nav className="px-4 py-6 space-y-2">
-
-{isCompany ? (
-
-<>
-
-<Link
-href="/dashboard/company"
-className={linkClass("/dashboard/company")}
->
-📌 Company Commitments
-</Link>
-
-<Link
-href="/dashboard/company/insights"
-className={linkClass("/dashboard/company/insights")}
->
-📊 Insights
-</Link>
-
-<Link
-href="/dashboard/company/invite"
-className={linkClass("/dashboard/company/invite")}
->
-👥 Invite Members
-</Link>
-
-<Link
-href="/dashboard/company/settings"
-className={linkClass("/dashboard/company/settings")}
->
-⚙️ Account Settings
-</Link>
+              <Link
+                href="/upgrade"
+                className={linkClass("/upgrade")}
+              >
+                🚀 Upgrade
+              </Link>
+            </>
 
-<Link
-href="/upgrade"
-className={linkClass("/upgrade")}
->
-🚀 Upgrade
-</Link>
+          )}
 
-</>
+          <Link
+            href="/dashboard/support"
+            className={linkClass("/dashboard/support")}
+          >
+            🛟 Support
+          </Link>
 
-) : (
+          <button
+            onClick={async () => {
+              const supabase = createClient();
+              await supabase.auth.signOut();
+              router.push("/");
+            }}
+            className="flex items-center gap-3 px-5 py-3 font-bold text-red-600"
+          >
+            🚪 Logout
+          </button>
 
-<>
+        </nav>
 
-<Link
-href="/dashboard/my"
-className={linkClass("/dashboard/my")}
->
-📌 My Commitments
-</Link>
+      </aside>
 
-<Link
-href="/dashboard/insights"
-className={linkClass("/dashboard/insights")}
->
-📊 Insights
-</Link>
+      {/* MAIN */}
 
-<Link
-href="/billing"
-className={linkClass("/billing")}
->
-💳 Billing
-</Link>
+      <main className="flex-1 flex flex-col pb-24">
 
-<Link
-href="/account"
-className={linkClass("/account")}
->
-⚙️ Account Settings
-</Link>
+        {/* MOBILE HEADER */}
 
-<Link
-href="/upgrade"
-className={linkClass("/upgrade")}
->
-🚀 Upgrade
-</Link>
+        <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
 
-</>
+          <button onClick={() => setOpen(!open)}>
+            ☰
+          </button>
 
-)}
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="" width={40} height={40} />
+            <span className="font-bold text-blue-600">
+              Stated
+            </span>
+          </Link>
 
-<Link
-href="/dashboard/support"
-className={linkClass("/dashboard/support")}
->
-🛟 Support
-</Link>
+          <NotificationBell />
 
-<button
-onClick={async()=>{
-const supabase = createClient()
-await supabase.auth.signOut()
-router.push("/")
-}}
-className="flex items-center gap-3 px-5 py-3 font-bold text-red-600"
->
-🚪 Logout
-</button>
+        </div>
 
-</nav>
+        {/* DESKTOP HEADER */}
 
-</aside>
+        <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
-{/* MAIN */}
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="" width={40} height={40} />
+            <span className="font-bold text-blue-600">
+              Stated
+            </span>
+          </Link>
 
-<main className="flex-1 flex flex-col pb-24">
+          <NotificationBell />
 
-{/* MOBILE HEADER */}
+        </div>
 
-<div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
+        {/* PAGE CONTENT */}
 
-<button onClick={()=>setOpen(!open)}>
-☰
-</button>
+        <div className="px-6 py-8 max-w-4xl mx-auto w-full">
+          {children}
+        </div>
 
-<Link href="/dashboard" className="flex items-center gap-2">
-<Image src="/logo.png" alt="" width={40} height={40}/>
-<span className="font-bold text-blue-600">
-Stated
-</span>
-</Link>
+        {/* MOBILE BOTTOM NAV */}
 
-<NotificationBell/>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
 
-</div>
+          <Link href="/dashboard">🏠</Link>
 
-{/* DESKTOP HEADER */}
+          <Link href="/dashboard/search">🔍</Link>
 
-<div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
+          <Link
+            href={createLink}
+            className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
+          >
+            + Create
+          </Link>
 
-<Link href="/dashboard" className="flex items-center gap-2">
-<Image src="/logo.png" alt="" width={40} height={40}/>
-<span className="font-bold text-blue-600">
-Stated
-</span>
-</Link>
+        </div>
 
-<NotificationBell/>
+      </main>
 
-</div>
+    </div>
 
-<div className="px-6 py-8 max-w-4xl mx-auto w-full">
-{children}
-</div>
+  );
 
-{/* BOTTOM NAV */}
-
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
-
-<Link href="/dashboard">🏠</Link>
-
-<Link href="/dashboard/search">🔍</Link>
-
-<Link
-href={createLink}
-className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
->
-+ Create
-</Link>
-
-</div>
-
-</main>
-
-</div>
-
-)
-
-}
+        }
