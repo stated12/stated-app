@@ -12,33 +12,27 @@ export default async function CompanyInsightsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   /* ---------------- COMPANY MEMBERSHIP ---------------- */
 
   const { data: membership } = await supabase
     .from("company_members")
-    .select("company_id")
+    .select("company_id, role")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership) {
-    redirect("/dashboard");
-  }
+  if (!membership) redirect("/dashboard");
 
   /* ---------------- COMPANY ---------------- */
 
   const { data: company } = await supabase
     .from("companies")
-    .select("*")
+    .select("id, name, username")
     .eq("id", membership.company_id)
     .single();
 
-  if (!company) {
-    redirect("/dashboard");
-  }
+  if (!company) redirect("/dashboard");
 
   /* ---------------- COMMITMENTS ---------------- */
 
@@ -50,26 +44,39 @@ export default async function CompanyInsightsPage() {
   const total = commitments?.length ?? 0;
 
   const active =
-    commitments?.filter((c) => c.status === "active").length ?? 0;
+    commitments?.filter(
+      (c) => c.status === "active"
+    ).length ?? 0;
 
   const completed =
-    commitments?.filter((c) => c.status === "completed").length ?? 0;
+    commitments?.filter(
+      (c) => c.status === "completed"
+    ).length ?? 0;
 
   const paused =
     commitments?.filter(
-      (c) => c.status === "paused" || c.status === "withdrawn"
+      (c) =>
+        c.status === "paused" ||
+        c.status === "withdrawn"
     ).length ?? 0;
 
   const totalViews =
-    commitments?.reduce((sum, c) => sum + (c.views ?? 0), 0) ?? 0;
+    commitments?.reduce(
+      (sum, c) => sum + (c.views ?? 0),
+      0
+    ) ?? 0;
 
   const topCommitment =
     commitments
-      ?.sort((a, b) => (b.views ?? 0) - (a.views ?? 0))[0] ?? null;
+      ?.sort(
+        (a, b) =>
+          (b.views ?? 0) - (a.views ?? 0)
+      )[0] ?? null;
 
   /* ---------------- PAGE ---------------- */
 
   return (
+
     <div className="max-w-4xl mx-auto space-y-8">
 
       {/* HEADER */}
@@ -77,7 +84,7 @@ export default async function CompanyInsightsPage() {
       <div>
 
         <h1 className="text-2xl font-bold">
-          {company.name} Analytics
+          {company.name} Insights
         </h1>
 
         <div className="text-sm text-gray-500">
@@ -86,45 +93,29 @@ export default async function CompanyInsightsPage() {
 
       </div>
 
-      {/* STATS GRID */}
+      {/* STATS */}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-sm text-gray-500">
-            Total Commitments
-          </div>
-          <div className="text-xl font-semibold">
-            {total}
-          </div>
-        </div>
+        <StatCard
+          title="Total Commitments"
+          value={total}
+        />
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-sm text-gray-500">
-            Active
-          </div>
-          <div className="text-xl font-semibold">
-            {active}
-          </div>
-        </div>
+        <StatCard
+          title="Active"
+          value={active}
+        />
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-sm text-gray-500">
-            Completed
-          </div>
-          <div className="text-xl font-semibold">
-            {completed}
-          </div>
-        </div>
+        <StatCard
+          title="Completed"
+          value={completed}
+        />
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-sm text-gray-500">
-            Paused / Withdrawn
-          </div>
-          <div className="text-xl font-semibold">
-            {paused}
-          </div>
-        </div>
+        <StatCard
+          title="Paused / Withdrawn"
+          value={paused}
+        />
 
       </div>
 
@@ -149,7 +140,7 @@ export default async function CompanyInsightsPage() {
         <div className="bg-white rounded-xl shadow p-5">
 
           <div className="text-sm text-gray-500 mb-2">
-            Top Performing Commitment
+            Top Commitment
           </div>
 
           <div className="font-medium mb-1">
@@ -164,7 +155,7 @@ export default async function CompanyInsightsPage() {
 
       )}
 
-      {/* PUBLIC PAGE LINK */}
+      {/* PUBLIC PAGE */}
 
       <Link
         href={`/c/${company.username}`}
@@ -174,5 +165,33 @@ export default async function CompanyInsightsPage() {
       </Link>
 
     </div>
+
   );
-      }
+}
+
+/* ---------------- STAT CARD ---------------- */
+
+function StatCard({
+  title,
+  value,
+}: {
+  title: string;
+  value: number;
+}) {
+
+  return (
+
+    <div className="bg-white rounded-xl shadow p-4">
+
+      <div className="text-sm text-gray-500">
+        {title}
+      </div>
+
+      <div className="text-xl font-semibold">
+        {value}
+      </div>
+
+    </div>
+
+  );
+}
