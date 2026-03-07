@@ -9,7 +9,9 @@ export default function CompanySettingsPage() {
 
   const [company, setCompany] = useState<any>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   /* ---------------- LOAD COMPANY ---------------- */
 
@@ -23,7 +25,10 @@ export default function CompanySettingsPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const { data: membership } = await supabase
       .from("company_members")
@@ -31,7 +36,10 @@ export default function CompanySettingsPage() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!membership) return;
+    if (!membership) {
+      setLoading(false);
+      return;
+    }
 
     setCompanyId(membership.company_id);
 
@@ -42,15 +50,17 @@ export default function CompanySettingsPage() {
       .single();
 
     setCompany(data);
+
+    setLoading(false);
   }
 
   /* ---------------- UPDATE COMPANY ---------------- */
 
   async function updateCompany() {
 
-    if (!companyId) return;
+    if (!companyId || !company) return;
 
-    setLoading(true);
+    setSaving(true);
 
     await supabase
       .from("companies")
@@ -61,7 +71,7 @@ export default function CompanySettingsPage() {
       })
       .eq("id", companyId);
 
-    setLoading(false);
+    setSaving(false);
 
     alert("Company updated");
   }
@@ -72,7 +82,9 @@ export default function CompanySettingsPage() {
 
     if (!companyId) return;
 
-    const confirmDelete = prompt("Type DELETE to confirm");
+    const confirmDelete = prompt(
+      "Type DELETE to confirm company deletion"
+    );
 
     if (confirmDelete !== "DELETE") return;
 
@@ -86,9 +98,36 @@ export default function CompanySettingsPage() {
     window.location.href = "/dashboard";
   }
 
-  if (!company) return null;
+  /* ---------------- LOADING ---------------- */
+
+  if (loading) {
+
+    return (
+      <div className="max-w-2xl mx-auto py-10">
+        <div className="text-gray-500">
+          Loading company settings...
+        </div>
+      </div>
+    );
+
+  }
+
+  if (!company) {
+
+    return (
+      <div className="max-w-2xl mx-auto py-10">
+        <div className="text-gray-500">
+          Company not found
+        </div>
+      </div>
+    );
+
+  }
+
+  /* ---------------- PAGE ---------------- */
 
   return (
+
     <div className="max-w-2xl mx-auto py-10 space-y-8">
 
       <h1 className="text-2xl font-bold">
@@ -100,7 +139,7 @@ export default function CompanySettingsPage() {
       <div className="space-y-4">
 
         <input
-          value={company.name}
+          value={company.name || ""}
           onChange={(e) =>
             setCompany({
               ...company,
@@ -112,7 +151,7 @@ export default function CompanySettingsPage() {
         />
 
         <input
-          value={company.username}
+          value={company.username || ""}
           onChange={(e) =>
             setCompany({
               ...company,
@@ -137,10 +176,10 @@ export default function CompanySettingsPage() {
 
         <button
           onClick={updateCompany}
-          disabled={loading}
+          disabled={saving}
           className="bg-blue-600 text-white px-6 py-2 rounded-lg"
         >
-          {loading ? "Saving..." : "Save Changes"}
+          {saving ? "Saving..." : "Save Changes"}
         </button>
 
       </div>
@@ -159,5 +198,6 @@ export default function CompanySettingsPage() {
       </div>
 
     </div>
+
   );
 }
