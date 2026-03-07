@@ -61,6 +61,8 @@ export default async function CompanyDashboardPage() {
 
   if (!membership) redirect("/dashboard");
 
+  /* ---------------- COMPANY ---------------- */
+
   const { data: companyData } = await supabase
     .from("companies")
     .select("*")
@@ -242,8 +244,6 @@ export default async function CompanyDashboardPage() {
 
         </div>
 
-        {/* CREATE BUTTON */}
-
         <div className="mt-4 flex gap-4">
 
           <Link
@@ -400,5 +400,85 @@ function MemberRow({
 
     </div>
 
+  );
+}
+
+/* ---------------- ROLE SELECTOR ---------------- */
+
+function RoleSelector({
+  memberId,
+  currentRole,
+  disabled,
+}: {
+  memberId: string;
+  currentRole: string;
+  disabled: boolean;
+}) {
+
+  async function changeRole(role: string) {
+
+    await fetch("/api/company/member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "role",
+        memberId,
+        role,
+      }),
+    });
+
+    window.location.reload();
+  }
+
+  return (
+
+    <select
+      disabled={disabled}
+      defaultValue={currentRole}
+      onChange={(e) => changeRole(e.target.value)}
+      className="border rounded px-2 py-1 text-sm"
+    >
+      <option value="viewer">viewer</option>
+      <option value="member">member</option>
+      <option value="admin">admin</option>
+    </select>
+
+  );
+}
+
+/* ---------------- REMOVE BUTTON ---------------- */
+
+function RemoveButton({
+  memberId,
+  disabled,
+}: {
+  memberId: string;
+  disabled: boolean;
+}) {
+
+  async function remove() {
+
+    if (!confirm("Remove this member?")) return;
+
+    await fetch("/api/company/member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "remove",
+        memberId,
+      }),
+    });
+
+    window.location.reload();
+  }
+
+  return (
+    <button
+      disabled={disabled}
+      onClick={remove}
+      className="text-red-600 text-sm"
+    >
+      Remove
+    </button>
   );
 }
