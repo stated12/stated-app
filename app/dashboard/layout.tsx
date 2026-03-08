@@ -18,8 +18,6 @@ const [company,setCompany] = useState<any>(null)
 const pathname = usePathname()
 const router = useRouter()
 
-/* Detect which dashboard is open */
-
 const isCompanyDashboard = pathname.startsWith("/dashboard/company")
 
 useEffect(()=>{
@@ -85,11 +83,18 @@ setOpen(false)
 
 if(!profile) return null
 
-/* CREATE ROUTE (SINGLE FORM) */
+/* CREATE ROUTE */
 
 const createLink = "/dashboard/create"
 
-/* NAV ACTIVE STYLE */
+/* HOME ROUTE */
+
+const homeLink =
+company
+? "/dashboard/company"
+: "/dashboard/my"
+
+/* NAV ACTIVE */
 
 const linkClass = (href:string)=>{
 
@@ -105,7 +110,7 @@ active
 
 }
 
-/* PROFILE DISPLAY */
+/* PROFILE INFO */
 
 const avatar =
 isCompanyDashboard
@@ -292,7 +297,7 @@ className="flex items-center gap-3 px-5 py-3 font-bold text-red-600"
 ☰
 </button>
 
-<Link href="/dashboard" className="flex items-center gap-2">
+<Link href={homeLink} className="flex items-center gap-2">
 <Image src="/logo.png" alt="" width={40} height={40}/>
 <span className="font-bold text-blue-600">
 Stated
@@ -307,7 +312,7 @@ Stated
 
 <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
-<Link href="/dashboard" className="flex items-center gap-2">
+<Link href={homeLink} className="flex items-center gap-2">
 <Image src="/logo.png" alt="" width={40} height={40}/>
 <span className="font-bold text-blue-600">
 Stated
@@ -318,7 +323,7 @@ Stated
 
 </div>
 
-{/* PAGE CONTENT */}
+{/* PAGE */}
 
 <div className="px-6 py-8 max-w-4xl mx-auto w-full">
 {children}
@@ -328,7 +333,7 @@ Stated
 
 <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
 
-<Link href="/dashboard">🏠</Link>
+<Link href={homeLink}>🏠</Link>
 
 <Link href="/dashboard/search">🔍</Link>
 
