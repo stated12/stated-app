@@ -31,10 +31,10 @@ type Commitment = {
   id: string;
   text: string;
   category: string | null;
-  views: number | null;
+  views: number;
   created_at: string;
   created_by_user_id: string | null;
-  profiles?: {
+  profiles: {
     display_name: string | null;
     username: string | null;
   } | null;
@@ -56,7 +56,7 @@ export default async function CompanyDashboardPage() {
     redirect("/login");
   }
 
-  /* ---------------- COMPANY MEMBERSHIP ---------------- */
+  /* ---------------- MEMBERSHIP ---------------- */
 
   const { data:membership } = await supabase
   .from("company_members")
@@ -140,10 +140,23 @@ export default async function CompanyDashboardPage() {
   .eq("company_id",company.id)
   .eq("status","active")
   .order("created_at",{ascending:false})
-  .limit(10);
+  .limit(25);
 
-  const commitments:Commitment[] =
-  (commitmentsData ?? []) as Commitment[];
+  const commitments: Commitment[] = (commitmentsData ?? []).map((c:any)=>({
+    id:String(c.id),
+    text:String(c.text),
+    category:c.category ?? null,
+    views:c.views ?? 0,
+    created_at:String(c.created_at),
+    created_by_user_id:c.created_by_user_id ?? null,
+    profiles:c.profiles
+      ? {
+          display_name:c.profiles.display_name ?? null,
+          username:c.profiles.username ?? null
+        }
+      : null,
+    commitment_updates:c.commitment_updates ?? []
+  }));
 
   /* ---------------- PAGE ---------------- */
 
@@ -260,7 +273,7 @@ export default async function CompanyDashboardPage() {
   )}
 
   <div className="text-xs text-gray-400 mt-2">
-  👁 {c.views ?? 0} views
+  👁 {c.views} views
   </div>
 
   </div>
@@ -276,6 +289,23 @@ export default async function CompanyDashboardPage() {
   )}
 
   </div>
+
+  {/* VIEW MORE */}
+
+  {commitments.length === 25 && (
+
+  <div className="mt-6 text-center">
+
+  <Link
+  href={`/c/${company.username}`}
+  className="inline-block border px-5 py-2 rounded-lg text-sm hover:bg-gray-100"
+  >
+  View More Commitments
+  </Link>
+
+  </div>
+
+  )}
 
   </div>
 
@@ -325,4 +355,4 @@ export default async function CompanyDashboardPage() {
 
   );
 
-}
+    }
