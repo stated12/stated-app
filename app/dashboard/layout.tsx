@@ -18,6 +18,10 @@ const [company,setCompany] = useState<any>(null)
 const pathname = usePathname()
 const router = useRouter()
 
+/* Detect which dashboard user is viewing */
+
+const isCompanyDashboard = pathname.startsWith("/dashboard/company")
+
 useEffect(()=>{
 
 let mounted = true
@@ -81,11 +85,9 @@ setOpen(false)
 
 if(!profile) return null
 
-const isCompany = !!company
-
 /* CREATE ROUTE */
 
-const createLink = isCompany
+const createLink = isCompanyDashboard
 ? "/dashboard/company/create"
 : "/dashboard/create"
 
@@ -105,20 +107,20 @@ active
 
 }
 
-/* AVATAR */
+/* AVATAR + NAME */
 
 const avatar =
-isCompany
+isCompanyDashboard
 ? company?.logo_url
 : profile?.avatar_url
 
 const displayName =
-isCompany
+isCompanyDashboard
 ? company?.name
 : profile?.display_name || profile?.username
 
 const username =
-isCompany
+isCompanyDashboard
 ? company?.username
 : profile?.username
 
@@ -180,7 +182,7 @@ className="w-full h-full object-cover"
 </div>
 
 <Link
-href={isCompany ? `/c/${username}` : `/u/${username}`}
+href={isCompanyDashboard ? `/c/${username}` : `/u/${username}`}
 className="block mt-3 text-xs text-blue-600"
 >
 View Profile
@@ -192,7 +194,7 @@ View Profile
 
 <nav className="px-4 py-6 space-y-2">
 
-{isCompany ? (
+{isCompanyDashboard ? (
 
 <>
 <Link
@@ -222,7 +224,6 @@ className={linkClass("/dashboard/company/settings")}
 >
 ⚙️ Company Settings
 </Link>
-
 </>
 
 ) : (
@@ -255,7 +256,6 @@ className={linkClass("/account")}
 >
 ⚙️ Account Settings
 </Link>
-
 </>
 
 )}
