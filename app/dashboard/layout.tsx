@@ -18,7 +18,7 @@ const [company,setCompany] = useState<any>(null)
 const pathname = usePathname()
 const router = useRouter()
 
-/* Detect which dashboard user is viewing */
+/* Detect which dashboard is open */
 
 const isCompanyDashboard = pathname.startsWith("/dashboard/company")
 
@@ -85,11 +85,9 @@ setOpen(false)
 
 if(!profile) return null
 
-/* CREATE ROUTE */
+/* CREATE ROUTE (SINGLE FORM) */
 
-const createLink = isCompanyDashboard
-? "/dashboard/company/create"
-: "/dashboard/create"
+const createLink = "/dashboard/create"
 
 /* NAV ACTIVE STYLE */
 
@@ -107,7 +105,7 @@ active
 
 }
 
-/* AVATAR + NAME */
+/* PROFILE DISPLAY */
 
 const avatar =
 isCompanyDashboard
@@ -349,4 +347,4 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 
 )
 
-}
+  }
