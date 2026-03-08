@@ -18,7 +18,7 @@ const [company,setCompany] = useState<any>(null)
 const pathname = usePathname()
 const router = useRouter()
 
-const isCompanyDashboard = pathname.startsWith("/dashboard/company")
+/* LOAD USER + COMPANY */
 
 useEffect(()=>{
 
@@ -83,18 +83,20 @@ setOpen(false)
 
 if(!profile) return null
 
-/* CREATE ROUTE */
+/* DETERMINE MODE */
+
+const isCompanyUser = !!company
+
+/* ROUTES */
 
 const createLink = "/dashboard/create"
 
-/* HOME ROUTE */
-
 const homeLink =
-company
+isCompanyUser
 ? "/dashboard/company"
 : "/dashboard/my"
 
-/* NAV ACTIVE */
+/* ACTIVE STYLE */
 
 const linkClass = (href:string)=>{
 
@@ -110,20 +112,20 @@ active
 
 }
 
-/* PROFILE INFO */
+/* PROFILE DISPLAY */
 
 const avatar =
-isCompanyDashboard
+isCompanyUser
 ? company?.logo_url
 : profile?.avatar_url
 
 const displayName =
-isCompanyDashboard
+isCompanyUser
 ? company?.name
 : profile?.display_name || profile?.username
 
 const username =
-isCompanyDashboard
+isCompanyUser
 ? company?.username
 : profile?.username
 
@@ -185,7 +187,7 @@ className="w-full h-full object-cover"
 </div>
 
 <Link
-href={isCompanyDashboard ? `/c/${username}` : `/u/${username}`}
+href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
 className="block mt-3 text-xs text-blue-600"
 >
 View Profile
@@ -197,7 +199,7 @@ View Profile
 
 <nav className="px-4 py-6 space-y-2">
 
-{isCompanyDashboard ? (
+{isCompanyUser ? (
 
 <>
 <Link
@@ -352,4 +354,4 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 
 )
 
-  }
+}
