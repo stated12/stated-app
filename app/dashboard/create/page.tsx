@@ -2,28 +2,27 @@
 
 import { useEffect,useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter,usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage(){
 
 const supabase = createClient()
 const router = useRouter()
-const pathname = usePathname()
-
-const [user,setUser] = useState<any>(null)
-const [company,setCompany] = useState<any>(null)
-
-const [postAs,setPostAs] = useState<"myself"|"company">("myself")
 
 const [text,setText] = useState("")
 const [category,setCategory] = useState("")
 const [duration,setDuration] = useState("1 week")
 
+const [profile,setProfile] = useState<any>(null)
+const [company,setCompany] = useState<any>(null)
+
+const [postAs,setPostAs] = useState("user")
+
 const [loading,setLoading] = useState(false)
 
-/* CATEGORY LISTS */
+/* CATEGORIES */
 
-const individualCategories = [
+const userCategories = [
 "Fitness",
 "Learning",
 "Writing",
@@ -41,13 +40,18 @@ const companyCategories = [
 "Announcement"
 ]
 
-/* LOAD USER + COMPANY */
+const categories =
+postAs === "company"
+? companyCategories
+: userCategories
+
+/* LOAD USER */
 
 useEffect(()=>{
-load()
+loadUser()
 },[])
 
-async function load(){
+async function loadUser(){
 
 const {data:{user}} = await supabase.auth.getUser()
 
@@ -56,9 +60,17 @@ router.push("/login")
 return
 }
 
-setUser(user)
+/* PROFILE */
 
-/* COMPANY MEMBERSHIP */
+const {data:profileData} = await supabase
+.from("profiles")
+.select("*")
+.eq("id",user.id)
+.single()
+
+setProfile(profileData)
+
+/* COMPANY */
 
 const {data:membership} = await supabase
 .from("company_members")
@@ -78,27 +90,14 @@ setCompany(companyData)
 
 }
 
-/* COMPANY DASHBOARD AUTO MODE */
-
-if(pathname.startsWith("/dashboard/company")){
-setPostAs("company")
 }
 
-}
-
-/* CURRENT CATEGORY LIST */
-
-const categories =
-postAs === "company"
-? companyCategories
-: individualCategories
-
-/* CREATE COMMITMENT */
+/* CREATE */
 
 async function createCommitment(){
 
 if(!text.trim() || !category){
-alert("Please fill all required fields")
+alert("Please fill all fields")
 return
 }
 
@@ -106,26 +105,27 @@ setLoading(true)
 
 const {data:{user}} = await supabase.auth.getUser()
 
-if(!user){
-router.push("/login")
-return
+let insertData:any = {
+text,
+category,
+duration,
+status:"active"
 }
-
-/* COMPANY COMMITMENT */
 
 if(postAs==="company" && company){
 
+insertData.company_id = company.id
+insertData.created_by_user_id = user?.id
+
+}else{
+
+insertData.user_id = user?.id
+
+}
+
 const {error} = await supabase
 .from("commitments")
-.insert({
-text,
-category,
-duration,
-company_id: company.id,
-user_id: null,
-created_by_user_id: user.id,
-status: "active"
-})
+.insert(insertData)
 
 if(error){
 alert(error.message)
@@ -133,34 +133,13 @@ setLoading(false)
 return
 }
 
-router.push("/dashboard/company")
-return
-}
-
-/* INDIVIDUAL COMMITMENT */
-
-const {error} = await supabase
-.from("commitments")
-.insert({
-text,
-category,
-duration,
-user_id: user.id,
-company_id: null,
-status: "active"
-})
-
-if(error){
-alert(error.message)
-setLoading(false)
-return
-}
-
-router.push("/dashboard/my")
+router.push(
+postAs==="company"
+? "/dashboard/company"
+: "/dashboard/my"
+)
 
 }
-
-if(!user) return null
 
 return(
 
@@ -172,21 +151,21 @@ Create Commitment
 
 {/* POST AS */}
 
-{!pathname.startsWith("/dashboard/company") && company && (
+{company && (
 
 <div>
 
 <label className="font-medium">
-Post as
+Post As
 </label>
 
 <select
 value={postAs}
-onChange={(e)=>setPostAs(e.target.value as any)}
+onChange={(e)=>setPostAs(e.target.value)}
 className="w-full border rounded-lg px-4 py-2"
 >
 
-<option value="myself">
+<option value="user">
 Myself
 </option>
 
@@ -196,18 +175,6 @@ Myself
 
 </select>
 
-</div>
-
-)}
-
-{/* LOCKED COMPANY MODE */}
-
-{pathname.startsWith("/dashboard/company") && company && (
-
-<div className="text-sm text-gray-500">
-Posting as <span className="font-semibold">
-{company.name}
-</span>
 </div>
 
 )}
@@ -266,7 +233,7 @@ className="w-full border rounded-lg px-4 py-2"
 
 </select>
 
-{/* CREATE */}
+{/* BUTTON */}
 
 <button
 onClick={createCommitment}
