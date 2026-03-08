@@ -290,8 +290,6 @@ export default async function CompanyDashboardPage() {
 
   </div>
 
-  {/* VIEW MORE */}
-
   {commitments.length === 25 && (
 
   <div className="mt-6 text-center">
@@ -355,4 +353,181 @@ export default async function CompanyDashboardPage() {
 
   );
 
-    }
+}
+
+/* ---------------- MEMBER ROW ---------------- */
+
+function MemberRow({
+member,
+isOwner,
+isSelf,
+canManage
+}:{
+member:Member
+isOwner:boolean
+isSelf:boolean
+canManage:boolean
+}){
+
+const avatar =
+member.profiles?.avatar_url?.trim()
+? member.profiles.avatar_url.trim()
+: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+member.profiles?.display_name ||
+member.profiles?.username ||
+"User"
+)}&background=2563eb&color=fff`;
+
+return(
+
+<div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
+
+<div className="flex items-center gap-3">
+
+<img
+src={avatar}
+alt="avatar"
+className="w-10 h-10 rounded-full"
+/>
+
+<div>
+
+<div className="font-medium">
+{member.profiles?.display_name ||
+member.profiles?.username}
+</div>
+
+<div className="text-xs text-gray-500">
+@{member.profiles?.username}
+</div>
+
+</div>
+
+</div>
+
+<div className="flex items-center gap-3">
+
+{isOwner ? (
+
+<div className="text-sm bg-black text-white px-3 py-1 rounded">
+owner
+</div>
+
+) : canManage ? (
+
+<>
+<RoleSelector
+memberId={member.id}
+currentRole={member.role}
+disabled={isSelf}
+/>
+
+<RemoveButton
+memberId={member.id}
+disabled={isSelf}
+/>
+</>
+
+) : (
+
+<div className="text-xs text-gray-500">
+{member.role}
+</div>
+
+)}
+
+</div>
+
+</div>
+
+)
+
+}
+
+/* ---------------- ROLE SELECTOR ---------------- */
+
+function RoleSelector({
+memberId,
+currentRole,
+disabled
+}:{
+memberId:string
+currentRole:string
+disabled:boolean
+}){
+
+async function changeRole(role:string){
+
+await fetch("/api/company/member",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+action:"role",
+memberId,
+role
+})
+})
+
+window.location.reload()
+
+}
+
+return(
+
+<select
+disabled={disabled}
+defaultValue={currentRole}
+onChange={(e)=>changeRole(e.target.value)}
+className="border rounded px-2 py-1 text-sm"
+>
+
+<option value="viewer">viewer</option>
+<option value="member">member</option>
+<option value="admin">admin</option>
+
+</select>
+
+)
+
+}
+
+/* ---------------- REMOVE BUTTON ---------------- */
+
+function RemoveButton({
+memberId,
+disabled
+}:{
+memberId:string
+disabled:boolean
+}){
+
+async function remove(){
+
+if(!confirm("Remove this member?")) return;
+
+await fetch("/api/company/member",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+action:"remove",
+memberId
+})
+})
+
+window.location.reload()
+
+}
+
+return(
+
+<button
+disabled={disabled}
+onClick={remove}
+className="text-red-600 text-sm"
+>
+Remove
+</button>
+
+)
+
+}
