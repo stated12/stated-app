@@ -34,6 +34,10 @@ type Commitment = {
   views: number | null;
   created_at: string;
   created_by_user_id: string | null;
+  profiles?: {
+    display_name: string | null;
+    username: string | null;
+  } | null;
   commitment_updates: {
     text: string | null;
     created_at: string;
@@ -124,6 +128,10 @@ export default async function CompanyDashboardPage() {
     views,
     created_at,
     created_by_user_id,
+    profiles:profiles!commitments_created_by_user_id_fkey(
+      display_name,
+      username
+    ),
     commitment_updates(
       text,
       created_at
@@ -148,11 +156,11 @@ export default async function CompanyDashboardPage() {
   <div>
 
   <h1 className="text-2xl font-bold">
-  {company.name}
+  Company Commitments
   </h1>
 
   <div className="text-sm text-gray-500">
-  @{company.username}
+  {company.name} (@{company.username})
   </div>
 
   </div>
@@ -207,8 +215,14 @@ export default async function CompanyDashboardPage() {
 
   {commitments.map((c)=>{
 
-  const latestUpdate =
-  c.commitment_updates?.[0] || null;
+  const latestUpdate = c.commitment_updates?.[0] || null;
+
+  const creator =
+  c.created_by_user_id === company.owner_id
+  ? company.name
+  : c.profiles?.display_name ||
+    c.profiles?.username ||
+    "Member";
 
   return(
 
@@ -226,6 +240,10 @@ export default async function CompanyDashboardPage() {
   {c.category}
   </div>
   )}
+
+  <div className="text-xs text-gray-500 mb-2">
+  Posted by {creator}
+  </div>
 
   {latestUpdate ? (
 
@@ -299,12 +317,6 @@ export default async function CompanyDashboardPage() {
   />
   ))}
 
-  {members.length===0 && (
-  <div className="text-sm text-gray-500">
-  No members yet.
-  </div>
-  )}
-
   </div>
 
   </div>
@@ -314,180 +326,3 @@ export default async function CompanyDashboardPage() {
   );
 
 }
-
-/* ---------------- MEMBER ROW ---------------- */
-
-function MemberRow({
-member,
-isOwner,
-isSelf,
-canManage
-}:{
-member:Member
-isOwner:boolean
-isSelf:boolean
-canManage:boolean
-}){
-
-const avatar =
-member.profiles?.avatar_url?.trim()
-? member.profiles.avatar_url.trim()
-: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-member.profiles?.display_name ||
-member.profiles?.username ||
-"User"
-)}&background=2563eb&color=fff`;
-
-return(
-
-<div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
-
-<div className="flex items-center gap-3">
-
-<img
-src={avatar}
-alt="avatar"
-className="w-10 h-10 rounded-full"
-/>
-
-<div>
-
-<div className="font-medium">
-{member.profiles?.display_name ||
-member.profiles?.username}
-</div>
-
-<div className="text-xs text-gray-500">
-@{member.profiles?.username}
-</div>
-
-</div>
-
-</div>
-
-<div className="flex items-center gap-3">
-
-{isOwner ? (
-
-<div className="text-sm bg-black text-white px-3 py-1 rounded">
-owner
-</div>
-
-) : canManage ? (
-
-<>
-<RoleSelector
-memberId={member.id}
-currentRole={member.role}
-disabled={isSelf}
-/>
-
-<RemoveButton
-memberId={member.id}
-disabled={isSelf}
-/>
-</>
-
-) : (
-
-<div className="text-xs text-gray-500">
-{member.role}
-</div>
-
-)}
-
-</div>
-
-</div>
-
-)
-
-}
-
-/* ---------------- ROLE SELECTOR ---------------- */
-
-function RoleSelector({
-memberId,
-currentRole,
-disabled
-}:{
-memberId:string
-currentRole:string
-disabled:boolean
-}){
-
-async function changeRole(role:string){
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"role",
-memberId,
-role
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<select
-disabled={disabled}
-defaultValue={currentRole}
-onChange={(e)=>changeRole(e.target.value)}
-className="border rounded px-2 py-1 text-sm"
->
-
-<option value="viewer">viewer</option>
-<option value="member">member</option>
-<option value="admin">admin</option>
-
-</select>
-
-)
-
-}
-
-/* ---------------- REMOVE BUTTON ---------------- */
-
-function RemoveButton({
-memberId,
-disabled
-}:{
-memberId:string
-disabled:boolean
-}){
-
-async function remove(){
-
-if(!confirm("Remove this member?")) return;
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"remove",
-memberId
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<button
-disabled={disabled}
-onClick={remove}
-className="text-red-600 text-sm"
->
-Remove
-</button>
-
-)
-
-    }
