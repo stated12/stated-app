@@ -56,25 +56,13 @@ export default async function CompanyDashboardPage() {
     redirect("/login");
   }
 
-  /* ---------------- MEMBERSHIP ---------------- */
-
-  const { data:membership } = await supabase
-  .from("company_members")
-  .select("company_id,role")
-  .eq("user_id",user.id)
-  .maybeSingle();
-
-  if(!membership){
-    redirect("/dashboard");
-  }
-
-  /* ---------------- COMPANY ---------------- */
+  /* ---------------- COMPANY (OWNER) ---------------- */
 
   const { data:companyData } = await supabase
   .from("companies")
   .select("*")
-  .eq("id",membership.company_id)
-  .single();
+  .eq("owner_user_id",user.id)
+  .maybeSingle();
 
   if(!companyData){
     redirect("/dashboard");
@@ -84,8 +72,17 @@ export default async function CompanyDashboardPage() {
     id:String(companyData.id),
     name:String(companyData.name),
     username:String(companyData.username),
-    owner_id:String(companyData.owner_id)
+    owner_id:String(companyData.owner_user_id)
   };
+
+  /* ---------------- MEMBERSHIP ---------------- */
+
+  const { data:membership } = await supabase
+  .from("company_members")
+  .select("company_id,role")
+  .eq("user_id",user.id)
+  .eq("company_id",company.id)
+  .maybeSingle();
 
   /* ---------------- MEMBERS ---------------- */
 
@@ -216,7 +213,7 @@ export default async function CompanyDashboardPage() {
   </h2>
 
   <Link
-  href="/dashboard/company/create"
+  href="/dashboard/create"
   className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
   >
   + Create
@@ -290,21 +287,6 @@ export default async function CompanyDashboardPage() {
 
   </div>
 
-  {commitments.length === 25 && (
-
-  <div className="mt-6 text-center">
-
-  <Link
-  href={`/c/${company.username}`}
-  className="inline-block border px-5 py-2 rounded-lg text-sm hover:bg-gray-100"
-  >
-  View More Commitments
-  </Link>
-
-  </div>
-
-  )}
-
   </div>
 
   {/* MEMBERS */}
@@ -317,7 +299,7 @@ export default async function CompanyDashboardPage() {
   Members
   </h2>
 
-  {(membership.role==="owner" || membership.role==="admin") && (
+  {membership?.role==="owner" || membership?.role==="admin" ? (
 
   <Link
   href="/dashboard/company/invite"
@@ -326,7 +308,7 @@ export default async function CompanyDashboardPage() {
   Invite Member
   </Link>
 
-  )}
+  ) : null}
 
   </div>
 
@@ -339,8 +321,8 @@ export default async function CompanyDashboardPage() {
   isOwner={m.user_id === company.owner_id}
   isSelf={m.user_id === user.id}
   canManage={
-  membership.role==="owner" ||
-  membership.role==="admin"
+  membership?.role==="owner" ||
+  membership?.role==="admin"
   }
   />
   ))}
@@ -352,182 +334,5 @@ export default async function CompanyDashboardPage() {
   </div>
 
   );
-
-}
-
-/* ---------------- MEMBER ROW ---------------- */
-
-function MemberRow({
-member,
-isOwner,
-isSelf,
-canManage
-}:{
-member:Member
-isOwner:boolean
-isSelf:boolean
-canManage:boolean
-}){
-
-const avatar =
-member.profiles?.avatar_url?.trim()
-? member.profiles.avatar_url.trim()
-: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-member.profiles?.display_name ||
-member.profiles?.username ||
-"User"
-)}&background=2563eb&color=fff`;
-
-return(
-
-<div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
-
-<div className="flex items-center gap-3">
-
-<img
-src={avatar}
-alt="avatar"
-className="w-10 h-10 rounded-full"
-/>
-
-<div>
-
-<div className="font-medium">
-{member.profiles?.display_name ||
-member.profiles?.username}
-</div>
-
-<div className="text-xs text-gray-500">
-@{member.profiles?.username}
-</div>
-
-</div>
-
-</div>
-
-<div className="flex items-center gap-3">
-
-{isOwner ? (
-
-<div className="text-sm bg-black text-white px-3 py-1 rounded">
-owner
-</div>
-
-) : canManage ? (
-
-<>
-<RoleSelector
-memberId={member.id}
-currentRole={member.role}
-disabled={isSelf}
-/>
-
-<RemoveButton
-memberId={member.id}
-disabled={isSelf}
-/>
-</>
-
-) : (
-
-<div className="text-xs text-gray-500">
-{member.role}
-</div>
-
-)}
-
-</div>
-
-</div>
-
-)
-
-}
-
-/* ---------------- ROLE SELECTOR ---------------- */
-
-function RoleSelector({
-memberId,
-currentRole,
-disabled
-}:{
-memberId:string
-currentRole:string
-disabled:boolean
-}){
-
-async function changeRole(role:string){
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"role",
-memberId,
-role
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<select
-disabled={disabled}
-defaultValue={currentRole}
-onChange={(e)=>changeRole(e.target.value)}
-className="border rounded px-2 py-1 text-sm"
->
-
-<option value="viewer">viewer</option>
-<option value="member">member</option>
-<option value="admin">admin</option>
-
-</select>
-
-)
-
-}
-
-/* ---------------- REMOVE BUTTON ---------------- */
-
-function RemoveButton({
-memberId,
-disabled
-}:{
-memberId:string
-disabled:boolean
-}){
-
-async function remove(){
-
-if(!confirm("Remove this member?")) return;
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"remove",
-memberId
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<button
-disabled={disabled}
-onClick={remove}
-className="text-red-600 text-sm"
->
-Remove
-</button>
-
-)
 
 }
