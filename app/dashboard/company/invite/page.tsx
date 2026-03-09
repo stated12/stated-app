@@ -1,100 +1,93 @@
 "use client";
 
-import { useState,useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 
-export default function InvitePage(){
+export default function InvitePage() {
 
-const supabase = createClient()
-
-const [email,setEmail] = useState("")
-const [role,setRole] = useState("member")
-
-const [loading,setLoading] = useState(false)
-const [invites,setInvites] = useState<any[]>([])
-
-/* LOAD PENDING INVITES */
+const [email,setEmail] = useState("");
+const [role,setRole] = useState("member");
+const [loading,setLoading] = useState(false);
+const [invites,setInvites] = useState<any[]>([]);
 
 useEffect(()=>{
-loadInvites()
-},[])
+loadInvites();
+},[]);
+
 
 async function loadInvites(){
 
-const {data:{user}} = await supabase.auth.getUser()
+const res = await fetch("/api/company/invites");
 
-if(!user) return
+const data = await res.json();
 
-/* FIND COMPANY */
-
-const {data:company} = await supabase
-.from("companies")
-.select("id")
-.eq("owner_user_id",user.id)
-.maybeSingle()
-
-if(!company) return
-
-const {data} = await supabase
-.from("company_invites")
-.select("*")
-.eq("company_id",company.id)
-.eq("status","pending")
-.order("created_at",{ascending:false})
-
-setInvites(data || [])
+setInvites(data.invites || []);
 
 }
+
 
 /* SEND INVITE */
 
 async function sendInvite(){
 
 if(!email.trim()){
-alert("Enter email")
-return
+alert("Enter email");
+return;
 }
 
-setLoading(true)
-
-try{
+setLoading(true);
 
 const res = await fetch("/api/company/invite",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-email,
-role
-})
-})
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({ email,role })
+});
 
-const data = await res.json()
+const data = await res.json();
 
 if(!res.ok){
-alert(data.error || "Failed to send invite")
-setLoading(false)
-return
+alert(data.error);
+setLoading(false);
+return;
 }
 
-alert("Invitation sent")
+alert("Invitation sent");
 
-setEmail("")
+setEmail("");
 
-await loadInvites()
+loadInvites();
 
-}catch{
-
-alert("Something went wrong")
-
-}
-
-setLoading(false)
+setLoading(false);
 
 }
 
-/* PAGE */
+
+/* CANCEL INVITE */
+
+async function cancelInvite(id:string){
+
+if(!confirm("Cancel this invite?")) return;
+
+await fetch(`/api/company/invite/${id}`,{
+method:"DELETE"
+});
+
+loadInvites();
+
+}
+
+
+/* RESEND INVITE */
+
+async function resendInvite(id:string){
+
+await fetch(`/api/company/invite/${id}`,{
+method:"POST"
+});
+
+alert("Invite resent");
+
+}
+
 
 return(
 
@@ -105,7 +98,7 @@ Invite Member
 </h1>
 
 
-{/* FORM */}
+{/* CREATE INVITE */}
 
 <div className="space-y-4">
 
@@ -122,25 +115,14 @@ value={role}
 onChange={(e)=>setRole(e.target.value)}
 className="w-full border rounded px-3 py-2"
 >
-
-<option value="admin">
-Admin
-</option>
-
-<option value="member">
-Member
-</option>
-
-<option value="viewer">
-Viewer
-</option>
-
+<option value="member">Member</option>
+<option value="admin">Admin</option>
 </select>
 
 <button
 onClick={sendInvite}
 disabled={loading}
-className="bg-blue-600 text-white px-5 py-2 rounded"
+className="bg-blue-600 text-white px-4 py-2 rounded"
 >
 {loading ? "Sending..." : "Send Invite"}
 </button>
@@ -150,46 +132,73 @@ className="bg-blue-600 text-white px-5 py-2 rounded"
 
 {/* PENDING INVITES */}
 
-<div className="space-y-3">
+<div>
 
-<h2 className="font-medium">
+<h2 className="font-semibold mb-3">
 Pending Invites
 </h2>
 
-{invites.length === 0 && (
+<div className="space-y-3">
 
+{invites.length === 0 && (
 <div className="text-sm text-gray-500">
 No pending invites
 </div>
-
 )}
 
-{invites.map((invite)=>(
+{invites.map((invite)=>{
+
+const expired =
+new Date(invite.expires_at) < new Date();
+
+return(
 
 <div
 key={invite.id}
-className="flex justify-between items-center border rounded px-4 py-3"
+className="border rounded-lg p-3 flex justify-between items-center"
 >
 
 <div>
 
-<div className="text-sm font-medium">
+<div className="font-medium">
 {invite.email}
 </div>
 
 <div className="text-xs text-gray-500">
-{invite.role}
-</div>
-
+Role: {invite.role}
 </div>
 
 <div className="text-xs text-gray-400">
-pending
+{expired ? "Expired" : "Pending"}
 </div>
 
 </div>
 
-))}
+<div className="flex gap-2">
+
+<button
+onClick={()=>resendInvite(invite.id)}
+className="text-sm text-blue-600"
+>
+Resend
+</button>
+
+<button
+onClick={()=>cancelInvite(invite.id)}
+className="text-sm text-red-600"
+>
+Cancel
+</button>
+
+</div>
+
+</div>
+
+)
+
+})}
+
+</div>
 
 </div>
 
