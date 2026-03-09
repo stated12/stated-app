@@ -34,7 +34,7 @@ router.push("/login")
 return
 }
 
-/* PROFILE */
+/* LOAD PROFILE */
 
 const {data:profileData} = await supabase
 .from("profiles")
@@ -46,26 +46,16 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY (optional) */
-
-const {data:membership} = await supabase
-.from("company_members")
-.select("company_id")
-.eq("user_id",user.id)
-.maybeSingle()
-
-if(membership){
+/* LOAD COMPANY (owner based) */
 
 const {data:companyData} = await supabase
 .from("companies")
 .select("*")
-.eq("id",membership.company_id)
-.single()
+.eq("owner_user_id",user.id)
+.maybeSingle()
 
 if(mounted){
 setCompany(companyData)
-}
-
 }
 
 setLoading(false)
@@ -85,9 +75,7 @@ setOpen(false)
 if(loading) return null
 
 
-/* -------------------------------------------------- */
-/* ACCOUNT TYPE DETECTION */
-/* -------------------------------------------------- */
+/* ACCOUNT TYPE */
 
 const isCompanyUser = profile?.account_type === "company"
 
@@ -203,8 +191,6 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 </div>
 
-{/* VIEW PROFILE */}
-
 <Link
 href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
 className="block mt-3 text-sm text-blue-600 font-semibold"
@@ -302,17 +288,11 @@ className="flex items-center gap-3 text-red-600 font-bold"
 ☰
 </button>
 
-
-{/* LOGO → EDIT PROFILE */}
-
 <Link href="/account" className="flex items-center gap-2">
-
 <Image src="/logo.png" alt="" width={40} height={40}/>
-
 <span className="font-bold text-blue-600 text-lg">
 Stated
 </span>
-
 </Link>
 
 <NotificationBell/>
@@ -325,13 +305,10 @@ Stated
 <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
 <Link href="/account" className="flex items-center gap-2">
-
 <Image src="/logo.png" alt="" width={40} height={40}/>
-
 <span className="font-bold text-blue-600 text-xl">
 Stated
 </span>
-
 </Link>
 
 <NotificationBell/>
@@ -340,31 +317,22 @@ Stated
 
 
 
-{/* PAGE CONTENT */}
-
 <div className="px-6 py-8 max-w-4xl mx-auto w-full">
 {children}
 </div>
-
 
 
 {/* MOBILE NAV */}
 
 <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
 
-{/* HOME */}
-
 <Link href={homeLink}>
 🏠
 </Link>
 
-{/* SEARCH */}
-
 <Link href="/dashboard/search">
 🔍
 </Link>
-
-{/* CREATE */}
 
 <Link
 href={createLink}
