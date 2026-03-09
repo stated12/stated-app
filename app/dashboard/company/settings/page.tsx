@@ -5,199 +5,215 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function CompanySettingsPage() {
 
-  const supabase = createClient();
+const supabase = createClient();
 
-  const [company, setCompany] = useState<any>(null);
-  const [companyId, setCompanyId] = useState<string | null>(null);
+const [company,setCompany] = useState<any>(null)
+const [companyId,setCompanyId] = useState<string | null>(null)
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const [loading,setLoading] = useState(true)
+const [saving,setSaving] = useState(false)
 
-  /* ---------------- LOAD COMPANY ---------------- */
+/* ---------------- LOAD COMPANY ---------------- */
 
-  useEffect(() => {
-    loadCompany();
-  }, []);
+useEffect(()=>{
+loadCompany()
+},[])
 
-  async function loadCompany() {
+async function loadCompany(){
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+const {data:{user}} = await supabase.auth.getUser()
 
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+if(!user){
+setLoading(false)
+return
+}
 
-    const { data: membership } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+/* FIRST TRY OWNER */
 
-    if (!membership) {
-      setLoading(false);
-      return;
-    }
+const {data:ownerCompany} = await supabase
+.from("companies")
+.select("*")
+.eq("owner_user_id",user.id)
+.maybeSingle()
 
-    setCompanyId(membership.company_id);
+if(ownerCompany){
 
-    const { data } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("id", membership.company_id)
-      .single();
+setCompany(ownerCompany)
+setCompanyId(ownerCompany.id)
+setLoading(false)
+return
 
-    setCompany(data);
+}
 
-    setLoading(false);
-  }
+/* FALLBACK: MEMBER */
 
-  /* ---------------- UPDATE COMPANY ---------------- */
+const {data:membership} = await supabase
+.from("company_members")
+.select("company_id")
+.eq("user_id",user.id)
+.maybeSingle()
 
-  async function updateCompany() {
+if(!membership){
+setLoading(false)
+return
+}
 
-    if (!companyId || !company) return;
+const {data} = await supabase
+.from("companies")
+.select("*")
+.eq("id",membership.company_id)
+.single()
 
-    setSaving(true);
+setCompany(data)
+setCompanyId(membership.company_id)
 
-    await supabase
-      .from("companies")
-      .update({
-        name: company.name,
-        username: company.username,
-        description: company.description,
-      })
-      .eq("id", companyId);
+setLoading(false)
 
-    setSaving(false);
+}
 
-    alert("Company updated");
-  }
+/* ---------------- UPDATE COMPANY ---------------- */
 
-  /* ---------------- DELETE COMPANY ---------------- */
+async function updateCompany(){
 
-  async function deleteCompany() {
+if(!companyId || !company) return
 
-    if (!companyId) return;
+setSaving(true)
 
-    const confirmDelete = prompt(
-      "Type DELETE to confirm company deletion"
-    );
+await supabase
+.from("companies")
+.update({
+name:company.name,
+username:company.username,
+description:company.description
+})
+.eq("id",companyId)
 
-    if (confirmDelete !== "DELETE") return;
+setSaving(false)
 
-    await supabase
-      .from("companies")
-      .delete()
-      .eq("id", companyId);
+alert("Company updated")
 
-    alert("Company deleted");
+}
 
-    window.location.href = "/dashboard";
-  }
+/* ---------------- DELETE COMPANY ---------------- */
 
-  /* ---------------- LOADING ---------------- */
+async function deleteCompany(){
 
-  if (loading) {
+if(!companyId) return
 
-    return (
-      <div className="max-w-2xl mx-auto py-10">
-        <div className="text-gray-500">
-          Loading company settings...
-        </div>
-      </div>
-    );
+const confirmDelete = prompt(
+"Type DELETE to confirm company deletion"
+)
 
-  }
+if(confirmDelete !== "DELETE") return
 
-  if (!company) {
+await supabase
+.from("companies")
+.delete()
+.eq("id",companyId)
 
-    return (
-      <div className="max-w-2xl mx-auto py-10">
-        <div className="text-gray-500">
-          Company not found
-        </div>
-      </div>
-    );
+alert("Company deleted")
 
-  }
+window.location.href="/dashboard"
 
-  /* ---------------- PAGE ---------------- */
+}
 
-  return (
+/* ---------------- LOADING ---------------- */
 
-    <div className="max-w-2xl mx-auto py-10 space-y-8">
+if(loading){
 
-      <h1 className="text-2xl font-bold">
-        Company Settings
-      </h1>
+return(
+<div className="max-w-2xl mx-auto py-10">
+<div className="text-gray-500">
+Loading company settings...
+</div>
+</div>
+)
 
-      {/* COMPANY INFO */}
+}
 
-      <div className="space-y-4">
+if(!company){
 
-        <input
-          value={company.name || ""}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              name: e.target.value,
-            })
-          }
-          placeholder="Company Name"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+return(
+<div className="max-w-2xl mx-auto py-10">
+<div className="text-gray-500">
+Company not found
+</div>
+</div>
+)
 
-        <input
-          value={company.username || ""}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              username: e.target.value,
-            })
-          }
-          placeholder="Username"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+}
 
-        <textarea
-          value={company.description || ""}
-          onChange={(e) =>
-            setCompany({
-              ...company,
-              description: e.target.value,
-            })
-          }
-          placeholder="Company Description"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+/* ---------------- PAGE ---------------- */
 
-        <button
-          onClick={updateCompany}
-          disabled={saving}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+return(
 
-      </div>
+<div className="max-w-2xl mx-auto py-10 space-y-8">
 
-      {/* DELETE COMPANY */}
+<h1 className="text-2xl font-bold">
+Company Settings
+</h1>
 
-      <div className="border-t pt-6">
+<div className="space-y-4">
 
-        <button
-          onClick={deleteCompany}
-          className="text-red-600 font-medium"
-        >
-          Delete Company
-        </button>
+<input
+value={company.name || ""}
+onChange={(e)=>
+setCompany({
+...company,
+name:e.target.value
+})
+}
+placeholder="Company Name"
+className="w-full border rounded-lg px-4 py-2"
+/>
 
-      </div>
+<input
+value={company.username || ""}
+onChange={(e)=>
+setCompany({
+...company,
+username:e.target.value
+})
+}
+placeholder="Username"
+className="w-full border rounded-lg px-4 py-2"
+/>
 
-    </div>
+<textarea
+value={company.description || ""}
+onChange={(e)=>
+setCompany({
+...company,
+description:e.target.value
+})
+}
+placeholder="Company Description"
+className="w-full border rounded-lg px-4 py-2"
+/>
 
-  );
+<button
+onClick={updateCompany}
+disabled={saving}
+className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+>
+{saving ? "Saving..." : "Save Changes"}
+</button>
+
+</div>
+
+<div className="border-t pt-6">
+
+<button
+onClick={deleteCompany}
+className="text-red-600 font-medium"
+>
+Delete Company
+</button>
+
+</div>
+
+</div>
+
+)
+
 }
