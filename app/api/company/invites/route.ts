@@ -1,33 +1,39 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET(){
+export async function GET() {
 
 const supabase = await createClient();
 
-const { data:{ user } } = await supabase.auth.getUser();
+const { data: { user } } = await supabase.auth.getUser();
 
-if(!user){
-return NextResponse.json({ invites:[] });
+if (!user) {
+return NextResponse.json({ invites: [] });
 }
 
-const { data:company } = await supabase
+/* FIND COMPANY */
+
+const { data: company } = await supabase
 .from("companies")
 .select("id")
-.eq("owner_user_id",user.id)
+.eq("owner_id", user.id)
 .maybeSingle();
 
-if(!company){
-return NextResponse.json({ invites:[] });
+if (!company) {
+return NextResponse.json({ invites: [] });
 }
 
-const { data } = await supabase
+/* LOAD PENDING INVITES */
+
+const { data: invites } = await supabase
 .from("company_invites")
 .select("*")
-.eq("company_id",company.id)
-.eq("status","pending")
-.order("created_at",{ ascending:false });
+.eq("company_id", company.id)
+.eq("status", "pending")
+.order("created_at", { ascending: false });
 
-return NextResponse.json({ invites:data });
+return NextResponse.json({
+invites: invites || []
+});
 
 }
