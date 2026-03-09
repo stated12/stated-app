@@ -2,75 +2,78 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
-export default async function AcceptInvitePage({
+export default async function InviteAcceptPage({
   params,
 }: {
   params: { token: string };
 }) {
+
   const supabase = await createClient();
+
   const token = params.token;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect(`/login?next=/invite/${token}`);
-  }
+  /* ---------------- FIND INVITE ---------------- */
 
   const { data: invite } = await supabase
     .from("company_invites")
     .select("*")
     .eq("token", token)
     .eq("status", "pending")
-    .single();
+    .maybeSingle();
 
   if (!invite) {
     return (
-      <div className="max-w-md mx-auto mt-20 text-center">
+      <div className="max-w-lg mx-auto py-20 text-center">
         <h1 className="text-xl font-semibold mb-4">
-          Invite not valid or already used
+          Invalid Invite
         </h1>
-        <Link href="/dashboard" className="text-blue-600 underline">
-          Go to dashboard
-        </Link>
+        <p className="text-gray-500">
+          This invitation is invalid or expired.
+        </p>
       </div>
     );
   }
 
-  if (invite.email !== user.email) {
-    return (
-      <div className="max-w-md mx-auto mt-20 text-center">
-        <h1 className="text-xl font-semibold mb-4">
-          This invite was sent to another email
-        </h1>
-        <Link href="/dashboard" className="text-blue-600 underline">
-          Go to dashboard
-        </Link>
-      </div>
-    );
+  /* ---------------- USER ---------------- */
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/login?invite=${token}`);
   }
+
+  /* ---------------- ADD MEMBER ---------------- */
 
   const { data: existing } = await supabase
     .from("company_members")
-    .select("*")
+    .select("id")
     .eq("company_id", invite.company_id)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!existing) {
-    await supabase.from("company_members").insert({
-      company_id: invite.company_id,
-      user_id: user.id,
-      role: invite.role,
-    });
+
+    await supabase
+      .from("company_members")
+      .insert({
+        company_id: invite.company_id,
+        user_id: user.id,
+        role: invite.role,
+      });
+
   }
+
+  /* ---------------- MARK INVITE ACCEPTED ---------------- */
 
   await supabase
     .from("company_invites")
-    .update({ status: "accepted" })
+    .update({
+      status: "accepted",
+      accepted_at: new Date().toISOString(),
+    })
     .eq("id", invite.id);
 
   redirect("/dashboard/company");
