@@ -14,7 +14,10 @@ return NextResponse.json(
 );
 }
 
-const { email,role } = await request.json();
+const body = await request.json();
+
+const email = body.email?.trim().toLowerCase();
+const role = body.role;
 
 if(!email || !role){
 return NextResponse.json(
@@ -26,11 +29,18 @@ return NextResponse.json(
 
 /* ---------------- FIND COMPANY ---------------- */
 
-const { data:company } = await supabase
+const { data:company, error:companyError } = await supabase
 .from("companies")
 .select("id,member_limit")
 .eq("owner_user_id",user.id)
 .maybeSingle();
+
+if(companyError){
+return NextResponse.json(
+{ error:companyError.message },
+{ status:400 }
+);
+}
 
 if(!company){
 return NextResponse.json(
@@ -42,14 +52,21 @@ return NextResponse.json(
 
 /* ---------------- MEMBER LIMIT ---------------- */
 
-const { count } = await supabase
+const { count, error:countError } = await supabase
 .from("company_members")
 .select("*",{ count:"exact",head:true })
 .eq("company_id",company.id);
 
+if(countError){
+return NextResponse.json(
+{ error:countError.message },
+{ status:400 }
+);
+}
+
 if((count ?? 0) >= (company.member_limit ?? 10)){
 return NextResponse.json(
-{ error:"Member limit reached" },
+{ error:"Member limit reached. Upgrade plan to add more members." },
 { status:400 }
 );
 }
@@ -57,13 +74,20 @@ return NextResponse.json(
 
 /* ---------------- DUPLICATE CHECK ---------------- */
 
-const { data:existingInvite } = await supabase
+const { data:existingInvite, error:inviteCheckError } = await supabase
 .from("company_invites")
 .select("id")
 .eq("company_id",company.id)
 .eq("email",email)
 .eq("status","pending")
 .maybeSingle();
+
+if(inviteCheckError){
+return NextResponse.json(
+{ error:inviteCheckError.message },
+{ status:400 }
+);
+}
 
 if(existingInvite){
 return NextResponse.json(
@@ -75,7 +99,7 @@ return NextResponse.json(
 
 /* ---------------- CREATE INVITE ---------------- */
 
-await supabase
+const { error:insertError } = await supabase
 .from("company_invites")
 .insert({
 company_id:company.id,
@@ -85,10 +109,19 @@ invited_by_user_id:user.id,
 status:"pending"
 });
 
+if(insertError){
+return NextResponse.json(
+{ error:insertError.message },
+{ status:400 }
+);
+}
+
+
+/* ---------------- SUCCESS ---------------- */
 
 return NextResponse.json({
 success:true,
-message:"Invitation created"
+message:"Invitation sent"
 });
 
-  }
+}
