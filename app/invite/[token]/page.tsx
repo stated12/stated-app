@@ -4,95 +4,142 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function InvitePage({
-  params,
-}: {
-  params: { token: string };
-}) {
+params,
+}:{
+params:{ token:string }
+}){
 
-  const supabase = await createClient();
+const supabase = await createClient();
 
-  const token = params.token;
-
-  /* ---------------- FIND INVITE ---------------- */
-
-  const { data: invite } = await supabase
-    .from("company_invites")
-    .select("*")
-    .eq("token", token)
-    .eq("status", "pending")
-    .maybeSingle();
-
-  if (!invite) {
-
-    return (
-      <div className="max-w-lg mx-auto py-20 text-center">
-        <h1 className="text-xl font-semibold mb-4">
-          Invalid Invitation
-        </h1>
-        <p className="text-gray-500">
-          This invite is invalid or already used.
-        </p>
-      </div>
-    );
-
-  }
-
-  /* ---------------- GET COMPANY ---------------- */
-
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name")
-    .eq("id", invite.company_id)
-    .single();
+const token = params.token;
 
 
-  /* ---------------- GET USER ---------------- */
+/* ---------------- FIND INVITE ---------------- */
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-
-    redirect(`/login?invite=${token}`);
-
-  }
+const { data:invite } = await supabase
+.from("company_invites")
+.select("*")
+.eq("token",token)
+.maybeSingle();
 
 
-  /* ---------------- CHECK IF MEMBER ---------------- */
+if(!invite){
 
-  const { data: existing } = await supabase
-    .from("company_members")
-    .select("id")
-    .eq("company_id", invite.company_id)
-    .eq("user_id", user.id)
-    .maybeSingle();
+return(
+<div className="max-w-lg mx-auto py-20 text-center">
 
+<h1 className="text-xl font-semibold mb-4">
+Invalid Invitation
+</h1>
 
-  if (!existing) {
+<p className="text-gray-500">
+This invitation link is not valid.
+</p>
 
-    await supabase
-      .from("company_members")
-      .insert({
-        company_id: invite.company_id,
-        user_id: user.id,
-        role: invite.role,
-      });
+</div>
+);
 
-  }
+}
 
 
-  /* ---------------- MARK INVITE ACCEPTED ---------------- */
+/* ---------------- EXPIRED CHECK ---------------- */
 
-  await supabase
-    .from("company_invites")
-    .update({
-      status: "accepted",
-      accepted_at: new Date().toISOString(),
-    })
-    .eq("id", invite.id);
+if(invite.expires_at && new Date(invite.expires_at) < new Date()){
+
+return(
+<div className="max-w-lg mx-auto py-20 text-center">
+
+<h1 className="text-xl font-semibold mb-4">
+Invite Expired
+</h1>
+
+<p className="text-gray-500">
+This invitation has expired. Ask the company to send a new invite.
+</p>
+
+</div>
+);
+
+}
 
 
-  /* ---------------- REDIRECT ---------------- */
+/* ---------------- STATUS CHECK ---------------- */
 
-  redirect("/dashboard/company");
+if(invite.status === "accepted"){
+
+return(
+<div className="max-w-lg mx-auto py-20 text-center">
+
+<h1 className="text-xl font-semibold mb-4">
+Invite Already Used
+</h1>
+
+<p className="text-gray-500">
+This invitation was already accepted.
+</p>
+
+</div>
+);
+
+}
+
+
+/* ---------------- GET COMPANY ---------------- */
+
+const { data:company } = await supabase
+.from("companies")
+.select("name")
+.eq("id",invite.company_id)
+.single();
+
+
+/* ---------------- GET USER ---------------- */
+
+const { data:{ user } } = await supabase.auth.getUser();
+
+if(!user){
+
+redirect(`/login?invite=${token}`);
+
+}
+
+
+/* ---------------- CHECK MEMBER ---------------- */
+
+const { data:existing } = await supabase
+.from("company_members")
+.select("id")
+.eq("company_id",invite.company_id)
+.eq("user_id",user.id)
+.maybeSingle();
+
+
+if(!existing){
+
+await supabase
+.from("company_members")
+.insert({
+company_id:invite.company_id,
+user_id:user.id,
+role:invite.role
+});
+
+}
+
+
+/* ---------------- MARK ACCEPTED ---------------- */
+
+await supabase
+.from("company_invites")
+.update({
+status:"accepted",
+accepted_at:new Date().toISOString()
+})
+.eq("id",invite.id);
+
+
+/* ---------------- REDIRECT ---------------- */
+
+redirect("/dashboard/company");
 
 }
