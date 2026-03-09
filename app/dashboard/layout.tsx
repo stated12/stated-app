@@ -46,7 +46,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY */
+/* COMPANY (optional) */
 
 const {data:membership} = await supabase
 .from("company_members")
@@ -84,7 +84,15 @@ setOpen(false)
 
 if(loading) return null
 
-const isCompanyUser = !!company
+
+/* -------------------------------------------------- */
+/* ACCOUNT TYPE DETECTION */
+/* -------------------------------------------------- */
+
+const isCompanyUser = profile?.account_type === "company"
+
+
+/* ROUTES */
 
 const homeLink =
 isCompanyUser
@@ -92,6 +100,7 @@ isCompanyUser
 : "/dashboard/my"
 
 const createLink = "/dashboard/create"
+
 
 /* NAV STYLE */
 
@@ -109,7 +118,8 @@ active
 
 }
 
-/* PROFILE */
+
+/* PROFILE DISPLAY */
 
 const avatar =
 isCompanyUser
@@ -126,6 +136,7 @@ isCompanyUser
 ? company?.username
 : profile?.username
 
+
 async function logout(){
 
 const supabase = createClient()
@@ -135,6 +146,7 @@ await supabase.auth.signOut()
 router.push("/")
 
 }
+
 
 return(
 
@@ -149,6 +161,7 @@ onClick={()=>setOpen(false)}
 />
 )}
 
+
 {/* SIDEBAR */}
 
 <aside
@@ -156,6 +169,7 @@ className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex 
 open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 }`}
 >
+
 
 {/* PROFILE */}
 
@@ -189,6 +203,8 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 </div>
 
+{/* VIEW PROFILE */}
+
 <Link
 href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
 className="block mt-3 text-sm text-blue-600 font-semibold"
@@ -197,6 +213,7 @@ View Profile
 </Link>
 
 </div>
+
 
 {/* NAVIGATION */}
 
@@ -254,6 +271,7 @@ View Profile
 
 </nav>
 
+
 {/* LOGOUT */}
 
 <div className="px-5 pb-6">
@@ -269,9 +287,12 @@ className="flex items-center gap-3 text-red-600 font-bold"
 
 </aside>
 
+
+
 {/* MAIN */}
 
 <main className="flex-1 flex flex-col pb-24">
+
 
 {/* MOBILE HEADER */}
 
@@ -281,7 +302,10 @@ className="flex items-center gap-3 text-red-600 font-bold"
 ☰
 </button>
 
-<Link href={homeLink} className="flex items-center gap-2">
+
+{/* LOGO → EDIT PROFILE */}
+
+<Link href="/account" className="flex items-center gap-2">
 
 <Image src="/logo.png" alt="" width={40} height={40}/>
 
@@ -295,11 +319,12 @@ Stated
 
 </div>
 
+
 {/* DESKTOP HEADER */}
 
 <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
-<Link href={homeLink} className="flex items-center gap-2">
+<Link href="/account" className="flex items-center gap-2">
 
 <Image src="/logo.png" alt="" width={40} height={40}/>
 
@@ -313,23 +338,33 @@ Stated
 
 </div>
 
+
+
 {/* PAGE CONTENT */}
 
 <div className="px-6 py-8 max-w-4xl mx-auto w-full">
 {children}
 </div>
 
+
+
 {/* MOBILE NAV */}
 
 <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
+
+{/* HOME */}
 
 <Link href={homeLink}>
 🏠
 </Link>
 
+{/* SEARCH */}
+
 <Link href="/dashboard/search">
 🔍
 </Link>
+
+{/* CREATE */}
 
 <Link
 href={createLink}
@@ -340,10 +375,11 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 
 </div>
 
+
 </main>
 
 </div>
 
 )
 
-}
+  }
