@@ -4,335 +4,503 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-/* ---------------- TYPES ---------------- */
+/* TYPES */
 
 type Profile = {
-  id: string;
-  username: string;
-  display_name: string | null;
-  avatar_url: string | null;
-};
-
-type Company = {
-  id: string;
-  name: string;
-  username: string;
-  owner_id: string;
+id: string;
+username: string;
+display_name: string | null;
+avatar_url: string | null;
 };
 
 type Member = {
-  id: string;
-  role: string;
-  user_id: string;
-  profiles: Profile | null;
+id: string;
+role: string;
+user_id: string;
+profiles: Profile | null;
+};
+
+type Company = {
+id: string;
+name: string;
+username: string;
+owner_user_id: string;
 };
 
 type Commitment = {
-  id: string;
-  text: string;
-  category: string | null;
-  views: number;
-  created_at: string;
-  created_by_user_id: string | null;
-  profiles: {
-    display_name: string | null;
-    username: string | null;
-  } | null;
-  commitment_updates: {
-    text: string | null;
-    created_at: string;
-  }[];
+id: string;
+text: string;
+category: string | null;
+views: number;
+created_at: string;
+created_by_user_id: string | null;
+profiles: {
+display_name: string | null;
+username: string | null;
+} | null;
+commitment_updates: {
+text: string | null;
+created_at: string;
+}[];
 };
 
-/* ---------------- PAGE ---------------- */
+/* PAGE */
 
 export default async function CompanyDashboardPage() {
 
-  const supabase = await createClient();
-
-  const { data:{user} } = await supabase.auth.getUser();
-
-  if(!user){
-    redirect("/login");
-  }
-
-  /* ---------------- COMPANY (OWNER) ---------------- */
-
-  const { data:companyData } = await supabase
-  .from("companies")
-  .select("*")
-  .eq("owner_user_id",user.id)
-  .maybeSingle();
-
-  if(!companyData){
-    redirect("/dashboard");
-  }
-
-  const company:Company = {
-    id:String(companyData.id),
-    name:String(companyData.name),
-    username:String(companyData.username),
-    owner_id:String(companyData.owner_user_id)
-  };
-
-  /* ---------------- MEMBERSHIP ---------------- */
-
-  const { data:membership } = await supabase
-  .from("company_members")
-  .select("company_id,role")
-  .eq("user_id",user.id)
-  .eq("company_id",company.id)
-  .maybeSingle();
-
-  /* ---------------- MEMBERS ---------------- */
-
-  const { data:membersData } = await supabase
-  .from("company_members")
-  .select(`
-    id,
-    role,
-    user_id,
-    profiles(
-      id,
-      username,
-      display_name,
-      avatar_url
-    )
-  `)
-  .eq("company_id",company.id);
-
-  const members:Member[] =
-  (membersData ?? []).map((m:any)=>({
-    id:String(m.id),
-    role:String(m.role),
-    user_id:String(m.user_id),
-    profiles:m.profiles ? {
-      id:String(m.profiles.id),
-      username:String(m.profiles.username),
-      display_name:m.profiles.display_name ?? null,
-      avatar_url:m.profiles.avatar_url ?? null
-    } : null
-  }));
-
-  /* ---------------- COMMITMENTS ---------------- */
-
-  const { data:commitmentsData } = await supabase
-  .from("commitments")
-  .select(`
-    id,
-    text,
-    category,
-    views,
-    created_at,
-    created_by_user_id,
-    profiles:profiles!commitments_created_by_user_id_fkey(
-      display_name,
-      username
-    ),
-    commitment_updates(
-      text,
-      created_at
-    )
-  `)
-  .eq("company_id",company.id)
-  .eq("status","active")
-  .order("created_at",{ascending:false})
-  .limit(25);
-
-  const commitments: Commitment[] = (commitmentsData ?? []).map((c:any)=>({
-    id:String(c.id),
-    text:String(c.text),
-    category:c.category ?? null,
-    views:c.views ?? 0,
-    created_at:String(c.created_at),
-    created_by_user_id:c.created_by_user_id ?? null,
-    profiles:c.profiles
-      ? {
-          display_name:c.profiles.display_name ?? null,
-          username:c.profiles.username ?? null
-        }
-      : null,
-    commitment_updates:c.commitment_updates ?? []
-  }));
+const supabase = await createClient();
+
+const { data:{user} } = await supabase.auth.getUser();
+
+if(!user){
+redirect("/login");
+}
+
+/* COMPANY */
+
+const { data:companyData } = await supabase
+.from("companies")
+.select("*")
+.eq("owner_user_id",user.id)
+.maybeSingle();
+
+if(!companyData){
+redirect("/dashboard");
+}
+
+const company:Company = {
+id:String(companyData.id),
+name:String(companyData.name),
+username:String(companyData.username),
+owner_user_id:String(companyData.owner_user_id)
+};
+
+/* MEMBERSHIP */
+
+const { data:membership } = await supabase
+.from("company_members")
+.select("role")
+.eq("user_id",user.id)
+.eq("company_id",company.id)
+.maybeSingle();
+
+/* MEMBERS */
+
+const { data:membersData } = await supabase
+.from("company_members")
+.select(`
+id,
+role,
+user_id,
+profiles(
+id,
+username,
+display_name,
+avatar_url
+)
+`)
+.eq("company_id",company.id);
+
+const members:Member[] =
+(membersData ?? []).map((m:any)=>({
+id:String(m.id),
+role:String(m.role),
+user_id:String(m.user_id),
+profiles:m.profiles ? {
+id:String(m.profiles.id),
+username:String(m.profiles.username),
+display_name:m.profiles.display_name ?? null,
+avatar_url:m.profiles.avatar_url ?? null
+} : null
+}));
+
+/* COMMITMENTS */
+
+const { data:commitmentsData } = await supabase
+.from("commitments")
+.select(`
+id,
+text,
+category,
+views,
+created_at,
+created_by_user_id,
+profiles:profiles!commitments_created_by_user_id_fkey(
+display_name,
+username
+),
+commitment_updates(
+text,
+created_at
+)
+`)
+.eq("company_id",company.id)
+.eq("status","active")
+.order("created_at",{ascending:false})
+.limit(25);
+
+const commitments: Commitment[] = (commitmentsData ?? []).map((c:any)=>({
+id:String(c.id),
+text:String(c.text),
+category:c.category ?? null,
+views:c.views ?? 0,
+created_at:String(c.created_at),
+created_by_user_id:c.created_by_user_id ?? null,
+profiles:c.profiles
+? {
+display_name:c.profiles.display_name ?? null,
+username:c.profiles.username ?? null
+}
+: null,
+commitment_updates:c.commitment_updates ?? []
+}));
 
-  /* ---------------- PAGE ---------------- */
+/* PAGE UI */
 
-  return(
+return(
 
-  <div className="max-w-4xl mx-auto space-y-10">
+<div className="max-w-4xl mx-auto space-y-10">
 
-  {/* HEADER */}
+<div>
 
-  <div>
+<h1 className="text-2xl font-bold">
+Company Commitments
+</h1>
 
-  <h1 className="text-2xl font-bold">
-  Company Commitments
-  </h1>
+<div className="text-sm text-gray-500">
+{company.name} (@{company.username})
+</div>
 
-  <div className="text-sm text-gray-500">
-  {company.name} (@{company.username})
-  </div>
+</div>
 
-  </div>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-  {/* QUICK LINKS */}
+<Link
+href={`/c/${company.username}`}
+className="bg-white rounded-xl shadow p-5 hover:shadow-md"
+>
+Public Page
+</Link>
 
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+<Link
+href="/dashboard/company/insights"
+className="bg-white rounded-xl shadow p-5 hover:shadow-md"
+>
+Company Analytics
+</Link>
 
-  <Link
-  href={`/c/${company.username}`}
-  className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-  >
-  Public Page
-  </Link>
+<Link
+href="/dashboard/company/settings"
+className="bg-white rounded-xl shadow p-5 hover:shadow-md"
+>
+Company Settings
+</Link>
 
-  <Link
-  href="/dashboard/company/insights"
-  className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-  >
-  Company Analytics
-  </Link>
+</div>
 
-  <Link
-  href="/dashboard/company/settings"
-  className="bg-white rounded-xl shadow p-5 hover:shadow-md transition"
-  >
-  Company Settings
-  </Link>
+<div>
 
-  </div>
+<div className="flex justify-between items-center mb-4">
 
-  {/* COMPANY COMMITMENTS */}
+<h2 className="text-lg font-semibold">
+Company Commitments
+</h2>
 
-  <div>
+<Link
+href="/dashboard/create"
+className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
+>
++ Create
+</Link>
 
-  <div className="flex justify-between items-center mb-4">
+</div>
 
-  <h2 className="text-lg font-semibold">
-  Company Commitments
-  </h2>
+<div className="space-y-4">
 
-  <Link
-  href="/dashboard/create"
-  className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
-  >
-  + Create
-  </Link>
+{commitments.map((c)=>{
 
-  </div>
+const latestUpdate = c.commitment_updates?.[0] || null;
 
-  <div className="space-y-4">
+const creator =
+c.created_by_user_id === company.owner_user_id
+? company.name
+: c.profiles?.display_name ||
+c.profiles?.username ||
+"Member";
 
-  {commitments.map((c)=>{
+return(
 
-  const latestUpdate = c.commitment_updates?.[0] || null;
+<div
+key={c.id}
+className="bg-white rounded-xl shadow p-5"
+>
 
-  const creator =
-  c.created_by_user_id === company.owner_id
-  ? company.name
-  : c.profiles?.display_name ||
-    c.profiles?.username ||
-    "Member";
+<div className="font-medium mb-1">
+{c.text}
+</div>
 
-  return(
+{c.category && (
+<div className="text-xs text-gray-500 mb-2">
+{c.category}
+</div>
+)}
 
-  <div
-  key={c.id}
-  className="bg-white rounded-xl shadow p-5"
-  >
+<div className="text-xs text-gray-500 mb-2">
+Posted by {creator}
+</div>
 
-  <div className="font-medium mb-1">
-  {c.text}
-  </div>
+{latestUpdate ? (
 
-  {c.category && (
-  <div className="text-xs text-gray-500 mb-2">
-  {c.category}
-  </div>
-  )}
+<div className="text-sm text-gray-600">
+Latest update: {latestUpdate.text}
+</div>
 
-  <div className="text-xs text-gray-500 mb-2">
-  Posted by {creator}
-  </div>
+) : (
 
-  {latestUpdate ? (
+<div className="text-sm text-gray-400">
+No updates yet
+</div>
 
-  <div className="text-sm text-gray-600">
-  Latest update: {latestUpdate.text}
-  </div>
+)}
 
-  ) : (
+<div className="text-xs text-gray-400 mt-2">
+👁 {c.views} views
+</div>
 
-  <div className="text-sm text-gray-400">
-  No updates yet
-  </div>
+</div>
 
-  )}
+);
 
-  <div className="text-xs text-gray-400 mt-2">
-  👁 {c.views} views
-  </div>
+})}
 
-  </div>
+{commitments.length === 0 && (
+<div className="text-sm text-gray-500">
+No commitments yet.
+</div>
+)}
 
-  );
+</div>
 
-  })}
+</div>
 
-  {commitments.length === 0 && (
-  <div className="text-sm text-gray-500">
-  No commitments yet.
-  </div>
-  )}
+<div>
 
-  </div>
+<div className="flex justify-between items-center mb-4">
 
-  </div>
+<h2 className="text-lg font-semibold">
+Members
+</h2>
 
-  {/* MEMBERS */}
+{membership?.role==="owner" || membership?.role==="admin" ? (
 
-  <div>
+<Link
+href="/dashboard/company/invite"
+className="bg-blue-600 text-white px-4 py-2 rounded"
+>
+Invite Member
+</Link>
 
-  <div className="flex justify-between items-center mb-4">
+) : null}
 
-  <h2 className="text-lg font-semibold">
-  Members
-  </h2>
+</div>
 
-  {membership?.role==="owner" || membership?.role==="admin" ? (
+<div className="space-y-4">
 
-  <Link
-  href="/dashboard/company/invite"
-  className="bg-blue-600 text-white px-4 py-2 rounded"
-  >
-  Invite Member
-  </Link>
+{members.map((m)=>(
+<MemberRow
+key={m.id}
+member={m}
+isOwner={m.user_id === company.owner_user_id}
+isSelf={m.user_id === user.id}
+canManage={
+membership?.role==="owner" ||
+membership?.role==="admin"
+}
+/>
+))}
 
-  ) : null}
+</div>
 
-  </div>
+</div>
 
-  <div className="space-y-4">
+</div>
 
-  {members.map((m)=>(
-  <MemberRow
-  key={m.id}
-  member={m}
-  isOwner={m.user_id === company.owner_id}
-  isSelf={m.user_id === user.id}
-  canManage={
-  membership?.role==="owner" ||
-  membership?.role==="admin"
-  }
-  />
-  ))}
-
-  </div>
-
-  </div>
-
-  </div>
-
-  );
+);
 
 }
+
+/* MEMBER ROW */
+
+function MemberRow({
+member,
+isOwner,
+isSelf,
+canManage
+}:{
+member:Member
+isOwner:boolean
+isSelf:boolean
+canManage:boolean
+}){
+
+const avatar =
+member.profiles?.avatar_url?.trim()
+? member.profiles.avatar_url.trim()
+: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+member.profiles?.display_name ||
+member.profiles?.username ||
+"User"
+)}&background=2563eb&color=fff`;
+
+return(
+
+<div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
+
+<div className="flex items-center gap-3">
+
+<img
+src={avatar}
+className="w-10 h-10 rounded-full"
+/>
+
+<div>
+
+<div className="font-medium">
+{member.profiles?.display_name ||
+member.profiles?.username}
+</div>
+
+<div className="text-xs text-gray-500">
+@{member.profiles?.username}
+</div>
+
+</div>
+
+</div>
+
+<div className="flex items-center gap-3">
+
+{isOwner ? (
+
+<div className="text-sm bg-black text-white px-3 py-1 rounded">
+owner
+</div>
+
+) : canManage ? (
+
+<>
+<RoleSelector
+memberId={member.id}
+currentRole={member.role}
+disabled={isSelf}
+/>
+
+<RemoveButton
+memberId={member.id}
+disabled={isSelf}
+/>
+</>
+
+) : (
+
+<div className="text-xs text-gray-500">
+{member.role}
+</div>
+
+)}
+
+</div>
+
+</div>
+
+)
+
+}
+
+/* ROLE SELECTOR */
+
+function RoleSelector({
+memberId,
+currentRole,
+disabled
+}:{
+memberId:string
+currentRole:string
+disabled:boolean
+}){
+
+async function changeRole(role:string){
+
+await fetch("/api/company/member",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+action:"role",
+memberId,
+role
+})
+})
+
+window.location.reload()
+
+}
+
+return(
+
+<select
+disabled={disabled}
+defaultValue={currentRole}
+onChange={(e)=>changeRole(e.target.value)}
+className="border rounded px-2 py-1 text-sm"
+>
+
+<option value="viewer">viewer</option>
+<option value="member">member</option>
+<option value="admin">admin</option>
+
+</select>
+
+)
+
+}
+
+/* REMOVE BUTTON */
+
+function RemoveButton({
+memberId,
+disabled
+}:{
+memberId:string
+disabled:boolean
+}){
+
+async function remove(){
+
+if(!confirm("Remove this member?")) return;
+
+await fetch("/api/company/member",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+action:"remove",
+memberId
+})
+})
+
+window.location.reload()
+
+}
+
+return(
+
+<button
+disabled={disabled}
+onClick={remove}
+className="text-red-600 text-sm"
+>
+Remove
+</button>
+
+)
+
+  }
