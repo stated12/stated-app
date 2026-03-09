@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function CreateCommitmentPage(){
+export default function CreateCommitmentPage() {
 
 const supabase = createClient()
 const router = useRouter()
@@ -20,6 +20,7 @@ const [profile,setProfile] = useState<any>(null)
 const [company,setCompany] = useState<any>(null)
 
 const [loading,setLoading] = useState(false)
+const [initialLoading,setInitialLoading] = useState(true)
 
 /* CATEGORIES */
 
@@ -42,10 +43,7 @@ const companyCategories = [
 "Other"
 ]
 
-const categories =
-company
-? companyCategories
-: individualCategories
+const categories = company ? companyCategories : individualCategories
 
 /* LOAD USER */
 
@@ -72,7 +70,7 @@ const {data:profileData} = await supabase
 
 setProfile(profileData)
 
-/* COMPANY */
+/* COMPANY MEMBERSHIP */
 
 const {data:membership} = await supabase
 .from("company_members")
@@ -91,6 +89,8 @@ const {data:companyData} = await supabase
 setCompany(companyData)
 
 }
+
+setInitialLoading(false)
 
 }
 
@@ -136,7 +136,7 @@ return data.publicUrl
 
 }
 
-/* CREATE */
+/* CREATE COMMITMENT */
 
 async function createCommitment(){
 
@@ -152,13 +152,11 @@ const {data:{user}} = await supabase.auth.getUser()
 const targetDate = calculateDeadline()
 
 let insertData:any = {
-
 text,
 category,
 target_date:targetDate,
 status:"active",
 proof_link:proofLink || null
-
 }
 
 /* COMPANY POST */
@@ -207,17 +205,23 @@ setLoading(false)
 
 /* REDIRECT */
 
-router.push(
-company
-? "/dashboard/company"
-: "/dashboard/my"
-)
+router.push(company ? "/dashboard/company" : "/dashboard/my")
 
+}
+
+/* LOADING STATE */
+
+if(initialLoading){
+return (
+<div className="flex justify-center py-20 text-gray-500">
+Loading...
+</div>
+)
 }
 
 return(
 
-<div className="max-w-xl mx-auto py-10 space-y-6">
+<div className="max-w-xl mx-auto px-4 py-8 space-y-6">
 
 <h1 className="text-2xl font-bold">
 Create Commitment
@@ -304,7 +308,7 @@ Adding proof improves credibility
 <button
 onClick={createCommitment}
 disabled={loading}
-className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full"
 >
 
 {loading ? "Publishing..." : "Publish Commitment"}
