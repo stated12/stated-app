@@ -16,14 +16,14 @@ return NextResponse.json({ invites:[] });
 const { data:company } = await supabase
 .from("companies")
 .select("id")
-.eq("owner_id",user.id)
+.eq("owner_user_id",user.id)
 .maybeSingle();
 
 if(!company){
 return NextResponse.json({ invites:[] });
 }
 
-/* GET ALL INVITES */
+/* GET INVITES */
 
 const { data, error } = await supabase
 .from("company_invites")
