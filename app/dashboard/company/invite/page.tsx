@@ -14,6 +14,8 @@ loadInvites();
 },[]);
 
 
+/* LOAD INVITES */
+
 async function loadInvites(){
 
 const res = await fetch("/api/company/invites");
@@ -86,6 +88,8 @@ method:"POST"
 
 alert("Invite resent");
 
+loadInvites();
+
 }
 
 
@@ -115,8 +119,11 @@ value={role}
 onChange={(e)=>setRole(e.target.value)}
 className="w-full border rounded px-3 py-2"
 >
-<option value="member">Member</option>
+
 <option value="admin">Admin</option>
+<option value="member">Member</option>
+<option value="viewer">Viewer</option>
+
 </select>
 
 <button
@@ -149,6 +156,7 @@ No pending invites
 {invites.map((invite)=>{
 
 const expired =
+invite.expires_at &&
 new Date(invite.expires_at) < new Date();
 
 return(
@@ -174,14 +182,16 @@ Role: {invite.role}
 
 </div>
 
-<div className="flex gap-2">
+<div className="flex gap-3">
 
+{!expired && (
 <button
 onClick={()=>resendInvite(invite.id)}
 className="text-sm text-blue-600"
 >
 Resend
 </button>
+)}
 
 <button
 onClick={()=>cancelInvite(invite.id)}
