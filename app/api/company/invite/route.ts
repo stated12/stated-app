@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -17,10 +18,7 @@ return NextResponse.json(
 );
 }
 
-const body = await request.json();
-
-const email = body.email?.trim().toLowerCase();
-const role = body.role;
+const { email,role } = await request.json();
 
 if(!email || !role){
 return NextResponse.json(
@@ -34,7 +32,7 @@ return NextResponse.json(
 
 const { data:company } = await supabase
 .from("companies")
-.select("id,name,username,member_limit")
+.select("id,name,member_limit")
 .eq("owner_user_id",user.id)
 .maybeSingle();
 
@@ -79,107 +77,66 @@ return NextResponse.json(
 }
 
 
+/* ---------------- CREATE TOKEN ---------------- */
+
+const token = crypto.randomUUID();
+
+
 /* ---------------- CREATE INVITE ---------------- */
 
-const { data:invite, error:insertError } = await supabase
+await supabase
 .from("company_invites")
 .insert({
 company_id:company.id,
 email,
 role,
+token,
 invited_by_user_id:user.id,
 status:"pending"
-})
-.select()
-.single();
-
-if(insertError){
-return NextResponse.json(
-{ error:insertError.message },
-{ status:400 }
-);
-}
+});
 
 
 /* ---------------- INVITE LINK ---------------- */
 
-const inviteLink =
-`${process.env.NEXT_PUBLIC_SITE_URL}/invite/${invite.id}`;
-
-
-/* ---------------- EMAIL CONTENT ---------------- */
-
-const subject =
-`You're invited to manage ${company.name} on Stated`;
-
-const html = `
-<div style="font-family:Arial,sans-serif;line-height:1.6">
-
-<h2>You're invited to manage ${company.name} on Stated</h2>
-
-<p>Hello,</p>
-
-<p>
-<b>${company.name}</b> has invited you to help manage their company profile on <b>Stated</b>.
-</p>
-
-<p>
-Stated is a platform where organizations make public commitments and build credibility through transparent progress.
-</p>
-
-<p>
-<b>Your role:</b> ${role}
-</p>
-
-<p>
-Click below to accept the invitation:
-</p>
-
-<p>
-<a href="${inviteLink}"
-style="
-background:#2563eb;
-color:#ffffff;
-padding:12px 20px;
-text-decoration:none;
-border-radius:6px;
-display:inline-block;
-font-weight:600;
-">
-Accept Invitation
-</a>
-</p>
-
-<p>
-If you were not expecting this invitation, you can safely ignore this email.
-</p>
-
-<br/>
-
-<p>
-— Team Stated<br/>
-https://stated.in
-</p>
-
-</div>
-`;
+const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`;
 
 
 /* ---------------- SEND EMAIL ---------------- */
 
 await resend.emails.send({
-from: "Stated <hello@stated.in>",
-to: email,
-subject,
-html
+
+from:"Stated <hello@stated.in>",
+
+to:email,
+
+subject:`${company.name} invited you to manage their profile on Stated`,
+
+html:`
+
+<h2>You’ve been invited</h2>
+
+<p><strong>${company.name}</strong> invited you to help manage their profile on <strong>Stated</strong>.</p>
+
+<p>Your role: <b>${role}</b></p>
+
+<p>
+<a href="${inviteUrl}" style="background:#2563eb;color:white;padding:10px 18px;border-radius:6px;text-decoration:none;">
+Accept Invitation
+</a>
+</p>
+
+<p>If the button does not work, open this link:</p>
+
+<p>${inviteUrl}</p>
+
+`
+
 });
 
-
-/* ---------------- SUCCESS ---------------- */
 
 return NextResponse.json({
 success:true,
 message:"Invitation sent"
 });
 
-}
+    }
