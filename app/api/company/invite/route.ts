@@ -33,7 +33,7 @@ return NextResponse.json(
 const { data:company } = await supabase
 .from("companies")
 .select("id,name,member_limit")
-.eq("owner_user_id",user.id)
+.eq("owner_id",user.id)   // ✅ CORRECT COLUMN
 .maybeSingle();
 
 if(!company){
@@ -98,7 +98,8 @@ status:"pending"
 
 /* ---------------- INVITE LINK ---------------- */
 
-const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`;
+const inviteUrl =
+`${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`;
 
 
 /* ---------------- SEND EMAIL ---------------- */
@@ -115,7 +116,10 @@ html:`
 
 <h2>You’ve been invited</h2>
 
-<p><strong>${company.name}</strong> invited you to help manage their profile on <strong>Stated</strong>.</p>
+<p>
+<strong>${company.name}</strong>
+invited you to help manage their profile on <strong>Stated</strong>.
+</p>
 
 <p>Your role: <b>${role}</b></p>
 
@@ -125,7 +129,7 @@ Accept Invitation
 </a>
 </p>
 
-<p>If the button does not work, open this link:</p>
+<p>If the button does not work:</p>
 
 <p>${inviteUrl}</p>
 
@@ -136,7 +140,7 @@ Accept Invitation
 
 return NextResponse.json({
 success:true,
-message:"Invitation sent"
+message:"Invitation created"
 });
 
-    }
+   }
