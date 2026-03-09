@@ -14,11 +14,10 @@ children,
 const [open,setOpen] = useState(false)
 const [profile,setProfile] = useState<any>(null)
 const [company,setCompany] = useState<any>(null)
+const [loading,setLoading] = useState(true)
 
 const pathname = usePathname()
 const router = useRouter()
-
-/* LOAD USER + COMPANY */
 
 useEffect(()=>{
 
@@ -47,7 +46,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY MEMBERSHIP */
+/* COMPANY */
 
 const {data:membership} = await supabase
 .from("company_members")
@@ -69,6 +68,8 @@ setCompany(companyData)
 
 }
 
+setLoading(false)
+
 }
 
 load()
@@ -81,9 +82,9 @@ useEffect(()=>{
 setOpen(false)
 },[pathname])
 
-if(!profile) return null
+if(loading) return null
 
-/* DETERMINE MODE */
+/* DETECT COMPANY */
 
 const isCompanyUser = !!company
 
@@ -112,7 +113,7 @@ active
 
 }
 
-/* PROFILE DISPLAY */
+/* PROFILE */
 
 const avatar =
 isCompanyUser
@@ -133,46 +134,9 @@ return(
 
 <div className="min-h-screen flex bg-gray-50">
 
-{/* OVERLAY */}
+<aside className="w-72 bg-white border-r">
 
-{open && (
-<div
-className="fixed inset-0 bg-black/40 z-40 md:hidden"
-onClick={()=>setOpen(false)}
-/>
-)}
-
-{/* SIDEBAR */}
-
-<aside
-className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${
-open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-}`}
->
-
-{/* PROFILE */}
-
-<div className="px-6 pt-8 pb-5 border-b">
-
-<div className="flex items-center gap-3">
-
-<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-
-{avatar ? (
-<img
-src={avatar}
-alt=""
-className="w-full h-full object-cover"
-/>
-) : (
-<span className="font-semibold text-gray-700">
-{displayName?.charAt(0)}
-</span>
-)}
-
-</div>
-
-<div>
+<div className="p-6 border-b">
 
 <div className="font-semibold">
 {displayName}
@@ -184,123 +148,57 @@ className="w-full h-full object-cover"
 
 </div>
 
-</div>
-
-<Link
-href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
-className="block mt-3 text-xs text-blue-600"
->
-View Profile
-</Link>
-
-</div>
-
-{/* NAVIGATION */}
-
-<nav className="px-4 py-6 space-y-2">
+<nav className="p-4 space-y-2">
 
 {isCompanyUser ? (
 
 <>
-<Link
-href="/dashboard/company"
-className={linkClass("/dashboard/company")}
->
-📌 Company Commitments
+<Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
+Company Commitments
 </Link>
 
-<Link
-href="/dashboard/company/insights"
-className={linkClass("/dashboard/company/insights")}
->
-📊 Insights
+<Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
+Insights
 </Link>
 
-<Link
-href="/dashboard/company/invite"
-className={linkClass("/dashboard/company/invite")}
->
-👥 Invite Members
+<Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
+Invite Members
 </Link>
 
-<Link
-href="/dashboard/company/settings"
-className={linkClass("/dashboard/company/settings")}
->
-⚙️ Company Settings
+<Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
+Company Settings
 </Link>
 </>
 
 ) : (
 
 <>
-<Link
-href="/dashboard/my"
-className={linkClass("/dashboard/my")}
->
-📌 My Commitments
+<Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+My Commitments
 </Link>
 
-<Link
-href="/dashboard/insights"
-className={linkClass("/dashboard/insights")}
->
-📊 Insights
+<Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
+Insights
 </Link>
 
-<Link
-href="/billing"
-className={linkClass("/billing")}
->
-💳 Billing
-</Link>
-
-<Link
-href="/account"
-className={linkClass("/account")}
->
-⚙️ Account Settings
-</Link>
 </>
 
 )}
 
-<Link
-href="/dashboard/support"
-className={linkClass("/dashboard/support")}
->
-🛟 Support
+<Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
+Support
 </Link>
-
-<button
-onClick={async()=>{
-const supabase = createClient()
-await supabase.auth.signOut()
-router.push("/")
-}}
-className="flex items-center gap-3 px-5 py-3 font-bold text-red-600"
->
-🚪 Logout
-</button>
 
 </nav>
 
 </aside>
 
-{/* MAIN */}
+<main className="flex-1">
 
-<main className="flex-1 flex flex-col pb-24">
-
-{/* MOBILE HEADER */}
-
-<div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
-
-<button onClick={()=>setOpen(!open)}>
-☰
-</button>
+<div className="border-b p-4 flex justify-between">
 
 <Link href={homeLink} className="flex items-center gap-2">
-<Image src="/logo.png" alt="" width={40} height={40}/>
+<Image src="/logo.png" alt="" width={36} height={36}/>
 <span className="font-bold text-blue-600">
 Stated
 </span>
@@ -310,42 +208,8 @@ Stated
 
 </div>
 
-{/* DESKTOP HEADER */}
-
-<div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
-
-<Link href={homeLink} className="flex items-center gap-2">
-<Image src="/logo.png" alt="" width={40} height={40}/>
-<span className="font-bold text-blue-600">
-Stated
-</span>
-</Link>
-
-<NotificationBell/>
-
-</div>
-
-{/* PAGE */}
-
-<div className="px-6 py-8 max-w-4xl mx-auto w-full">
+<div className="p-6">
 {children}
-</div>
-
-{/* MOBILE NAV */}
-
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden flex justify-around py-3">
-
-<Link href={homeLink}>🏠</Link>
-
-<Link href="/dashboard/search">🔍</Link>
-
-<Link
-href={createLink}
-className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
->
-+ Create
-</Link>
-
 </div>
 
 </main>
