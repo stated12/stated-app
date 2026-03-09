@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function InviteAcceptPage({
+export default async function InvitePage({
   params,
 }: {
   params: { token: string };
@@ -23,29 +23,41 @@ export default async function InviteAcceptPage({
     .maybeSingle();
 
   if (!invite) {
+
     return (
       <div className="max-w-lg mx-auto py-20 text-center">
         <h1 className="text-xl font-semibold mb-4">
-          Invalid Invite
+          Invalid Invitation
         </h1>
         <p className="text-gray-500">
-          This invitation is invalid or expired.
+          This invite is invalid or already used.
         </p>
       </div>
     );
+
   }
 
-  /* ---------------- USER ---------------- */
+  /* ---------------- GET COMPANY ---------------- */
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name")
+    .eq("id", invite.company_id)
+    .single();
+
+
+  /* ---------------- GET USER ---------------- */
+
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+
     redirect(`/login?invite=${token}`);
+
   }
 
-  /* ---------------- ADD MEMBER ---------------- */
+
+  /* ---------------- CHECK IF MEMBER ---------------- */
 
   const { data: existing } = await supabase
     .from("company_members")
@@ -53,6 +65,7 @@ export default async function InviteAcceptPage({
     .eq("company_id", invite.company_id)
     .eq("user_id", user.id)
     .maybeSingle();
+
 
   if (!existing) {
 
@@ -66,6 +79,7 @@ export default async function InviteAcceptPage({
 
   }
 
+
   /* ---------------- MARK INVITE ACCEPTED ---------------- */
 
   await supabase
@@ -76,5 +90,9 @@ export default async function InviteAcceptPage({
     })
     .eq("id", invite.id);
 
+
+  /* ---------------- REDIRECT ---------------- */
+
   redirect("/dashboard/company");
+
 }
