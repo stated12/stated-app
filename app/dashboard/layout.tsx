@@ -46,7 +46,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY MEMBERSHIP */
+/* COMPANY */
 
 const {data:membership} = await supabase
 .from("company_members")
@@ -84,11 +84,7 @@ setOpen(false)
 
 if(loading) return null
 
-/* ACCOUNT TYPE */
-
 const isCompanyUser = !!company
-
-/* ROUTES */
 
 const homeLink =
 isCompanyUser
@@ -97,7 +93,7 @@ isCompanyUser
 
 const createLink = "/dashboard/create"
 
-/* ACTIVE LINK STYLE */
+/* NAV STYLE */
 
 const linkClass = (href:string)=>{
 
@@ -105,7 +101,7 @@ const active =
 pathname === href ||
 pathname.startsWith(href)
 
-return `flex items-center gap-3 px-5 py-3 rounded-lg font-semibold ${
+return `flex items-center gap-3 px-5 py-3 rounded-xl text-[18px] font-bold transition ${
 active
 ? "bg-blue-100 text-blue-700"
 : "text-gray-900 hover:bg-gray-100"
@@ -113,7 +109,7 @@ active
 
 }
 
-/* AVATAR */
+/* PROFILE */
 
 const avatar =
 isCompanyUser
@@ -144,7 +140,7 @@ return(
 
 <div className="min-h-screen flex bg-gray-50">
 
-{/* OVERLAY MOBILE */}
+{/* MOBILE OVERLAY */}
 
 {open && (
 <div
@@ -156,7 +152,7 @@ onClick={()=>setOpen(false)}
 {/* SIDEBAR */}
 
 <aside
-className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col z-50 transform transition-transform ${
+className={`fixed md:static top-0 left-0 h-[100dvh] w-72 bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${
 open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 }`}
 >
@@ -172,7 +168,7 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 {avatar ? (
 <img src={avatar} className="w-full h-full object-cover"/>
 ) : (
-<span className="font-bold">
+<span className="font-bold text-gray-700">
 {displayName?.charAt(0)}
 </span>
 )}
@@ -181,7 +177,7 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 <div>
 
-<div className="font-semibold">
+<div className="font-bold text-lg">
 {displayName}
 </div>
 
@@ -195,7 +191,7 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 <Link
 href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
-className="text-xs text-blue-600 mt-3 block"
+className="block mt-3 text-sm text-blue-600 font-semibold"
 >
 View Profile
 </Link>
@@ -209,31 +205,19 @@ View Profile
 {isCompanyUser ? (
 
 <>
-<Link
-href="/dashboard/company"
-className={linkClass("/dashboard/company")}
->
+<Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
 📌 Company Commitments
 </Link>
 
-<Link
-href="/dashboard/company/insights"
-className={linkClass("/dashboard/company/insights")}
->
+<Link href="/dashboard/company/insights" className={linkClass("/dashboard/company/insights")}>
 📊 Insights
 </Link>
 
-<Link
-href="/dashboard/company/invite"
-className={linkClass("/dashboard/company/invite")}
->
+<Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
 👥 Invite Members
 </Link>
 
-<Link
-href="/dashboard/company/settings"
-className={linkClass("/dashboard/company/settings")}
->
+<Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
 ⚙️ Company Settings
 </Link>
 </>
@@ -241,48 +225,30 @@ className={linkClass("/dashboard/company/settings")}
 ) : (
 
 <>
-<Link
-href="/dashboard/my"
-className={linkClass("/dashboard/my")}
->
+<Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
 📌 My Commitments
 </Link>
 
-<Link
-href="/dashboard/insights"
-className={linkClass("/dashboard/insights")}
->
+<Link href="/dashboard/insights" className={linkClass("/dashboard/insights")}>
 📊 Insights
 </Link>
 
-<Link
-href="/billing"
-className={linkClass("/billing")}
->
+<Link href="/billing" className={linkClass("/billing")}>
 💳 Billing
 </Link>
 
-<Link
-href="/account"
-className={linkClass("/account")}
->
+<Link href="/account" className={linkClass("/account")}>
 ⚙️ Account Settings
 </Link>
 
-<Link
-href="/upgrade"
-className={linkClass("/upgrade")}
->
+<Link href="/upgrade" className={linkClass("/upgrade")}>
 🚀 Upgrade
 </Link>
 </>
 
 )}
 
-<Link
-href="/dashboard/support"
-className={linkClass("/dashboard/support")}
->
+<Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
 🛟 Support
 </Link>
 
@@ -294,7 +260,7 @@ className={linkClass("/dashboard/support")}
 
 <button
 onClick={logout}
-className="flex items-center gap-3 text-red-600 font-semibold"
+className="flex items-center gap-3 text-red-600 font-bold"
 >
 🚪 Logout
 </button>
@@ -317,14 +283,9 @@ className="flex items-center gap-3 text-red-600 font-semibold"
 
 <Link href={homeLink} className="flex items-center gap-2">
 
-<Image
-src="/logo.png"
-alt=""
-width={40}
-height={40}
-/>
+<Image src="/logo.png" alt="" width={40} height={40}/>
 
-<span className="font-bold text-blue-600">
+<span className="font-bold text-blue-600 text-lg">
 Stated
 </span>
 
@@ -340,14 +301,9 @@ Stated
 
 <Link href={homeLink} className="flex items-center gap-2">
 
-<Image
-src="/logo.png"
-alt=""
-width={40}
-height={40}
-/>
+<Image src="/logo.png" alt="" width={40} height={40}/>
 
-<span className="font-bold text-blue-600">
+<span className="font-bold text-blue-600 text-xl">
 Stated
 </span>
 
