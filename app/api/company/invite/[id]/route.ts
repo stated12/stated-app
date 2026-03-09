@@ -4,6 +4,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+
 /* ---------------- CANCEL INVITE ---------------- */
 
 export async function DELETE(
@@ -38,17 +39,12 @@ const supabase = await createClient();
 
 const { id } = await context.params;
 
+
 /* GET INVITE */
 
 const { data: invite } = await supabase
 .from("company_invites")
-.select(`
-id,
-email,
-role,
-token,
-companies(name)
-`)
+.select("*")
 .eq("id", id)
 .single();
 
@@ -61,10 +57,21 @@ return NextResponse.json(
 
 }
 
+
+/* GET COMPANY */
+
+const { data: company } = await supabase
+.from("companies")
+.select("name")
+.eq("id", invite.company_id)
+.single();
+
+
 /* INVITE LINK */
 
 const inviteUrl =
 `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${invite.token}`;
+
 
 /* SEND EMAIL */
 
@@ -74,13 +81,13 @@ from: "Stated <hello@stated.in>",
 
 to: invite.email,
 
-subject: `${invite.companies?.name || "Company"} invited you to manage their profile on Stated`,
+subject: `${company?.name || "Company"} invited you to manage their profile on Stated`,
 
 html: `
 <h2>You’ve been invited</h2>
 
 <p>
-<strong>${invite.companies?.name || "A company"}</strong>
+<strong>${company?.name || "A company"}</strong>
 invited you to help manage their profile on <strong>Stated</strong>.
 </p>
 
