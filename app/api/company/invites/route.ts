@@ -11,29 +11,32 @@ if(!user){
 return NextResponse.json({ invites:[] });
 }
 
-
-/* GET COMPANY */
+/* FIND COMPANY */
 
 const { data:company } = await supabase
 .from("companies")
 .select("id")
-.eq("owner_id",user.id)   // ✅ FIXED COLUMN
+.eq("owner_id",user.id)
 .maybeSingle();
 
 if(!company){
 return NextResponse.json({ invites:[] });
 }
 
+/* GET ALL INVITES */
 
-/* GET INVITES */
-
-const { data } = await supabase
+const { data, error } = await supabase
 .from("company_invites")
 .select("*")
 .eq("company_id",company.id)
-.eq("status","pending")
 .order("created_at",{ ascending:false });
 
-return NextResponse.json({ invites:data || [] });
+if(error){
+return NextResponse.json({ invites:[] });
+}
 
-        }
+return NextResponse.json({
+invites: data || []
+});
+
+}
