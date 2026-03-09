@@ -33,7 +33,7 @@ return NextResponse.json(
 const { data:company } = await supabase
 .from("companies")
 .select("id,name,member_limit")
-.eq("owner_id",user.id)   // ✅ CORRECT COLUMN
+.eq("owner_id",user.id)
 .maybeSingle();
 
 if(!company){
@@ -82,9 +82,15 @@ return NextResponse.json(
 const token = crypto.randomUUID();
 
 
+/* ---------------- EXPIRE AFTER 7 DAYS ---------------- */
+
+const expiresAt = new Date();
+expiresAt.setDate(expiresAt.getDate() + 7);
+
+
 /* ---------------- CREATE INVITE ---------------- */
 
-await supabase
+const { error:insertError } = await supabase
 .from("company_invites")
 .insert({
 company_id:company.id,
@@ -92,8 +98,16 @@ email,
 role,
 token,
 invited_by_user_id:user.id,
-status:"pending"
+status:"pending",
+expires_at:expiresAt
 });
+
+if(insertError){
+return NextResponse.json(
+{ error:insertError.message },
+{ status:500 }
+);
+}
 
 
 /* ---------------- INVITE LINK ---------------- */
