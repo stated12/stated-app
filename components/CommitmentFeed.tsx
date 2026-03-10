@@ -51,6 +51,7 @@ export default function CommitmentFeed({
   endpoint: string;
   showFilters?: boolean;
 }) {
+
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,86 +68,95 @@ export default function CommitmentFeed({
     "Health",
     "Finance",
     "Business",
-    "Product",
-    "Growth",
-    "Hiring",
     "Marketing",
+    "Sales",
     "Operations",
-    "Revenue",
+    "Product",
+    "Strategic",
+    "Announcement",
+    "Other"
   ];
 
   useEffect(() => {
-    loadInitial();
+    resetFeed();
   }, [activeTab, category]);
 
+  function resetFeed() {
+    setCommitments([]);
+    setCursor(null);
+    setHasMore(true);
+    loadInitial();
+  }
+
   async function loadInitial() {
-    try {
-      const query = new URLSearchParams();
-      query.append("type", activeTab);
-      if (category) query.append("category", category);
 
-      const res = await fetch(`${endpoint}?${query.toString()}`);
+    const query = new URLSearchParams();
+    query.append("type", activeTab);
 
-      if (!res.ok) {
-        console.error("Feed fetch failed");
-        return;
-      }
+    if (category) query.append("category", category);
 
-      const data = await res.json();
+    const res = await fetch(`${endpoint}?${query.toString()}`);
 
-      const safeData = Array.isArray(data) ? data : [];
+    if (!res.ok) return;
 
-      setCommitments(safeData);
+    const data = await res.json();
 
-      setCursor(
-        safeData.length
-          ? safeData[safeData.length - 1]?.created_at
-          : null
-      );
+    const safeData = Array.isArray(data) ? data : [];
 
-      setHasMore(safeData.length === 25);
-    } catch (err) {
-      console.error("Feed load error:", err);
-    }
+    setCommitments(safeData);
+
+    setCursor(
+      safeData.length
+        ? safeData[safeData.length - 1].created_at
+        : null
+    );
+
+    setHasMore(safeData.length === 25);
   }
 
   async function loadMore() {
+
     if (!cursor || !hasMore) return;
 
     setLoading(true);
 
-    try {
-      const query = new URLSearchParams();
-      query.append("type", activeTab);
-      query.append("cursor", cursor);
-      if (category) query.append("category", category);
+    const query = new URLSearchParams();
+    query.append("type", activeTab);
+    query.append("cursor", cursor);
 
-      const res = await fetch(`${endpoint}?${query.toString()}`);
-      const data = await res.json();
+    if (category) query.append("category", category);
 
-      const safeData = Array.isArray(data) ? data : [];
+    const res = await fetch(`${endpoint}?${query.toString()}`);
 
-      setCommitments((prev) => [...prev, ...safeData]);
+    const data = await res.json();
 
-      if (safeData.length > 0) {
-        setCursor(safeData[safeData.length - 1].created_at);
-      }
+    const safeData = Array.isArray(data) ? data : [];
 
-      if (safeData.length < 25) {
-        setHasMore(false);
-      }
-    } catch (err) {
-      console.error("Load more error:", err);
+    const unique = safeData.filter(
+      (item) => !commitments.some((c) => c.id === item.id)
+    );
+
+    setCommitments((prev) => [...prev, ...unique]);
+
+    if (unique.length > 0) {
+      setCursor(unique[unique.length - 1].created_at);
+    }
+
+    if (unique.length < 25) {
+      setHasMore(false);
     }
 
     setLoading(false);
   }
 
   return (
+
     <div className="max-w-3xl mx-auto space-y-6">
 
       {showFilters && (
+
         <div className="flex justify-between items-center">
+
           <div className="flex gap-4">
 
             <button
@@ -178,19 +188,25 @@ export default function CommitmentFeed({
             onChange={(e) => setCategory(e.target.value)}
             className="border rounded px-3 py-2"
           >
+
             {categories.map((cat) => (
+
               <option key={cat} value={cat}>
                 {cat || "All Categories"}
               </option>
+
             ))}
+
           </select>
 
         </div>
+
       )}
 
       <div className="space-y-4">
 
         {commitments.map((c) => {
+
           const identity = c.identity ?? {};
 
           const avatar =
@@ -208,9 +224,10 @@ export default function CommitmentFeed({
               : `/u/${identity.username}`;
 
           return (
+
             <div
               key={c.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5"
             >
 
               <ViewTracker
@@ -231,6 +248,7 @@ export default function CommitmentFeed({
                 </Link>
 
                 <div>
+
                   <Link
                     href={profileLink}
                     className="font-medium"
@@ -244,14 +262,17 @@ export default function CommitmentFeed({
                     @{identity.username || "user"} ·{" "}
                     {timeAgo(c.created_at)}
                   </div>
+
                 </div>
 
               </div>
 
               {c.category && (
+
                 <div className="text-xs text-blue-600 mb-2">
                   {c.category}
                 </div>
+
               )}
 
               <div className="mb-3 whitespace-pre-wrap text-gray-800">
@@ -263,12 +284,15 @@ export default function CommitmentFeed({
               </div>
 
             </div>
+
           );
+
         })}
 
       </div>
 
       {hasMore && (
+
         <div className="text-center">
 
           <button
@@ -276,12 +300,17 @@ export default function CommitmentFeed({
             disabled={loading}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg"
           >
+
             {loading ? "Loading..." : "Load More"}
+
           </button>
 
         </div>
+
       )}
 
     </div>
+
   );
+
 }
