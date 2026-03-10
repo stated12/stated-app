@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+
   const router = useRouter();
   const supabase = createClient();
 
@@ -21,18 +22,55 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const latestCheck = useRef("");
+
+  const reservedUsernames = [
+    "admin",
+    "login",
+    "signup",
+    "dashboard",
+    "api",
+    "support",
+    "billing",
+    "settings",
+    "stated",
+    "company",
+    "commitments",
+  ];
+
+  /* ---------------- PASSWORD VALIDATION ---------------- */
+
+  function isValidPassword(password: string) {
+    const minLength = password.length >= 8;
+    const hasNumberOrSpecial = /[0-9!@#$%^&*(),.?":{}|<>]/.test(password);
+    return minLength && hasNumberOrSpecial;
+  }
+
   /* ---------------- USERNAME CHECK ---------------- */
 
   useEffect(() => {
-    if (username.length < 3 || username.length > 20) {
+
+    const lower = username.toLowerCase();
+
+    if (
+      lower.length < 3 ||
+      lower.length > 20 ||
+      reservedUsernames.includes(lower)
+    ) {
       setUsernameStatus("idle");
       return;
     }
 
-    const checkUsername = async () => {
-      setUsernameStatus("checking");
+    if (!/^[a-z][a-z0-9_]{2,19}$/.test(lower)) {
+      setUsernameStatus("idle");
+      return;
+    }
 
-      const lower = username.toLowerCase();
+    latestCheck.current = lower;
+
+    const checkUsername = async () => {
+
+      setUsernameStatus("checking");
 
       const { data: profileMatch } = await supabase
         .from("profiles")
@@ -46,6 +84,8 @@ export default function SignupPage() {
         .eq("username", lower)
         .maybeSingle();
 
+      if (latestCheck.current !== lower) return;
+
       if (profileMatch || companyMatch) {
         setUsernameStatus("taken");
       } else {
@@ -55,12 +95,15 @@ export default function SignupPage() {
 
     const timeout = setTimeout(checkUsername, 400);
     return () => clearTimeout(timeout);
+
   }, [username]);
 
   /* ---------------- SIGNUP ---------------- */
 
   async function handleSignup(e: React.FormEvent) {
+
     e.preventDefault();
+
     if (loading) return;
 
     setError("");
@@ -70,8 +113,10 @@ export default function SignupPage() {
       return;
     }
 
-    if (username.length < 3 || username.length > 20) {
-      setError("Username must be 3–20 characters");
+    if (!isValidPassword(password)) {
+      setError(
+        "Password must be at least 8 characters and include a number or special character."
+      );
       return;
     }
 
@@ -80,7 +125,9 @@ export default function SignupPage() {
     const lower = username.toLowerCase();
 
     try {
-      // 1️⃣ Create Auth User
+
+      /* ---------- CREATE AUTH USER ---------- */
+
       const { data: authData, error: authError } =
         await supabase.auth.signUp({
           email,
@@ -101,7 +148,8 @@ export default function SignupPage() {
         return;
       }
 
-      // 🔥 IMPORTANT: ensure session is ready (fixes RLS failure)
+      /* ---------- ENSURE SESSION ---------- */
+
       const { data: sessionData } =
         await supabase.auth.getSession();
 
@@ -111,14 +159,15 @@ export default function SignupPage() {
         return;
       }
 
-      // 2️⃣ Insert Profile
+      /* ---------- CREATE PROFILE ---------- */
+
       const { error: profileError } =
         await supabase.from("profiles").insert({
           id: user.id,
           username: lower,
           display_name: username,
           account_type: accountType,
-          credits: 2,
+          credits: 5,
           plan_key: "free",
         });
 
@@ -128,8 +177,10 @@ export default function SignupPage() {
         return;
       }
 
-      // 3️⃣ Company Setup
+      /* ---------- COMPANY SETUP ---------- */
+
       if (accountType === "company") {
+
         const { data: company, error: companyError } =
           await supabase
             .from("companies")
@@ -138,7 +189,7 @@ export default function SignupPage() {
               name: username,
               owner_id: user.id,
               plan_key: "free",
-              credits: 2,
+              credits: 5,
               member_limit: 2,
             })
             .select()
@@ -150,11 +201,18 @@ export default function SignupPage() {
           return;
         }
 
-        await supabase.from("company_members").insert({
-          company_id: company.id,
-          user_id: user.id,
-          role: "owner",
-        });
+        const { error: membershipError } =
+          await supabase.from("company_members").insert({
+            company_id: company.id,
+            user_id: user.id,
+            role: "owner",
+          });
+
+        if (membershipError) {
+          setError("Could not create company membership.");
+          setLoading(false);
+          return;
+        }
 
         router.push("/dashboard/company");
         return;
@@ -162,19 +220,25 @@ export default function SignupPage() {
 
       router.push("/dashboard");
 
-    } catch (err) {
+    } catch {
+
       setError("Unexpected error. Please try again.");
+
     }
 
     setLoading(false);
+
   }
 
   /* ---------------- UI ---------------- */
 
   return (
     <div style={styles.container}>
+
       <form onSubmit={handleSignup} style={styles.card}>
+
         <div style={styles.brand}>Stated</div>
+
         <div style={styles.tagline}>
           Make commitments. Stay accountable. Build trust publicly.
         </div>
@@ -206,13 +270,17 @@ export default function SignupPage() {
         </div>
 
         <div style={styles.usernameStatus}>
+
           {usernameStatus === "checking" && "Checking..."}
+
           {usernameStatus === "available" && (
             <span style={{ color: "green" }}>✓ Available</span>
           )}
+
           {usernameStatus === "taken" && (
             <span style={{ color: "red" }}>✗ Already taken</span>
           )}
+
         </div>
 
         <input
@@ -228,13 +296,14 @@ export default function SignupPage() {
           type="password"
           placeholder="Password"
           required
-          minLength={6}
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={styles.input}
         />
 
         <div style={styles.accountTypeContainer}>
+
           <button
             type="button"
             onClick={() => setAccountType("individual")}
@@ -262,6 +331,7 @@ export default function SignupPage() {
           >
             Company
           </button>
+
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -283,10 +353,14 @@ export default function SignupPage() {
             Login
           </span>
         </div>
+
       </form>
+
     </div>
   );
 }
+
+/* ---------------- STYLES ---------------- */
 
 const styles: any = {
   container: {
