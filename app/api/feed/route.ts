@@ -10,12 +10,15 @@ function getSupabase() {
 
 export async function GET(request: Request) {
   try {
+
     const { searchParams } = new URL(request.url);
 
     const type = searchParams.get("type") || "latest";
     const category = searchParams.get("category");
     const cursor = searchParams.get("cursor");
     const searchQuery = searchParams.get("q");
+    const userHandle = searchParams.get("user");
+    const companyHandle = searchParams.get("company");
 
     const supabase = getSupabase();
 
@@ -24,19 +27,64 @@ export async function GET(request: Request) {
       .select("*")
       .eq("status", "active")
       .eq("visibility", "public")
-      .limit(25)
-      .order("created_at", { ascending: false });
+      .limit(25);
+
+    /* ---------- ORDERING ---------- */
+
+    if (type === "latest") {
+      query = query.order("created_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    /* ---------- CATEGORY FILTER ---------- */
 
     if (category) {
       query = query.eq("category", category);
     }
 
+    /* ---------- CURSOR PAGINATION ---------- */
+
     if (cursor) {
       query = query.lt("created_at", cursor);
     }
 
+    /* ---------- SEARCH ---------- */
+
     if (searchQuery) {
       query = query.ilike("text", `%${searchQuery}%`);
+    }
+
+    /* ---------- USER PROFILE FILTER ---------- */
+
+    if (userHandle) {
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", userHandle)
+        .maybeSingle();
+
+      if (profile) {
+        query = query.eq("user_id", profile.id);
+      }
+
+    }
+
+    /* ---------- COMPANY FILTER ---------- */
+
+    if (companyHandle) {
+
+      const { data: companyRow } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("username", companyHandle)
+        .maybeSingle();
+
+      if (companyRow) {
+        query = query.eq("company_id", companyRow.id);
+      }
+
     }
 
     const { data: commitments, error } = await query;
@@ -59,9 +107,7 @@ export async function GET(request: Request) {
 
     const commitmentIds = commitments.map((c: any) => c.id);
 
-    // -----------------------------
-    // fetch profiles
-    // -----------------------------
+    /* ---------- FETCH PROFILES ---------- */
 
     const { data: profiles } = await supabase
       .from("profiles")
@@ -69,13 +115,12 @@ export async function GET(request: Request) {
       .in("id", userIds);
 
     const profileMap: any = {};
+
     profiles?.forEach((p: any) => {
       profileMap[p.id] = p;
     });
 
-    // -----------------------------
-    // fetch companies
-    // -----------------------------
+    /* ---------- FETCH COMPANIES ---------- */
 
     const { data: companies } = await supabase
       .from("companies")
@@ -83,13 +128,12 @@ export async function GET(request: Request) {
       .in("id", companyIds);
 
     const companyMap: any = {};
+
     companies?.forEach((c: any) => {
       companyMap[c.id] = c;
     });
 
-    // -----------------------------
-    // fetch view counts
-    // -----------------------------
+    /* ---------- FETCH VIEW COUNTS ---------- */
 
     const { data: viewRows } = await supabase
       .from("commitment_views")
@@ -103,14 +147,14 @@ export async function GET(request: Request) {
         (viewCount[v.commitment_id] || 0) + 1;
     });
 
-    // -----------------------------
-    // build feed
-    // -----------------------------
+    /* ---------- BUILD FEED ---------- */
 
-    const feed = commitments.map((c: any) => {
+    let feed = commitments.map((c: any) => {
+
       let identity: any = null;
 
       if (c.company_id) {
+
         const company = companyMap[c.company_id];
 
         identity = {
@@ -119,15 +163,19 @@ export async function GET(request: Request) {
           avatar_url: company?.logo_url || null,
           type: "company",
         };
+
       } else {
+
         const profile = profileMap[c.user_id];
 
         identity = {
           username: profile?.username || "user",
-          display_name: profile?.display_name || profile?.username || "User",
+          display_name:
+            profile?.display_name || profile?.username || "User",
           avatar_url: profile?.avatar_url || null,
           type: "user",
         };
+
       }
 
       return {
@@ -138,12 +186,22 @@ export async function GET(request: Request) {
         views: viewCount[c.id] || 0,
         identity,
       };
+
     });
 
+    /* ---------- TRENDING SORT ---------- */
+
+    if (type === "trending") {
+      feed.sort((a, b) => (b.views || 0) - (a.views || 0));
+    }
+
     return NextResponse.json(feed);
+
   } catch (err: any) {
+
     return NextResponse.json({
       error: err.message,
     });
+
   }
 }
