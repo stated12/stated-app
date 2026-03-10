@@ -15,6 +15,10 @@ export default function CompleteCommitmentPage() {
 
   const [commitment, setCommitment] = useState<any>(null);
   const [note, setNote] = useState("");
+  const [proofText, setProofText] = useState("");
+  const [proofLink, setProofLink] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,6 +57,26 @@ export default function CompleteCommitmentPage() {
     setCommitment(data);
   }
 
+  async function uploadProofImage(userId: string) {
+
+    if (!imageFile) return null;
+
+    const fileExt = imageFile.name.split(".").pop();
+    const filePath = `${userId}/${commitmentId}_${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from("commitment_proofs")
+      .upload(filePath, imageFile);
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from("commitment_proofs")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  }
+
   async function handleComplete() {
 
     setError("");
@@ -66,7 +90,24 @@ export default function CompleteCommitmentPage() {
 
       if (!user) throw new Error("Not authenticated");
 
-      // 1️⃣ Update Status
+      let imageUrl = null;
+
+      if (imageFile) {
+        imageUrl = await uploadProofImage(user.id);
+      }
+
+      const proofParts = [];
+
+      if (note.trim()) proofParts.push(note);
+      if (proofText.trim()) proofParts.push(`Proof: ${proofText}`);
+      if (proofLink.trim()) proofParts.push(`Link: ${proofLink}`);
+      if (imageUrl) proofParts.push(`Image: ${imageUrl}`);
+
+      const completionText =
+        proofParts.length > 0
+          ? `Commitment completed — ${proofParts.join(" | ")}`
+          : "Commitment completed";
+
       const { error: updateError } = await supabase
         .from("commitments")
         .update({
@@ -79,12 +120,6 @@ export default function CompleteCommitmentPage() {
 
       if (updateError) throw updateError;
 
-      // 2️⃣ Log Update Entry
-      const completionText =
-        note.trim()
-          ? `Commitment completed: ${note}`
-          : "Commitment completed";
-
       const { error: logError } = await supabase
         .from("commitment_updates")
         .insert({
@@ -95,7 +130,6 @@ export default function CompleteCommitmentPage() {
 
       if (logError) throw logError;
 
-      // 3️⃣ Insert Notification (NEW)
       await supabase.from("notifications").insert({
         user_id: user.id,
         type: "completion",
@@ -116,7 +150,6 @@ export default function CompleteCommitmentPage() {
       setLoading(false);
 
     }
-
   }
 
   if (error && !commitment) {
@@ -155,12 +188,56 @@ export default function CompleteCommitmentPage() {
           {commitment.text}
         </div>
 
+        {/* Completion Note */}
+
         <textarea
           placeholder="Optional completion note..."
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-3"
+          className="w-full border rounded-lg px-3 py-2 mb-4"
         />
+
+        {/* Proof Section */}
+
+        <div className="border rounded-lg p-4 mb-4 bg-gray-50">
+
+          <div className="font-medium mb-2">
+            Add Proof (Optional)
+          </div>
+
+          <div className="text-sm text-gray-500 mb-3">
+            Adding proof increases credibility.
+          </div>
+
+          {/* Image Upload */}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            className="w-full mb-3"
+          />
+
+          {/* Link */}
+
+          <input
+            type="text"
+            placeholder="Proof link (optional)"
+            value={proofLink}
+            onChange={(e) => setProofLink(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 mb-3"
+          />
+
+          {/* Proof Text */}
+
+          <textarea
+            placeholder="Describe proof (optional)"
+            value={proofText}
+            onChange={(e) => setProofText(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+        </div>
 
         {error && (
           <div className="text-red-500 text-sm mb-3">
@@ -181,5 +258,4 @@ export default function CompleteCommitmentPage() {
     </div>
 
   );
-
-}
+      }
