@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import ViewTracker from "@/components/ViewTracker";
 
 export default function CommitmentClient({ commitmentId }: any) {
 
@@ -23,7 +24,6 @@ if(!commitmentId) return;
 
 loadCommitment();
 loadCurrentUser();
-trackView();
 
 },[commitmentId]);
 
@@ -110,33 +110,6 @@ console.error(err);
 }
 
 setLoading(false);
-
-}
-
-async function trackView(){
-
-try{
-
-const viewedKey = `commitment_view_${commitmentId}`;
-
-if(sessionStorage.getItem(viewedKey)) return;
-
-sessionStorage.setItem(viewedKey,"true");
-
-await fetch("/api/track-view",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-type:"commitment",
-entityId:commitmentId
-})
-});
-
-}catch(e){
-console.error(e);
-}
 
 }
 
@@ -228,6 +201,8 @@ currentUser?.id === commitment.user_id;
 return(
 
 <div className="min-h-screen bg-gray-50 px-4 py-8">
+
+<ViewTracker type="commitment" entityId={commitmentId} />
 
 <div className="max-w-2xl mx-auto space-y-6">
 
@@ -395,4 +370,4 @@ className="bg-white rounded-xl shadow p-4"
 
 );
 
-}
+  }
