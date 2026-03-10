@@ -6,87 +6,123 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
 
-  const supabase = await createClient();
+const supabase = await createClient();
 
-  /* -----------------------------
-     FETCH LATEST COMMITMENTS
-  ----------------------------- */
+/* -----------------------------
+FETCH LATEST COMMITMENTS
+----------------------------- */
 
-  const { data: commitmentsData } = await supabase
-    .from("commitments")
-    .select(`
-      id,
-      text,
-      created_at,
-      user_id,
-      company_id,
-      profiles:user_id (
-        username,
-        display_name,
-        avatar_url
-      ),
-      companies:company_id (
-        username,
-        name,
-        logo_url
-      )
-    `)
-    .eq("status","active")
-    .eq("visibility","public")
-    .order("created_at",{ ascending:false })
-    .limit(6);
+const { data: commitmentsData } = await supabase
+.from("commitments")
+.select("id,text,created_at,user_id,company_id")
+.eq("status","active")
+.eq("visibility","public")
+.order("created_at",{ ascending:false })
+.limit(6);
 
-  /* -----------------------------
-     FETCH VIEW COUNTS
-  ----------------------------- */
+/* -----------------------------
+IDENTITY LOOKUPS
+----------------------------- */
 
-  const commitmentIds =
-    commitmentsData?.map((c:any)=>c.id) || [];
+const userIds = [
+...new Set(commitmentsData?.map((c:any)=>c.user_id).filter(Boolean))
+];
 
-  let viewCount:any = {};
+const companyIds = [
+...new Set(commitmentsData?.map((c:any)=>c.company_id).filter(Boolean))
+];
 
-  if(commitmentIds.length){
+/* FETCH PROFILES */
 
-    const { data:viewRows } = await supabase
-      .from("commitment_views")
-      .select("commitment_id")
-      .in("commitment_id",commitmentIds);
+const { data: profiles } = await supabase
+.from("profiles")
+.select("id,username,display_name,avatar_url")
+.in("id",userIds);
 
-    viewRows?.forEach((v:any)=>{
-      viewCount[v.commitment_id] =
-        (viewCount[v.commitment_id] || 0) + 1;
-    });
+/* FETCH COMPANIES */
 
-  }
+const { data: companies } = await supabase
+.from("companies")
+.select("id,username,name,logo_url")
+.in("id",companyIds);
 
-  /* -----------------------------
-     NORMALIZE DATA
-  ----------------------------- */
+/* MAP IDENTITIES */
 
-  const commitments =
-    commitmentsData?.map((c:any)=>{
+const profileMap:any = {};
+profiles?.forEach((p:any)=>{
+profileMap[p.id] = p;
+});
 
-      const isCompany = !!c.company_id;
+const companyMap:any = {};
+companies?.forEach((c:any)=>{
+companyMap[c.id] = c;
+});
 
-      return{
-        id:c.id,
-        text:c.text,
-        views:viewCount[c.id] || 0,
-        username:isCompany
-          ? c.companies?.username
-          : c.profiles?.username,
-        display_name:isCompany
-          ? c.companies?.name
-          : c.profiles?.display_name,
-        avatar:isCompany
-          ? c.companies?.logo_url
-          : c.profiles?.avatar_url,
-        type:isCompany ? "company":"user"
-      }
+/* -----------------------------
+FETCH VIEW COUNTS
+----------------------------- */
 
-    }) || [];
+const commitmentIds = commitmentsData?.map((c:any)=>c.id) || [];
 
-  return (
+let viewCount:any = {};
+
+if(commitmentIds.length){
+
+const { data:viewRows } = await supabase
+.from("commitment_views")
+.select("commitment_id")
+.in("commitment_id",commitmentIds);
+
+viewRows?.forEach((v:any)=>{
+viewCount[v.commitment_id] =
+(viewCount[v.commitment_id] || 0) + 1;
+});
+
+}
+
+/* -----------------------------
+NORMALIZE DATA
+----------------------------- */
+
+const commitments =
+commitmentsData?.map((c:any)=>{
+
+let identity:any = null;
+
+if(c.company_id){
+
+const company = companyMap[c.company_id];
+
+identity = {
+username: company?.username,
+display_name: company?.name,
+avatar: company?.logo_url,
+type:"company"
+};
+
+}else{
+
+const profile = profileMap[c.user_id];
+
+identity = {
+username: profile?.username,
+display_name: profile?.display_name || profile?.username,
+avatar: profile?.avatar_url,
+type:"user"
+};
+
+}
+
+return{
+id:c.id,
+text:c.text,
+views:viewCount[c.id] || 0,
+...identity
+};
+
+}) || [];
+
+return(
 
 <div className="min-h-screen flex flex-col">
 
