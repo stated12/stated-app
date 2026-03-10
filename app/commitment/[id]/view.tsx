@@ -12,7 +12,7 @@ const [commitment,setCommitment] = useState<any>(null);
 const [updates,setUpdates] = useState<any[]>([]);
 const [identity,setIdentity] = useState<any>(null);
 const [identityType,setIdentityType] = useState<"user"|"company">("user");
-const [viewCount,setViewCount] = useState(0);
+const [viewCount,setViewCount] = useState<number>(0);
 
 const [currentUser,setCurrentUser] = useState<any>(null);
 const [loading,setLoading] = useState(true);
@@ -29,21 +29,29 @@ trackView();
 
 async function loadCurrentUser(){
 
+try{
+
 const {data} = await supabase.auth.getUser();
-setCurrentUser(data?.user);
+setCurrentUser(data?.user || null);
+
+}catch(e){
+console.error(e);
+}
 
 }
 
 async function loadCommitment(){
 
-const {data:commitmentData} =
+try{
+
+const {data:commitmentData,error} =
 await supabase
 .from("commitments")
 .select("*")
 .eq("id",commitmentId)
 .single();
 
-if(!commitmentData){
+if(error || !commitmentData){
 setLoading(false);
 return;
 }
@@ -95,11 +103,25 @@ await supabase
 
 setViewCount(count || 0);
 
+}catch(err){
+
+console.error(err);
+
+}
+
 setLoading(false);
 
 }
 
 async function trackView(){
+
+try{
+
+const viewedKey = `commitment_view_${commitmentId}`;
+
+if(sessionStorage.getItem(viewedKey)) return;
+
+sessionStorage.setItem(viewedKey,"true");
 
 await fetch("/api/track-view",{
 method:"POST",
@@ -111,6 +133,10 @@ type:"commitment",
 entityId:commitmentId
 })
 });
+
+}catch(e){
+console.error(e);
+}
 
 }
 
@@ -133,13 +159,15 @@ identity?.username ||
 
 async function share(){
 
+try{
+
 const url =
 `${window.location.origin}/commitment/${commitmentId}`;
 
 const text =
 `I made a public commitment on Stated:
 
-"${commitment.text}"
+"${commitment?.text}"
 
 Track progress:
 ${url}`;
@@ -159,11 +187,17 @@ alert("Commitment link copied");
 
 }
 
+}catch(err){
+
+console.error(err);
+
+}
+
 }
 
 function statusBadge(){
 
-const status = commitment.status;
+const status = commitment?.status;
 
 if(status==="active") return "🟢 ACTIVE";
 if(status==="paused") return "🟡 PAUSED";
@@ -215,6 +249,8 @@ Stated
 
 </div>
 
+{identity && (
+
 <Link
 href={
 identityType==="company"
@@ -242,6 +278,8 @@ className="w-10 h-10 rounded-full object-cover"
 </div>
 
 </Link>
+
+)}
 
 <div className="bg-white rounded-xl shadow p-6 space-y-3">
 
