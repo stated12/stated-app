@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 function getOrCreateSessionId() {
+
   const existing = document.cookie
     .split("; ")
     .find((row) => row.startsWith("stated_sid="))
@@ -26,43 +27,56 @@ export default function ViewTracker({
   type: "profile" | "commitment";
   entityId: string;
 }) {
+
   const ref = useRef<HTMLDivElement | null>(null);
   const [hasTracked, setHasTracked] = useState(false);
 
   useEffect(() => {
-    if (!ref.current || hasTracked) return;
+
+    const element = ref.current;
+    if (!element) return;
+    if (hasTracked) return;
 
     const observer = new IntersectionObserver(
+
       (entries) => {
+
         const entry = entries[0];
 
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          const sessionId = getOrCreateSessionId();
+        if (!entry.isIntersecting) return;
 
-          fetch("/api/track-view", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              type,
-              entityId,
-              sessionId,
-            }),
-          });
+        if (entry.intersectionRatio < 0.5) return;
 
-          setHasTracked(true);
-          observer.disconnect();
-        }
+        if (hasTracked) return;
+
+        const sessionId = getOrCreateSessionId();
+
+        fetch("/api/track-view", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type,
+            entityId,
+            sessionId,
+          }),
+        });
+
+        setHasTracked(true);
+        observer.disconnect();
       },
+
       {
         threshold: 0.5,
       }
     );
 
-    observer.observe(ref.current);
+    observer.observe(element);
 
     return () => observer.disconnect();
+
   }, [type, entityId, hasTracked]);
 
   return <div ref={ref} />;
