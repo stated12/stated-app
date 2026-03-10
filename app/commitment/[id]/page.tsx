@@ -26,18 +26,20 @@ export async function generateMetadata({ params }: any) {
   if (!data) {
     return {
       title: "Commitment on Stated",
-      description: "Public commitments and accountability"
+      description: "Public commitments and accountability",
     };
   }
 
   const isCompany = !!data.company_id;
 
-  const name =
-    isCompany
-      ? data.companies?.name
-      : data.profiles?.display_name;
+  const profile: any = data.profiles;
+  const company: any = data.companies;
 
-  const title = `${name} on Stated`;
+  const name = isCompany
+    ? company?.name
+    : profile?.display_name || profile?.username;
+
+  const title = `${name || "User"} on Stated`;
 
   const description =
     data.text?.slice(0, 140) ||
@@ -55,21 +57,22 @@ export async function generateMetadata({ params }: any) {
       url,
       siteName: "Stated",
       type: "article",
+
       images: [
         {
           url: "https://app.stated.in/og-default.png",
           width: 1200,
-          height: 630
-        }
-      ]
+          height: 630,
+        },
+      ],
     },
 
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["https://app.stated.in/og-default.png"]
-    }
+      images: ["https://app.stated.in/og-default.png"],
+    },
   };
 }
 
