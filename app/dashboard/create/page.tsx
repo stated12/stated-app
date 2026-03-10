@@ -6,23 +6,21 @@ import { useRouter } from "next/navigation";
 
 export default function CreateCommitmentPage() {
 
-const supabase = createClient()
-const router = useRouter()
+const supabase = createClient();
+const router = useRouter();
 
-const [text,setText] = useState("")
-const [category,setCategory] = useState("")
-const [deadline,setDeadline] = useState("")
-const [customDate,setCustomDate] = useState("")
-const [proofLink,setProofLink] = useState("")
-const [proofImage,setProofImage] = useState<File | null>(null)
+const [text,setText] = useState("");
+const [category,setCategory] = useState("");
+const [deadline,setDeadline] = useState("");
+const [customDate,setCustomDate] = useState("");
 
-const [profile,setProfile] = useState<any>(null)
-const [company,setCompany] = useState<any>(null)
+const [profile,setProfile] = useState<any>(null);
+const [company,setCompany] = useState<any>(null);
 
-const [loading,setLoading] = useState(false)
-const [initialLoading,setInitialLoading] = useState(true)
+const [loading,setLoading] = useState(false);
+const [initialLoading,setInitialLoading] = useState(true);
 
-/* CATEGORIES */
+/* ---------------- CATEGORIES ---------------- */
 
 const individualCategories = [
 "Fitness",
@@ -31,7 +29,7 @@ const individualCategories = [
 "Health",
 "Finance",
 "Business"
-]
+];
 
 const companyCategories = [
 "Marketing",
@@ -41,23 +39,23 @@ const companyCategories = [
 "Strategic",
 "Announcement",
 "Other"
-]
+];
 
-const categories = company ? companyCategories : individualCategories
+const categories = company ? companyCategories : individualCategories;
 
-/* LOAD USER */
+/* ---------------- LOAD USER ---------------- */
 
 useEffect(()=>{
-loadUser()
-},[])
+loadUser();
+},[]);
 
 async function loadUser(){
 
-const {data:{user}} = await supabase.auth.getUser()
+const {data:{user}} = await supabase.auth.getUser();
 
 if(!user){
-router.push("/login")
-return
+router.push("/login");
+return;
 }
 
 /* PROFILE */
@@ -66,9 +64,9 @@ const {data:profileData} = await supabase
 .from("profiles")
 .select("*")
 .eq("id",user.id)
-.single()
+.single();
 
-setProfile(profileData)
+setProfile(profileData);
 
 /* COMPANY MEMBERSHIP */
 
@@ -76,7 +74,7 @@ const {data:membership} = await supabase
 .from("company_members")
 .select("company_id")
 .eq("user_id",user.id)
-.maybeSingle()
+.maybeSingle();
 
 if(membership){
 
@@ -84,87 +82,61 @@ const {data:companyData} = await supabase
 .from("companies")
 .select("*")
 .eq("id",membership.company_id)
-.single()
+.single();
 
-setCompany(companyData)
-
-}
-
-setInitialLoading(false)
+setCompany(companyData);
 
 }
 
-/* DEADLINE */
+setInitialLoading(false);
+
+}
+
+/* ---------------- DEADLINE ---------------- */
 
 function calculateDeadline(){
 
-if(deadline==="custom") return customDate
+if(deadline==="custom") return customDate;
 
-const date = new Date()
+const date = new Date();
 
-if(deadline==="1m") date.setMonth(date.getMonth()+1)
-if(deadline==="3m") date.setMonth(date.getMonth()+3)
-if(deadline==="6m") date.setMonth(date.getMonth()+6)
-if(deadline==="1y") date.setFullYear(date.getFullYear()+1)
+if(deadline==="1m") date.setMonth(date.getMonth()+1);
+if(deadline==="3m") date.setMonth(date.getMonth()+3);
+if(deadline==="6m") date.setMonth(date.getMonth()+6);
+if(deadline==="1y") date.setFullYear(date.getFullYear()+1);
 
-return date.toISOString()
-
-}
-
-/* IMAGE UPLOAD */
-
-async function uploadImage(commitmentId:string){
-
-if(!proofImage) return null
-
-const filePath = `${commitmentId}/${Date.now()}_${proofImage.name}`
-
-const {error} = await supabase.storage
-.from("commitment-proofs")
-.upload(filePath,proofImage)
-
-if(error){
-alert(error.message)
-return null
-}
-
-const {data} = supabase.storage
-.from("commitment-proofs")
-.getPublicUrl(filePath)
-
-return data.publicUrl
+return date.toISOString();
 
 }
 
-/* CREATE COMMITMENT */
+/* ---------------- CREATE COMMITMENT ---------------- */
 
 async function createCommitment(){
 
-if(!text){
-alert("Commitment text required")
-return
+if(!text.trim()){
+alert("Commitment text required");
+return;
 }
 
-setLoading(true)
+setLoading(true);
 
-const {data:{user}} = await supabase.auth.getUser()
+const {data:{user}} = await supabase.auth.getUser();
 
-const targetDate = calculateDeadline()
+const targetDate = calculateDeadline();
 
 let insertData:any = {
-text,
+text:text.trim(),
 category,
 target_date:targetDate,
-status:"active",
-proof_link:proofLink || null
-}
+status:"active"
+};
 
 /* COMPANY POST */
 
 if(company){
 
-insertData.company_id = company.id
-insertData.created_by_user_id = user?.id
+insertData.company_id = company.id;
+insertData.created_by_user_id = user?.id;
 
 }
 
@@ -172,52 +144,41 @@ insertData.created_by_user_id = user?.id
 
 else{
 
-insertData.user_id = user?.id
+insertData.user_id = user?.id;
 
 }
 
-const {data:commitment,error} = await supabase
+const {error} = await supabase
 .from("commitments")
-.insert(insertData)
-.select()
-.single()
+.insert(insertData);
 
-if(error || !commitment){
-alert(error?.message || "Error creating commitment")
-setLoading(false)
-return
+if(error){
+alert(error.message);
+setLoading(false);
+return;
 }
 
-const imageUrl = await uploadImage(commitment.id)
+setLoading(false);
 
-if(imageUrl){
+/* REDIRECT TO FEED */
 
-await supabase
-.from("commitments")
-.update({
-proof_image_url:imageUrl
-})
-.eq("id",commitment.id)
+router.push("/dashboard");
 
 }
 
-setLoading(false)
-
-/* REDIRECT */
-
-router.push(company ? "/dashboard/company" : "/dashboard/my")
-
-}
-
-/* LOADING STATE */
+/* ---------------- LOADING STATE ---------------- */
 
 if(initialLoading){
-return (
+
+return(
 <div className="flex justify-center py-20 text-gray-500">
 Loading...
 </div>
-)
+);
+
 }
+
+/* ---------------- UI ---------------- */
 
 return(
 
@@ -286,25 +247,6 @@ className="w-full border rounded-lg px-4 py-2"
 
 </div>
 
-<input
-type="text"
-placeholder="Proof link (optional)"
-value={proofLink}
-onChange={(e)=>setProofLink(e.target.value)}
-className="w-full border rounded-lg px-4 py-2"
-/>
-
-<input
-type="file"
-accept="image/*"
-onChange={(e)=>setProofImage(e.target.files?.[0] || null)}
-className="w-full"
-/>
-
-<div className="text-xs text-gray-500">
-Adding proof improves credibility
-</div>
-
 <button
 onClick={createCommitment}
 disabled={loading}
@@ -317,6 +259,6 @@ className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full"
 
 </div>
 
-)
+);
 
-}
+  }
