@@ -7,6 +7,7 @@ import Script from "next/script";
 import { createClient } from "@/lib/supabase/client";
 
 export default function UpgradePage() {
+
   const supabase = createClient();
 
   const [currentPlan, setCurrentPlan] = useState<string>("free");
@@ -14,9 +15,11 @@ export default function UpgradePage() {
   const [userType, setUserType] = useState<
     "individual" | "company_member" | "company_owner"
   >("individual");
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
     async function loadData() {
 
       const {
@@ -69,16 +72,19 @@ export default function UpgradePage() {
     }
 
     loadData();
+
   }, []);
 
   async function handlePurchase(planKey: string) {
+
     try {
+
       const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ planKey }),
+        body: JSON.stringify({ planKey })
       });
 
       const data = await res.json();
@@ -100,23 +106,24 @@ export default function UpgradePage() {
         order_id: data.orderId,
 
         handler: async function (response: any) {
+
           await fetch("/api/razorpay/verify-payment", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
             body: JSON.stringify({
               ...response,
-              planKey,
-            }),
+              planKey
+            })
           });
 
           window.location.href = "/dashboard";
         },
 
         theme: {
-          color: "#1E4ED8",
-        },
+          color: "#1E4ED8"
+        }
       };
 
       const razorpay = new (window as any).Razorpay(options);
@@ -133,7 +140,7 @@ export default function UpgradePage() {
     price,
     features,
     planKey,
-    highlight = false,
+    highlight = false
   }: any) {
 
     const isCurrent = currentPlan === planKey;
@@ -144,6 +151,7 @@ export default function UpgradePage() {
           highlight ? "border-2 border-blue-600" : ""
         }`}
       >
+
         {highlight && (
           <div className="text-xs font-semibold text-blue-600 mb-2">
             ⭐ Most Popular
@@ -151,15 +159,21 @@ export default function UpgradePage() {
         )}
 
         <div>
-          <div className="text-lg font-semibold">{title}</div>
 
-          <div className="text-2xl font-bold mt-2">₹{price}</div>
+          <div className="text-xl font-semibold">{title}</div>
+
+          <div className="text-3xl font-bold mt-2">
+            ₹{price}
+          </div>
 
           <ul className="mt-4 space-y-2 text-sm text-gray-600">
+
             {features.map((f: string, i: number) => (
               <li key={i}>• {f}</li>
             ))}
+
           </ul>
+
         </div>
 
         <button
@@ -173,14 +187,18 @@ export default function UpgradePage() {
         >
           {isCurrent ? "Current Plan" : "Choose Plan"}
         </button>
+
       </div>
     );
   }
 
   const isIndividualPaid = currentPlan.startsWith("ind_");
 
+  /* ---------- INDIVIDUAL PLANS ---------- */
+
   const individualPlans = (
     <>
+
       <div className="text-center text-sm text-gray-600 mb-8">
         You currently have <span className="font-semibold">{credits}</span> credits.
       </div>
@@ -194,8 +212,8 @@ export default function UpgradePage() {
           features={[
             "20 credits",
             "Analytics unlocked",
-            "Completion tracking",
-            "Public commitment views",
+            "Up to 5 commitment updates per commitment",
+            "Public commitment views"
           ]}
         />
 
@@ -208,7 +226,8 @@ export default function UpgradePage() {
             "40 credits",
             "Analytics unlocked",
             "PRO badge",
-            "Extended dashboard insights",
+            "Up to 10 commitment updates per commitment",
+            "Extended dashboard insights"
           ]}
         />
 
@@ -220,13 +239,15 @@ export default function UpgradePage() {
             "60 credits",
             "Analytics unlocked",
             "PRO badge",
-            "Completion scoring",
+            "Up to 15 commitment updates per commitment",
+            "Extended dashboard insights"
           ]}
         />
 
       </div>
 
       {isIndividualPaid && (
+
         <div className="mt-16">
 
           <h2 className="text-2xl font-bold text-center mb-8">
@@ -238,10 +259,13 @@ export default function UpgradePage() {
             {[
               { title: "10 Credits", price: 199, key: "pack_10" },
               { title: "25 Credits", price: 399, key: "pack_25" },
-              { title: "50 Credits", price: 699, key: "pack_50" },
+              { title: "50 Credits", price: 699, key: "pack_50" }
             ].map((pack) => (
 
-              <div key={pack.key} className="bg-white rounded-xl shadow p-6 text-center">
+              <div
+                key={pack.key}
+                className="bg-white rounded-xl shadow p-6 text-center"
+              >
 
                 <div className="font-semibold">{pack.title}</div>
 
@@ -261,12 +285,18 @@ export default function UpgradePage() {
             ))}
 
           </div>
+
         </div>
+
       )}
+
     </>
   );
 
+  /* ---------- COMPANY PLANS ---------- */
+
   const companyPlans = (
+
     <div className="grid md:grid-cols-3 gap-8">
 
       <PlanCard
@@ -275,9 +305,9 @@ export default function UpgradePage() {
         planKey="comp_1999"
         features={[
           "25 shared credits",
-          "Up to 10 members",
-          "Company analytics",
-          "Team dashboard",
+          "Up to 5 team members",
+          "Company analytics unlocked",
+          "Up to 5 commitment updates per commitment"
         ]}
       />
 
@@ -288,9 +318,9 @@ export default function UpgradePage() {
         highlight
         features={[
           "50 shared credits",
-          "Up to 15 members",
-          "Company analytics",
-          "Reputation scoring",
+          "Up to 10 team members",
+          "Company analytics unlocked",
+          "Up to 10 commitment updates per commitment"
         ]}
       />
 
@@ -300,9 +330,9 @@ export default function UpgradePage() {
         planKey="comp_4999"
         features={[
           "75 shared credits",
-          "Up to 25 members",
-          "Full analytics suite",
-          "Advanced reporting ready",
+          "Up to 15 team members",
+          "Company analytics unlocked",
+          "Up to 15 commitment updates per commitment"
         ]}
       />
 
@@ -321,16 +351,28 @@ export default function UpgradePage() {
 
             <div className="flex items-center gap-3">
 
-              <Image src="/logo.png" alt="Stated" width={40} height={40} />
+              <Image
+                src="/logo.png"
+                alt="Stated"
+                width={40}
+                height={40}
+              />
 
               <div>
-                <div className="text-2xl font-bold text-blue-600">Stated</div>
-                <div className="text-sm text-gray-500">Upgrade Your Plan</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  Stated
+                </div>
+                <div className="text-sm text-gray-500">
+                  Upgrade Your Plan
+                </div>
               </div>
 
             </div>
 
-            <Link href="/dashboard" className="text-sm text-gray-500 hover:underline">
+            <Link
+              href="/dashboard"
+              className="text-sm text-gray-500 hover:underline"
+            >
               ← Back to Dashboard
             </Link>
 
@@ -343,7 +385,7 @@ export default function UpgradePage() {
             </h1>
 
             <p className="text-gray-600 mt-3">
-              More credits, analytics access, and team scaling.
+              More credits, analytics access, and deeper commitment insights.
             </p>
 
           </div>
@@ -353,10 +395,16 @@ export default function UpgradePage() {
           {userType === "company_owner" && companyPlans}
 
           {userType === "company_member" && (
+
             <div className="text-center text-gray-600">
               Only the company owner can upgrade the company plan.
             </div>
+
           )}
+
+          <div className="text-center text-sm text-gray-600">
+            Need a customized plan? Email <span className="font-medium">hello@stated.in</span> with your requirements.
+          </div>
 
           <div className="text-center text-sm text-gray-500 border-t pt-8">
             Secure payments via Razorpay • One-time payment • Instant activation • No subscription lock-in
