@@ -17,7 +17,6 @@ export default async function HomePage() {
     .select(`
       id,
       text,
-      views,
       created_at,
       user_id,
       company_id,
@@ -32,232 +31,261 @@ export default async function HomePage() {
         logo_url
       )
     `)
-    .order("created_at", { ascending: false })
+    .eq("status","active")
+    .eq("visibility","public")
+    .order("created_at",{ ascending:false })
     .limit(6);
+
+  /* -----------------------------
+     FETCH VIEW COUNTS
+  ----------------------------- */
+
+  const commitmentIds =
+    commitmentsData?.map((c:any)=>c.id) || [];
+
+  let viewCount:any = {};
+
+  if(commitmentIds.length){
+
+    const { data:viewRows } = await supabase
+      .from("commitment_views")
+      .select("commitment_id")
+      .in("commitment_id",commitmentIds);
+
+    viewRows?.forEach((v:any)=>{
+      viewCount[v.commitment_id] =
+        (viewCount[v.commitment_id] || 0) + 1;
+    });
+
+  }
 
   /* -----------------------------
      NORMALIZE DATA
   ----------------------------- */
 
   const commitments =
-    commitmentsData?.map((c: any) => {
+    commitmentsData?.map((c:any)=>{
 
       const isCompany = !!c.company_id;
 
-      return {
-        id: c.id,
-        text: c.text,
-        views: c.views ?? 0,
-        username: isCompany
+      return{
+        id:c.id,
+        text:c.text,
+        views:viewCount[c.id] || 0,
+        username:isCompany
           ? c.companies?.username
           : c.profiles?.username,
-        display_name: isCompany
+        display_name:isCompany
           ? c.companies?.name
           : c.profiles?.display_name,
-        avatar: isCompany
+        avatar:isCompany
           ? c.companies?.logo_url
           : c.profiles?.avatar_url,
-        type: isCompany ? "company" : "user",
-      };
+        type:isCompany ? "company":"user"
+      }
 
     }) || [];
 
   return (
-    <div className="min-h-screen flex flex-col">
 
-      {/* HEADER */}
+<div className="min-h-screen flex flex-col">
 
-      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
+{/* HEADER */}
 
-        <Link href="/explore" className="hover:text-blue-400 transition">
-          Explore
-        </Link>
+<header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
-        <Link href="/login" className="hover:text-blue-400 transition">
-          Login
-        </Link>
+<Link href="/explore" className="hover:text-blue-400 transition">
+Explore
+</Link>
 
-        <Link
-          href="/signup"
-          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Sign up
-        </Link>
+<Link href="/login" className="hover:text-blue-400 transition">
+Login
+</Link>
 
-      </header>
+<Link
+href="/signup"
+className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+>
+Sign up
+</Link>
 
-      {/* HERO */}
+</header>
 
-      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
+{/* HERO */}
 
-        <Image
-          src="/nature-bg.jpg"
-          alt="Background"
-          fill
-          priority
-          className="object-cover -z-10"
-        />
+<section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm -z-10" />
+<Image
+src="/nature-bg.jpg"
+alt="Background"
+fill
+priority
+className="object-cover -z-10"
+/>
 
-        <Image
-          src="/logo.png"
-          alt="Stated Logo"
-          width={180}
-          height={180}
-          className="mb-6"
-        />
+<div className="absolute inset-0 bg-black/60 backdrop-blur-sm -z-10"/>
 
-        <h2 className="text-4xl font-semibold text-blue-400 tracking-wide mb-6">
-          Stated
-        </h2>
+<Image
+src="/logo.png"
+alt="Stated Logo"
+width={180}
+height={180}
+className="mb-6"
+/>
 
-        <h1 className="text-4xl md:text-5xl font-bold leading-snug">
-          Public commitments.
-          <br />
-          Public outcomes.
-        </h1>
+<h2 className="text-4xl font-semibold text-blue-400 tracking-wide mb-6">
+Stated
+</h2>
 
-        <p className="mt-5 text-gray-300 max-w-xl">
-          Build credibility. Track progress. Stay accountable.
-        </p>
+<h1 className="text-4xl md:text-5xl font-bold leading-snug">
+Public commitments.
+<br/>
+Public outcomes.
+</h1>
 
-        {/* SEARCH */}
+<p className="mt-5 text-gray-300 max-w-xl">
+Build credibility. Track progress. Stay accountable.
+</p>
 
-        <form
-          action="/search"
-          method="GET"
-          className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
-        >
+{/* SEARCH */}
 
-          <input
-            type="text"
-            name="q"
-            placeholder="Search commitments, people or companies"
-            className="flex-1 px-4 py-3 text-black outline-none"
-          />
+<form
+action="/search"
+method="GET"
+className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
+>
 
-          <button
-            type="submit"
-            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
-          >
-            Search
-          </button>
+<input
+type="text"
+name="q"
+placeholder="Search commitments, people or companies"
+className="flex-1 px-4 py-3 text-black outline-none"
+/>
 
-        </form>
+<button
+type="submit"
+className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
+>
+Search
+</button>
 
-        {/* CTA */}
+</form>
 
-        <Link
-          href="/signup"
-          className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
-        >
-          Start with 2 Free Credits
-        </Link>
+{/* CTA */}
 
-        <p className="mt-3 text-sm text-gray-300">
-          No credit card required
-        </p>
+<Link
+href="/signup"
+className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
+>
+Start with 5 Free Credits
+</Link>
 
-      </section>
+<p className="mt-3 text-sm text-gray-300">
+2 updates per commitment • Public profile included
+</p>
 
-      {/* RECENT COMMITMENTS */}
+</section>
 
-      <section className="bg-white text-black py-16 px-6">
+{/* RECENT COMMITMENTS */}
 
-        <div className="max-w-5xl mx-auto">
+<section className="bg-white text-black py-16 px-6">
 
-          <h2 className="text-2xl font-semibold mb-10 text-center">
-            Recent Commitments
-          </h2>
+<div className="max-w-5xl mx-auto">
 
-          {commitments.length > 0 ? (
+<h2 className="text-2xl font-semibold mb-10 text-center">
+Recent Commitments
+</h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
+{commitments.length > 0 ? (
 
-              {commitments.map((c: any) => {
+<div className="grid md:grid-cols-2 gap-6">
 
-                const avatar =
-                  c.avatar?.trim()
-                    ? c.avatar
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        c.display_name || "User"
-                      )}&background=2563eb&color=fff`;
+{commitments.map((c:any)=>{
 
-                return (
+const avatar =
+c.avatar?.trim()
+? c.avatar
+: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+c.display_name || "User"
+)}&background=2563eb&color=fff`;
 
-                  <Link
-                    key={c.id}
-                    href={`/commitment/${c.id}`}
-                    className="block bg-gray-100 rounded-xl p-6 hover:bg-gray-200 hover:shadow-md transition"
-                  >
+return(
 
-                    <div className="flex items-start gap-4">
+<Link
+key={c.id}
+href={`/commitment/${c.id}`}
+className="block bg-gray-100 rounded-xl p-6 hover:bg-gray-200 hover:shadow-md transition"
+>
 
-                      <Image
-                        src={avatar}
-                        alt="avatar"
-                        width={50}
-                        height={50}
-                        className="rounded-full"
-                      />
+<div className="flex items-start gap-4">
 
-                      <div className="flex-1">
+<Image
+src={avatar}
+alt="avatar"
+width={50}
+height={50}
+className="rounded-full"
+/>
 
-                        <div className="flex items-center gap-2 font-semibold mb-1">
+<div className="flex-1">
 
-                          {c.display_name}
+<div className="flex items-center gap-2 font-semibold mb-1">
 
-                          {c.type === "company" && (
-                            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                              COMPANY
-                            </span>
-                          )}
+{c.display_name}
 
-                        </div>
+{c.type==="company" && (
+<span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+COMPANY
+</span>
+)}
 
-                        <div className="text-gray-800 mb-2">
-                          {c.text}
-                        </div>
+</div>
 
-                        <div className="text-xs text-gray-500">
-                          👁 {c.views} views
-                        </div>
+<div className="text-gray-800 mb-2">
+{c.text}
+</div>
 
-                      </div>
+<div className="text-xs text-gray-500">
+👁 {c.views} views
+</div>
 
-                    </div>
+</div>
 
-                  </Link>
+</div>
 
-                );
-              })}
+</Link>
 
-            </div>
+)
 
-          ) : (
+})}
 
-            <div className="text-center text-gray-500">
-              No commitments yet.
-            </div>
+</div>
 
-          )}
+) : (
 
-          <div className="text-center mt-10">
+<div className="text-center text-gray-500">
+No commitments yet.
+</div>
 
-            <Link
-              href="/explore"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Explore more commitments →
-            </Link>
+)}
 
-          </div>
+<div className="text-center mt-10">
 
-        </div>
+<Link
+href="/explore"
+className="text-blue-600 hover:underline font-medium"
+>
+Explore more commitments →
+</Link>
 
-      </section>
+</div>
 
-    </div>
-  );
+</div>
+
+</section>
+
+</div>
+
+);
+
 }
