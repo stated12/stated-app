@@ -20,7 +20,10 @@ const [loading,setLoading] = useState(true);
 
 useEffect(()=>{
 
-if(!commitmentId) return;
+if(!commitmentId){
+setLoading(false);
+return;
+}
 
 loadCommitment();
 loadCurrentUser();
@@ -29,14 +32,8 @@ loadCurrentUser();
 
 async function loadCurrentUser(){
 
-try{
-
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
-
-}catch(e){
-console.error(e);
-}
 
 }
 
@@ -44,44 +41,50 @@ async function loadCommitment(){
 
 try{
 
-const {data:commitmentData,error} =
+const {data,error} =
 await supabase
 .from("commitments")
 .select("*")
 .eq("id",commitmentId)
-.single();
+.maybeSingle();
 
-if(error || !commitmentData){
+if(error){
+console.error("Commitment fetch error:",error);
 setLoading(false);
 return;
 }
 
-setCommitment(commitmentData);
+if(!data){
+setLoading(false);
+return;
+}
 
-if(commitmentData.user_id){
+setCommitment(data);
 
-const {data} =
+if(data.user_id){
+
+const {data:profile} =
 await supabase
 .from("profiles")
 .select("*")
-.eq("id",commitmentData.user_id)
-.single();
+.eq("id",data.user_id)
+.maybeSingle();
 
-setIdentity(data);
+setIdentity(profile);
 setIdentityType("user");
 
 }
 
-if(commitmentData.company_id){
+if(data.company_id){
 
-const {data} =
+const {data:company} =
 await supabase
 .from("companies")
 .select("*")
-.eq("id",commitmentData.company_id)
-.single();
+.eq("id",data.company_id)
+.maybeSingle();
 
-setIdentity(data);
+setIdentity(company);
 setIdentityType("company");
 
 }
@@ -105,7 +108,7 @@ setViewCount(count || 0);
 
 }catch(err){
 
-console.error(err);
+console.error("Load commitment failed:",err);
 
 }
 
@@ -132,8 +135,6 @@ identity?.username ||
 
 async function share(){
 
-try{
-
 const url =
 `${window.location.origin}/commitment/${commitmentId}`;
 
@@ -157,12 +158,6 @@ url
 
 await navigator.clipboard.writeText(url);
 alert("Commitment link copied");
-
-}
-
-}catch(err){
-
-console.error(err);
 
 }
 
@@ -208,17 +203,11 @@ return(
 
 <div className="flex justify-between items-center">
 
-<Link
-href="/"
-className="text-sm text-gray-500"
->
+<Link href="/" className="text-sm text-gray-500">
 ← Back
 </Link>
 
-<Link
-href="/"
-className="text-xl font-bold text-blue-600"
->
+<Link href="/" className="text-xl font-bold text-blue-600">
 Stated
 </Link>
 
@@ -267,9 +256,7 @@ className="w-10 h-10 rounded-full object-cover"
 </div>
 
 <div className="text-xs text-gray-400">
-Created{" "}
-{new Date(commitment.created_at)
-.toLocaleDateString()}
+Created {new Date(commitment.created_at).toLocaleDateString()}
 </div>
 
 <div className="text-xs text-gray-400">
@@ -289,38 +276,23 @@ Share commitment
 
 <div className="flex flex-wrap gap-2">
 
-<Link
-href={`/commitment/${commitmentId}/update`}
-className="bg-gray-200 px-3 py-2 rounded text-sm"
->
+<Link href={`/commitment/${commitmentId}/update`} className="bg-gray-200 px-3 py-2 rounded text-sm">
 Add update
 </Link>
 
-<Link
-href={`/commitment/${commitmentId}/pause`}
-className="bg-gray-200 px-3 py-2 rounded text-sm"
->
+<Link href={`/commitment/${commitmentId}/pause`} className="bg-gray-200 px-3 py-2 rounded text-sm">
 Pause
 </Link>
 
-<Link
-href={`/commitment/${commitmentId}/resume`}
-className="bg-gray-200 px-3 py-2 rounded text-sm"
->
+<Link href={`/commitment/${commitmentId}/resume`} className="bg-gray-200 px-3 py-2 rounded text-sm">
 Resume
 </Link>
 
-<Link
-href={`/commitment/${commitmentId}/complete`}
-className="bg-gray-200 px-3 py-2 rounded text-sm"
->
+<Link href={`/commitment/${commitmentId}/complete`} className="bg-gray-200 px-3 py-2 rounded text-sm">
 Complete
 </Link>
 
-<Link
-href={`/commitment/${commitmentId}/withdraw`}
-className="bg-gray-200 px-3 py-2 rounded text-sm"
->
+<Link href={`/commitment/${commitmentId}/withdraw`} className="bg-gray-200 px-3 py-2 rounded text-sm">
 Withdraw
 </Link>
 
@@ -353,8 +325,7 @@ className="bg-white rounded-xl shadow p-4"
 </div>
 
 <div className="text-xs text-gray-400 mt-1">
-{new Date(update.created_at)
-.toLocaleDateString()}
+{new Date(update.created_at).toLocaleDateString()}
 </div>
 
 </div>
@@ -370,4 +341,4 @@ className="bg-white rounded-xl shadow p-4"
 
 );
 
-  }
+                }
