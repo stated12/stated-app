@@ -23,57 +23,68 @@ export async function GET(req: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  /* PROFILES SEARCH */
+  /* PEOPLE SEARCH */
 
-  const { data: profiles } = await supabase
+  const { data: people } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, account_type")
+    .select("id, username, display_name, avatar_url")
     .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
     .limit(10);
 
-  /* COMMITMENTS SEARCH */
+  /* COMPANY SEARCH */
+
+  const { data: companies } = await supabase
+    .from("companies")
+    .select("id, username, name, logo_url")
+    .or(`username.ilike.%${q}%,name.ilike.%${q}%`)
+    .limit(10);
+
+  /* COMMITMENT SEARCH */
 
   const { data: commitments } = await supabase
     .from("commitments")
-    .select("id, text, user_id")
+    .select("id, text, user_id, company_id")
     .ilike("text", `%${q}%`)
+    .eq("status", "active")
+    .eq("visibility", "public")
     .limit(10);
 
-  const people =
-    profiles?.filter((p) => p.account_type !== "company") || [];
-
-  const companies =
-    profiles?.filter((p) => p.account_type === "company") || [];
+  /* TOP RESULTS */
 
   const top = [
-    ...(people.slice(0, 2)),
-    ...(companies.slice(0, 2)),
+    ...(people?.slice(0, 2) || []),
+    ...(companies?.slice(0, 2) || []),
   ];
 
-  /* SEARCH SUGGESTIONS */
+  /* SUGGESTIONS */
 
   const suggestions = [
-    ...people.map((p) => ({
+
+    ...(people || []).map((p) => ({
       type: "person",
       label: p.display_name || p.username,
       username: p.username,
     })),
-    ...companies.map((c) => ({
+
+    ...(companies || []).map((c) => ({
       type: "company",
-      label: c.display_name || c.username,
+      label: c.name || c.username,
       username: c.username,
     })),
-    ...(commitments || []).slice(0, 3).map((c) => ({
+
+    ...(commitments || []).slice(0,3).map((c) => ({
       type: "commitment",
-      label: c.text,
+      label: c.text?.slice(0,60) || "",
     })),
-  ].slice(0, 6);
+
+  ].slice(0,6);
 
   return NextResponse.json({
     suggestions,
     top,
-    people,
-    companies,
+    people: people || [],
+    companies: companies || [],
     commitments: commitments || [],
   });
+
 }
