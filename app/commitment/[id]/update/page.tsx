@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CommitmentUpdatePage() {
+
   const supabase = createClient();
   const router = useRouter();
   const params = useParams();
@@ -18,46 +19,59 @@ export default function CommitmentUpdatePage() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
 
+  /* ---------------- UPDATE LIMITS ---------------- */
+
   const UPDATE_LIMITS: Record<string, number> = {
-    free: 5,
-    individual: 10,
-    company_starter: 5,
-    company_growth: 10,
-    company_scale: 15,
+    free: 2,
+    ind_499: 5,
+    ind_899: 10,
+    ind_1299: 15,
+    comp_1999: 5,
+    comp_2999: 10,
+    comp_4999: 15,
   };
 
   useEffect(() => {
-    async function verifyOwnership() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    verifyOwnership();
+  }, []);
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+  async function verifyOwnership() {
 
-      const { data, error } = await supabase
-        .from("commitments")
-        .select("text")
-        .eq("id", commitmentId)
-        .eq("user_id", user.id)
-        .single();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (error || !data) {
-        setError("Commitment not found");
-        setChecking(false);
-        return;
-      }
-
-      setCommitmentText(data.text);
-      setChecking(false);
+    if (!user) {
+      router.push("/login");
+      return;
     }
 
-    verifyOwnership();
-  }, [commitmentId, router, supabase]);
+    const { data, error } = await supabase
+      .from("commitments")
+      .select("text, user_id, company_id")
+      .eq("id", commitmentId)
+      .single();
+
+    if (error || !data) {
+      setError("Commitment not found");
+      setChecking(false);
+      return;
+    }
+
+    /* OWNER CHECK */
+
+    if (data.user_id !== user.id && !data.company_id) {
+      setError("You do not have permission");
+      setChecking(false);
+      return;
+    }
+
+    setCommitmentText(data.text);
+    setChecking(false);
+  }
 
   async function submitUpdate() {
+
     if (!content.trim()) {
       setError("Write your progress update");
       return;
@@ -75,31 +89,65 @@ export default function CommitmentUpdatePage() {
       return;
     }
 
-    // GET PROFILE
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan_key")
-      .eq("id", user.id)
+    /* ---------------- GET COMMITMENT ---------------- */
+
+    const { data: commitment } = await supabase
+      .from("commitments")
+      .select("company_id")
+      .eq("id", commitmentId)
       .single();
 
-    const planKey = profile?.plan_key || "free";
-    const limit = UPDATE_LIMITS[planKey] ?? 5;
+    let planKey = "free";
 
-    // COUNT EXISTING UPDATES
+    /* ---------------- CHECK COMPANY PLAN ---------------- */
+
+    if (commitment?.company_id) {
+
+      const { data: company } = await supabase
+        .from("companies")
+        .select("plan_key")
+        .eq("id", commitment.company_id)
+        .single();
+
+      planKey = company?.plan_key || "free";
+
+    }
+
+    /* ---------------- INDIVIDUAL PLAN ---------------- */
+
+    else {
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan_key")
+        .eq("id", user.id)
+        .single();
+
+      planKey = profile?.plan_key || "free";
+
+    }
+
+    const limit = UPDATE_LIMITS[planKey] ?? 2;
+
+    /* ---------------- COUNT EXISTING UPDATES ---------------- */
+
     const { count } = await supabase
       .from("commitment_updates")
       .select("*", { count: "exact", head: true })
       .eq("commitment_id", commitmentId);
 
     if ((count ?? 0) >= limit) {
+
       setError(
         `Update limit reached (${limit}). Upgrade your plan to add more updates.`
       );
+
       setLoading(false);
       return;
     }
 
-    // INSERT UPDATE
+    /* ---------------- INSERT UPDATE ---------------- */
+
     const { error: insertError } = await supabase
       .from("commitment_updates")
       .insert({
@@ -109,48 +157,62 @@ export default function CommitmentUpdatePage() {
       });
 
     if (insertError) {
+
       setError(insertError.message);
       setLoading(false);
       return;
+
     }
 
-    // 🔔 INSERT NOTIFICATION (NEW)
-    await supabase.from("notifications").insert({
-      user_id: user.id,
-      type: "update",
-      title: "📈 Progress Updated",
-      message: "You added a new progress update.",
-      link: "/dashboard/my",
-      read: false,
-    });
+    /* ---------------- NOTIFICATION ---------------- */
+
+    await supabase
+      .from("notifications")
+      .insert({
+        user_id: user.id,
+        type: "update",
+        title: "📈 Progress Updated",
+        message: "You added a new progress update.",
+        link: "/dashboard/my",
+        read: false,
+      });
 
     router.push("/dashboard");
+
   }
 
   if (checking) {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         Loading...
       </div>
     );
+
   }
 
   if (error === "Commitment not found") {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         {error}
       </div>
     );
+
   }
 
   return (
+
     <div className="min-h-screen bg-gray-50 flex justify-center items-center p-4">
+
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
 
         <Link href="/dashboard">
+
           <div className="text-3xl font-bold text-blue-600 mb-2">
             Stated
           </div>
+
         </Link>
 
         <div className="text-gray-500 mb-4">
@@ -184,6 +246,8 @@ export default function CommitmentUpdatePage() {
         </button>
 
       </div>
+
     </div>
+
   );
 }
