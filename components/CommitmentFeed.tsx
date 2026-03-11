@@ -19,6 +19,7 @@ type Commitment = {
   category?: string;
   created_at: string;
   views?: number;
+  latest_update?: string | null;
   identity?: Identity | null;
 };
 
@@ -225,65 +226,80 @@ export default function CommitmentFeed({
 
           return (
 
-            <div
-              key={c.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5"
-            >
+            <Link key={c.id} href={`/commitment/${c.id}`}>
 
-              <ViewTracker
-                type="commitment"
-                entityId={c.id}
-              />
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 cursor-pointer hover:shadow-md transition">
 
-              <div className="flex items-center gap-3 mb-3">
+                <ViewTracker
+                  type="commitment"
+                  entityId={c.id}
+                />
 
-                <Link href={profileLink}>
-                  <Image
-                    src={avatar}
-                    alt="avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                </Link>
+                <div className="flex items-center gap-3 mb-3">
 
-                <div>
+                  <Link href={profileLink} onClick={(e)=>e.stopPropagation()}>
 
-                  <Link
-                    href={profileLink}
-                    className="font-medium"
-                  >
-                    {identity.display_name ||
-                      identity.username ||
-                      "Unknown"}
+                    <Image
+                      src={avatar}
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+
                   </Link>
 
-                  <div className="text-xs text-gray-500">
-                    @{identity.username || "user"} ·{" "}
-                    {timeAgo(c.created_at)}
+                  <div>
+
+                    <Link
+                      href={profileLink}
+                      onClick={(e)=>e.stopPropagation()}
+                      className="font-medium"
+                    >
+                      {identity.display_name ||
+                        identity.username ||
+                        "Unknown"}
+                    </Link>
+
+                    <div className="text-xs text-gray-500">
+                      @{identity.username || "user"} ·{" "}
+                      {timeAgo(c.created_at)}
+                    </div>
+
                   </div>
 
                 </div>
 
-              </div>
+                {c.category && (
 
-              {c.category && (
+                  <div className="text-xs text-blue-600 mb-2">
+                    {c.category}
+                  </div>
 
-                <div className="text-xs text-blue-600 mb-2">
-                  {c.category}
+                )}
+
+                <div className="mb-3 whitespace-pre-wrap text-gray-800">
+                  {c.text || ""}
                 </div>
 
-              )}
+                {c.latest_update && (
 
-              <div className="mb-3 whitespace-pre-wrap text-gray-800">
-                {c.text || ""}
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 mb-3">
+                    <span className="font-medium text-gray-900">
+                      Latest update:
+                    </span>{" "}
+                    {c.latest_update}
+                  </div>
+
+                )}
+
+                <div className="text-sm text-gray-500">
+                  👁 {c.views ?? 0} views
+                </div>
+
               </div>
 
-              <div className="text-sm text-gray-500">
-                👁 {c.views ?? 0} views
-              </div>
-
-            </div>
+            </Link>
 
           );
 
