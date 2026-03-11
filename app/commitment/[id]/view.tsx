@@ -14,6 +14,9 @@ export default function CommitmentClient({
 const supabase = createClient();
 
 const [commitment,setCommitment] = useState<any>(null);
+const [profile,setProfile] = useState<any>(null);
+const [company,setCompany] = useState<any>(null);
+
 const [updates,setUpdates] = useState<any[]>([]);
 const [viewCount,setViewCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
@@ -26,36 +29,59 @@ loadViews();
 loadUser();
 },[]);
 
+
 async function loadUser(){
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
 }
+
 
 async function loadCommitment(){
 
 const {data} =
 await supabase
 .from("commitments")
-.select(`
-*,
-profiles:user_id (
-username,
-display_name,
-avatar_url
-),
-companies:company_id (
-username,
-name,
-logo_url
-)
-`)
+.select("*")
 .eq("id",commitmentId)
 .maybeSingle();
 
-setCommitment(data || null);
+if(!data){
+setLoading(false);
+return;
+}
+
+setCommitment(data);
+
+if(data.user_id){
+
+const {data:profileData} =
+await supabase
+.from("profiles")
+.select("username,display_name,avatar_url")
+.eq("id",data.user_id)
+.maybeSingle();
+
+setProfile(profileData || null);
+
+}
+
+if(data.company_id){
+
+const {data:companyData} =
+await supabase
+.from("companies")
+.select("username,name,logo_url")
+.eq("id",data.company_id)
+.maybeSingle();
+
+setCompany(companyData || null);
+
+}
+
 setLoading(false);
 
 }
+
 
 async function loadUpdates(){
 
@@ -70,6 +96,7 @@ setUpdates(data || []);
 
 }
 
+
 async function loadViews(){
 
 const {count} =
@@ -82,10 +109,8 @@ setViewCount(count || 0);
 
 }
 
-function avatar(){
 
-const profile:any = commitment?.profiles;
-const company:any = commitment?.companies;
+function avatar(){
 
 if(commitment?.company_id && company?.logo_url)
 return company.logo_url;
@@ -100,6 +125,7 @@ company?.name ||
 )}&background=2563eb&color=fff`;
 
 }
+
 
 async function share(){
 
@@ -131,6 +157,7 @@ alert("Commitment link copied");
 
 }
 
+
 function statusBadge(){
 
 const status = commitment?.status;
@@ -144,12 +171,14 @@ return status;
 
 }
 
+
 if(loading)
 return(
 <div className="min-h-screen flex items-center justify-center">
 Loading commitment...
 </div>
 );
+
 
 if(!commitment)
 return(
@@ -158,8 +187,6 @@ Commitment not found
 </div>
 );
 
-const profile:any = commitment?.profiles;
-const company:any = commitment?.companies;
 
 const identity =
 commitment.company_id ? company : profile;
@@ -169,6 +196,7 @@ commitment.company_id ? "company" : "user";
 
 const isOwner =
 currentUser?.id === commitment.user_id;
+
 
 return(
 
@@ -189,6 +217,7 @@ Stated
 </Link>
 
 </div>
+
 
 <Link
 href={
@@ -218,6 +247,7 @@ className="w-10 h-10 rounded-full object-cover"
 
 </Link>
 
+
 <div className="bg-white rounded-xl shadow p-6 space-y-3">
 
 <div className="text-lg font-medium">
@@ -244,6 +274,7 @@ Share commitment
 </button>
 
 </div>
+
 
 {isOwner &&(
 
@@ -272,6 +303,7 @@ Withdraw
 </div>
 
 )}
+
 
 <div>
 
