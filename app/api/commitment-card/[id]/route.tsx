@@ -1,31 +1,24 @@
-import { ImageResponse } from "next/og"
-import { createClient } from "@/lib/supabase/server"
+import { ImageResponse } from "next/og";
+import { createClient } from "@/lib/supabase/server";
 
-export const runtime = "edge"
+export const runtime = "edge";
 
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
 
-  const { id } = await context.params
+  const { id } = await context.params;
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data: commitment } = await supabase
     .from("commitments")
-    .select(`
-      text,
-      user_id,
-      company_id,
-      profiles(display_name,username),
-      companies(name,username)
-    `)
+    .select("id,text,user_id,company_id")
     .eq("id", id)
-    .maybeSingle()
+    .maybeSingle();
 
   if (!commitment) {
-
     return new ImageResponse(
       (
         <div
@@ -44,15 +37,32 @@ export async function GET(
         </div>
       ),
       { width: 1200, height: 630 }
-    )
-
+    );
   }
 
-  const identity =
-    commitment.company_id
-      ? commitment.companies?.name
-      : commitment.profiles?.display_name ||
-        commitment.profiles?.username
+  let identity = "User";
+
+  if (commitment.company_id) {
+
+    const { data: company } = await supabase
+      .from("companies")
+      .select("name")
+      .eq("id", commitment.company_id)
+      .maybeSingle();
+
+    identity = company?.name || "Company";
+
+  } else if (commitment.user_id) {
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name,username")
+      .eq("id", commitment.user_id)
+      .maybeSingle();
+
+    identity = profile?.display_name || profile?.username || "User";
+
+  }
 
   return new ImageResponse(
     (
@@ -89,6 +99,6 @@ export async function GET(
       </div>
     ),
     { width: 1200, height: 630 }
-  )
+  );
 
 }
