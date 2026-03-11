@@ -10,16 +10,19 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     const { data } = await supabase
       .from("commitments")
       .select(`
+        id,
         text,
         user_id,
         company_id,
         profiles:user_id (
           username,
-          display_name
+          display_name,
+          avatar_url
         ),
         companies:company_id (
           username,
-          name
+          name,
+          logo_url
         )
       `)
       .eq("id", params.id)
@@ -49,6 +52,8 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
     const url = `https://app.stated.in/commitment/${params.id}`;
 
+    const image = "https://app.stated.in/og-default.png";
+
     return {
       title,
       description,
@@ -59,10 +64,9 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
         url,
         siteName: "Stated",
         type: "article",
-
         images: [
           {
-            url: "https://app.stated.in/og-default.png",
+            url: image,
             width: 1200,
             height: 630,
           },
@@ -73,7 +77,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
         card: "summary_large_image",
         title,
         description,
-        images: ["https://app.stated.in/og-default.png"],
+        images: [image],
       },
     };
 
@@ -89,10 +93,32 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   }
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default async function Page({ params }: { params: { id: string } }) {
+
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("commitments")
+    .select(`
+      *,
+      profiles:user_id (
+        username,
+        display_name,
+        avatar_url
+      ),
+      companies:company_id (
+        username,
+        name,
+        logo_url
+      )
+    `)
+    .eq("id", params.id)
+    .maybeSingle();
 
   return (
-    <CommitmentClient commitmentId={params.id} />
+    <CommitmentClient
+      commitment={data}
+      commitmentId={params.id}
+    />
   );
-
-}
+                                   }
