@@ -1,110 +1,275 @@
-import { createClient } from "@/lib/supabase/server";
-import CommitmentClient from "./view";
+"use client";
 
-export async function generateMetadata({ params }: any) {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import ViewTracker from "@/components/ViewTracker";
 
-  const supabase = await createClient();
+export default function CommitmentClient({ commitment, commitmentId }: any) {
 
-  const { data } = await supabase
-    .from("commitments")
-    .select(`
-      id,
-      text,
-      user_id,
-      company_id,
-      profiles:user_id (
-        username,
-        display_name,
-        avatar_url
-      ),
-      companies:company_id (
-        username,
-        name,
-        logo_url
-      )
-    `)
-    .eq("id", params.id)
-    .maybeSingle();
+const supabase = createClient();
 
-  if (!data) {
-    return {
-      title: "Commitment on Stated",
-      description: "Public commitments and accountability",
-    };
-  }
+const [updates,setUpdates] = useState<any[]>([]);
+const [viewCount,setViewCount] = useState<number>(0);
+const [currentUser,setCurrentUser] = useState<any>(null);
 
-  const isCompany = !!data.company_id;
+useEffect(()=>{
 
-  const name = isCompany
-    ? data.companies?.name
-    : data.profiles?.display_name || data.profiles?.username;
+loadUpdates();
+loadViews();
+loadUser();
 
-  const title = `${name || "User"} on Stated`;
+},[]);
 
-  const description =
-    data.text?.slice(0, 140) ||
-    "View this public commitment on Stated";
-
-  const url = `https://app.stated.in/commitment/${params.id}`;
-
-  const image = "https://app.stated.in/og-default.png";
-
-  return {
-
-    title,
-    description,
-
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: "Stated",
-      type: "article",
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630
-        }
-      ]
-    },
-
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [image]
-    }
-
-  };
+async function loadUser(){
+const {data} = await supabase.auth.getUser();
+setCurrentUser(data?.user || null);
 }
 
-export default async function Page({ params }: any) {
+async function loadUpdates(){
 
-  const supabase = await createClient();
+const {data} =
+await supabase
+.from("commitment_updates")
+.select("*")
+.eq("commitment_id",commitmentId)
+.order("created_at",{ascending:false});
 
-  const { data } = await supabase
-    .from("commitments")
-    .select(`
-      *,
-      profiles:user_id (
-        username,
-        display_name,
-        avatar_url
-      ),
-      companies:company_id (
-        username,
-        name,
-        logo_url
-      )
-    `)
-    .eq("id", params.id)
-    .maybeSingle();
+setUpdates(data || []);
 
-  return (
-    <CommitmentClient
-      commitment={data}
-      commitmentId={params.id}
-    />
-  );
 }
+
+async function loadViews(){
+
+const {count} =
+await supabase
+.from("commitment_views")
+.select("*",{count:"exact",head:true})
+.eq("commitment_id",commitmentId);
+
+setViewCount(count || 0);
+
+}
+
+function avatar(){
+
+const profile:any = commitment?.profiles;
+const company:any = commitment?.companies;
+
+if(commitment.company_id && company?.logo_url)
+return company.logo_url;
+
+if(profile?.avatar_url)
+return profile.avatar_url;
+
+return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+profile?.display_name ||
+company?.name ||
+"User"
+)}&background=2563eb&color=fff`;
+
+}
+
+async function share(){
+
+const url =
+`${window.location.origin}/commitment/${commitmentId}`;
+
+const text =
+`I made a public commitment on Stated:
+
+"${commitment?.text}"
+
+Track progress:
+${url}`;
+
+if(navigator.share){
+
+await navigator.share({
+title:"Public Commitment on Stated",
+text,
+url
+});
+
+}else{
+
+await navigator.clipboard.writeText(url);
+alert("Commitment link copied");
+
+}
+
+}
+
+function statusBadge(){
+
+const status = commitment?.status;
+
+if(status==="active") return "🟢 ACTIVE";
+if(status==="paused") return "🟡 PAUSED";
+if(status==="completed") return "✅ COMPLETED";
+if(status==="withdrawn") return "🔴 WITHDRAWN";
+
+return status;
+
+}
+
+if(!commitment)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Commitment not found
+</div>
+);
+
+const isOwner =
+currentUser?.id === commitment.user_id;
+
+const profile:any = commitment?.profiles;
+const company:any = commitment?.companies;
+
+const identity =
+commitment.company_id ? company : profile;
+
+const identityType =
+commitment.company_id ? "company" : "user";
+
+return(
+
+<div className="min-h-screen bg-gray-50 px-4 py-8">
+
+<ViewTracker type="commitment" entityId={commitmentId} />
+
+<div className="max-w-2xl mx-auto space-y-6">
+
+<div className="flex justify-between items-center">
+
+<Link href="/" className="text-sm text-gray-500">
+← Back
+</Link>
+
+<Link href="/" className="text-xl font-bold text-blue-600">
+Stated
+</Link>
+
+</div>
+
+<Link
+href={
+identityType==="company"
+? `/c/${identity?.username}`
+: `/u/${identity?.username}`
+}
+className="flex items-center gap-3"
+>
+
+<img
+src={avatar()}
+className="w-10 h-10 rounded-full object-cover"
+/>
+
+<div>
+
+<div className="font-medium">
+{identity?.display_name || identity?.name}
+</div>
+
+<div className="text-sm text-gray-500">
+@{identity?.username}
+</div>
+
+</div>
+
+</Link>
+
+<div className="bg-white rounded-xl shadow p-6 space-y-3">
+
+<div className="text-lg font-medium">
+{commitment.text}
+</div>
+
+<div className="text-sm font-medium">
+{statusBadge()}
+</div>
+
+<div className="text-xs text-gray-400">
+Created {new Date(commitment.created_at).toLocaleDateString()}
+</div>
+
+<div className="text-xs text-gray-400">
+👁 {viewCount} views
+</div>
+
+<button
+onClick={share}
+className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+>
+Share commitment
+</button>
+
+</div>
+
+{isOwner &&(
+
+<div className="flex flex-wrap gap-2">
+
+<Link href={`/commitment/${commitmentId}/update`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Add update
+</Link>
+
+<Link href={`/commitment/${commitmentId}/pause`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Pause
+</Link>
+
+<Link href={`/commitment/${commitmentId}/resume`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Resume
+</Link>
+
+<Link href={`/commitment/${commitmentId}/complete`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Complete
+</Link>
+
+<Link href={`/commitment/${commitmentId}/withdraw`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Withdraw
+</Link>
+
+</div>
+
+)}
+
+<div>
+
+<div className="font-semibold mb-3">
+Progress updates
+</div>
+
+{updates.length===0 &&(
+<div className="text-gray-500">
+No updates yet
+</div>
+)}
+
+<div className="space-y-3">
+
+{updates.map(update=>(
+<div key={update.id} className="bg-white rounded-xl shadow p-4">
+
+<div className="text-sm">
+{update.content}
+</div>
+
+<div className="text-xs text-gray-400 mt-1">
+{new Date(update.created_at).toLocaleDateString()}
+</div>
+
+</div>
+))}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+);
+       }
