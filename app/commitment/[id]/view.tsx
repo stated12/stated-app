@@ -6,30 +6,55 @@ import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
 export default function CommitmentClient({
-commitment,
 commitmentId
 }:{
-commitment:any
 commitmentId:string
 }){
 
 const supabase = createClient();
 
+const [commitment,setCommitment] = useState<any>(null);
 const [updates,setUpdates] = useState<any[]>([]);
 const [viewCount,setViewCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
+const [loading,setLoading] = useState(true);
 
 useEffect(()=>{
-
+loadCommitment();
 loadUpdates();
 loadViews();
 loadUser();
-
 },[]);
 
 async function loadUser(){
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
+}
+
+async function loadCommitment(){
+
+const {data} =
+await supabase
+.from("commitments")
+.select(`
+*,
+profiles:user_id (
+username,
+display_name,
+avatar_url
+),
+companies:company_id (
+username,
+name,
+logo_url
+)
+`)
+.eq("id",commitmentId)
+.maybeSingle();
+
+setCommitment(data || null);
+setLoading(false);
+
 }
 
 async function loadUpdates(){
@@ -118,6 +143,13 @@ if(status==="withdrawn") return "🔴 WITHDRAWN";
 return status;
 
 }
+
+if(loading)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Loading commitment...
+</div>
+);
 
 if(!commitment)
 return(
