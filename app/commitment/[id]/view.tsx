@@ -6,9 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
 export default function CommitmentClient({
-commitmentId
+  commitmentId
 }:{
-commitmentId:string
+  commitmentId:string
 }){
 
 const supabase = createClient();
