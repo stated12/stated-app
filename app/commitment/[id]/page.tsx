@@ -11,19 +11,7 @@ export default async function Page({
 
   const { data: commitment } = await supabase
     .from("commitments")
-    .select(`
-      *,
-      profiles:user_id (
-        username,
-        display_name,
-        avatar_url
-      ),
-      companies:company_id (
-        username,
-        name,
-        logo_url
-      )
-    `)
+    .select("*")
     .eq("id", params.id)
     .maybeSingle();
 
