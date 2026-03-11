@@ -9,7 +9,7 @@ export default async function Page({
 
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data: commitment } = await supabase
     .from("commitments")
     .select(`
       *,
@@ -29,7 +29,7 @@ export default async function Page({
 
   return (
     <CommitmentClient
-      commitment={data}
+      commitment={commitment}
       commitmentId={params.id}
     />
   );
