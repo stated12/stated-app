@@ -105,8 +105,6 @@ export async function GET(request: Request) {
       ...new Set(commitments.map((c: any) => c.company_id).filter(Boolean)),
     ];
 
-    const commitmentIds = commitments.map((c: any) => c.id);
-
     /* ---------- FETCH PROFILES ---------- */
 
     const { data: profiles } = await supabase
@@ -131,20 +129,6 @@ export async function GET(request: Request) {
 
     companies?.forEach((c: any) => {
       companyMap[c.id] = c;
-    });
-
-    /* ---------- FETCH VIEW COUNTS ---------- */
-
-    const { data: viewRows } = await supabase
-      .from("commitment_views")
-      .select("commitment_id")
-      .in("commitment_id", commitmentIds);
-
-    const viewCount: any = {};
-
-    viewRows?.forEach((v: any) => {
-      viewCount[v.commitment_id] =
-        (viewCount[v.commitment_id] || 0) + 1;
     });
 
     /* ---------- BUILD FEED ---------- */
@@ -183,7 +167,7 @@ export async function GET(request: Request) {
         text: c.text,
         category: c.category,
         created_at: c.created_at,
-        views: viewCount[c.id] || 0,
+        views: c.views || 0,   // ✅ FIXED: use cached views
         identity,
       };
 
