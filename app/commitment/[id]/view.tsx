@@ -1,30 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
-export default function CommitmentClient({
-  commitment,
-  commitmentId,
-}: any) {
+export default function CommitmentClient() {
 
 const supabase = createClient();
+const params = useParams();
+const commitmentId = params?.id as string;
 
+const [commitment,setCommitment] = useState<any>(null);
 const [updates,setUpdates] = useState<any[]>([]);
 const [viewCount,setViewCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
+const [loading,setLoading] = useState(true);
 
 useEffect(()=>{
+
+if(!commitmentId) return;
+
+loadCommitment();
 loadUpdates();
 loadViews();
 loadUser();
-},[]);
+
+},[commitmentId]);
 
 async function loadUser(){
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
+}
+
+async function loadCommitment(){
+
+const {data,error} =
+await supabase
+.from("commitments")
+.select(`
+  *,
+  profiles:user_id (
+    username,
+    display_name,
+    avatar_url
+  ),
+  companies:company_id (
+    username,
+    name,
+    logo_url
+  )
+`)
+.eq("id",commitmentId)
+.maybeSingle();
+
+if(data){
+setCommitment(data);
+}
+
+setLoading(false);
+
 }
 
 async function loadUpdates(){
@@ -84,8 +120,6 @@ const text =
 Track progress:
 ${url}`;
 
-try{
-
 if(navigator.share){
 
 await navigator.share({
@@ -99,10 +133,6 @@ url
 await navigator.clipboard.writeText(url);
 alert("Commitment link copied");
 
-}
-
-}catch(e){
-console.error(e);
 }
 
 }
@@ -120,15 +150,19 @@ return status;
 
 }
 
+if(loading)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Loading commitment...
+</div>
+);
+
 if(!commitment)
 return(
 <div className="min-h-screen flex items-center justify-center">
 Commitment not found
 </div>
 );
-
-const isOwner =
-currentUser?.id === commitment.user_id;
 
 const profile:any = commitment?.profiles;
 const company:any = commitment?.companies;
@@ -138,6 +172,9 @@ commitment.company_id ? company : profile;
 
 const identityType =
 commitment.company_id ? "company" : "user";
+
+const isOwner =
+currentUser?.id === commitment.user_id;
 
 return(
 
@@ -222,22 +259,6 @@ Share commitment
 Add update
 </Link>
 
-<Link href={`/commitment/${commitmentId}/pause`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Pause
-</Link>
-
-<Link href={`/commitment/${commitmentId}/resume`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Resume
-</Link>
-
-<Link href={`/commitment/${commitmentId}/complete`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Complete
-</Link>
-
-<Link href={`/commitment/${commitmentId}/withdraw`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Withdraw
-</Link>
-
 </div>
 
 )}
@@ -279,4 +300,4 @@ No updates yet
 </div>
 
 );
-}
+  }
