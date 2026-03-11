@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
@@ -11,6 +12,7 @@ export default function CommitmentClient({
   commitmentId:string
 }){
 
+const router = useRouter();
 const supabase = createClient();
 
 const [commitment,setCommitment] = useState<any>(null);
@@ -18,6 +20,7 @@ const [profile,setProfile] = useState<any>(null);
 const [company,setCompany] = useState<any>(null);
 const [updates,setUpdates] = useState<any[]>([]);
 const [viewCount,setViewCount] = useState<number>(0);
+const [shareCount,setShareCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
 const [loading,setLoading] = useState(true);
 
@@ -25,15 +28,14 @@ useEffect(()=>{
 loadCommitment();
 loadUpdates();
 loadViews();
+loadShares();
 loadUser();
 },[]);
-
 
 async function loadUser(){
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
 }
-
 
 async function loadCommitment(){
 
@@ -81,7 +83,6 @@ setLoading(false);
 
 }
 
-
 async function loadUpdates(){
 
 const {data} =
@@ -95,7 +96,6 @@ setUpdates(data || []);
 
 }
 
-
 async function loadViews(){
 
 const {count} =
@@ -108,6 +108,17 @@ setViewCount(count || 0);
 
 }
 
+async function loadShares(){
+
+const {count} =
+await supabase
+.from("commitment_shares")
+.select("*",{count:"exact",head:true})
+.eq("commitment_id",commitmentId);
+
+setShareCount(count || 0);
+
+}
 
 function avatar(){
 
@@ -125,7 +136,6 @@ company?.name ||
 
 }
 
-
 async function share(){
 
 const url =
@@ -138,6 +148,18 @@ const text =
 
 Track progress:
 ${url}`;
+
+try{
+
+await supabase
+.from("commitment_shares")
+.insert({commitment_id:commitmentId});
+
+setShareCount((s)=>s+1);
+
+}catch(e){
+console.log("share tracking error",e);
+}
 
 if(navigator.share){
 
@@ -156,7 +178,6 @@ alert("Commitment link copied");
 
 }
 
-
 function statusBadge(){
 
 const status = commitment?.status;
@@ -170,7 +191,6 @@ return status;
 
 }
 
-
 if(loading)
 return(
 <div className="min-h-screen flex items-center justify-center">
@@ -178,14 +198,12 @@ Loading commitment...
 </div>
 );
 
-
 if(!commitment)
 return(
 <div className="min-h-screen flex items-center justify-center">
 Commitment not found
 </div>
 );
-
 
 const identity =
 commitment.company_id ? company : profile;
@@ -195,7 +213,6 @@ commitment.company_id ? "company" : "user";
 
 const isOwner =
 currentUser?.id === commitment.user_id;
-
 
 return(
 
@@ -207,16 +224,27 @@ return(
 
 <div className="flex justify-between items-center">
 
-<Link href="/" className="text-sm text-gray-500">
+<button
+onClick={()=>{
+if(window.history.length > 1){
+router.back();
+}else{
+router.push("/");
+}
+}}
+className="text-sm text-gray-500"
+>
 ← Back
-</Link>
+</button>
 
-<Link href="/" className="text-xl font-bold text-blue-600">
+<Link
+href="/"
+className="text-xl font-bold text-blue-600"
+>
 Stated
 </Link>
 
 </div>
-
 
 <Link
 href={
@@ -246,7 +274,6 @@ className="w-10 h-10 rounded-full object-cover"
 
 </Link>
 
-
 <div className="bg-white rounded-xl shadow p-6 space-y-3">
 
 <div className="text-lg font-medium">
@@ -262,7 +289,7 @@ Created {new Date(commitment.created_at).toLocaleDateString()}
 </div>
 
 <div className="text-xs text-gray-400">
-👁 {viewCount} views
+👁 {viewCount} views · 🔗 {shareCount} shares
 </div>
 
 <button
@@ -273,7 +300,6 @@ Share commitment
 </button>
 
 </div>
-
 
 {isOwner &&(
 
@@ -302,7 +328,6 @@ Withdraw
 </div>
 
 )}
-
 
 <div>
 
@@ -335,9 +360,6 @@ No updates yet
 </div>
 
 </div>
-
-
-{/* SIGNUP CTA */}
 
 {!currentUser && (
 
