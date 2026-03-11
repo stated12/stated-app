@@ -132,7 +132,7 @@ const url =
 `${window.location.origin}/commitment/${commitmentId}`;
 
 const text =
-`I made a public commitment on Stated:
+`Public commitment on Stated:
 
 "${commitment?.text}"
 
@@ -335,6 +335,32 @@ No updates yet
 </div>
 
 </div>
+
+
+{/* SIGNUP CTA */}
+
+{!currentUser && (
+
+<div className="bg-white rounded-xl shadow p-6 text-center space-y-4">
+
+<div className="text-lg font-semibold">
+Make your own public commitment
+</div>
+
+<div className="text-sm text-gray-500">
+Start with <b>5 free commitments</b>. Build credibility publicly.
+</div>
+
+<Link
+href="/signup"
+className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+>
+Create your commitment
+</Link>
+
+</div>
+
+)}
 
 </div>
 
