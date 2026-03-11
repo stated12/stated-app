@@ -1,11 +1,10 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-export default function Page({
-  params,
-}: {
-  params: { id: string };
-}) {
+import { useParams } from "next/navigation";
 
+export default function Page() {
+
+  const params = useParams();
   const id = params?.id;
 
   return (
@@ -14,7 +13,7 @@ export default function Page({
 
       <p>ID from URL:</p>
 
-      <pre>{id}</pre>
+      <pre>{String(id)}</pre>
     </div>
   );
 }
