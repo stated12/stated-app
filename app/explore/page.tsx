@@ -10,14 +10,20 @@ type Profile = {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
-  account_type?: "individual" | "company";
+};
+
+type Company = {
+  id: string;
+  username: string;
+  name: string | null;
+  logo_url: string | null;
 };
 
 export default function ExplorePage() {
   const supabase = createClient();
 
   const [people, setPeople] = useState<Profile[]>([]);
-  const [companies, setCompanies] = useState<Profile[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,20 +32,20 @@ export default function ExplorePage() {
 
   async function loadExplore() {
     try {
+
       const { data: peopleData } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, account_type")
-        .eq("account_type", "individual")
+        .select("id, username, display_name, avatar_url")
         .limit(4);
 
       const { data: companyData } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, avatar_url, account_type")
-        .eq("account_type", "company")
+        .from("companies")
+        .select("id, username, name, logo_url")
         .limit(4);
 
       if (peopleData) setPeople(peopleData);
       if (companyData) setCompanies(companyData);
+
     } catch (error) {
       console.error("Explore load error:", error);
     }
@@ -47,11 +53,19 @@ export default function ExplorePage() {
     setLoading(false);
   }
 
-  function avatar(profile: Profile) {
+  function personAvatar(profile: Profile) {
     if (profile?.avatar_url) return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
       profile?.display_name || profile?.username || "User"
+    )}&background=2563eb&color=fff`;
+  }
+
+  function companyAvatar(company: Company) {
+    if (company?.logo_url) return company.logo_url;
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      company?.name || company?.username || "Company"
     )}&background=2563eb&color=fff`;
   }
 
@@ -100,8 +114,18 @@ export default function ExplorePage() {
 
         {people.length > 0 && (
           <section>
-            <div className="text-lg font-semibold mb-4">
-              Featured people
+
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-lg font-semibold">
+                Featured people
+              </div>
+
+              <Link
+                href="/people"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View all →
+              </Link>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -112,7 +136,7 @@ export default function ExplorePage() {
                   className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
                 >
                   <img
-                    src={avatar(person)}
+                    src={personAvatar(person)}
                     alt={person.username}
                     className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
                   />
@@ -134,8 +158,18 @@ export default function ExplorePage() {
 
         {companies.length > 0 && (
           <section>
-            <div className="text-lg font-semibold mb-4">
-              Featured companies
+
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-lg font-semibold">
+                Featured companies
+              </div>
+
+              <Link
+                href="/companies"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View all →
+              </Link>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -146,13 +180,13 @@ export default function ExplorePage() {
                   className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
                 >
                   <img
-                    src={avatar(company)}
+                    src={companyAvatar(company)}
                     alt={company.username}
                     className="w-14 h-14 rounded-full mx-auto mb-2 object-cover"
                   />
 
                   <div className="font-medium">
-                    {company.display_name || company.username}
+                    {company.name || company.username}
                   </div>
 
                   <div className="text-sm text-gray-500">
