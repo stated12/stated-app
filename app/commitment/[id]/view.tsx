@@ -36,7 +36,7 @@ setCurrentUser(data?.user || null);
 
 async function loadCommitment(){
 
-const {data,error} =
+const {data} =
 await supabase
 .from("commitments")
 .select(`
@@ -300,4 +300,4 @@ No updates yet
 </div>
 
 );
-  }
+ }
