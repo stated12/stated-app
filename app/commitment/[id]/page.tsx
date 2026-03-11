@@ -1,9 +1,12 @@
 import CommitmentClient from "./view";
 
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <CommitmentClient commitmentId={params.id} />;
+
+  const { id } = await params;
+
+  return <CommitmentClient commitmentId={id} />;
 }
