@@ -5,16 +5,19 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
-export default function CommitmentClient({ commitment, commitmentId }: any) {
+export default function CommitmentClient({ commitmentId }: any) {
 
 const supabase = createClient();
 
+const [commitment,setCommitment] = useState<any>(null);
 const [updates,setUpdates] = useState<any[]>([]);
 const [viewCount,setViewCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
+const [loading,setLoading] = useState(true);
 
 useEffect(()=>{
 
+loadCommitment();
 loadUpdates();
 loadViews();
 loadUser();
@@ -22,8 +25,39 @@ loadUser();
 },[]);
 
 async function loadUser(){
+
 const {data} = await supabase.auth.getUser();
 setCurrentUser(data?.user || null);
+
+}
+
+async function loadCommitment(){
+
+const {data,error} =
+await supabase
+.from("commitments")
+.select(`
+  *,
+  profiles:user_id (
+    username,
+    display_name,
+    avatar_url
+  ),
+  companies:company_id (
+    username,
+    name,
+    logo_url
+  )
+`)
+.eq("id",commitmentId)
+.maybeSingle();
+
+if(!error && data){
+setCommitment(data);
+}
+
+setLoading(false);
+
 }
 
 async function loadUpdates(){
@@ -56,7 +90,7 @@ function avatar(){
 const profile:any = commitment?.profiles;
 const company:any = commitment?.companies;
 
-if(commitment.company_id && company?.logo_url)
+if(commitment?.company_id && company?.logo_url)
 return company.logo_url;
 
 if(profile?.avatar_url)
@@ -112,6 +146,13 @@ if(status==="withdrawn") return "🔴 WITHDRAWN";
 return status;
 
 }
+
+if(loading)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Loading commitment...
+</div>
+);
 
 if(!commitment)
 return(
@@ -272,4 +313,4 @@ No updates yet
 </div>
 
 );
-       }
+}
