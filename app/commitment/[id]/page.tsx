@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import CommitmentClient from "./view";
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: any) {
+
+  const { id } = await params;
 
   const supabase = await createClient();
 
@@ -21,7 +23,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
         name
       )
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
   if (!data) {
@@ -45,7 +47,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     data.text?.slice(0, 140) ||
     "View this public commitment on Stated";
 
-  const url = `https://app.stated.in/commitment/${params.id}`;
+  const url = `https://app.stated.in/commitment/${id}`;
 
   return {
     title,
@@ -75,7 +77,9 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({ params }: any) {
+
+  const { id } = await params;
 
   const supabase = await createClient();
 
@@ -94,13 +98,13 @@ export default async function Page({ params }: { params: { id: string } }) {
         logo_url
       )
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
   return (
     <CommitmentClient
       commitment={data}
-      commitmentId={params.id}
+      commitmentId={id}
     />
   );
 }
