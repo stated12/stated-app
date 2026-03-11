@@ -7,13 +7,7 @@ export const size = {
 
 export const contentType = "image/png";
 
-export default async function Image({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-
-  const { id } = await params;
+export default async function Image() {
 
   return new ImageResponse(
     (
@@ -32,20 +26,13 @@ export default async function Image({
           textAlign: "center",
         }}
       >
+
         <div style={{ fontSize: 52, fontWeight: 700, marginBottom: 30 }}>
           Stated
         </div>
 
-        <div style={{ fontSize: 34 }}>
+        <div style={{ fontSize: 36, maxWidth: 900 }}>
           Public commitment platform
-        </div>
-
-        <div style={{ fontSize: 26, marginTop: 40, color: "#93c5fd" }}>
-          Commitment ID
-        </div>
-
-        <div style={{ fontSize: 22, marginTop: 10 }}>
-          {id}
         </div>
 
       </div>
