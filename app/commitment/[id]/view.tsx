@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import ViewTracker from "@/components/ViewTracker";
 
 export default function CommitmentClient({
   commitmentId
@@ -11,56 +13,330 @@ export default function CommitmentClient({
 
 const supabase = createClient();
 
-const [result,setResult] = useState<any>(null);
-const [error,setError] = useState<any>(null);
+const [commitment,setCommitment] = useState<any>(null);
+const [profile,setProfile] = useState<any>(null);
+const [company,setCompany] = useState<any>(null);
+const [updates,setUpdates] = useState<any[]>([]);
+const [viewCount,setViewCount] = useState<number>(0);
+const [currentUser,setCurrentUser] = useState<any>(null);
+const [loading,setLoading] = useState(true);
 
 useEffect(()=>{
-testQuery();
+loadCommitment();
+loadUpdates();
+loadViews();
+loadUser();
 },[]);
 
-async function testQuery(){
 
-const {data,error} =
+async function loadUser(){
+const {data} = await supabase.auth.getUser();
+setCurrentUser(data?.user || null);
+}
+
+
+async function loadCommitment(){
+
+const {data} =
 await supabase
 .from("commitments")
 .select("*")
 .eq("id",commitmentId)
 .maybeSingle();
 
-setResult(data);
-setError(error);
+if(!data){
+setLoading(false);
+return;
+}
+
+setCommitment(data);
+
+if(data.user_id){
+
+const {data:profileData} =
+await supabase
+.from("profiles")
+.select("username,display_name,avatar_url")
+.eq("id",data.user_id)
+.maybeSingle();
+
+setProfile(profileData || null);
 
 }
 
+if(data.company_id){
+
+const {data:companyData} =
+await supabase
+.from("companies")
+.select("username,name,logo_url")
+.eq("id",data.company_id)
+.maybeSingle();
+
+setCompany(companyData || null);
+
+}
+
+setLoading(false);
+
+}
+
+
+async function loadUpdates(){
+
+const {data} =
+await supabase
+.from("commitment_updates")
+.select("*")
+.eq("commitment_id",commitmentId)
+.order("created_at",{ascending:false});
+
+setUpdates(data || []);
+
+}
+
+
+async function loadViews(){
+
+const {count} =
+await supabase
+.from("commitment_views")
+.select("*",{count:"exact",head:true})
+.eq("commitment_id",commitmentId);
+
+setViewCount(count || 0);
+
+}
+
+
+function avatar(){
+
+if(commitment?.company_id && company?.logo_url)
+return company.logo_url;
+
+if(profile?.avatar_url)
+return profile.avatar_url;
+
+return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+profile?.display_name ||
+company?.name ||
+"User"
+)}&background=2563eb&color=fff`;
+
+}
+
+
+async function share(){
+
+const url =
+`${window.location.origin}/commitment/${commitmentId}`;
+
+const text =
+`I made a public commitment on Stated:
+
+"${commitment?.text}"
+
+Track progress:
+${url}`;
+
+if(navigator.share){
+
+await navigator.share({
+title:"Public Commitment on Stated",
+text,
+url
+});
+
+}else{
+
+await navigator.clipboard.writeText(url);
+alert("Commitment link copied");
+
+}
+
+}
+
+
+function statusBadge(){
+
+const status = commitment?.status;
+
+if(status==="active") return "🟢 ACTIVE";
+if(status==="paused") return "🟡 PAUSED";
+if(status==="completed") return "✅ COMPLETED";
+if(status==="withdrawn") return "🔴 WITHDRAWN";
+
+return status;
+
+}
+
+
+if(loading)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Loading commitment...
+</div>
+);
+
+
+if(!commitment)
+return(
+<div className="min-h-screen flex items-center justify-center">
+Commitment not found
+</div>
+);
+
+
+const identity =
+commitment.company_id ? company : profile;
+
+const identityType =
+commitment.company_id ? "company" : "user";
+
+const isOwner =
+currentUser?.id === commitment.user_id;
+
+
 return(
 
-<div style={{padding:40,fontFamily:"monospace"}}>
+<div className="min-h-screen bg-gray-50 px-4 py-8">
 
-<h2>Commitment Debug</h2>
+<ViewTracker type="commitment" entityId={commitmentId} />
 
-<div>
-<b>ID:</b> {commitmentId}
+<div className="max-w-2xl mx-auto space-y-6">
+
+<div className="flex justify-between items-center">
+
+<Link href="/" className="text-sm text-gray-500">
+← Back
+</Link>
+
+<Link href="/" className="text-xl font-bold text-blue-600">
+Stated
+</Link>
+
 </div>
 
-<br/>
+
+<Link
+href={
+identityType==="company"
+? `/c/${identity?.username}`
+: `/u/${identity?.username}`
+}
+className="flex items-center gap-3"
+>
+
+<img
+src={avatar()}
+className="w-10 h-10 rounded-full object-cover"
+/>
 
 <div>
-<b>Supabase result:</b>
+
+<div className="font-medium">
+{identity?.display_name || identity?.name}
 </div>
 
-<pre>
-{JSON.stringify(result,null,2)}
-</pre>
+<div className="text-sm text-gray-500">
+@{identity?.username}
+</div>
 
-<br/>
+</div>
+
+</Link>
+
+
+<div className="bg-white rounded-xl shadow p-6 space-y-3">
+
+<div className="text-lg font-medium">
+{commitment.text}
+</div>
+
+<div className="text-sm font-medium">
+{statusBadge()}
+</div>
+
+<div className="text-xs text-gray-400">
+Created {new Date(commitment.created_at).toLocaleDateString()}
+</div>
+
+<div className="text-xs text-gray-400">
+👁 {viewCount} views
+</div>
+
+<button
+onClick={share}
+className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+>
+Share commitment
+</button>
+
+</div>
+
+
+{isOwner &&(
+
+<div className="flex flex-wrap gap-2">
+
+<Link href={`/commitment/${commitmentId}/update`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Add update
+</Link>
+
+<Link href={`/commitment/${commitmentId}/pause`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Pause
+</Link>
+
+<Link href={`/commitment/${commitmentId}/resume`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Resume
+</Link>
+
+<Link href={`/commitment/${commitmentId}/complete`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Complete
+</Link>
+
+<Link href={`/commitment/${commitmentId}/withdraw`} className="bg-gray-200 px-3 py-2 rounded text-sm">
+Withdraw
+</Link>
+
+</div>
+
+)}
+
 
 <div>
-<b>Error:</b>
+
+<div className="font-semibold mb-3">
+Progress updates
 </div>
 
-<pre>
-{JSON.stringify(error,null,2)}
-</pre>
+{updates.length===0 &&(
+<div className="text-gray-500">
+No updates yet
+</div>
+)}
+
+<div className="space-y-3">
+
+{updates.map(update=>(
+<div key={update.id} className="bg-white rounded-xl shadow p-4">
+
+<div className="text-sm">
+{update.content}
+</div>
+
+<div className="text-xs text-gray-400 mt-1">
+{new Date(update.created_at).toLocaleDateString()}
+</div>
+
+</div>
+))}
+
+</div>
+
+</div>
+
+</div>
 
 </div>
 
