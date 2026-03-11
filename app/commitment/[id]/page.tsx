@@ -1,24 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
-import CommitmentClient from "./view";
-
-export default async function Page({
+export default function Page({
   params,
 }: {
   params: { id: string };
 }) {
 
-  const supabase = await createClient();
-
-  const { data: commitment } = await supabase
-    .from("commitments")
-    .select("*")
-    .eq("id", params.id)
-    .maybeSingle();
-
   return (
-    <CommitmentClient
-      commitment={commitment}
-      commitmentId={params.id}
-    />
+    <div style={{padding:40}}>
+      <h1>Commitment Page Debug</h1>
+
+      <p>ID from URL:</p>
+
+      <pre>{params.id}</pre>
+
+    </div>
   );
 }
