@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 type Identity = {
@@ -17,6 +16,7 @@ type Commitment = {
   category: string;
   created_at: string;
   views?: number;
+  latest_update?: string | null;
   identity: Identity;
 };
 
@@ -38,8 +38,6 @@ export default function DashboardPage() {
     useState<"latest" | "trending">("latest");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
-
-  /* COMBINED CATEGORY LIST (INDIVIDUAL + COMPANY) */
 
   const categories = [
     "",
@@ -80,15 +78,9 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (Array.isArray(data)) {
-
         setCommitments(data);
-
-        triggerImpressions(data);
-
       } else {
-
         setCommitments([]);
-
       }
 
     } catch (err) {
@@ -100,38 +92,6 @@ export default function DashboardPage() {
     } finally {
 
       setLoading(false);
-
-    }
-
-  }
-
-  async function triggerImpressions(data: Commitment[]) {
-
-    if (!data || data.length === 0) return;
-
-    const ids = data.map((c) => c.id);
-
-    const sessionKey = "viewed_" + ids.join("_");
-
-    if (sessionStorage.getItem(sessionKey)) return;
-
-    try {
-
-      await fetch("/api/impression", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          commitmentIds: ids,
-        }),
-      });
-
-      sessionStorage.setItem(sessionKey, "true");
-
-    } catch (err) {
-
-      console.error("Impression error:", err);
 
     }
 
@@ -159,8 +119,6 @@ export default function DashboardPage() {
 
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
 
-        {/* TAB SWITCH */}
-
         <div className="flex gap-2">
 
           <button
@@ -186,8 +144,6 @@ export default function DashboardPage() {
           </button>
 
         </div>
-
-        {/* CATEGORY FILTER */}
 
         <select
           value={category}
@@ -231,61 +187,76 @@ export default function DashboardPage() {
 
             return (
 
-              <div
-                key={c.id}
-                className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition"
-              >
+              <Link key={c.id} href={`/commitment/${c.id}`}>
 
-                {/* AUTHOR */}
+                <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer">
 
-                <Link
-                  href={profileLink}
-                  className="flex items-center gap-3 mb-3"
-                >
+                  {/* AUTHOR */}
 
-                  <Image
-                    src={avatar}
-                    alt="avatar"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
+                  <Link
+                    href={profileLink}
+                    onClick={(e)=>e.stopPropagation()}
+                    className="flex items-center gap-3 mb-3"
+                  >
 
-                  <div>
+                    <img
+                      src={avatar}
+                      alt="avatar"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
 
-                    <div className="text-sm font-semibold text-gray-900">
-                      {c.identity.display_name ||
-                        c.identity.username}
+                    <div>
+
+                      <div className="text-sm font-semibold text-gray-900">
+                        {c.identity.display_name ||
+                          c.identity.username}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        @{c.identity.username}
+                      </div>
+
                     </div>
 
-                    <div className="text-xs text-gray-500">
-                      @{c.identity.username}
-                    </div>
+                  </Link>
 
+                  {/* META */}
+
+                  <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                    <span>{c.category}</span>
+                    <span>{timeAgo(c.created_at)}</span>
                   </div>
 
-                </Link>
+                  {/* COMMITMENT TEXT */}
 
-                {/* META */}
+                  <div className="text-gray-900 text-base mb-3 leading-relaxed">
+                    {c.text}
+                  </div>
 
-                <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
-                  <span>{c.category}</span>
-                  <span>{timeAgo(c.created_at)}</span>
+                  {/* LATEST UPDATE */}
+
+                  {c.latest_update && (
+
+                    <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 mb-3">
+
+                      <span className="font-medium text-gray-900">
+                        Latest update:
+                      </span>{" "}
+                      {c.latest_update}
+
+                    </div>
+
+                  )}
+
+                  {/* VIEWS */}
+
+                  <div className="text-xs text-gray-500">
+                    👁 {c.views ?? 0} views
+                  </div>
+
                 </div>
 
-                {/* TEXT */}
-
-                <div className="text-gray-900 text-base mb-3 leading-relaxed">
-                  {c.text}
-                </div>
-
-                {/* VIEWS */}
-
-                <div className="text-xs text-gray-500">
-                  👁 {c.views ?? 0} views
-                </div>
-
-              </div>
+              </Link>
 
             );
 
