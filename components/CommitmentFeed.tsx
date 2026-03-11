@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import ViewTracker from "@/components/ViewTracker";
 
@@ -239,12 +238,10 @@ export default function CommitmentFeed({
 
                   <Link href={profileLink} onClick={(e)=>e.stopPropagation()}>
 
-                    <Image
+                    <img
                       src={avatar}
                       alt="avatar"
-                      width={40}
-                      height={40}
-                      className="rounded-full"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
 
                   </Link>
