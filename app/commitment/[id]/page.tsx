@@ -7,6 +7,8 @@ export default async function Page({
   params: { id: string };
 }) {
 
+  const commitmentId = params.id;
+
   const supabase = await createClient();
 
   const { data: commitment } = await supabase
@@ -24,13 +26,13 @@ export default async function Page({
         logo_url
       )
     `)
-    .eq("id", params.id)
-    .maybeSingle();
+    .eq("id", commitmentId)
+    .single();
 
   return (
     <CommitmentClient
       commitment={commitment}
-      commitmentId={params.id}
+      commitmentId={commitmentId}
     />
   );
 }
