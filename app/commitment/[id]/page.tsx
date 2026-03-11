@@ -1,19 +1,20 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import CommitmentClient from "./view";
 
 export default function Page() {
 
   const params = useParams();
-  const id = params?.id;
+  const id = params?.id as string;
 
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>Commitment Page Debug</h1>
+  if (!id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading commitment...
+      </div>
+    );
+  }
 
-      <p>ID from URL:</p>
-
-      <pre>{String(id)}</pre>
-    </div>
-  );
+  return <CommitmentClient commitmentId={id} />;
 }
