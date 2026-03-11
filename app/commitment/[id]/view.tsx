@@ -84,6 +84,8 @@ const text =
 Track progress:
 ${url}`;
 
+try{
+
 if(navigator.share){
 
 await navigator.share({
@@ -97,6 +99,10 @@ url
 await navigator.clipboard.writeText(url);
 alert("Commitment link copied");
 
+}
+
+}catch(e){
+console.error(e);
 }
 
 }
