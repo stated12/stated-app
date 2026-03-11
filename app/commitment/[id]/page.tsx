@@ -1,20 +1,38 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import CommitmentClient from "./view";
 
-export default function Page() {
+export default async function Page({
+params
+}:{
+params:{id:string}
+}){
 
-  const params = useParams();
-  const id = params?.id as string;
+const supabase = await createClient();
 
-  if (!id) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading commitment...
-      </div>
-    );
-  }
+const { data: commitment } =
+await supabase
+.from("commitments")
+.select(`
+*,
+profiles:user_id (
+username,
+display_name,
+avatar_url
+),
+companies:company_id (
+username,
+name,
+logo_url
+)
+`)
+.eq("id",params.id)
+.maybeSingle();
 
-  return <CommitmentClient commitmentId={id} />;
+return(
+<CommitmentClient
+commitment={commitment}
+commitmentId={params.id}
+/>
+);
+
 }
