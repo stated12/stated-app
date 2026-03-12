@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -137,14 +139,16 @@ export async function GET(request: Request) {
 
         const company = companyMap[c.company_id];
 
+        const avatar =
+          company?.logo_url ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            company?.name || "Company"
+          )}&background=111827&color=fff`;
+
         identity = {
           username: company?.username || "company",
           display_name: company?.name || "Company",
-          avatar_url:
-            company?.logo_url ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              company?.name || "Company"
-            )}&background=111827&color=fff`,
+          avatar_url: avatar,
           type: "company",
         };
 
@@ -152,15 +156,17 @@ export async function GET(request: Request) {
 
         const profile = profileMap[c.user_id];
 
+        const avatar =
+          profile?.avatar_url ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            profile?.display_name || profile?.username || "User"
+          )}&background=2563eb&color=fff`;
+
         identity = {
           username: profile?.username || "user",
           display_name:
             profile?.display_name || profile?.username || "User",
-          avatar_url:
-            profile?.avatar_url ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              profile?.display_name || profile?.username || "User"
-            )}&background=2563eb&color=fff`,
+          avatar_url: avatar,
           type: "user",
         };
 
