@@ -2,20 +2,16 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 
 export default async function HomePage() {
 
-let feed = [];
+let feed:any[] = [];
 
 try {
 
-const host = headers().get("host");
-
-const res = await fetch(
-`https://${host}/api/feed?type=latest`,
-{ cache: "no-store" }
-);
+const res = await fetch("https://app.stated.in/api/feed?type=latest", {
+cache: "no-store"
+});
 
 if (res.ok) {
 feed = await res.json();
@@ -131,7 +127,7 @@ Recent Commitments
 
 <div className="grid md:grid-cols-2 gap-6">
 
-{commitments.map((c)=>{
+{commitments.map((c:any)=>{
 
 const avatar =
 c.identity?.avatar_url?.trim()
