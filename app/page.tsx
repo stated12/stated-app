@@ -2,125 +2,23 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
 
-const supabase = await createClient();
-
 /* -----------------------------
-FETCH LATEST COMMITMENTS
+FETCH FROM API FEED
 ----------------------------- */
 
-const { data: commitmentsData } = await supabase
-.from("commitments")
-.select("id,text,created_at,user_id,company_id")
-.eq("status","active")
-.eq("visibility","public")
-.order("created_at",{ ascending:false })
-.limit(6);
+const res = await fetch(
+`${process.env.NEXT_PUBLIC_SITE_URL}/api/feed?type=latest`,
+{ cache: "no-store" }
+);
 
-/* -----------------------------
-IDENTITY LOOKUPS
------------------------------ */
+const feed = await res.json();
 
-const userIds = [
-...new Set(commitmentsData?.map((c:any)=>c.user_id).filter(Boolean))
-];
+/* SHOW ONLY FIRST 6 */
 
-const companyIds = [
-...new Set(commitmentsData?.map((c:any)=>c.company_id).filter(Boolean))
-];
-
-/* FETCH PROFILES */
-
-const { data: profiles } = await supabase
-.from("profiles")
-.select("id,username,display_name,avatar_url")
-.in("id",userIds);
-
-/* FETCH COMPANIES */
-
-const { data: companies } = await supabase
-.from("companies")
-.select("id,username,name,logo_url")
-.in("id",companyIds);
-
-/* MAP IDENTITIES */
-
-const profileMap:any = {};
-profiles?.forEach((p:any)=>{
-profileMap[p.id] = p;
-});
-
-const companyMap:any = {};
-companies?.forEach((c:any)=>{
-companyMap[c.id] = c;
-});
-
-/* -----------------------------
-FETCH VIEW COUNTS
------------------------------ */
-
-const commitmentIds = commitmentsData?.map((c:any)=>c.id) || [];
-
-let viewCount:any = {};
-
-if(commitmentIds.length){
-
-const { data:viewRows } = await supabase
-.from("commitment_views")
-.select("commitment_id")
-.in("commitment_id",commitmentIds);
-
-viewRows?.forEach((v:any)=>{
-viewCount[v.commitment_id] =
-(viewCount[v.commitment_id] || 0) + 1;
-});
-
-}
-
-/* -----------------------------
-NORMALIZE DATA
------------------------------ */
-
-const commitments =
-commitmentsData?.map((c:any)=>{
-
-let identity:any = null;
-
-if(c.company_id){
-
-const company = companyMap[c.company_id];
-
-identity = {
-username: company?.username,
-display_name: company?.name,
-avatar: company?.logo_url,
-type:"company"
-};
-
-}else{
-
-const profile = profileMap[c.user_id];
-
-identity = {
-username: profile?.username,
-display_name: profile?.display_name || profile?.username,
-avatar: profile?.avatar_url,
-type:"user"
-};
-
-}
-
-return{
-id:c.id,
-text:c.text,
-views:viewCount[c.id] || 0,
-...identity
-};
-
-}) || [];
+const commitments = feed.slice(0,6);
 
 return(
 
@@ -239,10 +137,10 @@ Recent Commitments
 {commitments.map((c:any)=>{
 
 const avatar =
-c.avatar?.trim()
-? c.avatar
+c.identity?.avatar_url?.trim()
+? c.identity.avatar_url
 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-c.display_name || "User"
+c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
 
 return(
@@ -267,9 +165,9 @@ className="rounded-full"
 
 <div className="flex items-center gap-2 font-semibold mb-1">
 
-{c.display_name}
+{c.identity?.display_name}
 
-{c.type==="company" && (
+{c.identity?.type==="company" && (
 <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
 COMPANY
 </span>
