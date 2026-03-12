@@ -7,25 +7,27 @@ export default async function HomePage() {
 
 let feed:any[] = [];
 
-try {
+try{
 
-const res = await fetch("https://app.stated.in/api/feed?type=latest", {
-cache: "no-store"
+const res = await fetch("https://app.stated.in/api/feed?type=latest",{
+cache:"no-store"
 });
 
-if (res.ok) {
+if(res.ok){
 feed = await res.json();
 }
 
-} catch (e) {
+}catch(e){
 feed = [];
 }
 
 const commitments = feed.slice(0,6);
 
-return (
+return(
 
 <div className="min-h-screen flex flex-col">
+
+{/* HEADER */}
 
 <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
@@ -45,6 +47,9 @@ Sign up
 </Link>
 
 </header>
+
+
+{/* HERO */}
 
 <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
@@ -80,6 +85,9 @@ Public outcomes.
 Build credibility. Track progress. Stay accountable.
 </p>
 
+
+{/* SEARCH */}
+
 <form
 action="/search"
 method="GET"
@@ -102,6 +110,9 @@ Search
 
 </form>
 
+
+{/* CTA */}
+
 <Link
 href="/signup"
 className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
@@ -115,6 +126,9 @@ Start with 5 Free Credits
 
 </section>
 
+
+{/* RECENT COMMITMENTS */}
+
 <section className="bg-white text-black py-16 px-6">
 
 <div className="max-w-5xl mx-auto">
@@ -122,6 +136,7 @@ Start with 5 Free Credits
 <h2 className="text-2xl font-semibold mb-10 text-center">
 Recent Commitments
 </h2>
+
 
 {commitments.length > 0 ? (
 
@@ -136,7 +151,7 @@ c.identity?.avatar_url?.trim()
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
 
-return (
+return(
 
 <Link
 key={c.id}
@@ -160,7 +175,7 @@ className="rounded-full"
 
 {c.identity?.display_name}
 
-{c.identity?.type === "company" && (
+{c.identity?.type==="company" && (
 <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
 COMPANY
 </span>
@@ -173,7 +188,7 @@ COMPANY
 </div>
 
 <div className="text-xs text-gray-500">
-👁 {c.views} views
+👁 {c.views}
 </div>
 
 </div>
@@ -188,7 +203,7 @@ COMPANY
 
 </div>
 
-) : (
+):( 
 
 <div className="text-center text-gray-500">
 No commitments yet.
