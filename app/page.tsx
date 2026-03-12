@@ -5,26 +5,32 @@ import Link from "next/link";
 
 export default async function HomePage() {
 
-/* -----------------------------
-FETCH FROM API FEED
------------------------------ */
+/* FETCH FROM API */
+
+let feed:any[] = [];
+
+try {
 
 const res = await fetch(
-`${process.env.NEXT_PUBLIC_SITE_URL}/api/feed?type=latest`,
+`${process.env.NEXT_PUBLIC_VERCEL_URL ? "https://" + process.env.NEXT_PUBLIC_VERCEL_URL : ""}/api/feed?type=latest`,
 { cache: "no-store" }
 );
 
-const feed = await res.json();
+if(res.ok){
+feed = await res.json();
+}
 
-/* SHOW ONLY FIRST 6 */
+} catch(e){
+feed = [];
+}
+
+/* FIRST 6 */
 
 const commitments = feed.slice(0,6);
 
 return(
 
 <div className="min-h-screen flex flex-col">
-
-{/* HEADER */}
 
 <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
@@ -44,8 +50,6 @@ Sign up
 </Link>
 
 </header>
-
-{/* HERO */}
 
 <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
@@ -81,8 +85,6 @@ Public outcomes.
 Build credibility. Track progress. Stay accountable.
 </p>
 
-{/* SEARCH */}
-
 <form
 action="/search"
 method="GET"
@@ -105,8 +107,6 @@ Search
 
 </form>
 
-{/* CTA */}
-
 <Link
 href="/signup"
 className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
@@ -119,8 +119,6 @@ Start with 5 Free Credits
 </p>
 
 </section>
-
-{/* RECENT COMMITMENTS */}
 
 <section className="bg-white text-black py-16 px-6">
 
