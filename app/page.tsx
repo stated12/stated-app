@@ -28,8 +28,6 @@ return (
 
 <div className="min-h-screen flex flex-col">
 
-{/* HEADER */}
-
 <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
 
 <Link href="/explore" className="hover:text-blue-400 transition">
@@ -49,8 +47,6 @@ Sign up
 
 </header>
 
-
-{/* HERO */}
 
 <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
@@ -87,8 +83,6 @@ Build credibility. Track progress. Stay accountable.
 </p>
 
 
-{/* SEARCH */}
-
 <form
 action="/search"
 method="GET"
@@ -112,8 +106,6 @@ Search
 </form>
 
 
-{/* CTA */}
-
 <Link
 href="/signup"
 className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
@@ -127,8 +119,6 @@ Start with 5 Free Credits
 
 </section>
 
-
-{/* RECENT COMMITMENTS */}
 
 <section className="bg-white text-black py-16 px-6">
 
@@ -145,8 +135,8 @@ Recent Commitments
 {commitments.map((c:any)=>{
 
 const avatar =
-(c.identity?.avatar_url || c.identity?.logo_url)?.trim()
-? (c.identity.avatar_url || c.identity.logo_url)
+(c.identity?.avatar || c.identity?.avatar_url || c.identity?.logo_url)?.trim()
+? (c.identity.avatar || c.identity.avatar_url || c.identity.logo_url)
 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
@@ -188,11 +178,8 @@ COMPANY
 </div>
 
 <div className="text-xs text-gray-500 flex gap-4">
-
 <span>👁 {c.views}</span>
-
 <span>🔁 {c.shares || 0}</span>
-
 </div>
 
 </div>
