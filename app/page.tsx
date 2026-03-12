@@ -2,33 +2,32 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 export default async function HomePage() {
 
-/* FETCH FROM API */
-
-let feed:any[] = [];
+let feed = [];
 
 try {
 
+const host = headers().get("host");
+
 const res = await fetch(
-`${process.env.NEXT_PUBLIC_VERCEL_URL ? "https://" + process.env.NEXT_PUBLIC_VERCEL_URL : ""}/api/feed?type=latest`,
+`https://${host}/api/feed?type=latest`,
 { cache: "no-store" }
 );
 
-if(res.ok){
+if (res.ok) {
 feed = await res.json();
 }
 
-} catch(e){
+} catch (e) {
 feed = [];
 }
 
-/* FIRST 6 */
-
 const commitments = feed.slice(0,6);
 
-return(
+return (
 
 <div className="min-h-screen flex flex-col">
 
@@ -132,7 +131,7 @@ Recent Commitments
 
 <div className="grid md:grid-cols-2 gap-6">
 
-{commitments.map((c:any)=>{
+{commitments.map((c)=>{
 
 const avatar =
 c.identity?.avatar_url?.trim()
@@ -141,7 +140,7 @@ c.identity?.avatar_url?.trim()
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
 
-return(
+return (
 
 <Link
 key={c.id}
@@ -165,7 +164,7 @@ className="rounded-full"
 
 {c.identity?.display_name}
 
-{c.identity?.type==="company" && (
+{c.identity?.type === "company" && (
 <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
 COMPANY
 </span>
