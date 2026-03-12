@@ -135,9 +135,8 @@ Recent Commitments
 {commitments.map((c:any)=>{
 
 const avatar =
-(c.identity?.avatar || c.identity?.avatar_url || c.identity?.logo_url)?.trim()
-? (c.identity.avatar || c.identity.avatar_url || c.identity.logo_url)
-: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+c.identity?.avatar_url ||
+`https://ui-avatars.com/api/?name=${encodeURIComponent(
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
 
