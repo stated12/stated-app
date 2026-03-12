@@ -29,33 +29,29 @@ export async function GET(request: Request) {
       .eq("visibility", "public")
       .limit(25);
 
-    /* ---------- ORDERING ---------- */
+    /* ORDERING */
 
-    if (type === "latest") {
-      query = query.order("created_at", { ascending: false });
-    } else {
-      query = query.order("created_at", { ascending: false });
-    }
+    query = query.order("created_at", { ascending: false });
 
-    /* ---------- CATEGORY FILTER ---------- */
+    /* CATEGORY FILTER */
 
     if (category) {
       query = query.eq("category", category);
     }
 
-    /* ---------- CURSOR PAGINATION ---------- */
+    /* CURSOR PAGINATION */
 
     if (cursor) {
       query = query.lt("created_at", cursor);
     }
 
-    /* ---------- SEARCH ---------- */
+    /* SEARCH */
 
     if (searchQuery) {
       query = query.ilike("text", `%${searchQuery}%`);
     }
 
-    /* ---------- USER PROFILE FILTER ---------- */
+    /* USER PROFILE FILTER */
 
     if (userHandle) {
 
@@ -71,7 +67,7 @@ export async function GET(request: Request) {
 
     }
 
-    /* ---------- COMPANY FILTER ---------- */
+    /* COMPANY FILTER */
 
     if (companyHandle) {
 
@@ -105,7 +101,7 @@ export async function GET(request: Request) {
       ...new Set(commitments.map((c: any) => c.company_id).filter(Boolean)),
     ];
 
-    /* ---------- FETCH PROFILES ---------- */
+    /* FETCH PROFILES */
 
     const { data: profiles } = await supabase
       .from("profiles")
@@ -118,7 +114,7 @@ export async function GET(request: Request) {
       profileMap[p.id] = p;
     });
 
-    /* ---------- FETCH COMPANIES ---------- */
+    /* FETCH COMPANIES */
 
     const { data: companies } = await supabase
       .from("companies")
@@ -131,7 +127,7 @@ export async function GET(request: Request) {
       companyMap[c.id] = c;
     });
 
-    /* ---------- BUILD FEED ---------- */
+    /* BUILD FEED */
 
     let feed = commitments.map((c: any) => {
 
@@ -144,7 +140,11 @@ export async function GET(request: Request) {
         identity = {
           username: company?.username || "company",
           display_name: company?.name || "Company",
-          avatar_url: company?.logo_url || null,
+          avatar_url:
+            company?.logo_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              company?.name || "Company"
+            )}&background=111827&color=fff`,
           type: "company",
         };
 
@@ -156,7 +156,11 @@ export async function GET(request: Request) {
           username: profile?.username || "user",
           display_name:
             profile?.display_name || profile?.username || "User",
-          avatar_url: profile?.avatar_url || null,
+          avatar_url:
+            profile?.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              profile?.display_name || profile?.username || "User"
+            )}&background=2563eb&color=fff`,
           type: "user",
         };
 
@@ -167,13 +171,14 @@ export async function GET(request: Request) {
         text: c.text,
         category: c.category,
         created_at: c.created_at,
-        views: c.views || 0,   // ✅ FIXED: use cached views
+        views: c.views || 0,
+        shares: c.shares || 0,
         identity,
       };
 
     });
 
-    /* ---------- TRENDING SORT ---------- */
+    /* TRENDING SORT */
 
     if (type === "trending") {
       feed.sort((a, b) => (b.views || 0) - (a.views || 0));
