@@ -7,23 +7,24 @@ export default async function HomePage() {
 
 let feed:any[] = [];
 
-try{
+try {
 
-const res = await fetch("https://app.stated.in/api/feed?type=latest",{
-cache:"no-store"
-});
+const res = await fetch(
+"https://app.stated.in/api/feed?type=latest",
+{ cache: "no-store" }
+);
 
-if(res.ok){
+if (res.ok) {
 feed = await res.json();
 }
 
-}catch(e){
+} catch (e) {
 feed = [];
 }
 
 const commitments = feed.slice(0,6);
 
-return(
+return (
 
 <div className="min-h-screen flex flex-col">
 
@@ -137,7 +138,6 @@ Start with 5 Free Credits
 Recent Commitments
 </h2>
 
-
 {commitments.length > 0 ? (
 
 <div className="grid md:grid-cols-2 gap-6">
@@ -145,8 +145,8 @@ Recent Commitments
 {commitments.map((c:any)=>{
 
 const avatar =
-c.identity?.avatar_url?.trim()
-? c.identity.avatar_url
+(c.identity?.avatar_url || c.identity?.logo_url)?.trim()
+? (c.identity.avatar_url || c.identity.logo_url)
 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
@@ -187,8 +187,12 @@ COMPANY
 {c.text}
 </div>
 
-<div className="text-xs text-gray-500">
-👁 {c.views}
+<div className="text-xs text-gray-500 flex gap-4">
+
+<span>👁 {c.views}</span>
+
+<span>🔁 {c.shares || 0}</span>
+
 </div>
 
 </div>
@@ -203,7 +207,7 @@ COMPANY
 
 </div>
 
-):( 
+) : (
 
 <div className="text-center text-gray-500">
 No commitments yet.
