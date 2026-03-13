@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function CreateCommitmentPage() {
 
 const supabase = createClient();
 const router = useRouter();
+const pathname = usePathname();
 
 const [text,setText] = useState("");
 const [category,setCategory] = useState("");
@@ -41,7 +42,12 @@ const companyCategories = [
 "Other"
 ];
 
-const categories = company ? companyCategories : individualCategories;
+/* Detect workspace */
+
+const isCompanyWorkspace = pathname.startsWith("/dashboard/company");
+
+const categories = isCompanyWorkspace ? companyCategories : individualCategories;
+
 
 /* ---------------- LOAD USER ---------------- */
 
@@ -70,6 +76,8 @@ setProfile(profileData);
 
 /* COMPANY MEMBERSHIP */
 
+if(isCompanyWorkspace){
+
 const {data:membership} = await supabase
 .from("company_members")
 .select("company_id")
@@ -88,9 +96,12 @@ setCompany(companyData);
 
 }
 
+}
+
 setInitialLoading(false);
 
 }
+
 
 /* ---------------- DEADLINE ---------------- */
 
@@ -105,9 +116,10 @@ if(deadline==="3m") date.setMonth(date.getMonth()+3);
 if(deadline==="6m") date.setMonth(date.getMonth()+6);
 if(deadline==="1y") date.setFullYear(date.getFullYear()+1);
 
-return date.toISOString();
+return date.toISOString().split("T")[0];
 
 }
+
 
 /* ---------------- CREATE COMMITMENT ---------------- */
 
@@ -115,6 +127,21 @@ async function createCommitment(){
 
 if(!text.trim()){
 alert("Commitment text required");
+return;
+}
+
+if(!category){
+alert("Please select a category");
+return;
+}
+
+if(!deadline){
+alert("Please select a deadline");
+return;
+}
+
+if(deadline==="custom" && !customDate){
+alert("Please select custom date");
 return;
 }
 
@@ -160,13 +187,12 @@ return;
 
 setLoading(false);
 
-/* REDIRECT TO FEED */
-
 router.push("/dashboard");
 
 }
 
-/* ---------------- LOADING STATE ---------------- */
+
+/* ---------------- LOADING ---------------- */
 
 if(initialLoading){
 
@@ -177,6 +203,7 @@ Loading...
 );
 
 }
+
 
 /* ---------------- UI ---------------- */
 
@@ -261,4 +288,4 @@ className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full"
 
 );
 
-  }
+}
