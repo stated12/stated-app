@@ -134,13 +134,22 @@ Recent Commitments
 
 {commitments.map((c:any)=>{
 
-const avatar =
-c.identity?.avatar_url &&
-c.identity.avatar_url.startsWith("http")
-? c.identity.avatar_url
-: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+let avatar = c.identity?.avatar_url;
+
+/* STRONG FALLBACK */
+
+if (
+!avatar ||
+avatar === "" ||
+avatar.includes("undefined") ||
+!avatar.startsWith("http")
+) {
+
+avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
 c.identity?.display_name || "User"
 )}&background=2563eb&color=fff`;
+
+}
 
 return(
 
@@ -217,28 +226,6 @@ Explore more commitments →
 </div>
 
 </section>
-
-
-<footer className="border-t mt-10 py-8 text-center text-gray-500 text-sm">
-
-<div className="flex justify-center gap-6 mb-3">
-
-<Link href="/">Home</Link>
-<Link href="/privacy">Privacy Policy</Link>
-<Link href="/terms">Terms of Service</Link>
-<Link href="/refund">Refund Policy</Link>
-
-</div>
-
-<p className="text-gray-500 mb-1">
-Built in India for the world
-</p>
-
-<p>
-© 2026 Stated
-</p>
-
-</footer>
 
 </div>
 
