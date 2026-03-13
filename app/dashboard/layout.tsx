@@ -19,6 +19,10 @@ const [loading,setLoading] = useState(true)
 const pathname = usePathname()
 const router = useRouter()
 
+/* DETECT WORKSPACE CONTEXT */
+
+const isCompanyWorkspace = pathname.startsWith("/dashboard/company")
+
 useEffect(()=>{
 
 let mounted = true
@@ -34,7 +38,7 @@ router.push("/login")
 return
 }
 
-/* LOAD PROFILE */
+/* PROFILE */
 
 const {data:profileData} = await supabase
 .from("profiles")
@@ -46,7 +50,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* LOAD COMPANY (owner based) */
+/* COMPANY (owner for now) */
 
 const {data:companyData} = await supabase
 .from("companies")
@@ -75,17 +79,12 @@ setOpen(false)
 if(loading) return null
 
 
-/* ACCOUNT TYPE */
-
-const isCompanyUser = profile?.account_type === "company"
-
-
 /* ROUTES */
 
 const homeLink =
-isCompanyUser
+isCompanyWorkspace
 ? "/dashboard/company"
-: "/dashboard/my"
+: "/dashboard"
 
 const createLink = "/dashboard/create"
 
@@ -110,17 +109,17 @@ active
 /* PROFILE DISPLAY */
 
 const avatar =
-isCompanyUser
+isCompanyWorkspace
 ? company?.logo_url
 : profile?.avatar_url
 
 const displayName =
-isCompanyUser
+isCompanyWorkspace
 ? company?.name
 : profile?.display_name || profile?.username
 
 const username =
-isCompanyUser
+isCompanyWorkspace
 ? company?.username
 : profile?.username
 
@@ -149,7 +148,6 @@ onClick={()=>setOpen(false)}
 />
 )}
 
-
 {/* SIDEBAR */}
 
 <aside
@@ -158,10 +156,11 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 }`}
 >
 
-
 {/* PROFILE */}
 
 <div className="px-6 pt-8 pb-5 border-b">
+
+<Link href="/dashboard/profile/edit">
 
 <div className="flex items-center gap-3">
 
@@ -191,8 +190,10 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 </div>
 
+</Link>
+
 <Link
-href={isCompanyUser ? `/c/${username}` : `/u/${username}`}
+href={isCompanyWorkspace ? `/c/${username}` : `/u/${username}`}
 className="block mt-3 text-sm text-blue-600 font-semibold"
 >
 View Profile
@@ -205,7 +206,7 @@ View Profile
 
 <nav className="px-4 py-6 space-y-2 flex-1">
 
-{isCompanyUser ? (
+{isCompanyWorkspace ? (
 
 <>
 <Link href="/dashboard/company" className={linkClass("/dashboard/company")}>
@@ -216,19 +217,27 @@ View Profile
 📊 Insights
 </Link>
 
+<Link href="/dashboard/company/members" className={linkClass("/dashboard/company/members")}>
+👥 Members
+</Link>
+
 <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
-👥 Invite Members
+✉ Invite Members
 </Link>
 
 <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
 ⚙️ Company Settings
+</Link>
+
+<Link href="/dashboard/company/billing" className={linkClass("/dashboard/company/billing")}>
+💳 Billing
 </Link>
 </>
 
 ) : (
 
 <>
-<Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
+<Link href="/dashboard/commitments" className={linkClass("/dashboard/commitments")}>
 📌 My Commitments
 </Link>
 
@@ -236,20 +245,25 @@ View Profile
 📊 Insights
 </Link>
 
-<Link href="/billing" className={linkClass("/billing")}>
+<Link href="/dashboard/billing" className={linkClass("/dashboard/billing")}>
 💳 Billing
 </Link>
 
-<Link href="/account" className={linkClass("/account")}>
+<Link href="/dashboard/profile/edit" className={linkClass("/dashboard/profile/edit")}>
 ⚙️ Account Settings
 </Link>
 
-<Link href="/upgrade" className={linkClass("/upgrade")}>
-🚀 Upgrade
-</Link>
 </>
 
 )}
+
+<Link href="/dashboard/upgrade" className={linkClass("/dashboard/upgrade")}>
+🚀 Upgrade
+</Link>
+
+<Link href="/dashboard/credits" className={linkClass("/dashboard/credits")}>
+💰 Buy Credits
+</Link>
 
 <Link href="/dashboard/support" className={linkClass("/dashboard/support")}>
 🛟 Support
@@ -274,7 +288,6 @@ className="flex items-center gap-3 text-red-600 font-bold"
 </aside>
 
 
-
 {/* MAIN */}
 
 <main className="flex-1 flex flex-col pb-24">
@@ -288,7 +301,7 @@ className="flex items-center gap-3 text-red-600 font-bold"
 ☰
 </button>
 
-<Link href="/account" className="flex items-center gap-2">
+<Link href="/dashboard" className="flex items-center gap-2">
 <Image src="/logo.png" alt="" width={40} height={40}/>
 <span className="font-bold text-blue-600 text-lg">
 Stated
@@ -304,7 +317,7 @@ Stated
 
 <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
 
-<Link href="/account" className="flex items-center gap-2">
+<Link href="/dashboard" className="flex items-center gap-2">
 <Image src="/logo.png" alt="" width={40} height={40}/>
 <span className="font-bold text-blue-600 text-xl">
 Stated
@@ -314,7 +327,6 @@ Stated
 <NotificationBell/>
 
 </div>
-
 
 
 <div className="px-6 py-8 max-w-4xl mx-auto w-full">
@@ -350,4 +362,4 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 
 )
 
-  }
+}
