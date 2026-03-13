@@ -48,7 +48,7 @@ Sign up
 </header>
 
 
-<section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
+<section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24 min-h-[85vh]">
 
 {/* Desktop hero */}
 <Image
@@ -68,9 +68,8 @@ priority
 className="object-cover -z-10 md:hidden"
 />
 
-{/* Slightly lighter overlay so S glow is brighter */}
-<div className="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"/>
-
+{/* Overlay */}
+<div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10"/>
 
 <Image
 src="/logo.png"
@@ -132,7 +131,6 @@ Start with 5 Free Credits
 </section>
 
 
-{/* flex-1 pushes footer down on large screens */}
 <section className="bg-white text-black py-16 px-6 flex-1">
 
 <div className="max-w-5xl mx-auto">
