@@ -9,9 +9,7 @@ export default async function InsightsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,7 +17,6 @@ export default async function InsightsPage() {
     .eq("id", user.id)
     .single();
 
-  // PRO plan detection
   const PRO_PLANS = [
     "ind_499",
     "ind_899",
@@ -31,7 +28,6 @@ export default async function InsightsPage() {
 
   const isPro = PRO_PLANS.includes(profile?.plan_key);
 
-  // Personal commitments only
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id,status,shares")
@@ -69,7 +65,6 @@ export default async function InsightsPage() {
       (c) => c.status === "paused" || c.status === "withdrawn"
     ).length ?? 0;
 
-  // Total Shares
   const totalShares =
     commitments?.reduce((sum, c) => sum + (c.shares ?? 0), 0) ?? 0;
 
@@ -93,7 +88,7 @@ export default async function InsightsPage() {
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
-              Profile Views
+              👤 Profile Views
             </div>
             <div className="text-xl font-semibold">
               {profileViews ?? 0}
@@ -102,16 +97,16 @@ export default async function InsightsPage() {
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
-              Commitment Views
+              👁 Commitment Views
             </div>
             <div className="text-xl font-semibold">
               {commitmentViews}
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-xs text-gray-500 mb-1">
-              Total Shares
+          <div className="bg-blue-50 rounded-lg p-4 text-blue-700">
+            <div className="text-xs mb-1">
+              🔁 Total Shares
             </div>
             <div className="text-xl font-semibold">
               {totalShares}
@@ -120,7 +115,7 @@ export default async function InsightsPage() {
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
-              Total Commitments
+              📝 Total Commitments
             </div>
             <div className="text-xl font-semibold">
               {total}
@@ -129,27 +124,35 @@ export default async function InsightsPage() {
 
         </div>
 
+        {/* Divider */}
+        <div className="border-t border-gray-200 mt-6 pt-4" />
+
         {/* Commitment Status */}
-        <div className="mt-6 border-t pt-4 text-sm text-gray-600 grid grid-cols-3 gap-3 text-center">
+        <div className="grid grid-cols-3 text-center text-sm text-gray-600">
 
           <div>
-            <div className="font-medium text-gray-900">{active}</div>
-            <div>Active</div>
+            <div className="font-semibold text-gray-900">
+              {active}
+            </div>
+            Active
           </div>
 
           <div>
-            <div className="font-medium text-gray-900">{completed}</div>
-            <div>Completed</div>
+            <div className="font-semibold text-gray-900">
+              {completed}
+            </div>
+            Completed
           </div>
 
           <div>
-            <div className="font-medium text-gray-900">{paused}</div>
-            <div>Paused / Withdrawn</div>
+            <div className="font-semibold text-gray-900">
+              {paused}
+            </div>
+            Paused / Withdrawn
           </div>
 
         </div>
 
-        {/* Blur overlay for free users */}
         {!isPro && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-xl">
 
@@ -175,7 +178,6 @@ export default async function InsightsPage() {
 
       </div>
 
-      {/* Reputation Card */}
       <ReputationCard userId={user.id} />
 
     </div>
