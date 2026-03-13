@@ -19,9 +19,7 @@ const [loading,setLoading] = useState(true)
 const pathname = usePathname()
 const router = useRouter()
 
-/* DETECT WORKSPACE CONTEXT */
-
-const isCompanyWorkspace = pathname.startsWith("/dashboard/company")
+/* LOAD USER DATA */
 
 useEffect(()=>{
 
@@ -50,7 +48,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY (owner for now) */
+/* COMPANY (OWNER ONLY FOR NOW) */
 
 const {data:companyData} = await supabase
 .from("companies")
@@ -72,11 +70,17 @@ return ()=>{mounted=false}
 
 },[router])
 
+
 useEffect(()=>{
 setOpen(false)
 },[pathname])
 
 if(loading) return null
+
+
+/* WORKSPACE TYPE */
+
+const isCompanyWorkspace = pathname.startsWith("/dashboard/company")
 
 
 /* ROUTES */
@@ -156,13 +160,13 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 }`}
 >
 
-{/* PROFILE */}
+{/* PROFILE HEADER */}
 
 <div className="px-6 pt-8 pb-5 border-b">
 
-<Link href="/dashboard/profile/edit">
+<Link href="/profile/edit">
 
-<div className="flex items-center gap-3">
+<div className="flex items-center gap-3 cursor-pointer">
 
 <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
 
@@ -217,27 +221,20 @@ View Profile
 📊 Insights
 </Link>
 
-<Link href="/dashboard/company/members" className={linkClass("/dashboard/company/members")}>
-👥 Members
-</Link>
-
 <Link href="/dashboard/company/invite" className={linkClass("/dashboard/company/invite")}>
-✉ Invite Members
+👥 Invite Members
 </Link>
 
 <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
 ⚙️ Company Settings
 </Link>
 
-<Link href="/dashboard/company/billing" className={linkClass("/dashboard/company/billing")}>
-💳 Billing
-</Link>
 </>
 
 ) : (
 
 <>
-<Link href="/dashboard/commitments" className={linkClass("/dashboard/commitments")}>
+<Link href="/dashboard/my" className={linkClass("/dashboard/my")}>
 📌 My Commitments
 </Link>
 
@@ -249,7 +246,7 @@ View Profile
 💳 Billing
 </Link>
 
-<Link href="/dashboard/profile/edit" className={linkClass("/dashboard/profile/edit")}>
+<Link href="/profile/edit" className={linkClass("/profile/edit")}>
 ⚙️ Account Settings
 </Link>
 
@@ -257,11 +254,13 @@ View Profile
 
 )}
 
+{/* SHARED LINKS */}
+
 <Link href="/dashboard/upgrade" className={linkClass("/dashboard/upgrade")}>
 🚀 Upgrade
 </Link>
 
-<Link href="/dashboard/credits" className={linkClass("/dashboard/credits")}>
+<Link href="/dashboard/upgrade" className={linkClass("/dashboard/upgrade")}>
 💰 Buy Credits
 </Link>
 
@@ -328,6 +327,8 @@ Stated
 
 </div>
 
+
+{/* PAGE CONTENT */}
 
 <div className="px-6 py-8 max-w-4xl mx-auto w-full">
 {children}
