@@ -16,6 +16,7 @@ type Commitment = {
   category: string;
   created_at: string;
   views?: number;
+  shares?: number;
   latest_update?: string | null;
   identity: Identity;
 };
@@ -175,10 +176,11 @@ export default function DashboardPage() {
           commitments.map((c) => {
 
             const avatar =
-              c.identity.avatar_url ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                c.identity.display_name || c.identity.username
-              )}&background=2563eb&color=fff`;
+              c.identity.avatar_url?.trim()
+                ? c.identity.avatar_url.trim()
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    c.identity.display_name || c.identity.username
+                  )}&background=2563eb&color=fff`;
 
             const profileLink =
               c.identity.type === "company"
@@ -248,10 +250,11 @@ export default function DashboardPage() {
 
                   )}
 
-                  {/* VIEWS */}
+                  {/* VIEWS + SHARES */}
 
-                  <div className="text-xs text-gray-500">
-                    👁 {c.views ?? 0} views
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>👁 {c.views ?? 0} views</span>
+                    <span>🔁 {c.shares ?? 0}</span>
                   </div>
 
                 </div>
