@@ -68,8 +68,8 @@ priority
 className="object-cover -z-10 md:hidden"
 />
 
-{/* Overlay */}
-<div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10"/>
+{/* Slightly lighter overlay so S glow is brighter */}
+<div className="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"/>
 
 
 <Image
@@ -120,7 +120,7 @@ Search
 
 <Link
 href="/signup"
-className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
+className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition shadow-lg"
 >
 Start with 5 Free Credits
 </Link>
@@ -132,7 +132,8 @@ Start with 5 Free Credits
 </section>
 
 
-<section className="bg-white text-black py-16 px-6">
+{/* flex-1 pushes footer down on large screens */}
+<section className="bg-white text-black py-16 px-6 flex-1">
 
 <div className="max-w-5xl mx-auto">
 
