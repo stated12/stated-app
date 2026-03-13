@@ -50,15 +50,27 @@ Sign up
 
 <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24">
 
+{/* Desktop hero */}
 <Image
-src="/nature-bg.jpg"
+src="/hero-desktop.png"
 alt="Background"
 fill
 priority
-className="object-cover -z-10"
+className="object-cover -z-10 hidden md:block"
 />
 
-<div className="absolute inset-0 bg-black/60 backdrop-blur-sm -z-10"/>
+{/* Mobile hero */}
+<Image
+src="/hero-mobile.png"
+alt="Background"
+fill
+priority
+className="object-cover -z-10 md:hidden"
+/>
+
+{/* Overlay */}
+<div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10"/>
+
 
 <Image
 src="/logo.png"
@@ -114,7 +126,7 @@ Start with 5 Free Credits
 </Link>
 
 <p className="mt-3 text-sm text-gray-300">
-2 updates per commitment • Public profile included
+1 credit = 1 commitment • 2 updates per commitment • Public profile included
 </p>
 
 </section>
@@ -123,6 +135,10 @@ Start with 5 Free Credits
 <section className="bg-white text-black py-16 px-6">
 
 <div className="max-w-5xl mx-auto">
+
+<p className="text-center text-gray-500 mb-4">
+Join people publicly committing to their goals.
+</p>
 
 <h2 className="text-2xl font-semibold mb-10 text-center">
 Recent Commitments
@@ -135,8 +151,6 @@ Recent Commitments
 {commitments.map((c:any)=>{
 
 let avatar = c.identity?.avatar_url;
-
-/* STRONG FALLBACK */
 
 if (
 !avatar ||
@@ -230,5 +244,4 @@ Explore more commitments →
 </div>
 
 );
-
 }
