@@ -68,9 +68,6 @@ priority
 className="object-cover -z-10 md:hidden"
 />
 
-{/* Overlay */}
-<div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10"/>
-
 <Image
 src="/logo.png"
 alt="Stated Logo"
