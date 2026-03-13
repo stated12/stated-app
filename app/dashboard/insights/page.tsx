@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import ReputationCard from "@/components/ReputationCard";
 
 export default async function InsightsPage() {
   const supabase = await createClient();
@@ -18,7 +19,7 @@ export default async function InsightsPage() {
     .eq("id", user.id)
     .single();
 
-  // ✅ PRO plan detection
+  // PRO plan detection
   const PRO_PLANS = [
     "ind_499",
     "ind_899",
@@ -30,10 +31,12 @@ export default async function InsightsPage() {
 
   const isPro = PRO_PLANS.includes(profile?.plan_key);
 
+  // Personal commitments only
   const { data: commitments } = await supabase
     .from("commitments")
-    .select("*")
-    .eq("user_id", user.id);
+    .select("id,status,shares")
+    .eq("user_id", user.id)
+    .is("company_id", null);
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
 
@@ -66,12 +69,16 @@ export default async function InsightsPage() {
       (c) => c.status === "paused" || c.status === "withdrawn"
     ).length ?? 0;
 
+  // Total Shares
+  const totalShares =
+    commitments?.reduce((sum, c) => sum + (c.shares ?? 0), 0) ?? 0;
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
       <div className="bg-white rounded-xl shadow p-6 relative">
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div className="text-lg font-semibold">Insights</div>
 
           {isPro && (
@@ -81,21 +88,68 @@ export default async function InsightsPage() {
           )}
         </div>
 
-        {/* Insights grid */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-2 gap-4 text-center">
 
-          <div>Profile views: {profileViews ?? 0}</div>
-          <div>Total commitments: {total}</div>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              Profile Views
+            </div>
+            <div className="text-xl font-semibold">
+              {profileViews ?? 0}
+            </div>
+          </div>
 
-          <div>Commitment views: {commitmentViews}</div>
-          <div>Active: {active}</div>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              Commitment Views
+            </div>
+            <div className="text-xl font-semibold">
+              {commitmentViews}
+            </div>
+          </div>
 
-          <div>Completed: {completed}</div>
-          <div>Paused / Withdrawn: {paused}</div>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              Total Shares
+            </div>
+            <div className="text-xl font-semibold">
+              {totalShares}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              Total Commitments
+            </div>
+            <div className="text-xl font-semibold">
+              {total}
+            </div>
+          </div>
 
         </div>
 
-        {/* 🔒 Blur overlay for free users */}
+        {/* Commitment Status */}
+        <div className="mt-6 border-t pt-4 text-sm text-gray-600 grid grid-cols-3 gap-3 text-center">
+
+          <div>
+            <div className="font-medium text-gray-900">{active}</div>
+            <div>Active</div>
+          </div>
+
+          <div>
+            <div className="font-medium text-gray-900">{completed}</div>
+            <div>Completed</div>
+          </div>
+
+          <div>
+            <div className="font-medium text-gray-900">{paused}</div>
+            <div>Paused / Withdrawn</div>
+          </div>
+
+        </div>
+
+        {/* Blur overlay for free users */}
         {!isPro && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-xl">
 
@@ -120,6 +174,9 @@ export default async function InsightsPage() {
         )}
 
       </div>
+
+      {/* Reputation Card */}
+      <ReputationCard userId={user.id} />
 
     </div>
   );
