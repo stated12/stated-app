@@ -11,14 +11,11 @@ export default function GlobalFooter() {
 
   return (
     <footer className="border-t py-6 text-center text-sm text-gray-500 bg-white">
-      
+
       {/* Navigation + Legal Links */}
       <div className="flex justify-center flex-wrap gap-4">
 
-        <Link
-          href="/"
-          className="hover:underline"
-        >
+        <Link href="/" className="hover:underline">
           Home
         </Link>
 
@@ -51,9 +48,10 @@ export default function GlobalFooter() {
 
       </div>
 
-      {/* Copyright */}
+      {/* Copyright + India line */}
       <div className="mt-3">
-        © {new Date().getFullYear()} Stated
+        © {new Date().getFullYear()} Stated • Built in{" "}
+        <span className="text-blue-600 font-medium">India</span> for the World
       </div>
 
     </footer>
