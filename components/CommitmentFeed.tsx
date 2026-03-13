@@ -18,7 +18,7 @@ type Commitment = {
   category?: string;
   created_at: string;
   views?: number;
-  share_count?: number;
+  shares?: number;
   latest_update?: string | null;
   identity?: Identity | null;
 };
@@ -293,7 +293,7 @@ export default function CommitmentFeed({
 
                 <div className="text-sm text-gray-500 flex items-center gap-4">
                   <span>👁 {c.views ?? 0} views</span>
-                  <span>🔁 {c.share_count ?? 0}</span>
+                  <span>🔁 {c.shares ?? 0}</span>
                 </div>
 
               </div>
