@@ -48,7 +48,7 @@ if(mounted){
 setProfile(profileData)
 }
 
-/* COMPANY (OWNER ONLY FOR NOW) */
+/* COMPANY */
 
 const {data:companyData} = await supabase
 .from("companies")
@@ -228,7 +228,6 @@ View Profile
 <Link href="/dashboard/company/settings" className={linkClass("/dashboard/company/settings")}>
 ⚙️ Company Settings
 </Link>
-
 </>
 
 ) : (
@@ -242,25 +241,24 @@ View Profile
 📊 Insights
 </Link>
 
-<Link href="/dashboard/billing" className={linkClass("/dashboard/billing")}>
+<Link href="/billing" className={linkClass("/billing")}>
 💳 Billing
 </Link>
 
-<Link href="/profile/edit" className={linkClass("/profile/edit")}>
+<Link href="/account" className={linkClass("/account")}>
 ⚙️ Account Settings
 </Link>
-
 </>
 
 )}
 
 {/* SHARED LINKS */}
 
-<Link href="/dashboard/upgrade" className={linkClass("/dashboard/upgrade")}>
+<Link href="/upgrade" className={linkClass("/upgrade")}>
 🚀 Upgrade
 </Link>
 
-<Link href="/dashboard/upgrade" className={linkClass("/dashboard/upgrade")}>
+<Link href="/upgrade" className={linkClass("/upgrade")}>
 💰 Buy Credits
 </Link>
 
