@@ -7,10 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 
 export default function CommitmentClient({
-  commitmentId
-}:{
-  commitmentId:string
-}){
+commitmentId
+}:{commitmentId:string}){
 
 const router = useRouter();
 const supabase = createClient();
@@ -136,6 +134,8 @@ company?.name ||
 
 }
 
+/* -------- SHARE FUNCTION (FIXED) -------- */
+
 async function share(){
 
 const url =
@@ -151,15 +151,27 @@ ${url}`;
 
 try{
 
+/* record share event */
+
 await supabase
 .from("commitment_shares")
 .insert({commitment_id:commitmentId});
+
+/* increment global share count */
+
+await supabase.rpc("increment_commitment_shares",{
+commitment_id_input:commitmentId
+});
+
+/* update UI instantly */
 
 setShareCount((s)=>s+1);
 
 }catch(e){
 console.log("share tracking error",e);
 }
+
+/* open share dialog */
 
 if(navigator.share){
 
@@ -177,6 +189,8 @@ alert("Commitment link copied");
 }
 
 }
+
+/* -------- STATUS BADGE -------- */
 
 function statusBadge(){
 
