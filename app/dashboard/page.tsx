@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
 type Identity = {
@@ -35,10 +35,15 @@ function timeAgo(date: string) {
 export default function DashboardPage() {
 
   const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] =
     useState<"latest" | "trending">("latest");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const categories = [
     "",
@@ -57,8 +62,38 @@ export default function DashboardPage() {
   ];
 
   useEffect(() => {
-    loadFeed();
+    resetFeed();
   }, [activeTab, category]);
+
+  useEffect(() => {
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+
+        const first = entries[0];
+
+        if (first.isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+
+      },
+      { threshold: 1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+
+  }, [hasMore, loadingMore]);
+
+  function resetFeed() {
+    setCommitments([]);
+    setCursor(null);
+    setHasMore(true);
+    loadFeed();
+  }
 
   async function loadFeed() {
 
@@ -67,27 +102,28 @@ export default function DashboardPage() {
       setLoading(true);
 
       const params = new URLSearchParams();
-
       params.append("type", activeTab);
 
-      if (category) {
-        params.append("category", category);
-      }
+      if (category) params.append("category", category);
 
       const res = await fetch(`/api/feed?${params.toString()}`);
-
       const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setCommitments(data);
-      } else {
-        setCommitments([]);
-      }
+      const safeData = Array.isArray(data) ? data : [];
+
+      setCommitments(safeData);
+
+      setCursor(
+        safeData.length
+          ? safeData[safeData.length - 1].created_at
+          : null
+      );
+
+      setHasMore(safeData.length === 25);
 
     } catch (err) {
 
       console.error("Feed error:", err);
-
       setCommitments([]);
 
     } finally {
@@ -98,11 +134,51 @@ export default function DashboardPage() {
 
   }
 
+  async function loadMore() {
+
+    if (!cursor || !hasMore) return;
+
+    try {
+
+      setLoadingMore(true);
+
+      const params = new URLSearchParams();
+
+      params.append("type", activeTab);
+      params.append("cursor", cursor);
+
+      if (category) params.append("category", category);
+
+      const res = await fetch(`/api/feed?${params.toString()}`);
+      const data = await res.json();
+
+      const safeData = Array.isArray(data) ? data : [];
+
+      setCommitments((prev) => [...prev, ...safeData]);
+
+      if (safeData.length > 0) {
+        setCursor(safeData[safeData.length - 1].created_at);
+      }
+
+      if (safeData.length < 25) {
+        setHasMore(false);
+      }
+
+    } catch (err) {
+
+      console.error("Load more error:", err);
+
+    } finally {
+
+      setLoadingMore(false);
+
+    }
+
+  }
+
   return (
 
     <div className="max-w-xl mx-auto px-4 pt-6 pb-20 space-y-6">
-
-      {/* TITLE */}
 
       <div>
 
@@ -115,8 +191,6 @@ export default function DashboardPage() {
         </p>
 
       </div>
-
-      {/* FILTER CARD */}
 
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
 
@@ -162,8 +236,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* FEED */}
-
       <div className="space-y-4">
 
         {loading && (
@@ -172,102 +244,100 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!loading &&
-          commitments.map((c) => {
+        {commitments.map((c) => {
 
-            const avatar =
-              c.identity.avatar_url?.trim()
-                ? c.identity.avatar_url.trim()
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    c.identity.display_name || c.identity.username
-                  )}&background=2563eb&color=fff`;
+          const avatar =
+            c.identity.avatar_url?.trim()
+              ? c.identity.avatar_url.trim()
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  c.identity.display_name || c.identity.username
+                )}&background=2563eb&color=fff`;
 
-            const profileLink =
-              c.identity.type === "company"
-                ? `/c/${c.identity.username}`
-                : `/u/${c.identity.username}`;
+          const profileLink =
+            c.identity.type === "company"
+              ? `/c/${c.identity.username}`
+              : `/u/${c.identity.username}`;
 
-            return (
+          return (
 
-              <Link key={c.id} href={`/commitment/${c.id}`}>
+            <Link key={c.id} href={`/commitment/${c.id}`}>
 
-                <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer">
+              <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer">
 
-                  {/* AUTHOR */}
+                <Link
+                  href={profileLink}
+                  onClick={(e)=>e.stopPropagation()}
+                  className="flex items-center gap-3 mb-3"
+                >
 
-                  <Link
-                    href={profileLink}
-                    onClick={(e)=>e.stopPropagation()}
-                    className="flex items-center gap-3 mb-3"
-                  >
+                  <img
+                    src={avatar}
+                    alt="avatar"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
 
-                    <img
-                      src={avatar}
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                  <div>
 
-                    <div>
-
-                      <div className="text-sm font-semibold text-gray-900">
-                        {c.identity.display_name ||
-                          c.identity.username}
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        @{c.identity.username}
-                      </div>
-
+                    <div className="text-sm font-semibold text-gray-900">
+                      {c.identity.display_name ||
+                        c.identity.username}
                     </div>
 
-                  </Link>
-
-                  {/* META */}
-
-                  <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
-                    <span>{c.category}</span>
-                    <span>{timeAgo(c.created_at)}</span>
-                  </div>
-
-                  {/* COMMITMENT TEXT */}
-
-                  <div className="text-gray-900 text-base mb-3 leading-relaxed">
-                    {c.text}
-                  </div>
-
-                  {/* LATEST UPDATE */}
-
-                  {c.latest_update && (
-
-                    <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 mb-3">
-
-                      <span className="font-medium text-gray-900">
-                        Latest update:
-                      </span>{" "}
-                      {c.latest_update}
-
+                    <div className="text-xs text-gray-500">
+                      @{c.identity.username}
                     </div>
 
-                  )}
-
-                  {/* VIEWS + SHARES */}
-
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>👁 {c.views ?? 0} views</span>
-                    <span>🔁 {c.shares ?? 0}</span>
                   </div>
 
+                </Link>
+
+                <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                  <span>{c.category}</span>
+                  <span>{timeAgo(c.created_at)}</span>
                 </div>
 
-              </Link>
+                <div className="text-gray-900 text-base mb-3 leading-relaxed">
+                  {c.text}
+                </div>
 
-            );
+                {c.latest_update && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 mb-3">
+                    <span className="font-medium text-gray-900">
+                      Latest update:
+                    </span>{" "}
+                    {c.latest_update}
+                  </div>
+                )}
 
-          })}
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span>👁 {c.views ?? 0} views</span>
+                  <span>🔁 {c.shares ?? 0}</span>
+                </div>
 
-        {!loading && commitments.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 text-center text-gray-500">
-            No commitments yet
+              </div>
+
+            </Link>
+
+          );
+
+        })}
+
+        {loadingMore && (
+          <div className="text-center text-gray-500 py-4">
+            Loading more...
+          </div>
+        )}
+
+        <div ref={loadMoreRef}></div>
+
+        {hasMore && !loadingMore && (
+          <div className="text-center">
+            <button
+              onClick={loadMore}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+            >
+              Load More
+            </button>
           </div>
         )}
 
