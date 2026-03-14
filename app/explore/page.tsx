@@ -20,6 +20,7 @@ type Company = {
 };
 
 export default function ExplorePage() {
+
   const supabase = createClient();
 
   const [people, setPeople] = useState<Profile[]>([]);
@@ -31,110 +32,144 @@ export default function ExplorePage() {
   }, []);
 
   async function loadExplore() {
+
     try {
+
+      /* PEOPLE — highest reputation first */
 
       const { data: peopleData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url")
+        .order("reputation_score", { ascending: false })
         .limit(4);
+
+      /* COMPANIES — newest first */
 
       const { data: companyData } = await supabase
         .from("companies")
         .select("id, username, name, logo_url")
+        .order("created_at", { ascending: false })
         .limit(4);
 
       if (peopleData) setPeople(peopleData);
       if (companyData) setCompanies(companyData);
 
     } catch (error) {
+
       console.error("Explore load error:", error);
+
     }
 
     setLoading(false);
+
   }
 
   function personAvatar(profile: Profile) {
+
     if (profile?.avatar_url) return profile.avatar_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
       profile?.display_name || profile?.username || "User"
     )}&background=2563eb&color=fff`;
+
   }
 
   function companyAvatar(company: Company) {
+
     if (company?.logo_url) return company.logo_url;
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
       company?.name || company?.username || "Company"
     )}&background=2563eb&color=fff`;
+
   }
 
   if (loading) {
+
     return (
       <div className="min-h-screen bg-gray-50 px-4 py-8">
+
         <div className="max-w-5xl mx-auto space-y-6">
+
           <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
                 className="bg-white p-4 rounded-xl shadow animate-pulse h-24"
               />
             ))}
+
           </div>
+
         </div>
+
       </div>
     );
+
   }
 
   return (
+
     <div className="min-h-screen bg-gray-50 px-4 py-8">
+
       <div className="max-w-5xl mx-auto space-y-12">
 
         {/* LOGO */}
 
         <Link href="/">
+
           <div className="text-2xl font-bold text-blue-600 cursor-pointer">
             Stated
           </div>
+
         </Link>
 
         {/* EXPLORE COMMITMENTS */}
 
         <section>
+
           <div className="text-lg font-semibold mb-4">
             Explore commitments
           </div>
 
           <CommitmentFeed endpoint="/api/feed" showFilters={false} />
+
         </section>
 
         {/* FEATURED PEOPLE */}
 
         {people.length > 0 && (
+
           <section>
 
             <div className="flex justify-between items-center mb-4">
+
               <div className="text-lg font-semibold">
                 Featured people
               </div>
 
               <Link
-                href="/people"
+                href="/explore/people"
                 className="text-sm text-blue-600 hover:underline"
               >
                 View all →
               </Link>
+
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
               {people.map((person) => (
+
                 <Link
                   key={person.id}
                   href={`/u/${person.username}`}
                   className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
                 >
+
                   <img
                     src={personAvatar(person)}
                     alt={person.username}
@@ -148,37 +183,48 @@ export default function ExplorePage() {
                   <div className="text-sm text-gray-500">
                     @{person.username}
                   </div>
+
                 </Link>
+
               ))}
+
             </div>
+
           </section>
+
         )}
 
         {/* FEATURED COMPANIES */}
 
         {companies.length > 0 && (
+
           <section>
 
             <div className="flex justify-between items-center mb-4">
+
               <div className="text-lg font-semibold">
                 Featured companies
               </div>
 
               <Link
-                href="/companies"
+                href="/explore/companies"
                 className="text-sm text-blue-600 hover:underline"
               >
                 View all →
               </Link>
+
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
               {companies.map((company) => (
+
                 <Link
                   key={company.id}
                   href={`/c/${company.username}`}
                   className="bg-white p-4 rounded-xl shadow text-center hover:shadow-md transition"
                 >
+
                   <img
                     src={companyAvatar(company)}
                     alt={company.username}
@@ -192,13 +238,21 @@ export default function ExplorePage() {
                   <div className="text-sm text-gray-500">
                     @{company.username}
                   </div>
+
                 </Link>
+
               ))}
+
             </div>
+
           </section>
+
         )}
 
       </div>
+
     </div>
+
   );
+
 }
