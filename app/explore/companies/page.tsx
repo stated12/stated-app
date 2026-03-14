@@ -1,70 +1,157 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 
-export default async function ExploreCompaniesPage(){
+const PAGE_SIZE = 10;
 
-const supabase = await createClient();
+export default function CompaniesPage() {
 
-const { data:companies } =
-await supabase
-.from("companies")
-.select("username,name,logo_url")
-.order("created_at",{ascending:false})
-.limit(50);
+  const supabase = createClient();
 
-return(
+  const [companies,setCompanies] = useState<any[]>([]);
+  const [page,setPage] = useState(0);
+  const [loading,setLoading] = useState(true);
+  const [loadingMore,setLoadingMore] = useState(false);
 
-<div className="max-w-4xl mx-auto py-10 px-4">
+  useEffect(()=>{
+    loadCompanies();
+  },[]);
 
-<h1 className="text-2xl font-bold mb-6">
-Companies
-</h1>
+  async function loadCompanies(){
 
-<div className="grid md:grid-cols-2 gap-6">
+    const {data,error} = await supabase
+      .from("explore_companies_metrics")
+      .select("*")
+      .order("commitments",{ascending:false})
+      .range(0,PAGE_SIZE-1);
 
-{companies?.map((c)=>{
+    if(error){
+      console.error("Companies load error:",error);
+      setLoading(false);
+      return;
+    }
 
-const logo =
-c.logo_url ||
-`https://ui-avatars.com/api/?name=${encodeURIComponent(
-c.name
-)}&background=2563eb&color=fff`;
+    setCompanies(data || []);
+    setPage(1);
+    setLoading(false);
 
-return(
+  }
 
-<Link
-key={c.username}
-href={`/c/${c.username}`}
-className="flex items-center gap-4 bg-white p-4 rounded-xl shadow hover:shadow-md transition"
->
+  async function loadMore(){
 
-<img
-src={logo}
-className="w-10 h-10 rounded-full"
-/>
+    setLoadingMore(true);
 
-<div>
+    const start = page * PAGE_SIZE;
+    const end = start + PAGE_SIZE - 1;
 
-<div className="font-semibold">
-{c.name}
-</div>
+    const {data,error} = await supabase
+      .from("explore_companies_metrics")
+      .select("*")
+      .order("commitments",{ascending:false})
+      .range(start,end);
 
-<div className="text-sm text-gray-500">
-@{c.username}
-</div>
+    if(error){
+      console.error("Load more error:",error);
+      setLoadingMore(false);
+      return;
+    }
 
-</div>
+    if(data && data.length>0){
+      setCompanies(prev => [...prev,...data]);
+      setPage(prev => prev+1);
+    }
 
-</Link>
+    setLoadingMore(false);
 
-)
+  }
 
-})}
+  function avatar(company:any){
 
-</div>
+    if(company.logo_url) return company.logo_url;
 
-</div>
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      company.name || company.username
+    )}&background=2563eb&color=fff`;
 
-)
+  }
 
-}
+  if(loading){
+
+    return(
+      <div className="min-h-screen bg-gray-50 px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          Loading companies...
+        </div>
+      </div>
+    );
+
+  }
+
+  return(
+
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
+
+      <div className="max-w-3xl mx-auto space-y-4">
+
+        <h1 className="text-2xl font-bold">
+          Companies
+        </h1>
+
+        {companies.map(company => (
+
+          <Link
+            key={company.id}
+            href={`/c/${company.username}`}
+            className="bg-white rounded-xl shadow p-4 flex gap-4 hover:shadow-md transition"
+          >
+
+            <img
+              src={avatar(company)}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+
+            <div className="flex-1">
+
+              <div className="font-medium">
+                {company.name || company.username}
+              </div>
+
+              <div className="text-sm text-gray-500">
+                @{company.username}
+              </div>
+
+              <div className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {company.bio ? company.bio : "No bio yet"}
+              </div>
+
+              <div className="text-xs text-gray-400 mt-2">
+                {company.commitments} commitments • {company.views} views • {company.shares} shares
+              </div>
+
+            </div>
+
+          </Link>
+
+        ))}
+
+        <div className="text-center pt-4">
+
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+          >
+            {loadingMore ? "Loading..." : "Load more"}
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+      }
