@@ -9,7 +9,7 @@ type Notification = {
   message: string;
   link: string | null;
   created_at: string;
-  read: boolean;
+  is_read: boolean;
 };
 
 function timeAgo(date: string) {
@@ -24,29 +24,33 @@ function timeAgo(date: string) {
 }
 
 export default function NotificationBell() {
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+
     fetchNotifications();
 
-    // 🔔 Auto refresh every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
 
     return () => clearInterval(interval);
+
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
+
     function handleClickOutside(event: any) {
+
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target)
       ) {
         setOpen(false);
       }
+
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -54,20 +58,33 @@ export default function NotificationBell() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+
   }, []);
 
   async function fetchNotifications() {
+
     try {
+
       const res = await fetch("/api/notifications");
+
+      if (!res.ok) return;
+
       const data = await res.json();
+
       setNotifications(data || []);
+
     } catch (err) {
+
       console.error("Bell fetch error:", err);
+
     }
+
   }
 
   async function markRead(id: string) {
+
     try {
+
       await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -76,18 +93,24 @@ export default function NotificationBell() {
 
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === id ? { ...n, read: true } : n
+          n.id === id ? { ...n, is_read: true } : n
         )
       );
+
     } catch (err) {
+
       console.error("Notification update error:", err);
+
     }
+
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
+
     <div className="relative" ref={dropdownRef}>
+
       {/* Bell */}
       <button
         onClick={() => setOpen(!open)}
@@ -100,14 +123,18 @@ export default function NotificationBell() {
             {unreadCount}
           </span>
         )}
+
       </button>
+
 
       {/* Dropdown */}
       {open && (
+
         <div className="absolute right-0 mt-3 w-80 bg-white shadow-xl rounded-xl p-4 z-50 border">
 
           {/* Header */}
           <div className="flex justify-between items-center mb-3">
+
             <div className="font-semibold text-gray-900">
               Notifications
             </div>
@@ -117,7 +144,9 @@ export default function NotificationBell() {
                 {unreadCount} new
               </div>
             )}
+
           </div>
+
 
           {/* Empty state */}
           {notifications.length === 0 && (
@@ -126,10 +155,11 @@ export default function NotificationBell() {
             </div>
           )}
 
-          {/* Notification list */}
-          <div className="space-y-3">
 
-            {notifications.slice(0, 5).map((n) => (
+          {/* Notification list */}
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+
+            {notifications.slice(0,5).map((n) => (
 
               <Link
                 key={n.id}
@@ -147,7 +177,7 @@ export default function NotificationBell() {
 
                     <div
                       className={`text-sm ${
-                        n.read
+                        n.is_read
                           ? "text-gray-700"
                           : "font-semibold text-gray-900"
                       }`}
@@ -167,7 +197,7 @@ export default function NotificationBell() {
 
                   </div>
 
-                  {!n.read && (
+                  {!n.is_read && (
                     <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 ml-2"></span>
                   )}
 
@@ -179,6 +209,7 @@ export default function NotificationBell() {
 
           </div>
 
+
           {/* View all */}
           <Link
             href="/dashboard/notifications"
@@ -189,7 +220,11 @@ export default function NotificationBell() {
           </Link>
 
         </div>
+
       )}
+
     </div>
+
   );
+
 }
