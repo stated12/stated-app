@@ -45,7 +45,7 @@ if (viewerId && type === "commitment") {
 
 const { data: commitment } = await supabase
 .from("commitments")
-.select("user_id, created_by_user_id")
+.select("user_id, company_id, created_by_user_id")
 .eq("id", entityId)
 .maybeSingle();
 
@@ -87,6 +87,82 @@ session_key: sessionKey,
 })
 .throwOnError();
 
+/* ============================= */
+/* ENGAGEMENT MILESTONE LOGIC */
+/* ============================= */
+
+if (type === "commitment") {
+
+const { count } = await supabase
+.from("commitment_views")
+.select("*", { count: "exact", head: true })
+.eq("commitment_id", entityId);
+
+const views = count ?? 0;
+
+/* VIEW MILESTONES */
+
+const milestones = [50, 100, 500, 1000];
+
+if (milestones.includes(views)) {
+
+const { data: commitment } = await supabase
+.from("commitments")
+.select("id, text, user_id, company_id")
+.eq("id", entityId)
+.maybeSingle();
+
+if (!commitment) {
+return NextResponse.json({ success: true });
+}
+
+let ownerUserId = commitment.user_id;
+
+/* COMPANY OWNER */
+
+if (commitment.company_id) {
+
+const { data: company } = await supabase
+.from("companies")
+.select("owner_user_id")
+.eq("id", commitment.company_id)
+.maybeSingle();
+
+ownerUserId = company?.owner_user_id;
+
+}
+
+if (ownerUserId) {
+
+const typeKey = `views_${views}`;
+
+const { data: existingNotification } = await supabase
+.from("notifications")
+.select("id")
+.eq("commitment_id", entityId)
+.eq("notification_type", typeKey)
+.limit(1);
+
+if (!existingNotification || existingNotification.length === 0) {
+
+await supabase.from("notifications").insert({
+user_id: ownerUserId,
+title: "👀 Your commitment is gaining attention",
+message: `Your commitment reached ${views} views.`,
+link: `/commitment/${entityId}`,
+is_read: false,
+notification_type: typeKey,
+commitment_id: entityId,
+});
+
+}
+
+}
+
+}
+
+}
+
 return NextResponse.json({ success: true });
 
 } catch (err) {
@@ -100,4 +176,4 @@ return NextResponse.json(
 
 }
 
-}
+  }
