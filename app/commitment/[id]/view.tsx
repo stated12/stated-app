@@ -134,7 +134,7 @@ company?.name ||
 
 }
 
-/* -------- SHARE FUNCTION (FIXED) -------- */
+/* -------- SHARE FUNCTION WITH MILESTONES -------- */
 
 async function share(){
 
@@ -151,27 +151,96 @@ ${url}`;
 
 try{
 
-/* record share event */
+/* RECORD SHARE */
 
 await supabase
 .from("commitment_shares")
 .insert({commitment_id:commitmentId});
 
-/* increment global share count */
+/* UPDATE GLOBAL SHARE COUNT */
 
 await supabase.rpc("increment_commitment_shares",{
 commitment_id_input:commitmentId
 });
 
-/* update UI instantly */
+/* UPDATE UI */
 
 setShareCount((s)=>s+1);
 
-}catch(e){
-console.log("share tracking error",e);
+/* ============================= */
+/* SHARE MILESTONE NOTIFICATIONS */
+/* ============================= */
+
+const { count } =
+await supabase
+.from("commitment_shares")
+.select("*",{count:"exact",head:true})
+.eq("commitment_id",commitmentId);
+
+const shares = count ?? 0;
+
+const milestones = [5,10,25,100];
+
+if(milestones.includes(shares)){
+
+let ownerUserId = commitment?.user_id;
+
+/* COMPANY OWNER */
+
+if(commitment?.company_id){
+
+const { data:companyOwner } =
+await supabase
+.from("companies")
+.select("owner_user_id")
+.eq("id",commitment.company_id)
+.maybeSingle();
+
+ownerUserId = companyOwner?.owner_user_id;
+
 }
 
-/* open share dialog */
+if(ownerUserId){
+
+const typeKey = `shares_${shares}`;
+
+/* PREVENT DUPLICATE */
+
+const { data:existing } =
+await supabase
+.from("notifications")
+.select("id")
+.eq("commitment_id",commitmentId)
+.eq("notification_type",typeKey)
+.limit(1);
+
+if(!existing || existing.length===0){
+
+await supabase
+.from("notifications")
+.insert({
+user_id:ownerUserId,
+title:"🔁 Your commitment is spreading",
+message:`Your commitment was shared ${shares} times.`,
+link:`/commitment/${commitmentId}`,
+is_read:false,
+notification_type:typeKey,
+commitment_id:commitmentId
+});
+
+}
+
+}
+
+}
+
+}catch(e){
+
+console.log("share tracking error",e);
+
+}
+
+/* SHARE DIALOG */
 
 if(navigator.share){
 
@@ -303,7 +372,7 @@ Created {new Date(commitment.created_at).toLocaleDateString()}
 </div>
 
 <div className="text-xs text-gray-400">
-👁 {viewCount} views · 🔗 {shareCount} shares
+👁 {viewCount} views · 🔁 {shareCount} shares
 </div>
 
 <button
