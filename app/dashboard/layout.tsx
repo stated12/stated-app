@@ -195,6 +195,10 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 @{username}
 </div>
 
+<div className="text-sm text-yellow-600 font-semibold mt-1">
+⭐ {credits} credits
+</div>
+
 </div>
 
 </div>
@@ -308,18 +312,7 @@ Stated
 </span>
 </Link>
 
-<div className="flex items-center gap-3">
-
-<Link
-href="/billing"
-className="text-sm font-semibold text-gray-700"
->
-⭐ {credits}
-</Link>
-
 <NotificationBell/>
-
-</div>
 
 </div>
 
@@ -335,18 +328,7 @@ Stated
 </span>
 </Link>
 
-<div className="flex items-center gap-6">
-
-<Link
-href="/billing"
-className="text-sm font-semibold text-gray-700 hover:text-blue-600"
->
-⭐ {credits} credits
-</Link>
-
 <NotificationBell/>
-
-</div>
 
 </div>
 
