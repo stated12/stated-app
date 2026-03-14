@@ -35,15 +35,15 @@ export default function ExplorePage() {
 
     try {
 
-      /* PEOPLE — highest reputation first */
+      /* FEATURED PEOPLE */
 
       const { data: peopleData } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url")
-        .order("reputation_score", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(4);
 
-      /* COMPANIES — newest first */
+      /* FEATURED COMPANIES */
 
       const { data: companyData } = await supabase
         .from("companies")
@@ -61,7 +61,6 @@ export default function ExplorePage() {
     }
 
     setLoading(false);
-
   }
 
   function personAvatar(profile: Profile) {
@@ -85,30 +84,22 @@ export default function ExplorePage() {
   }
 
   if (loading) {
-
     return (
       <div className="min-h-screen bg-gray-50 px-4 py-8">
-
         <div className="max-w-5xl mx-auto space-y-6">
-
           <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
                 className="bg-white p-4 rounded-xl shadow animate-pulse h-24"
               />
             ))}
-
           </div>
-
         </div>
-
       </div>
     );
-
   }
 
   return (
@@ -120,11 +111,9 @@ export default function ExplorePage() {
         {/* LOGO */}
 
         <Link href="/">
-
           <div className="text-2xl font-bold text-blue-600 cursor-pointer">
             Stated
           </div>
-
         </Link>
 
         {/* EXPLORE COMMITMENTS */}
