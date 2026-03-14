@@ -128,6 +128,11 @@ isCompanyWorkspace
 : profile?.username
 
 
+/* CREDITS */
+
+const credits = profile?.credits_remaining ?? 0
+
+
 async function logout(){
 
 const supabase = createClient()
@@ -252,8 +257,6 @@ View Profile
 
 )}
 
-{/* SHARED LINKS */}
-
 <Link href="/upgrade" className={linkClass("/upgrade")}>
 🚀 Upgrade
 </Link>
@@ -305,7 +308,18 @@ Stated
 </span>
 </Link>
 
+<div className="flex items-center gap-3">
+
+<Link
+href="/billing"
+className="text-sm font-semibold text-gray-700"
+>
+⭐ {credits}
+</Link>
+
 <NotificationBell/>
+
+</div>
 
 </div>
 
@@ -321,7 +335,18 @@ Stated
 </span>
 </Link>
 
+<div className="flex items-center gap-6">
+
+<Link
+href="/billing"
+className="text-sm font-semibold text-gray-700 hover:text-blue-600"
+>
+⭐ {credits} credits
+</Link>
+
 <NotificationBell/>
+
+</div>
 
 </div>
 
