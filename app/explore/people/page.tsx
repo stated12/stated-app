@@ -4,22 +4,13 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-type Person = {
-  id: string;
-  username: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-};
-
 const PAGE_SIZE = 10;
 
 export default function PeoplePage() {
 
   const supabase = createClient();
 
-  const [people,setPeople] = useState<Person[]>([]);
-  const [metrics,setMetrics] = useState<any>({});
+  const [people,setPeople] = useState<any[]>([]);
   const [page,setPage] = useState(0);
   const [loading,setLoading] = useState(true);
   const [loadingMore,setLoadingMore] = useState(false);
@@ -30,12 +21,10 @@ export default function PeoplePage() {
 
   async function loadPeople(){
 
-    setLoading(true);
-
-    const {data:profiles,error} = await supabase
-      .from("profiles")
-      .select("id,username,display_name,avatar_url,bio")
-      .order("created_at",{ascending:false})
+    const {data,error} = await supabase
+      .from("explore_people_metrics")
+      .select("*")
+      .order("commitments",{ascending:false})
       .range(0,PAGE_SIZE-1);
 
     if(error){
@@ -44,9 +33,7 @@ export default function PeoplePage() {
       return;
     }
 
-    setPeople(profiles || []);
-    await loadMetrics(profiles || []);
-
+    setPeople(data || []);
     setPage(1);
     setLoading(false);
 
@@ -59,17 +46,15 @@ export default function PeoplePage() {
     const start = page * PAGE_SIZE;
     const end = start + PAGE_SIZE - 1;
 
-    const {data:profiles} = await supabase
-      .from("profiles")
-      .select("id,username,display_name,avatar_url,bio")
-      .order("created_at",{ascending:false})
+    const {data} = await supabase
+      .from("explore_people_metrics")
+      .select("*")
+      .order("commitments",{ascending:false})
       .range(start,end);
 
-    if(profiles && profiles.length>0){
+    if(data && data.length>0){
 
-      setPeople(prev=>[...prev,...profiles]);
-      await loadMetrics(profiles);
-
+      setPeople(prev=>[...prev,...data]);
       setPage(prev=>prev+1);
 
     }
@@ -78,57 +63,7 @@ export default function PeoplePage() {
 
   }
 
-  async function loadMetrics(profiles:Person[]){
-
-    const stats:any = {...metrics};
-
-    for(const p of profiles){
-
-      const {count:commitments} = await supabase
-      .from("commitments")
-      .select("*",{count:"exact",head:true})
-      .eq("user_id",p.id);
-
-      const {data:ids} = await supabase
-      .from("commitments")
-      .select("id")
-      .eq("user_id",p.id);
-
-      let views = 0;
-      let shares = 0;
-
-      if(ids && ids.length>0){
-
-        const commitmentIds = ids.map(c=>c.id);
-
-        const {count:viewCount} = await supabase
-        .from("commitment_views")
-        .select("*",{count:"exact",head:true})
-        .in("commitment_id",commitmentIds);
-
-        const {count:shareCount} = await supabase
-        .from("commitment_shares")
-        .select("*",{count:"exact",head:true})
-        .in("commitment_id",commitmentIds);
-
-        views = viewCount || 0;
-        shares = shareCount || 0;
-
-      }
-
-      stats[p.id] = {
-        commitments: commitments || 0,
-        views,
-        shares
-      };
-
-    }
-
-    setMetrics(stats);
-
-  }
-
-  function avatar(p:Person){
+  function avatar(p:any){
 
     if(p.avatar_url) return p.avatar_url;
 
@@ -160,50 +95,42 @@ export default function PeoplePage() {
           People
         </h1>
 
-        {people.map(p=>{
+        {people.map(p=>(
 
-          const m = metrics[p.id] || {};
+          <Link
+            key={p.id}
+            href={`/u/${p.username}`}
+            className="bg-white rounded-xl shadow p-4 flex gap-4 hover:shadow-md transition"
+          >
 
-          return(
+            <img
+              src={avatar(p)}
+              className="w-12 h-12 rounded-full object-cover"
+            />
 
-            <Link
-              key={p.id}
-              href={`/u/${p.username}`}
-              className="bg-white rounded-xl shadow p-4 flex gap-4 hover:shadow-md transition"
-            >
+            <div className="flex-1">
 
-              <img
-                src={avatar(p)}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-
-              <div className="flex-1">
-
-                <div className="font-medium">
-                  {p.display_name || p.username}
-                </div>
-
-                <div className="text-sm text-gray-500">
-                  @{p.username}
-                </div>
-
-                <div className="text-sm text-gray-600 mt-1 line-clamp-2">
-                  {p.bio ? p.bio : "No bio yet"}
-                </div>
-
-                <div className="text-xs text-gray-400 mt-2">
-                  {m.commitments || 0} commitments • {m.views || 0} views • {m.shares || 0} shares
-                </div>
-
+              <div className="font-medium">
+                {p.display_name || p.username}
               </div>
 
-            </Link>
+              <div className="text-sm text-gray-500">
+                @{p.username}
+              </div>
 
-          )
+              <div className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {p.bio ? p.bio : "No bio yet"}
+              </div>
 
-        })}
+              <div className="text-xs text-gray-400 mt-2">
+                {p.commitments} commitments • {p.views} views • {p.shares} shares
+              </div>
 
-        {/* LOAD MORE */}
+            </div>
+
+          </Link>
+
+        ))}
 
         <div className="text-center pt-4">
 
