@@ -128,9 +128,9 @@ isCompanyWorkspace
 : profile?.username
 
 
-/* CREDITS */
+/* CREDITS (FIXED) */
 
-const credits = profile?.credits_remaining ?? 0
+const credits = profile?.credits ?? 0
 
 
 async function logout(){
@@ -367,5 +367,4 @@ className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold"
 </div>
 
 )
-
 }
