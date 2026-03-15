@@ -3,6 +3,7 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import GlobalFooter from "@/components/GlobalFooter";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,8 @@ export default function RootLayout({
         <InstallPrompt />
 
         <GlobalFooter />
+
+        <Analytics />
       </body>
     </html>
   );
