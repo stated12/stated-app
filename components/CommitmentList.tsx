@@ -1,7 +1,5 @@
 "use client";
 
-import ViewTracker from "./ViewTracker";
-
 export default function CommitmentList({
   commitments,
 }: {
@@ -15,6 +13,7 @@ export default function CommitmentList({
     views: number;
   }[];
 }) {
+
   function statusColor(status: string) {
     switch (status) {
       case "active":
@@ -33,13 +32,15 @@ export default function CommitmentList({
   }
 
   function getDateLabel(c: any) {
+
     if (c.status === "completed" && c.completed_at) {
+
       const completed = new Date(c.completed_at);
       const created = new Date(c.created_at);
 
       const days = Math.ceil(
         (completed.getTime() - created.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       );
 
       return `Completed ${completed.toLocaleDateString()} (${days} days)`;
@@ -50,12 +51,13 @@ export default function CommitmentList({
 
   return (
     <div className="space-y-8">
+
       {commitments.map((c) => (
+
         <div
           key={c.id}
           className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
         >
-          <ViewTracker type="commitment" entityId={c.id} />
 
           <div className="font-semibold text-lg text-gray-900 mb-2">
             {c.text}
@@ -72,8 +74,11 @@ export default function CommitmentList({
           <div className="text-xs text-gray-500 mt-4">
             👁 {c.views || 0} views
           </div>
+
         </div>
+
       ))}
+
     </div>
   );
 }
