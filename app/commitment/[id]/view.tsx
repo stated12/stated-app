@@ -311,16 +311,9 @@ className="w-10 h-10 rounded-full object-cover"
 
 <span>•</span>
 
-<Link
-href={
-identityType==="company"
-? `/c/${identity?.username}/followers`
-: `/u/${identity?.username}/followers`
-}
-className="hover:underline"
->
+<span>
 {followerCount} followers
-</Link>
+</span>
 
 </div>
 
@@ -437,5 +430,4 @@ Create your commitment
 </div>
 
 );
-
 }
