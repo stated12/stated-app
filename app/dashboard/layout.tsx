@@ -219,27 +219,43 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 ⭐ {credits} credits
 </div>
 
-{/* FOLLOW STATS */}
+{/* FOLLOW STATS (CLEAN 2-COLUMN DESIGN) */}
 
 {username && (
 
-<div className="text-sm text-gray-600 mt-1">
+<div className="flex items-center gap-6 mt-2 text-sm text-gray-600">
+
+<div className="flex flex-col items-center">
 
 <Link
 href={`/u/${username}/followers`}
-className="hover:text-blue-600 font-semibold"
+className="font-bold text-gray-900 hover:text-blue-600"
 >
-👥 {followers} Followers
+👥 {followers}
 </Link>
 
-<span className="mx-2 text-gray-400">•</span>
+<span className="text-xs text-gray-500">
+Followers
+</span>
+
+</div>
+
+<span className="text-gray-400">•</span>
+
+<div className="flex flex-col items-center">
 
 <Link
 href={`/u/${username}/following`}
-className="hover:text-blue-600 font-semibold"
+className="font-bold text-gray-900 hover:text-blue-600"
 >
-{following} Following
+{following}
 </Link>
+
+<span className="text-xs text-gray-500">
+Following
+</span>
+
+</div>
 
 </div>
 
