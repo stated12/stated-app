@@ -16,6 +16,11 @@ const [profile,setProfile] = useState<any>(null)
 const [company,setCompany] = useState<any>(null)
 const [loading,setLoading] = useState(true)
 
+/* NEW */
+
+const [followers,setFollowers] = useState(0)
+const [following,setFollowing] = useState(0)
+
 const pathname = usePathname()
 const router = useRouter()
 
@@ -58,6 +63,25 @@ const {data:companyData} = await supabase
 
 if(mounted){
 setCompany(companyData)
+}
+
+/* =========================
+FETCH FOLLOW COUNTS
+========================= */
+
+const { count:followersCount } = await supabase
+.from("follows")
+.select("*",{count:"exact",head:true})
+.eq("following_user_id",user.id)
+
+const { count:followingCount } = await supabase
+.from("follows")
+.select("*",{count:"exact",head:true})
+.eq("follower_user_id",user.id)
+
+if(mounted){
+setFollowers(followersCount || 0)
+setFollowing(followingCount || 0)
 }
 
 setLoading(false)
@@ -128,7 +152,7 @@ isCompanyWorkspace
 : profile?.username
 
 
-/* CREDITS (FIXED) */
+/* CREDITS */
 
 const credits = profile?.credits ?? 0
 
@@ -197,6 +221,30 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 
 <div className="text-sm text-yellow-600 font-semibold mt-1">
 ⭐ {credits} credits
+</div>
+
+{/* =========================
+FOLLOW STATS
+========================= */}
+
+<div className="flex gap-3 text-sm text-gray-600 mt-1">
+
+<Link
+href={`/u/${username}/followers`}
+className="hover:text-blue-600 font-semibold"
+>
+👥 {followers} Followers
+</Link>
+
+<span>•</span>
+
+<Link
+href={`/u/${username}/following`}
+className="hover:text-blue-600 font-semibold"
+>
+{following} Following
+</Link>
+
 </div>
 
 </div>
