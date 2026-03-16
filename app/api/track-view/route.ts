@@ -93,9 +93,14 @@ session_key: sessionKey,
 
 if (type === "commitment") {
 
+const { error: viewIncrementError } =
 await supabase.rpc("increment_commitment_views", {
 commitment_id_input: entityId,
 });
+
+if (viewIncrementError) {
+console.error("View counter increment failed:", viewIncrementError);
+}
 
 }
 
