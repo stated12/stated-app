@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   currentUserId?: string;
@@ -14,7 +15,9 @@ export default function FollowButton({
   targetUserId,
   targetCompanyId,
 }: Props) {
+
   const router = useRouter();
+  const supabase = createClient();
 
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,6 +27,7 @@ export default function FollowButton({
   }, []);
 
   async function checkFollowing() {
+
     if (!currentUserId) return;
 
     const res = await fetch("/api/follow/check", {
@@ -37,9 +41,11 @@ export default function FollowButton({
     const data = await res.json();
 
     setFollowing(data.following);
+
   }
 
   async function follow() {
+
     if (!currentUserId) {
       router.push("/signup?next=" + window.location.pathname);
       return;
@@ -56,10 +62,91 @@ export default function FollowButton({
     });
 
     setFollowing(true);
+
+    /* =============================== */
+    /* CREATE FOLLOW NOTIFICATION      */
+    /* =============================== */
+
+    try {
+
+      let ownerUserId = targetUserId;
+
+      /* company owner */
+
+      if (targetCompanyId) {
+
+        const { data: company } =
+        await supabase
+        .from("companies")
+        .select("owner_user_id")
+        .eq("id", targetCompanyId)
+        .maybeSingle();
+
+        ownerUserId = company?.owner_user_id;
+
+      }
+
+      if (!ownerUserId) {
+        setLoading(false);
+        return;
+      }
+
+      /* get follower name */
+
+      const { data: followerProfile } =
+      await supabase
+      .from("profiles")
+      .select("display_name,username")
+      .eq("id", currentUserId)
+      .maybeSingle();
+
+      const followerName =
+      followerProfile?.display_name ||
+      followerProfile?.username ||
+      "Someone";
+
+      /* check owner plan */
+
+      const { data: ownerProfile } =
+      await supabase
+      .from("profiles")
+      .select("plan_key")
+      .eq("id", ownerUserId)
+      .maybeSingle();
+
+      const planKey = ownerProfile?.plan_key ?? "free";
+
+      let message = "You have a new follower";
+
+      if (planKey !== "free") {
+        message = `${followerName} started following you`;
+      }
+
+      await supabase
+      .from("notifications")
+      .insert({
+        user_id: ownerUserId,
+        title: "👥 New follower",
+        message,
+        link: targetUserId
+          ? `/u/${followerProfile?.username}`
+          : `/c/${targetCompanyId}`,
+        is_read: false,
+        notification_type: "new_follower",
+      });
+
+    } catch (e) {
+
+      console.log("follow notification error", e);
+
+    }
+
     setLoading(false);
+
   }
 
   async function unfollow() {
+
     setLoading(true);
 
     await fetch("/api/follow", {
@@ -72,6 +159,7 @@ export default function FollowButton({
 
     setFollowing(false);
     setLoading(false);
+
   }
 
   return (
@@ -87,4 +175,5 @@ export default function FollowButton({
       {following ? "Following" : "Follow"}
     </button>
   );
+
 }
