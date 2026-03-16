@@ -16,7 +16,7 @@ type Commitment = {
   creatorId: string;
   creatorType: "user" | "company";
 
-  currentUserId?: string;
+  currentUserId?: string | null;
 };
 
 export default function CommitmentCard({
@@ -24,19 +24,27 @@ export default function CommitmentCard({
 }: {
   commitment: Commitment;
 }) {
+
   const start = new Date(commitment.start_date);
   const end = new Date(commitment.end_date);
 
   const startFormatted = start.toLocaleDateString();
   const endFormatted = end.toLocaleDateString();
 
+  const isOwner =
+    commitment.currentUserId &&
+    commitment.creatorType === "user" &&
+    commitment.currentUserId === commitment.creatorId;
+
   let completedText = null;
 
   if (commitment.status === "completed" && commitment.completed_at) {
+
     const completed = new Date(commitment.completed_at);
 
     const daysTaken = Math.ceil(
-      (completed.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      (completed.getTime() - start.getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     completedText = (
@@ -44,6 +52,7 @@ export default function CommitmentCard({
         Completed in {daysTaken} days
       </p>
     );
+
   }
 
   return (
@@ -64,19 +73,21 @@ export default function CommitmentCard({
         </Link>
 
         {/* Follow Button */}
-        <FollowButton
-          currentUserId={commitment.currentUserId}
-          targetUserId={
-            commitment.creatorType === "user"
-              ? commitment.creatorId
-              : undefined
-          }
-          targetCompanyId={
-            commitment.creatorType === "company"
-              ? commitment.creatorId
-              : undefined
-          }
-        />
+        {!isOwner && commitment.currentUserId && (
+          <FollowButton
+            currentUserId={commitment.currentUserId}
+            targetUserId={
+              commitment.creatorType === "user"
+                ? commitment.creatorId
+                : undefined
+            }
+            targetCompanyId={
+              commitment.creatorType === "company"
+                ? commitment.creatorId
+                : undefined
+            }
+          />
+        )}
 
       </div>
 
