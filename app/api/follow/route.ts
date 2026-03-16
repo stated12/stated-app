@@ -33,47 +33,43 @@ export async function POST(req: Request) {
      CREATE NOTIFICATION
      ========================= */
 
-  try {
+  let ownerUserId: string | null = null;
 
-    let ownerUserId: string | null = null;
+  if (followingUserId) {
+    ownerUserId = followingUserId;
+  }
 
-    /* IF FOLLOWING USER */
+  if (followingCompanyId) {
 
-    if (followingUserId) {
-      ownerUserId = followingUserId;
-    }
-
-    /* IF FOLLOWING COMPANY */
-
-    if (followingCompanyId) {
-
-      const { data: company } = await supabase
-        .from("companies")
-        .select("owner_user_id")
-        .eq("id", followingCompanyId)
-        .maybeSingle();
-
-      ownerUserId = company?.owner_user_id || null;
-    }
-
-    /* GET FOLLOWER PROFILE */
-
-    const { data: followerProfile } = await supabase
-      .from("profiles")
-      .select("username, display_name")
-      .eq("id", user.id)
+    const { data: company } = await supabase
+      .from("companies")
+      .select("owner_user_id")
+      .eq("id", followingCompanyId)
       .maybeSingle();
 
-    const followerName =
-      followerProfile?.display_name ||
-      followerProfile?.username ||
-      "Someone";
+    ownerUserId = company?.owner_user_id || null;
+  }
 
-    /* INSERT NOTIFICATION */
+  /* GET FOLLOWER PROFILE */
 
-    if (ownerUserId && ownerUserId !== user.id) {
+  const { data: followerProfile } = await supabase
+    .from("profiles")
+    .select("username, display_name")
+    .eq("id", user.id)
+    .maybeSingle();
 
-      await supabase.from("notifications").insert({
+  const followerName =
+    followerProfile?.display_name ||
+    followerProfile?.username ||
+    "Someone";
+
+  /* INSERT NOTIFICATION */
+
+  if (ownerUserId && ownerUserId !== user.id) {
+
+    const { error: notifError } = await supabase
+      .from("notifications")
+      .insert({
         user_id: ownerUserId,
         title: "👥 New follower",
         message: `${followerName} started following you`,
@@ -83,10 +79,10 @@ export async function POST(req: Request) {
         read: false,
       });
 
+    if (notifError) {
+      console.log("Notification insert error:", notifError);
     }
 
-  } catch (err) {
-    console.log("Notification creation failed", err);
   }
 
   return NextResponse.json({ success: true });
