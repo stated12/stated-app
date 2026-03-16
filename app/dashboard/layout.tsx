@@ -16,8 +16,6 @@ const [profile,setProfile] = useState<any>(null)
 const [company,setCompany] = useState<any>(null)
 const [loading,setLoading] = useState(true)
 
-/* NEW */
-
 const [followers,setFollowers] = useState(0)
 const [following,setFollowing] = useState(0)
 
@@ -65,9 +63,7 @@ if(mounted){
 setCompany(companyData)
 }
 
-/* =========================
-FETCH FOLLOW COUNTS
-========================= */
+/* FETCH FOLLOW COUNTS */
 
 const { count:followersCount } = await supabase
 .from("follows")
@@ -223,11 +219,11 @@ open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
 ⭐ {credits} credits
 </div>
 
-{/* =========================
-FOLLOW STATS
-========================= */}
+{/* FOLLOW STATS */}
 
-<div className="flex gap-3 text-sm text-gray-600 mt-1">
+{username && (
+
+<div className="text-sm text-gray-600 mt-1">
 
 <Link
 href={`/u/${username}/followers`}
@@ -236,7 +232,7 @@ className="hover:text-blue-600 font-semibold"
 👥 {followers} Followers
 </Link>
 
-<span>•</span>
+<span className="mx-2 text-gray-400">•</span>
 
 <Link
 href={`/u/${username}/following`}
@@ -246,6 +242,8 @@ className="hover:text-blue-600 font-semibold"
 </Link>
 
 </div>
+
+)}
 
 </div>
 
