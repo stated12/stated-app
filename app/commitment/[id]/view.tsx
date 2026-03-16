@@ -290,16 +290,9 @@ Stated
 
 {/* CREATOR */}
 
-<div className="flex items-center justify-between gap-3">
+<div className="flex items-center justify-between">
 
-<Link
-href={
-identityType==="company"
-? `/c/${identity?.username}`
-: `/u/${identity?.username}`
-}
-className="flex items-center gap-3"
->
+<div className="flex items-center gap-3">
 
 <img
 src={avatar()}
@@ -312,17 +305,28 @@ className="w-10 h-10 rounded-full object-cover"
 {identity?.display_name || identity?.name}
 </div>
 
-<div className="text-sm text-gray-500">
-@{identity?.username}
-</div>
+<div className="text-sm text-gray-500 flex items-center gap-2">
 
-<div className="text-xs text-gray-400">
+<span>@{identity?.username}</span>
+
+<span>•</span>
+
+<Link
+href={
+identityType==="company"
+? `/c/${identity?.username}/followers`
+: `/u/${identity?.username}/followers`
+}
+className="hover:underline"
+>
 {followerCount} followers
-</div>
-
-</div>
-
 </Link>
+
+</div>
+
+</div>
+
+</div>
 
 {!isOwner && (
 
