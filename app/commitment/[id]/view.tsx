@@ -22,6 +22,7 @@ const [viewCount,setViewCount] = useState<number>(0);
 const [shareCount,setShareCount] = useState<number>(0);
 const [currentUser,setCurrentUser] = useState<any>(null);
 const [loading,setLoading] = useState(true);
+const [followerCount,setFollowerCount] = useState<number>(0);
 
 useEffect(()=>{
 loadCommitment();
@@ -30,6 +31,12 @@ loadViews();
 loadShares();
 loadUser();
 },[]);
+
+useEffect(()=>{
+if(profile || company){
+loadFollowers();
+}
+},[profile,company]);
 
 async function loadUser(){
 const {data} = await supabase.auth.getUser();
@@ -116,6 +123,34 @@ await supabase
 .eq("commitment_id",commitmentId);
 
 setShareCount(count || 0);
+
+}
+
+async function loadFollowers(){
+
+if(profile?.id){
+
+const { count } =
+await supabase
+.from("follows")
+.select("*",{count:"exact",head:true})
+.eq("following_user_id",profile.id);
+
+setFollowerCount(count || 0);
+
+}
+
+if(company?.id){
+
+const { count } =
+await supabase
+.from("follows")
+.select("*",{count:"exact",head:true})
+.eq("following_company_id",company.id);
+
+setFollowerCount(count || 0);
+
+}
 
 }
 
@@ -281,11 +316,13 @@ className="w-10 h-10 rounded-full object-cover"
 @{identity?.username}
 </div>
 
+<div className="text-xs text-gray-400">
+{followerCount} followers
+</div>
+
 </div>
 
 </Link>
-
-{/* FOLLOW BUTTON */}
 
 {!isOwner && (
 
@@ -397,4 +434,4 @@ Create your commitment
 
 );
 
-  }
+}
