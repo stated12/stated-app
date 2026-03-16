@@ -8,7 +8,7 @@ import ViewTracker from "@/components/ViewTracker";
 import FollowButton from "@/components/social/FollowButton";
 
 export default function CommitmentClient({
-  commitmentId
+commitmentId
 }:{commitmentId:string}){
 
 const router = useRouter();
@@ -217,7 +217,7 @@ const identityType =
 commitment.company_id ? "company" : "user";
 
 const isOwner =
-currentUser?.id === commitment.user_id;
+(identityType==="user" && currentUser?.id === identity?.id);
 
 return(
 
@@ -253,9 +253,9 @@ Stated
 
 </div>
 
-{/* CREATOR ROW */}
+{/* CREATOR */}
 
-<div className="flex justify-between items-center">
+<div className="flex items-center justify-between gap-3">
 
 <Link
 href={
@@ -303,7 +303,7 @@ identityType==="company" ? identity?.id : undefined
 
 </div>
 
-{/* COMMITMENT CARD */}
+{/* COMMITMENT */}
 
 <div className="bg-white rounded-xl shadow p-6 space-y-3">
 
@@ -332,37 +332,7 @@ Share commitment
 
 </div>
 
-{/* OWNER ACTIONS */}
-
-{isOwner &&(
-
-<div className="flex flex-wrap gap-2">
-
-<Link href={`/commitment/${commitmentId}/update`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Add update
-</Link>
-
-<Link href={`/commitment/${commitmentId}/pause`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Pause
-</Link>
-
-<Link href={`/commitment/${commitmentId}/resume`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Resume
-</Link>
-
-<Link href={`/commitment/${commitmentId}/complete`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Complete
-</Link>
-
-<Link href={`/commitment/${commitmentId}/withdraw`} className="bg-gray-200 px-3 py-2 rounded text-sm">
-Withdraw
-</Link>
-
-</div>
-
-)}
-
-{/* UPDATES */}
+{/* PROGRESS */}
 
 <div>
 
@@ -396,9 +366,9 @@ No updates yet
 
 </div>
 
-{/* SIGNUP CTA */}
+{/* CREATE COMMITMENT CTA */}
 
-{!currentUser && (
+{!isOwner && (
 
 <div className="bg-white rounded-xl shadow p-6 text-center space-y-4">
 
@@ -411,7 +381,7 @@ Start with <b>5 free commitments</b>. Build credibility publicly.
 </div>
 
 <Link
-href="/signup"
+href="/dashboard/create"
 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
 >
 Create your commitment
@@ -427,4 +397,4 @@ Create your commitment
 
 );
 
-}
+  }
