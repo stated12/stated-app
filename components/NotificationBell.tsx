@@ -9,7 +9,7 @@ type Notification = {
   message: string;
   link: string | null;
   created_at: string;
-  is_read: boolean;
+  read: boolean;
 };
 
 function timeAgo(date: string) {
@@ -93,7 +93,7 @@ export default function NotificationBell() {
 
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === id ? { ...n, is_read: true } : n
+          n.id === id ? { ...n, read: true } : n
         )
       );
 
@@ -105,7 +105,7 @@ export default function NotificationBell() {
 
   }
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
 
@@ -177,7 +177,7 @@ export default function NotificationBell() {
 
                     <div
                       className={`text-sm ${
-                        n.is_read
+                        n.read
                           ? "text-gray-700"
                           : "font-semibold text-gray-900"
                       }`}
@@ -197,7 +197,7 @@ export default function NotificationBell() {
 
                   </div>
 
-                  {!n.is_read && (
+                  {!n.read && (
                     <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 ml-2"></span>
                   )}
 
