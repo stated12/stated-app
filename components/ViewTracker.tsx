@@ -44,9 +44,7 @@ export default function ViewTracker({
         const entry = entries[0];
 
         if (!entry.isIntersecting) return;
-
         if (entry.intersectionRatio < 0.5) return;
-
         if (hasTracked) return;
 
         const sessionId = getOrCreateSessionId();
@@ -62,10 +60,13 @@ export default function ViewTracker({
             entityId,
             sessionId,
           }),
+        }).catch(() => {
+          // fail silently
         });
 
         setHasTracked(true);
         observer.disconnect();
+
       },
 
       {
@@ -79,5 +80,5 @@ export default function ViewTracker({
 
   }, [type, entityId, hasTracked]);
 
-  return <div ref={ref} />;
+  return <div ref={ref} style={{ height: 1, width: 1 }} />;
 }
