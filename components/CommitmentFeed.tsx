@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ViewTracker from "@/components/ViewTracker";
 
 type Identity = {
   username?: string;
@@ -24,6 +23,7 @@ type Commitment = {
 };
 
 function timeAgo(date: string) {
+
   const seconds = Math.floor(
     (new Date().getTime() - new Date(date).getTime()) / 1000
   );
@@ -37,12 +37,16 @@ function timeAgo(date: string) {
   };
 
   for (const key in intervals) {
+
     const interval = Math.floor(seconds / intervals[key]);
+
     if (interval > 1) return `${interval} ${key}s ago`;
     if (interval === 1) return `1 ${key} ago`;
+
   }
 
   return "Just now";
+
 }
 
 export default function CommitmentFeed({
@@ -83,10 +87,13 @@ export default function CommitmentFeed({
   }, [activeTab, category]);
 
   function resetFeed() {
+
     setCommitments([]);
     setCursor(null);
     setHasMore(true);
+
     loadInitial();
+
   }
 
   async function loadInitial() {
@@ -113,6 +120,7 @@ export default function CommitmentFeed({
     );
 
     setHasMore(safeData.length === 25);
+
   }
 
   async function loadMore() {
@@ -148,6 +156,7 @@ export default function CommitmentFeed({
     }
 
     setLoading(false);
+
   }
 
   return (
@@ -229,11 +238,6 @@ export default function CommitmentFeed({
             <Link key={c.id} href={`/commitment/${c.id}`}>
 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 cursor-pointer hover:shadow-md transition">
-
-                <ViewTracker
-                  type="commitment"
-                  entityId={c.id}
-                />
 
                 <div className="flex items-center gap-3 mb-3">
 
