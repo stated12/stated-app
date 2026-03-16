@@ -76,7 +76,7 @@ if (existing) {
 return NextResponse.json({ success: true });
 }
 
-/* INSERT VIEW */
+/* INSERT VIEW EVENT */
 
 await supabase
 .from(table)
@@ -87,9 +87,21 @@ session_key: sessionKey,
 })
 .throwOnError();
 
-/* ============================= */
+/* ============================== */
+/* UPDATE CACHED VIEW COUNTER */
+/* ============================== */
+
+if (type === "commitment") {
+
+await supabase.rpc("increment_commitment_views", {
+commitment_id_input: entityId,
+});
+
+}
+
+/* ============================== */
 /* ENGAGEMENT MILESTONE LOGIC */
-/* ============================= */
+/* ============================== */
 
 if (type === "commitment") {
 
@@ -176,4 +188,4 @@ return NextResponse.json(
 
 }
 
-  }
+}
