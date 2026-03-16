@@ -164,9 +164,14 @@ export default function NotificationBell() {
               <Link
                 key={n.id}
                 href={n.link || "/dashboard"}
-                onClick={() => {
-                  markRead(n.id);
+                onClick={async () => {
+
+                  if (!n.read) {
+                    await markRead(n.id);
+                  }
+
                   setOpen(false);
+
                 }}
                 className="block p-3 rounded-lg hover:bg-gray-50 transition"
               >
