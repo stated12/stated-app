@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, title, message, link, created_at, is_read")
+    .select("id, title, message, link, created_at, read")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -58,13 +58,13 @@ export async function GET() {
           message:
             "You unlocked 5 free credits. 1 credit = 1 commitment. Start posting your first commitment.",
           link: "/dashboard/create",
-          is_read: false,
+          read: false,
           notification_type: "welcome",
         });
 
         const { data: updated } = await supabase
           .from("notifications")
-          .select("id, title, message, link, created_at, is_read")
+          .select("id, title, message, link, created_at, read")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(20);
@@ -93,7 +93,7 @@ export async function PATCH(request: Request) {
 
   const { error } = await supabase
     .from("notifications")
-    .update({ is_read: true })
+    .update({ read: true })
     .eq("id", id)
     .eq("user_id", user.id);
 
