@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
+import FollowButton from "@/components/social/FollowButton";
 
 export default function CommitmentClient({
-commitmentId
+  commitmentId
 }:{commitmentId:string}){
 
 const router = useRouter();
@@ -56,7 +57,7 @@ if(data.user_id){
 const {data:profileData} =
 await supabase
 .from("profiles")
-.select("username,display_name,avatar_url")
+.select("id,username,display_name,avatar_url")
 .eq("id",data.user_id)
 .maybeSingle();
 
@@ -69,7 +70,7 @@ if(data.company_id){
 const {data:companyData} =
 await supabase
 .from("companies")
-.select("username,name,logo_url")
+.select("id,username,name,logo_url")
 .eq("id",data.company_id)
 .maybeSingle();
 
@@ -134,8 +135,6 @@ company?.name ||
 
 }
 
-/* -------- SHARE FUNCTION WITH MILESTONES -------- */
-
 async function share(){
 
 const url =
@@ -151,96 +150,21 @@ ${url}`;
 
 try{
 
-/* RECORD SHARE */
-
 await supabase
 .from("commitment_shares")
 .insert({commitment_id:commitmentId});
-
-/* UPDATE GLOBAL SHARE COUNT */
 
 await supabase.rpc("increment_commitment_shares",{
 commitment_id_input:commitmentId
 });
 
-/* UPDATE UI */
-
 setShareCount((s)=>s+1);
-
-/* ============================= */
-/* SHARE MILESTONE NOTIFICATIONS */
-/* ============================= */
-
-const { count } =
-await supabase
-.from("commitment_shares")
-.select("*",{count:"exact",head:true})
-.eq("commitment_id",commitmentId);
-
-const shares = count ?? 0;
-
-const milestones = [5,10,25,100];
-
-if(milestones.includes(shares)){
-
-let ownerUserId = commitment?.user_id;
-
-/* COMPANY OWNER */
-
-if(commitment?.company_id){
-
-const { data:companyOwner } =
-await supabase
-.from("companies")
-.select("owner_user_id")
-.eq("id",commitment.company_id)
-.maybeSingle();
-
-ownerUserId = companyOwner?.owner_user_id;
-
-}
-
-if(ownerUserId){
-
-const typeKey = `shares_${shares}`;
-
-/* PREVENT DUPLICATE */
-
-const { data:existing } =
-await supabase
-.from("notifications")
-.select("id")
-.eq("commitment_id",commitmentId)
-.eq("notification_type",typeKey)
-.limit(1);
-
-if(!existing || existing.length===0){
-
-await supabase
-.from("notifications")
-.insert({
-user_id:ownerUserId,
-title:"🔁 Your commitment is spreading",
-message:`Your commitment was shared ${shares} times.`,
-link:`/commitment/${commitmentId}`,
-is_read:false,
-notification_type:typeKey,
-commitment_id:commitmentId
-});
-
-}
-
-}
-
-}
 
 }catch(e){
 
 console.log("share tracking error",e);
 
 }
-
-/* SHARE DIALOG */
 
 if(navigator.share){
 
@@ -258,8 +182,6 @@ alert("Commitment link copied");
 }
 
 }
-
-/* -------- STATUS BADGE -------- */
 
 function statusBadge(){
 
@@ -305,6 +227,8 @@ return(
 
 <div className="max-w-2xl mx-auto space-y-6">
 
+{/* HEADER */}
+
 <div className="flex justify-between items-center">
 
 <button
@@ -328,6 +252,10 @@ Stated
 </Link>
 
 </div>
+
+{/* CREATOR ROW */}
+
+<div className="flex justify-between items-center">
 
 <Link
 href={
@@ -357,6 +285,26 @@ className="w-10 h-10 rounded-full object-cover"
 
 </Link>
 
+{/* FOLLOW BUTTON */}
+
+{!isOwner && (
+
+<FollowButton
+currentUserId={currentUser?.id}
+targetUserId={
+identityType==="user" ? identity?.id : undefined
+}
+targetCompanyId={
+identityType==="company" ? identity?.id : undefined
+}
+/>
+
+)}
+
+</div>
+
+{/* COMMITMENT CARD */}
+
 <div className="bg-white rounded-xl shadow p-6 space-y-3">
 
 <div className="text-lg font-medium">
@@ -383,6 +331,8 @@ Share commitment
 </button>
 
 </div>
+
+{/* OWNER ACTIONS */}
 
 {isOwner &&(
 
@@ -411,6 +361,8 @@ Withdraw
 </div>
 
 )}
+
+{/* UPDATES */}
 
 <div>
 
@@ -443,6 +395,8 @@ No updates yet
 </div>
 
 </div>
+
+{/* SIGNUP CTA */}
 
 {!currentUser && (
 
