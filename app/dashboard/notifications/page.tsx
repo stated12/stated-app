@@ -9,7 +9,7 @@ type Notification = {
   message: string;
   link: string | null;
   created_at: string;
-  is_read: boolean;
+  read: boolean;
 };
 
 export default function NotificationsPage() {
@@ -55,7 +55,7 @@ export default function NotificationsPage() {
 
     setNotifications((prev) =>
       prev.map((n) =>
-        n.id === id ? { ...n, is_read: true } : n
+        n.id === id ? { ...n, read: true } : n
       )
     );
 
@@ -63,7 +63,7 @@ export default function NotificationsPage() {
 
   async function handleClick(n: Notification) {
 
-    if (!n.is_read) {
+    if (!n.read) {
       await markAsRead(n.id);
     }
 
@@ -103,7 +103,7 @@ export default function NotificationsPage() {
           key={n.id}
           onClick={() => handleClick(n)}
           className={`p-4 rounded-xl border cursor-pointer transition ${
-            n.is_read
+            n.read
               ? "bg-gray-50 border-gray-200"
               : "bg-white shadow border-blue-200"
           }`}
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
               {n.title}
             </div>
 
-            {!n.is_read && (
+            {!n.read && (
               <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
                 New
               </span>
