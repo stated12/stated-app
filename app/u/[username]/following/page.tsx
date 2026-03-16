@@ -1,24 +1,32 @@
-import { createClient } from "@/lib/supabase/server";
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export default async function FollowingPage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
 
-  const supabase = await createClient();
+  const { username } = await params;
 
-  /* GET USER */
+  const supabase = createPublicClient();
+
+  const cleanUsername = decodeURIComponent(username)
+    .trim()
+    .toLowerCase();
+
+  /* GET PROFILE */
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, username, display_name")
-    .eq("username", params.username)
+    .ilike("username", cleanUsername)
     .single();
 
   if (!profile) {
-    return <div className="p-10">User not found</div>;
+    return <div className="p-10 text-center">User not found</div>;
   }
 
   /* GET FOLLOWING */
@@ -36,64 +44,75 @@ export default async function FollowingPage({
     .eq("follower_user_id", profile.id);
 
   return (
-    <div className="max-w-2xl mx-auto py-10">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Following
-      </h1>
+    <div className="min-h-screen bg-gray-50 px-6 py-12">
 
-      {(!following || following.length === 0) && (
-        <div className="text-gray-500">
-          Not following anyone yet
+      <div className="max-w-xl mx-auto bg-white rounded-2xl shadow p-8">
+
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Following
+        </h1>
+
+        {(!following || following.length === 0) && (
+          <div className="text-gray-500 text-center">
+            Not following anyone yet
+          </div>
+        )}
+
+        <div className="space-y-4">
+
+          {following?.map((f: any) => {
+
+            const user = f.profiles;
+
+            if (!user) return null;
+
+            const avatar =
+              user.avatar_url?.trim()
+                ? user.avatar_url
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.display_name ||
+                    user.username ||
+                    "User"
+                  )}&background=2563eb&color=fff`;
+
+            return (
+
+              <Link
+                key={f.following_user_id}
+                href={`/u/${user.username}`}
+                className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 transition"
+              >
+
+                <img
+                  src={avatar}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+
+                <div>
+
+                  <div className="font-semibold">
+                    {user.display_name || user.username}
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    @{user.username}
+                  </div>
+
+                </div>
+
+              </Link>
+
+            );
+
+          })}
+
         </div>
-      )}
-
-      <div className="space-y-4">
-
-        {following?.map((f: any) => {
-
-          const user = f.profiles;
-
-          return (
-            <Link
-              key={f.following_user_id}
-              href={`/u/${user.username}`}
-              className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
-            >
-
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
-
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="font-bold">
-                    {user.display_name?.charAt(0)}
-                  </span>
-                )}
-
-              </div>
-
-              <div>
-
-                <div className="font-semibold">
-                  {user.display_name}
-                </div>
-
-                <div className="text-sm text-gray-500">
-                  @{user.username}
-                </div>
-
-              </div>
-
-            </Link>
-          );
-        })}
 
       </div>
 
     </div>
+
   );
+
 }
