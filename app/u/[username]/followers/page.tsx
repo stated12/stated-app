@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function FollowersPage({
   params,
@@ -12,12 +13,19 @@ export default async function FollowersPage({
   const { username } = await params;
 
   const supabase = createPublicClient();
+  const supabaseAuth = await createClient();
+
+  const {
+    data: { user: currentUser },
+  } = await supabaseAuth.auth.getUser();
 
   const cleanUsername = decodeURIComponent(username)
     .trim()
     .toLowerCase();
 
-  /* GET PROFILE */
+  /* =========================
+     PROFILE
+  ========================= */
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -29,19 +37,39 @@ export default async function FollowersPage({
     return <div className="p-10 text-center">User not found</div>;
   }
 
-  /* GET FOLLOWERS */
+  /* =========================
+     FOLLOWERS
+  ========================= */
 
   const { data: followers } = await supabase
     .from("follows")
     .select(`
       follower_user_id,
       profiles!follows_follower_user_id_fkey (
+        id,
         username,
         display_name,
         avatar_url
       )
     `)
     .eq("following_user_id", profile.id);
+
+  /* =========================
+     WHO CURRENT USER FOLLOWS
+  ========================= */
+
+  let followingSet = new Set<string>();
+
+  if (currentUser) {
+    const { data: myFollowing } = await supabase
+      .from("follows")
+      .select("following_user_id")
+      .eq("follower_user_id", currentUser.id);
+
+    followingSet = new Set(
+      myFollowing?.map((f) => f.following_user_id) || []
+    );
+  }
 
   return (
 
@@ -76,32 +104,76 @@ export default async function FollowersPage({
                     "User"
                   )}&background=2563eb&color=fff`;
 
+            const isFollowing = followingSet.has(user.id);
+
             return (
 
-              <Link
+              <div
                 key={f.follower_user_id}
-                href={`/u/${user.username}`}
-                className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 transition"
+                className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-gray-50 transition"
               >
 
-                <img
-                  src={avatar}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                {/* LEFT */}
+                <Link
+                  href={`/u/${user.username}`}
+                  className="flex items-center gap-4"
+                >
 
-                <div>
+                  <img
+                    src={avatar}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
 
-                  <div className="font-semibold">
-                    {user.display_name || user.username}
+                  <div>
+
+                    <div className="font-semibold text-gray-900">
+                      {user.display_name || user.username}
+                    </div>
+
+                    <div className="text-sm text-gray-500">
+                      @{user.username}
+                    </div>
+
                   </div>
 
-                  <div className="text-sm text-gray-500">
-                    @{user.username}
-                  </div>
+                </Link>
 
-                </div>
+                {/* RIGHT */}
+                {currentUser && currentUser.id !== user.id && (
 
-              </Link>
+                  isFollowing ? (
+
+                    <button
+                      disabled
+                      className="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded-full"
+                    >
+                      Following
+                    </button>
+
+                  ) : (
+
+                    <form action="/api/follow" method="POST">
+
+                      <input
+                        type="hidden"
+                        name="targetUserId"
+                        value={user.id}
+                      />
+
+                      <button
+                        type="submit"
+                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition"
+                      >
+                        Follow Back
+                      </button>
+
+                    </form>
+
+                  )
+
+                )}
+
+              </div>
 
             );
 
