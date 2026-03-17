@@ -3,42 +3,14 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
-
-/* CLIENT FOLLOW BUTTON */
-function FollowButton({
-  userId,
-}: {
-  userId: string;
-}) {
-  return (
-    <button
-      onClick={async (e) => {
-        e.preventDefault();
-
-        await fetch("/api/follow", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            followingUserId: userId,
-          }),
-        });
-
-        window.location.reload();
-      }}
-      className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition"
-    >
-      Follow Back
-    </button>
-  );
-}
+import FollowButton from "@/components/social/FollowButton";
 
 export default async function FollowersPage({
   params,
 }: {
   params: Promise<{ username: string }>;
 }) {
+
   const { username } = await params;
 
   const supabase = createPublicClient();
@@ -83,24 +55,8 @@ export default async function FollowersPage({
     `)
     .eq("following_user_id", profile.id);
 
-  /* =========================
-     WHO CURRENT USER FOLLOWS
-  ========================= */
-
-  let followingSet = new Set<string>();
-
-  if (currentUser) {
-    const { data: myFollowing } = await supabase
-      .from("follows")
-      .select("following_user_id")
-      .eq("follower_user_id", currentUser.id);
-
-    followingSet = new Set(
-      myFollowing?.map((f) => f.following_user_id) || []
-    );
-  }
-
   return (
+
     <div className="min-h-screen bg-gray-50 px-6 py-12">
 
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow p-8">
@@ -118,6 +74,7 @@ export default async function FollowersPage({
         <div className="space-y-4">
 
           {followers?.map((f: any) => {
+
             const user = f.profiles;
             if (!user) return null;
 
@@ -130,9 +87,8 @@ export default async function FollowersPage({
                     "User"
                   )}&background=2563eb&color=fff`;
 
-            const isFollowing = followingSet.has(user.id);
-
             return (
+
               <div
                 key={f.follower_user_id}
                 className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-gray-50 transition"
@@ -143,12 +99,14 @@ export default async function FollowersPage({
                   href={`/u/${user.username}`}
                   className="flex items-center gap-4"
                 >
+
                   <img
                     src={avatar}
                     className="w-12 h-12 rounded-full object-cover"
                   />
 
                   <div>
+
                     <div className="font-semibold text-gray-900">
                       {user.display_name || user.username}
                     </div>
@@ -156,25 +114,23 @@ export default async function FollowersPage({
                     <div className="text-sm text-gray-500">
                       @{user.username}
                     </div>
+
                   </div>
+
                 </Link>
 
                 {/* RIGHT */}
                 {currentUser && currentUser.id !== user.id && (
-                  isFollowing ? (
-                    <button
-                      disabled
-                      className="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded-full"
-                    >
-                      Following
-                    </button>
-                  ) : (
-                    <FollowButton userId={user.id} />
-                  )
+                  <FollowButton
+                    currentUserId={currentUser.id}
+                    targetUserId={user.id}
+                  />
                 )}
 
               </div>
+
             );
+
           })}
 
         </div>
@@ -182,5 +138,7 @@ export default async function FollowersPage({
       </div>
 
     </div>
+
   );
+
 }
