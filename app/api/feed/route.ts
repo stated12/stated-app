@@ -1,14 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   try {
@@ -22,38 +15,55 @@ export async function GET(request: Request) {
     const userHandle = searchParams.get("user");
     const companyHandle = searchParams.get("company");
 
-    const supabase = getSupabase();
+    const supabase = await createClient();
+
+    /* =========================
+       GET CURRENT USER
+    ========================= */
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    /* =========================
+       BASE QUERY
+    ========================= */
 
     let query = supabase
       .from("commitments")
-      .select("*")
+      .select("id, text, category, created_at, user_id, company_id, shares")
       .eq("status", "active")
       .eq("visibility", "public")
+      .order("created_at", { ascending: false })
       .limit(25);
 
-    /* ORDERING */
-
-    query = query.order("created_at", { ascending: false });
-
-    /* CATEGORY FILTER */
+    /* =========================
+       CATEGORY
+    ========================= */
 
     if (category) {
       query = query.eq("category", category);
     }
 
-    /* CURSOR PAGINATION */
+    /* =========================
+       CURSOR
+    ========================= */
 
     if (cursor) {
       query = query.lt("created_at", cursor);
     }
 
-    /* SEARCH */
+    /* =========================
+       SEARCH
+    ========================= */
 
     if (searchQuery) {
       query = query.ilike("text", `%${searchQuery}%`);
     }
 
-    /* USER PROFILE FILTER */
+    /* =========================
+       USER FILTER
+    ========================= */
 
     if (userHandle) {
 
@@ -69,7 +79,9 @@ export async function GET(request: Request) {
 
     }
 
-    /* COMPANY FILTER */
+    /* =========================
+       COMPANY FILTER
+    ========================= */
 
     if (companyHandle) {
 
@@ -85,6 +97,36 @@ export async function GET(request: Request) {
 
     }
 
+    /* =========================
+       FOLLOWING FILTER
+    ========================= */
+
+    if (type === "following") {
+
+      if (!user) {
+        return NextResponse.json([]);
+      }
+
+      const { data: following } = await supabase
+        .from("follows")
+        .select("following_user_id")
+        .eq("follower_user_id", user.id);
+
+      const ids =
+        following?.map((f) => f.following_user_id).filter(Boolean) || [];
+
+      if (ids.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      query = query.in("user_id", ids);
+
+    }
+
+    /* =========================
+       FETCH COMMITMENTS
+    ========================= */
+
     const { data: commitments, error } = await query;
 
     if (error) {
@@ -95,60 +137,78 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
+    /* =========================
+       FETCH REAL VIEWS
+    ========================= */
+
+    const enriched = await Promise.all(
+      commitments.map(async (c: any) => {
+
+        const { count } = await supabase
+          .from("commitment_views")
+          .select("*", { count: "exact", head: true })
+          .eq("commitment_id", c.id);
+
+        return {
+          ...c,
+          views: count || 0,
+        };
+
+      })
+    );
+
+    /* =========================
+       MAP USERS & COMPANIES
+    ========================= */
+
     const userIds = [
-      ...new Set(commitments.map((c: any) => c.user_id).filter(Boolean)),
+      ...new Set(enriched.map((c: any) => c.user_id).filter(Boolean)),
     ];
 
     const companyIds = [
-      ...new Set(commitments.map((c: any) => c.company_id).filter(Boolean)),
+      ...new Set(enriched.map((c: any) => c.company_id).filter(Boolean)),
     ];
-
-    /* FETCH PROFILES */
 
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, username, display_name, avatar_url")
       .in("id", userIds);
 
-    const profileMap: any = {};
-
-    profiles?.forEach((p: any) => {
-      profileMap[p.id] = p;
-    });
-
-    /* FETCH COMPANIES */
-
     const { data: companies } = await supabase
       .from("companies")
       .select("id, username, name, logo_url")
       .in("id", companyIds);
 
-    const companyMap: any = {};
+    const profileMap: any = {};
+    profiles?.forEach((p: any) => {
+      profileMap[p.id] = p;
+    });
 
+    const companyMap: any = {};
     companies?.forEach((c: any) => {
       companyMap[c.id] = c;
     });
 
-    /* BUILD FEED */
+    /* =========================
+       BUILD FINAL FEED
+    ========================= */
 
-    let feed = commitments.map((c: any) => {
+    let feed = enriched.map((c: any) => {
 
-      let identity: any = null;
+      let identity: any;
 
       if (c.company_id) {
 
         const company = companyMap[c.company_id];
 
-        const avatar =
-          company?.logo_url ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            company?.name || "Company"
-          )}&background=111827&color=fff`;
-
         identity = {
           username: company?.username || "company",
           display_name: company?.name || "Company",
-          avatar_url: avatar,
+          avatar_url:
+            company?.logo_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              company?.name || "Company"
+            )}`,
           type: "company",
         };
 
@@ -156,17 +216,15 @@ export async function GET(request: Request) {
 
         const profile = profileMap[c.user_id];
 
-        const avatar =
-          profile?.avatar_url ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            profile?.display_name || profile?.username || "User"
-          )}&background=2563eb&color=fff`;
-
         identity = {
           username: profile?.username || "user",
           display_name:
             profile?.display_name || profile?.username || "User",
-          avatar_url: avatar,
+          avatar_url:
+            profile?.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              profile?.display_name || profile?.username || "User"
+            )}`,
           type: "user",
         };
 
@@ -177,14 +235,16 @@ export async function GET(request: Request) {
         text: c.text,
         category: c.category,
         created_at: c.created_at,
-        views: c.views || 0,
+        views: c.views,
         shares: c.shares || 0,
         identity,
       };
 
     });
 
-    /* TRENDING SORT */
+    /* =========================
+       TRENDING SORT
+    ========================= */
 
     if (type === "trending") {
       feed.sort((a, b) => (b.views || 0) - (a.views || 0));
@@ -199,4 +259,4 @@ export async function GET(request: Request) {
     });
 
   }
-}
+  }
