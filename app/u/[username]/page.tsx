@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,6 +31,10 @@ export default async function UserPage({
     .trim()
     .toLowerCase();
 
+  /* =========================
+     PROFILE
+  ========================= */
+
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
@@ -43,7 +48,7 @@ export default async function UserPage({
   }
 
   /* =========================
-     FOLLOW COUNTS (NEW)
+     FOLLOW COUNTS
   ========================= */
 
   const { count: followersCount } = await supabase
@@ -60,12 +65,18 @@ export default async function UserPage({
      COMMITMENTS
   ========================= */
 
-  const { data: commitments } = await supabase
+  const { data: commitments, error: commitmentsError } = await supabase
     .from("commitments")
-    .select("id, text, status, created_at, end_date, completed_at, latest_update")
+    .select(
+      "id, text, status, created_at, end_date, completed_at, latest_update"
+    )
     .eq("user_id", profile.id)
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
+
+  if (commitmentsError) {
+    console.log("Commitments error:", commitmentsError);
+  }
 
   const enrichedCommitments =
     commitments && commitments.length > 0
@@ -83,6 +94,10 @@ export default async function UserPage({
           })
         )
       : [];
+
+  /* =========================
+     HELPERS
+  ========================= */
 
   const avatarUrl =
     profile.avatar_url && profile.avatar_url.startsWith("http")
@@ -121,22 +136,23 @@ export default async function UserPage({
         <ViewTracker type="profile" entityId={profile.id} />
 
         {/* HEADER */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-12">
           <Image
             src="/logo.png"
             alt="Stated"
-            width={120}
-            height={120}
+            width={110}
+            height={110}
             className="mx-auto"
           />
-          <div className="text-blue-600 font-bold text-3xl mt-4">
+          <div className="text-blue-600 font-bold text-3xl mt-3">
             Stated
           </div>
         </div>
 
         {/* PROFILE */}
         <div className="text-center">
-          <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
+
+          <div className="w-32 h-32 mx-auto mb-5 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <img
               src={avatarUrl}
               alt="avatar"
@@ -147,23 +163,23 @@ export default async function UserPage({
           <h1 className="text-3xl font-bold text-gray-900">
             {profile.display_name || profile.username}
             {profile.plan_key === "pro" && (
-              <span className="ml-3 text-blue-600 text-sm font-semibold">
+              <span className="ml-2 text-blue-600 text-sm font-semibold">
                 PRO
               </span>
             )}
           </h1>
 
-          <div className="text-gray-600 font-medium mt-1">
+          <div className="text-gray-600 mt-1">
             @{profile.username}
           </div>
 
           {profile.bio && (
-            <p className="mt-4 text-gray-800 max-w-md mx-auto">
+            <p className="mt-3 text-gray-800 max-w-md mx-auto">
               {profile.bio}
             </p>
           )}
 
-          {/* 🔥 FOLLOW BUTTON + COUNTS */}
+          {/* 🔥 FOLLOW SECTION */}
           <div className="mt-6 flex flex-col items-center gap-3">
 
             {currentUser?.id !== profile.id && (
@@ -173,16 +189,16 @@ export default async function UserPage({
               />
             )}
 
-            <div className="text-sm text-gray-600 flex gap-4">
+            <div className="text-sm text-gray-700 flex gap-5">
 
               <Link href={`/u/${profile.username}/followers`}>
-                <span className="hover:underline cursor-pointer">
+                <span className="cursor-pointer hover:underline">
                   <strong>{followersCount ?? 0}</strong> Followers
                 </span>
               </Link>
 
               <Link href={`/u/${profile.username}/following`}>
-                <span className="hover:underline cursor-pointer">
+                <span className="cursor-pointer hover:underline">
                   <strong>{followingCount ?? 0}</strong> Following
                 </span>
               </Link>
@@ -192,13 +208,9 @@ export default async function UserPage({
           </div>
 
           {/* SOCIAL LINKS */}
-          <div className="mt-8 flex justify-center flex-wrap gap-3">
+          <div className="mt-7 flex justify-center flex-wrap gap-3">
             {profile.website && (
-              <SocialLink
-                href={profile.website}
-                label={cleanUrl(profile.website)}
-                icon={<span>🌐</span>}
-              />
+              <SocialLink href={profile.website} label={cleanUrl(profile.website)} icon={<span>🌐</span>} />
             )}
             {profile.linkedin && (
               <SocialLink href={profile.linkedin} label="LinkedIn" icon={<span>🔗</span>} />
@@ -214,9 +226,10 @@ export default async function UserPage({
             )}
           </div>
 
-          <div className="mt-8">
+          <div className="mt-7">
             <ShareProfileButton username={profile.username} />
           </div>
+
         </div>
 
         {/* REPUTATION */}
@@ -226,15 +239,18 @@ export default async function UserPage({
 
         {/* COMMITMENTS */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
+          <h2 className="text-2xl font-bold mb-8 text-center text-gray-900">
             Public Commitments
           </h2>
 
           {enrichedCommitments.length > 0 ? (
             <CommitmentList commitments={enrichedCommitments} />
           ) : (
-            <div className="border rounded-xl p-6 text-gray-700 text-center">
-              No public commitments yet.
+            <div className="border rounded-xl p-6 text-gray-600 text-center">
+              No public commitments yet <br />
+              <span className="text-sm text-gray-500">
+                Follow to track future commitments
+              </span>
             </div>
           )}
         </div>
