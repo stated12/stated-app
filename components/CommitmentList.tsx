@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function CommitmentList({
   commitments,
 }: {
@@ -11,6 +13,7 @@ export default function CommitmentList({
     completed_at?: string;
     end_date?: string;
     views: number;
+    latest_update?: string | null; // ✅ safe add
   }[];
 }) {
 
@@ -54,28 +57,43 @@ export default function CommitmentList({
 
       {commitments.map((c) => (
 
-        <div
-          key={c.id}
-          className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg transition"
-        >
+        <Link key={c.id} href={`/commitment/${c.id}`}>
 
-          <div className="font-semibold text-lg text-gray-900 mb-2">
-            {c.text}
+          <div className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg hover:bg-gray-50 transition cursor-pointer">
+
+            {/* TEXT */}
+            <div className="font-semibold text-lg text-gray-900 mb-2">
+              {c.text}
+            </div>
+
+            {/* STATUS */}
+            <div className={`text-sm capitalize ${statusColor(c.status)}`}>
+              Status: {c.status}
+            </div>
+
+            {/* DATE */}
+            <div className="text-xs text-gray-600 mt-2">
+              {getDateLabel(c)}
+            </div>
+
+            {/* 🔥 LATEST UPDATE (NEW) */}
+            {c.latest_update && (
+              <div className="mt-3 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                <span className="font-medium text-gray-900">
+                  Latest update:
+                </span>{" "}
+                {c.latest_update}
+              </div>
+            )}
+
+            {/* VIEWS */}
+            <div className="text-xs text-gray-500 mt-4">
+              👁 {c.views || 0} views
+            </div>
+
           </div>
 
-          <div className={`text-sm capitalize ${statusColor(c.status)}`}>
-            Status: {c.status}
-          </div>
-
-          <div className="text-xs text-gray-600 mt-2">
-            {getDateLabel(c)}
-          </div>
-
-          <div className="text-xs text-gray-500 mt-4">
-            👁 {c.views || 0} views
-          </div>
-
-        </div>
+        </Link>
 
       ))}
 
