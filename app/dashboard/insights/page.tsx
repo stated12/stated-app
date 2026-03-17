@@ -28,6 +28,24 @@ export default async function InsightsPage() {
 
   const isPro = PRO_PLANS.includes(profile?.plan_key);
 
+  /* =========================
+     FOLLOWERS DATA
+  ========================= */
+
+  const { count: followers } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("following_user_id", user.id);
+
+  const { count: following } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("follower_user_id", user.id);
+
+  /* =========================
+     COMMITMENTS
+  ========================= */
+
   const { data: commitments } = await supabase
     .from("commitments")
     .select("id,status,shares")
@@ -35,6 +53,10 @@ export default async function InsightsPage() {
     .is("company_id", null);
 
   const commitmentIds = commitments?.map((c) => c.id) || [];
+
+  /* =========================
+     VIEWS
+  ========================= */
 
   const { count: profileViews } = await supabase
     .from("profile_views")
@@ -51,6 +73,10 @@ export default async function InsightsPage() {
 
     commitmentViews = data?.length ?? 0;
   }
+
+  /* =========================
+     STATS
+  ========================= */
 
   const total = commitments?.length ?? 0;
 
@@ -86,6 +112,7 @@ export default async function InsightsPage() {
         {/* Analytics Cards */}
         <div className="grid grid-cols-2 gap-4 text-center">
 
+          {/* Profile Views */}
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
               👤 Profile Views
@@ -95,6 +122,7 @@ export default async function InsightsPage() {
             </div>
           </div>
 
+          {/* Commitment Views */}
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
               👁 Commitment Views
@@ -104,6 +132,27 @@ export default async function InsightsPage() {
             </div>
           </div>
 
+          {/* Followers */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              👥 Followers
+            </div>
+            <div className="text-xl font-semibold">
+              {followers ?? 0}
+            </div>
+          </div>
+
+          {/* Following */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-xs text-gray-500 mb-1">
+              ➡️ Following
+            </div>
+            <div className="text-xl font-semibold">
+              {following ?? 0}
+            </div>
+          </div>
+
+          {/* Shares */}
           <div className="bg-blue-50 rounded-lg p-4 text-blue-700">
             <div className="text-xs mb-1">
               🔁 Total Shares
@@ -113,6 +162,7 @@ export default async function InsightsPage() {
             </div>
           </div>
 
+          {/* Total Commitments */}
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-xs text-gray-500 mb-1">
               📝 Total Commitments
@@ -127,7 +177,7 @@ export default async function InsightsPage() {
         {/* Divider */}
         <div className="border-t border-gray-200 mt-6 pt-4" />
 
-        {/* Commitment Status */}
+        {/* Status */}
         <div className="grid grid-cols-3 text-center text-sm text-gray-600">
 
           <div>
