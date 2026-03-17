@@ -30,17 +30,22 @@ export default function FollowButton({
 
     if (!currentUserId) return;
 
-    const res = await fetch("/api/follow/check", {
-      method: "POST",
-      body: JSON.stringify({
-        targetUserId,
-        targetCompanyId,
-      }),
-    });
+    try {
+      const res = await fetch("/api/follow/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId,
+          targetCompanyId,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
+      setFollowing(data.following);
 
-    setFollowing(data.following);
+    } catch (e) {
+      console.log("check follow error", e);
+    }
 
   }
 
@@ -53,92 +58,21 @@ export default function FollowButton({
 
     setLoading(true);
 
-    await fetch("/api/follow", {
-      method: "POST",
-      body: JSON.stringify({
-        followingUserId: targetUserId,
-        followingCompanyId: targetCompanyId,
-      }),
-    });
-
-    setFollowing(true);
-
-    /* =============================== */
-    /* CREATE FOLLOW NOTIFICATION      */
-    /* =============================== */
-
     try {
 
-      let ownerUserId = targetUserId;
-
-      /* company owner */
-
-      if (targetCompanyId) {
-
-        const { data: company } =
-        await supabase
-        .from("companies")
-        .select("owner_user_id")
-        .eq("id", targetCompanyId)
-        .maybeSingle();
-
-        ownerUserId = company?.owner_user_id;
-
-      }
-
-      if (!ownerUserId) {
-        setLoading(false);
-        return;
-      }
-
-      /* get follower name */
-
-      const { data: followerProfile } =
-      await supabase
-      .from("profiles")
-      .select("display_name,username")
-      .eq("id", currentUserId)
-      .maybeSingle();
-
-      const followerName =
-      followerProfile?.display_name ||
-      followerProfile?.username ||
-      "Someone";
-
-      /* check owner plan */
-
-      const { data: ownerProfile } =
-      await supabase
-      .from("profiles")
-      .select("plan_key")
-      .eq("id", ownerUserId)
-      .maybeSingle();
-
-      const planKey = ownerProfile?.plan_key ?? "free";
-
-      let message = "You have a new follower";
-
-      if (planKey !== "free") {
-        message = `${followerName} started following you`;
-      }
-
-      await supabase
-      .from("notifications")
-      .insert({
-        user_id: ownerUserId,
-        title: "👥 New follower",
-        message,
-        link: targetUserId
-          ? `/u/${followerProfile?.username}`
-          : `/c/${targetCompanyId}`,
-        is_read: false,
-        notification_type: "new_follower",
+      await fetch("/api/follow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, // ✅ FIX
+        body: JSON.stringify({
+          followingUserId: targetUserId,
+          followingCompanyId: targetCompanyId,
+        }),
       });
 
+      setFollowing(true);
+
     } catch (e) {
-
-      console.log("follow notification error", e);
-
+      console.log("follow error", e);
     }
 
     setLoading(false);
@@ -149,15 +83,23 @@ export default function FollowButton({
 
     setLoading(true);
 
-    await fetch("/api/follow", {
-      method: "DELETE",
-      body: JSON.stringify({
-        followingUserId: targetUserId,
-        followingCompanyId: targetCompanyId,
-      }),
-    });
+    try {
 
-    setFollowing(false);
+      await fetch("/api/follow", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }, // ✅ FIX
+        body: JSON.stringify({
+          followingUserId: targetUserId,
+          followingCompanyId: targetCompanyId,
+        }),
+      });
+
+      setFollowing(false);
+
+    } catch (e) {
+      console.log("unfollow error", e);
+    }
+
     setLoading(false);
 
   }
@@ -166,13 +108,13 @@ export default function FollowButton({
     <button
       onClick={following ? unfollow : follow}
       disabled={loading}
-      className={`px-3 py-1 rounded-lg text-sm ${
+      className={`px-3 py-1 rounded-lg text-sm transition ${
         following
           ? "bg-gray-200 text-gray-800"
-          : "bg-blue-600 text-white"
+          : "bg-blue-600 text-white hover:bg-blue-700"
       }`}
     >
-      {following ? "Following" : "Follow"}
+      {loading ? "..." : following ? "Following" : "Follow"}
     </button>
   );
 
