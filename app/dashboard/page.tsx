@@ -91,14 +91,13 @@ export default function DashboardPage() {
     setCommitments([]);
     setCursor(null);
     setHasMore(true);
+    setLoading(true); // ✅ FIX
     loadFeed();
   }
 
   async function loadFeed() {
 
     try {
-
-      setLoading(true);
 
       const params = new URLSearchParams();
       params.append("type", activeTab);
@@ -215,7 +214,7 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* FOLLOWING BUTTON */}
+        {/* Following */}
         <button
           onClick={() => setActiveTab("following")}
           className={`w-full py-2 rounded-xl text-sm font-medium ${
@@ -227,7 +226,7 @@ export default function DashboardPage() {
           Following
         </button>
 
-        {/* CATEGORY */}
+        {/* Category */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -242,7 +241,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* EMPTY STATE (FOLLOWING) */}
+      {/* EMPTY STATE */}
       {!loading && commitments.length === 0 && activeTab === "following" && (
         <div className="text-center text-gray-500 py-10">
           👀 No updates yet <br />
@@ -252,6 +251,12 @@ export default function DashboardPage() {
 
       {/* FEED */}
       <div className="space-y-4">
+
+        {loading && (
+          <div className="text-center text-gray-500 py-6">
+            Loading...
+          </div>
+        )}
 
         {commitments.map((c) => {
 
@@ -312,7 +317,26 @@ export default function DashboardPage() {
 
         })}
 
+        {/* Loading more */}
+        {loadingMore && (
+          <div className="text-center text-gray-500 py-4">
+            Loading more...
+          </div>
+        )}
+
         <div ref={loadMoreRef}></div>
+
+        {/* Load More Button */}
+        {hasMore && !loadingMore && (
+          <div className="text-center py-4">
+            <button
+              onClick={loadMore}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+            >
+              Load More
+            </button>
+          </div>
+        )}
 
       </div>
 
