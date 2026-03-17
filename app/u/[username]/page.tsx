@@ -2,21 +2,29 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
+import { createClient } from "@/lib/supabase/server";
+
 import ShareProfileButton from "@/components/ShareProfileButton";
 import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
+import FollowButton from "@/components/social/FollowButton";
 
 export default async function UserPage({
   params,
 }: {
   params: Promise<{ username: string }>;
 }) {
-  // ✅ Next 16 async params fix
   const { username } = await params;
 
   const supabase = createPublicClient();
+  const supabaseAuth = await createClient();
+
+  const {
+    data: { user: currentUser },
+  } = await supabaseAuth.auth.getUser();
 
   const cleanUsername = decodeURIComponent(username)
     .trim()
@@ -34,10 +42,27 @@ export default async function UserPage({
     return notFound();
   }
 
-  // ✅ Only change here: added end_date and completed_at
+  /* =========================
+     FOLLOW COUNTS (NEW)
+  ========================= */
+
+  const { count: followersCount } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("following_user_id", profile.id);
+
+  const { count: followingCount } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("follower_user_id", profile.id);
+
+  /* =========================
+     COMMITMENTS
+  ========================= */
+
   const { data: commitments } = await supabase
     .from("commitments")
-    .select("id, text, status, created_at, end_date, completed_at")
+    .select("id, text, status, created_at, end_date, completed_at, latest_update")
     .eq("user_id", profile.id)
     .eq("visibility", "public")
     .order("created_at", { ascending: false });
@@ -95,6 +120,7 @@ export default async function UserPage({
 
         <ViewTracker type="profile" entityId={profile.id} />
 
+        {/* HEADER */}
         <div className="text-center mb-14">
           <Image
             src="/logo.png"
@@ -108,6 +134,7 @@ export default async function UserPage({
           </div>
         </div>
 
+        {/* PROFILE */}
         <div className="text-center">
           <div className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <img
@@ -136,6 +163,35 @@ export default async function UserPage({
             </p>
           )}
 
+          {/* 🔥 FOLLOW BUTTON + COUNTS */}
+          <div className="mt-6 flex flex-col items-center gap-3">
+
+            {currentUser?.id !== profile.id && (
+              <FollowButton
+                currentUserId={currentUser?.id}
+                targetUserId={profile.id}
+              />
+            )}
+
+            <div className="text-sm text-gray-600 flex gap-4">
+
+              <Link href={`/u/${profile.username}/followers`}>
+                <span className="hover:underline cursor-pointer">
+                  <strong>{followersCount ?? 0}</strong> Followers
+                </span>
+              </Link>
+
+              <Link href={`/u/${profile.username}/following`}>
+                <span className="hover:underline cursor-pointer">
+                  <strong>{followingCount ?? 0}</strong> Following
+                </span>
+              </Link>
+
+            </div>
+
+          </div>
+
+          {/* SOCIAL LINKS */}
           <div className="mt-8 flex justify-center flex-wrap gap-3">
             {profile.website && (
               <SocialLink
@@ -145,32 +201,16 @@ export default async function UserPage({
               />
             )}
             {profile.linkedin && (
-              <SocialLink
-                href={profile.linkedin}
-                label="LinkedIn"
-                icon={<span>🔗</span>}
-              />
+              <SocialLink href={profile.linkedin} label="LinkedIn" icon={<span>🔗</span>} />
             )}
             {profile.github && (
-              <SocialLink
-                href={profile.github}
-                label="GitHub"
-                icon={<span>💻</span>}
-              />
+              <SocialLink href={profile.github} label="GitHub" icon={<span>💻</span>} />
             )}
             {profile.twitter && (
-              <SocialLink
-                href={profile.twitter}
-                label="X"
-                icon={<span>✖</span>}
-              />
+              <SocialLink href={profile.twitter} label="X" icon={<span>✖</span>} />
             )}
             {profile.youtube && (
-              <SocialLink
-                href={profile.youtube}
-                label="YouTube"
-                icon={<span>▶</span>}
-              />
+              <SocialLink href={profile.youtube} label="YouTube" icon={<span>▶</span>} />
             )}
           </div>
 
@@ -179,10 +219,12 @@ export default async function UserPage({
           </div>
         </div>
 
+        {/* REPUTATION */}
         <div className="mt-10">
           <ReputationCard userId={profile.id} />
         </div>
 
+        {/* COMMITMENTS */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-10 text-center text-gray-900">
             Public Commitments
