@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
+import LiveFeed from "@/components/LiveFeed";
 
 export default async function HomePage() {
 
@@ -40,7 +41,7 @@ export default async function HomePage() {
 
         <Link
           href="/signup"
-          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
         >
           Sign up
         </Link>
@@ -55,7 +56,7 @@ export default async function HomePage() {
           alt="Background"
           fill
           priority
-          className="object-cover -z-10 hidden md:block"
+          className="object-cover -z-20 hidden md:block"
         />
 
         <Image
@@ -63,18 +64,21 @@ export default async function HomePage() {
           alt="Background"
           fill
           priority
-          className="object-cover -z-10 md:hidden"
+          className="object-cover -z-20 md:hidden"
         />
+
+        {/* Overlay for contrast */}
+        <div className="absolute inset-0 bg-black/40 -z-10" />
 
         <Image
           src="/logo.png"
           alt="Stated Logo"
-          width={180}
-          height={180}
-          className="mb-6"
+          width={140}
+          height={140}
+          className="mb-4"
         />
 
-        <h2 className="text-4xl font-semibold text-blue-400 tracking-wide mb-6">
+        <h2 className="text-3xl font-semibold text-blue-400 mb-4">
           Stated
         </h2>
 
@@ -112,14 +116,15 @@ export default async function HomePage() {
 
         <Link
           href="/signup"
-          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl"
+          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:shadow-2xl hover:scale-[1.02]"
         >
           Start with 5 Free Commitments
         </Link>
 
-        <p className="mt-3 text-sm text-green-300">
+        {/* 🔥 STRONG TRUST LINE */}
+        <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
           ✓ No signup needed to browse or share
-        </p>
+        </div>
 
         <p className="mt-2 text-sm text-gray-300">
           2 updates per commitment • Public profile included
@@ -127,126 +132,21 @@ export default async function HomePage() {
 
       </section>
 
-      {/* RECENT COMMITMENTS (MOVED UP) */}
-      <section className="bg-white text-black py-24 px-6">
+      {/* LIVE FEED */}
+      <section className="bg-white text-black py-28 px-6">
 
         <div className="max-w-5xl mx-auto">
 
-          <p className="text-center text-gray-500 mb-3 text-sm">
-            People on record, right now
+          <p className="text-center text-gray-500 mb-3 text-sm flex justify-center items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            Live commitments happening now
           </p>
 
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-center tracking-tight">
             Commitments from people & companies
           </h2>
 
-          {commitments.length > 0 ? (
-
-            <div className="grid md:grid-cols-2 gap-6">
-
-              {commitments.map((c: any) => {
-
-                let avatar = c.identity?.avatar_url;
-
-                if (
-                  !avatar ||
-                  avatar === "" ||
-                  avatar.includes("undefined") ||
-                  avatar.includes("avatar") ||
-                  !avatar.startsWith("http")
-                ) {
-                  avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    c.identity?.display_name || "User"
-                  )}&background=2563eb&color=fff`;
-                }
-
-                const isUpdate = c.type === "update";
-
-                const link =
-                  isUpdate && c.parent_commitment_id
-                    ? `/commitment/${c.parent_commitment_id}`
-                    : `/commitment/${c.id}`;
-
-                return (
-
-                  <Link
-                    key={c.id}
-                    href={link}
-                    className={`block rounded-2xl p-6 transition duration-200 hover:-translate-y-[2px] ${
-                      isUpdate
-                        ? "bg-white border border-gray-200 shadow-sm hover:shadow-md"
-                        : "bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200"
-                    }`}
-                  >
-
-                    {isUpdate && (
-                      <div className="text-xs text-blue-600 mb-2">
-                        🔄 Update
-                      </div>
-                    )}
-
-                    <div className="flex items-start gap-4">
-
-                      <Image
-                        src={avatar}
-                        alt="avatar"
-                        width={50}
-                        height={50}
-                        className="rounded-full"
-                      />
-
-                      <div className="flex-1">
-
-                        <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
-
-                          {c.identity?.display_name}
-
-                          {c.identity?.type === "company" && (
-                            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                              COMPANY
-                            </span>
-                          )}
-
-                        </div>
-
-                        {isUpdate && (
-                          <div className="text-xs text-gray-500 mb-1">
-                            updated a commitment
-                          </div>
-                        )}
-
-                        <div className="text-gray-800 mb-3 leading-relaxed">
-                          {c.text}
-                        </div>
-
-                        <div className="text-xs text-gray-500 flex gap-4">
-                          <span>👁 {c.views ?? 0}</span>
-
-                          {!isUpdate && (
-                            <span>🔁 {c.shares ?? 0}</span>
-                          )}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </Link>
-
-                );
-
-              })}
-
-            </div>
-
-          ) : (
-
-            <div className="text-center text-gray-500">
-              No commitments yet.
-            </div>
-
-          )}
+          <LiveFeed initialData={commitments} />
 
           <div className="text-center mt-12">
 
@@ -263,42 +163,36 @@ export default async function HomePage() {
 
       </section>
 
-      {/* WHY STATED WORKS */}
-      <section className="bg-gray-50 py-28 px-6">
+      {/* WHY STATED */}
+      <section className="bg-gray-50 py-32 px-6">
         <div className="max-w-5xl mx-auto">
 
           <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
             Why Stated Works
           </p>
 
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-snug">
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
             Most platforms reward{" "}
             <span className="italic text-orange-500">performance.</span>
             <br />
             We reward follow-through.
           </h2>
 
-          <p className="text-gray-500 max-w-xl mb-12">
-            You can post about your goals anywhere. But nowhere does your word
-            actually live on the line — until stated.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 mt-12">
 
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
               <div className="text-3xl mb-4">📌</div>
               <h3 className="font-semibold text-gray-900 mb-2">Your word, on record</h3>
               <p className="text-sm text-gray-500">
-                A commitment on Stated isn't a tweet. It's timestamped, public,
-                and attached to your name with a deadline.
+                Public, timestamped, tied to your name.
               </p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
               <div className="text-3xl mb-4">👥</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Real audience, real pressure</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Real audience</h3>
               <p className="text-sm text-gray-500">
-                Social accountability is the oldest productivity hack — now built in.
+                Social pressure that actually works.
               </p>
             </div>
 
@@ -306,7 +200,7 @@ export default async function HomePage() {
               <div className="text-3xl mb-4">📈</div>
               <h3 className="font-semibold text-gray-900 mb-2">Credibility compounds</h3>
               <p className="text-sm text-gray-500">
-                Every commitment builds a public track record of follow-through.
+                A public track record of follow-through.
               </p>
             </div>
 
@@ -316,7 +210,7 @@ export default async function HomePage() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="bg-gray-950 text-white py-32 px-6 text-center">
+      <section className="bg-gray-950 text-white py-36 px-6 text-center">
         <div className="max-w-2xl mx-auto">
 
           <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-4">
@@ -330,14 +224,14 @@ export default async function HomePage() {
           </h2>
 
           <p className="text-gray-400 mb-10">
-            Stop saving goals for private notes. Say it where it counts.
+            Say it where it counts.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
 
             <Link
               href="/signup"
-              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:shadow-2xl hover:scale-[1.02]"
             >
               Commit publicly →
             </Link>
