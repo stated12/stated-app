@@ -10,7 +10,6 @@ export async function GET(request: Request) {
 
     const type = searchParams.get("type") || "latest";
     const category = searchParams.get("category");
-    const cursor = searchParams.get("cursor");
 
     const supabase = await createClient();
 
@@ -19,8 +18,11 @@ export async function GET(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    /* BASE QUERY */
-    let query = supabase
+    /* =========================
+       FETCH COMMITMENTS
+    ========================= */
+
+    let commitmentQuery = supabase
       .from("commitments")
       .select(`
         id,
@@ -29,20 +31,16 @@ export async function GET(request: Request) {
         created_at,
         user_id,
         company_id,
-        shares,
-        latest_update,
-        updated_at
+        shares
       `)
       .eq("status", "active")
       .eq("visibility", "public")
       .limit(25);
 
-    /* CATEGORY */
     if (category) {
-      query = query.eq("category", category);
+      commitmentQuery = commitmentQuery.eq("category", category);
     }
 
-    /* FOLLOWING FILTER */
     if (type === "following") {
 
       if (!user) return NextResponse.json([]);
@@ -57,44 +55,36 @@ export async function GET(request: Request) {
 
       if (ids.length === 0) return NextResponse.json([]);
 
-      query = query.in("user_id", ids);
+      commitmentQuery = commitmentQuery.in("user_id", ids);
     }
 
-    /* FETCH */
-    const { data: commitments, error } = await query;
+    const { data: commitments } = await commitmentQuery;
 
-    if (error) {
-      return NextResponse.json({ error: error.message });
-    }
+    /* =========================
+       FETCH UPDATES
+    ========================= */
 
-    if (!commitments || commitments.length === 0) {
-      return NextResponse.json([]);
-    }
+    const { data: updates } = await supabase
+      .from("commitment_updates")
+      .select(`
+        id,
+        commitment_id,
+        content,
+        created_at
+      `)
+      .order("created_at", { ascending: false })
+      .limit(25);
 
-    /* GET VIEWS */
-    const enriched = await Promise.all(
-      commitments.map(async (c: any) => {
+    /* =========================
+       GET IDS
+    ========================= */
 
-        const { count } = await supabase
-          .from("commitment_views")
-          .select("*", { count: "exact", head: true })
-          .eq("commitment_id", c.id);
-
-        return {
-          ...c,
-          views: count || 0,
-        };
-
-      })
-    );
-
-    /* USERS + COMPANIES */
     const userIds = [
-      ...new Set(enriched.map((c: any) => c.user_id).filter(Boolean)),
+      ...new Set(commitments?.map((c: any) => c.user_id).filter(Boolean)),
     ];
 
     const companyIds = [
-      ...new Set(enriched.map((c: any) => c.company_id).filter(Boolean)),
+      ...new Set(commitments?.map((c: any) => c.company_id).filter(Boolean)),
     ];
 
     const { data: profiles } = await supabase
@@ -113,81 +103,92 @@ export async function GET(request: Request) {
     const companyMap: any = {};
     companies?.forEach((c: any) => (companyMap[c.id] = c));
 
-    /* BUILD ACTIVITY FEED */
+    /* =========================
+       BUILD FEED
+    ========================= */
+
     let feed: any[] = [];
 
-    enriched.forEach((c: any) => {
+    /* COMMITMENTS */
+    commitments?.forEach((c: any) => {
 
-      let identity;
+      const profile = profileMap[c.user_id];
+      const company = companyMap[c.company_id];
 
-      if (c.company_id) {
-        const company = companyMap[c.company_id];
-        identity = {
-          username: company?.username || "company",
-          display_name: company?.name || "Company",
-          avatar_url:
-            company?.logo_url ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              company?.name || "Company"
-            )}`,
-          type: "company",
-        };
-      } else {
-        const profile = profileMap[c.user_id];
-        identity = {
-          username: profile?.username || "user",
-          display_name:
-            profile?.display_name || profile?.username || "User",
-          avatar_url:
-            profile?.avatar_url ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              profile?.display_name || profile?.username || "User"
-            )}`,
-          type: "user",
-        };
-      }
+      const identity = c.company_id
+        ? {
+            username: company?.username,
+            display_name: company?.name,
+            avatar_url: company?.logo_url,
+            type: "company",
+          }
+        : {
+            username: profile?.username,
+            display_name: profile?.display_name,
+            avatar_url: profile?.avatar_url,
+            type: "user",
+          };
 
-      /* ✅ ADD COMMITMENT EVENT */
       feed.push({
         id: c.id,
         type: "commitment",
         text: c.text,
         category: c.category,
         created_at: c.created_at,
-        views: c.views,
-        shares: c.shares || 0,
         identity,
       });
 
-      /* ✅ ADD UPDATE EVENT */
-      if (c.latest_update) {
-        feed.push({
-          id: c.id + "_update",
-          type: "update",
-          text: c.latest_update,
-          parent_commitment_id: c.id,
-          created_at: c.updated_at || c.created_at,
-          identity,
-        });
-      }
+    });
+
+    /* UPDATES */
+    updates?.forEach((u: any) => {
+
+      const parent = commitments?.find(
+        (c: any) => c.id === u.commitment_id
+      );
+
+      if (!parent) return;
+
+      const profile = profileMap[parent.user_id];
+      const company = companyMap[parent.company_id];
+
+      const identity = parent.company_id
+        ? {
+            username: company?.username,
+            display_name: company?.name,
+            avatar_url: company?.logo_url,
+            type: "company",
+          }
+        : {
+            username: profile?.username,
+            display_name: profile?.display_name,
+            avatar_url: profile?.avatar_url,
+            type: "user",
+          };
+
+      feed.push({
+        id: u.id,
+        type: "update",
+        text: u.content,
+        parent_commitment_id: u.commitment_id,
+        created_at: u.created_at,
+        identity,
+      });
 
     });
 
-    /* SORT BY TIME */
+    /* SORT */
     feed.sort(
       (a, b) =>
         new Date(b.created_at).getTime() -
         new Date(a.created_at).getTime()
     );
 
-    /* TRENDING */
-    if (type === "trending") {
-      feed.sort((a, b) => (b.views || 0) - (a.views || 0));
-    }
-
     return NextResponse.json(feed);
 
   } catch (err: any) {
+
     return NextResponse.json({ error: err.message });
+
   }
 }
