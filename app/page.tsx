@@ -22,9 +22,14 @@ export default async function HomePage() {
     feed = [];
   }
 
+  // ✅ SAFE fallback
+  if (!Array.isArray(feed)) {
+    feed = [];
+  }
+
   // Balanced feed
-  const updates = feed.filter((f) => f.type === "update");
-  const originals = feed.filter((f) => f.type !== "update");
+  const updates = feed.filter((f) => f?.type === "update");
+  const originals = feed.filter((f) => f?.type !== "update");
 
   const commitments = [
     ...updates.slice(0, 2),
@@ -132,12 +137,13 @@ export default async function HomePage() {
 
             {commitments.map((c) => {
 
-              const avatar = getSafeAvatar(c.identity);
+              const identity = c?.identity || {};
+              const avatar = getSafeAvatar(identity);
 
-              const isUpdate = c.type === "update";
+              const isUpdate = c?.type === "update";
 
               const link =
-                isUpdate && c.parent_commitment_id
+                isUpdate && c?.parent_commitment_id
                   ? `/commitment/${c.parent_commitment_id}`
                   : `/commitment/${c.id}`;
 
@@ -166,7 +172,7 @@ export default async function HomePage() {
                       className="w-12 h-12 rounded-full object-cover"
                       onError={(e: any) => {
                         e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          c.identity?.display_name || "User"
+                          identity?.display_name || "User"
                         )}`;
                       }}
                     />
@@ -174,9 +180,9 @@ export default async function HomePage() {
                     <div className="flex-1">
 
                       <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
-                        {c.identity?.display_name}
+                        {identity?.display_name || "User"}
 
-                        {c.identity?.type === "company" && (
+                        {identity && identity.type === "company" && (
                           <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
                             COMPANY
                           </span>
@@ -190,14 +196,14 @@ export default async function HomePage() {
                       )}
 
                       <div className="text-gray-800 mb-3">
-                        {c.text}
+                        {c?.text || ""}
                       </div>
 
                       <div className="text-xs text-gray-500 flex gap-4">
-                        <span>👁 {c.views ?? 0}</span>
+                        <span>👁 {c?.views ?? 0}</span>
 
                         {!isUpdate && (
-                          <span>🔁 {c.shares ?? 0}</span>
+                          <span>🔁 {c?.shares ?? 0}</span>
                         )}
                       </div>
 
