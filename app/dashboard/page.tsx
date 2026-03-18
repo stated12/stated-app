@@ -18,6 +18,7 @@ type FeedItem = {
   created_at: string;
   views?: number;
   shares?: number;
+  parent_commitment_id?: string; // ✅ added
   identity: Identity;
 };
 
@@ -260,6 +261,11 @@ export default function DashboardPage() {
               ? `/c/${c.identity.username}`
               : `/u/${c.identity.username}`;
 
+          const commitmentLink =
+            c.type === "update" && c.parent_commitment_id
+              ? `/commitment/${c.parent_commitment_id}`
+              : `/commitment/${c.id}`;
+
           /* =========================
              UPDATE CARD
           ========================= */
@@ -267,38 +273,39 @@ export default function DashboardPage() {
           if (c.type === "update") {
             return (
 
-              <div
-                key={c.id}
-                className="bg-gray-50 border rounded-xl p-4"
-              >
+              <Link key={c.id} href={commitmentLink}>
 
-                <Link href={profileLink} className="flex gap-3 mb-2">
+                <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
 
-                  <img
-                    src={avatar}
-                    className="w-8 h-8 rounded-full"
-                  />
+                  <div className="flex gap-3 mb-2">
 
-                  <div className="text-sm">
+                    <img
+                      src={avatar}
+                      className="w-8 h-8 rounded-full"
+                    />
 
-                    <span className="font-semibold">
-                      {c.identity.display_name}
-                    </span>{" "}
-                    updated a commitment
+                    <div className="text-sm">
+
+                      <span className="font-semibold">
+                        {c.identity.display_name}
+                      </span>{" "}
+                      updated a commitment
+
+                    </div>
 
                   </div>
 
-                </Link>
+                  <div className="text-gray-900 text-sm ml-11">
+                    {c.text}
+                  </div>
 
-                <div className="text-gray-900 text-sm ml-11">
-                  {c.text}
+                  <div className="text-xs text-gray-400 ml-11 mt-1">
+                    {timeAgo(c.created_at)}
+                  </div>
+
                 </div>
 
-                <div className="text-xs text-gray-400 ml-11 mt-1">
-                  {timeAgo(c.created_at)}
-                </div>
-
-              </div>
+              </Link>
 
             );
           }
@@ -309,7 +316,7 @@ export default function DashboardPage() {
 
           return (
 
-            <Link key={c.id} href={`/commitment/${c.id}`}>
+            <Link key={c.id} href={commitmentLink}>
 
               <div className="bg-white rounded-2xl shadow-sm p-5">
 
