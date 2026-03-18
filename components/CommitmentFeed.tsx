@@ -7,18 +7,18 @@ type Identity = {
   username?: string;
   display_name?: string | null;
   avatar_url?: string | null;
-  plan_key?: string | null;
   type?: "user" | "company";
 };
 
-type Commitment = {
+type FeedItem = {
   id: string;
+  type: "commitment" | "update"; // ✅ IMPORTANT
   text?: string;
   category?: string;
   created_at: string;
   views?: number;
   shares?: number;
-  latest_update?: string | null;
+  parent_commitment_id?: string;
   identity?: Identity | null;
 };
 
@@ -37,16 +37,12 @@ function timeAgo(date: string) {
   };
 
   for (const key in intervals) {
-
     const interval = Math.floor(seconds / intervals[key]);
-
     if (interval > 1) return `${interval} ${key}s ago`;
     if (interval === 1) return `1 ${key} ago`;
-
   }
 
   return "Just now";
-
 }
 
 export default function CommitmentFeed({
@@ -57,7 +53,7 @@ export default function CommitmentFeed({
   showFilters?: boolean;
 }) {
 
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [items, setItems] = useState<FeedItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -87,13 +83,10 @@ export default function CommitmentFeed({
   }, [activeTab, category]);
 
   function resetFeed() {
-
-    setCommitments([]);
+    setItems([]);
     setCursor(null);
     setHasMore(true);
-
     loadInitial();
-
   }
 
   async function loadInitial() {
@@ -104,14 +97,12 @@ export default function CommitmentFeed({
     if (category) query.append("category", category);
 
     const res = await fetch(`${endpoint}?${query.toString()}`);
-
     if (!res.ok) return;
 
     const data = await res.json();
-
     const safeData = Array.isArray(data) ? data : [];
 
-    setCommitments(safeData);
+    setItems(safeData);
 
     setCursor(
       safeData.length
@@ -119,8 +110,8 @@ export default function CommitmentFeed({
         : null
     );
 
-    setHasMore(safeData.length === 25);
-
+    // ✅ FIX
+    setHasMore(safeData.length >= 25);
   }
 
   async function loadMore() {
@@ -136,16 +127,15 @@ export default function CommitmentFeed({
     if (category) query.append("category", category);
 
     const res = await fetch(`${endpoint}?${query.toString()}`);
-
     const data = await res.json();
 
     const safeData = Array.isArray(data) ? data : [];
 
     const unique = safeData.filter(
-      (item) => !commitments.some((c) => c.id === item.id)
+      (item) => !items.some((c) => c.id === item.id)
     );
 
-    setCommitments((prev) => [...prev, ...unique]);
+    setItems((prev) => [...prev, ...unique]);
 
     if (unique.length > 0) {
       setCursor(unique[unique.length - 1].created_at);
@@ -156,7 +146,6 @@ export default function CommitmentFeed({
     }
 
     setLoading(false);
-
   }
 
   return (
@@ -198,15 +187,11 @@ export default function CommitmentFeed({
             onChange={(e) => setCategory(e.target.value)}
             className="border rounded px-3 py-2"
           >
-
             {categories.map((cat) => (
-
               <option key={cat} value={cat}>
                 {cat || "All Categories"}
               </option>
-
             ))}
-
           </select>
 
         </div>
@@ -215,7 +200,7 @@ export default function CommitmentFeed({
 
       <div className="space-y-4">
 
-        {commitments.map((c) => {
+        {items.map((c) => {
 
           const identity = c.identity ?? {};
 
@@ -233,11 +218,66 @@ export default function CommitmentFeed({
               ? `/c/${identity.username}`
               : `/u/${identity.username}`;
 
+          const commitmentLink =
+            c.type === "update" && c.parent_commitment_id
+              ? `/commitment/${c.parent_commitment_id}`
+              : `/commitment/${c.id}`;
+
+          /* =========================
+             UPDATE CARD
+          ========================= */
+
+          if (c.type === "update") {
+            return (
+
+              <Link key={c.id} href={commitmentLink}>
+
+                <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
+
+                  <div className="text-xs text-blue-600 font-medium mb-2">
+                    🔄 Update
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-2">
+
+                    <img
+                      src={avatar}
+                      className="w-8 h-8 rounded-full"
+                    />
+
+                    <div className="text-sm">
+                      <span className="font-semibold">
+                        {identity.display_name || identity.username}
+                      </span>{" "}
+                      updated a commitment
+                    </div>
+
+                  </div>
+
+                  <div className="text-gray-900 text-sm ml-11">
+                    {c.text}
+                  </div>
+
+                  <div className="text-xs text-gray-400 ml-11 mt-1">
+                    {timeAgo(c.created_at)}
+                  </div>
+
+                </div>
+
+              </Link>
+
+            );
+          }
+
+          /* =========================
+             COMMITMENT CARD
+          ========================= */
+
           return (
 
-            <Link key={c.id} href={`/commitment/${c.id}`}>
+            <Link key={c.id} href={commitmentLink}>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 cursor-pointer hover:shadow-md transition">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition">
 
                 <div className="flex items-center gap-3 mb-3">
 
@@ -245,7 +285,6 @@ export default function CommitmentFeed({
 
                     <img
                       src={avatar}
-                      alt="avatar"
                       className="w-10 h-10 rounded-full object-cover"
                     />
 
@@ -258,14 +297,11 @@ export default function CommitmentFeed({
                       onClick={(e)=>e.stopPropagation()}
                       className="font-medium"
                     >
-                      {identity.display_name ||
-                        identity.username ||
-                        "Unknown"}
+                      {identity.display_name || identity.username}
                     </Link>
 
                     <div className="text-xs text-gray-500">
-                      @{identity.username || "user"} ·{" "}
-                      {timeAgo(c.created_at)}
+                      @{identity.username} · {timeAgo(c.created_at)}
                     </div>
 
                   </div>
@@ -273,31 +309,21 @@ export default function CommitmentFeed({
                 </div>
 
                 {c.category && (
-
                   <div className="text-xs text-blue-600 mb-2">
                     {c.category}
                   </div>
-
                 )}
 
                 <div className="mb-3 whitespace-pre-wrap text-gray-800">
-                  {c.text || ""}
+                  {c.text}
                 </div>
 
-                {c.latest_update && (
-
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 mb-3">
-                    <span className="font-medium text-gray-900">
-                      Latest update:
-                    </span>{" "}
-                    {c.latest_update}
-                  </div>
-
-                )}
-
-                <div className="text-sm text-gray-500 flex items-center gap-4">
+                <div className="text-sm text-gray-500 flex gap-4">
                   <span>👁 {c.views ?? 0} views</span>
-                  <span>🔁 {c.shares ?? 0}</span>
+
+                  {c.type === "commitment" && (
+                    <span>🔁 {c.shares ?? 0}</span>
+                  )}
                 </div>
 
               </div>
@@ -319,9 +345,7 @@ export default function CommitmentFeed({
             disabled={loading}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg"
           >
-
             {loading ? "Loading..." : "Load More"}
-
           </button>
 
         </div>
