@@ -22,14 +22,11 @@ export default async function HomePage() {
     feed = [];
   }
 
-  // ✅ Balanced feed
-  const updates = feed.filter((f) => f.type === "update");
-  const originals = feed.filter((f) => f.type !== "update");
+  /* ✅ CONTROLLED FEED (NO LIVE FEEL) */
+  const updates = feed.filter((f) => f.type === "update").slice(0, 1);
+  const originals = feed.filter((f) => f.type !== "update").slice(0, 5);
 
-  const commitments = [
-    ...updates.slice(0, 2),
-    ...originals.slice(0, 4),
-  ];
+  const commitments = [...updates, ...originals];
 
   return (
 
@@ -102,7 +99,6 @@ export default async function HomePage() {
           Start with 5 Free Commitments
         </Link>
 
-        {/* TRUST LINE */}
         <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
           ✓ No signup needed to browse or share
         </div>
@@ -131,7 +127,6 @@ export default async function HomePage() {
             {commitments.map((c) => {
 
               const avatar = getSafeAvatar(c.identity);
-
               const isUpdate = c.type === "update";
 
               const link =
@@ -158,12 +153,11 @@ export default async function HomePage() {
 
                   <div className="flex items-start gap-4">
 
-                    <Image
+                    {/* ✅ FIXED AVATAR */}
+                    <img
                       src={avatar}
                       alt="avatar"
-                      width={50}
-                      height={50}
-                      className="rounded-full"
+                      className="w-12 h-12 rounded-full object-cover"
                     />
 
                     <div className="flex-1">
@@ -206,7 +200,7 @@ export default async function HomePage() {
 
           </div>
 
-          {/* CTA BUTTON (UPGRADED) */}
+          {/* CTA BUTTON */}
           <div className="text-center mt-12">
             <Link
               href="/explore"
@@ -257,7 +251,6 @@ export default async function HomePage() {
 
           </div>
 
-          {/* ✅ FIXED TEXT */}
           <p className="mt-6 text-sm text-gray-400">
             Free to start. No credit card required.
           </p>
