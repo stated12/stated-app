@@ -50,7 +50,6 @@ Sign up
 
 <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24 min-h-[85vh]">
 
-{/* Desktop hero */}
 <Image
 src="/hero-desktop.png"
 alt="Background"
@@ -59,7 +58,6 @@ priority
 className="object-cover -z-10 hidden md:block"
 />
 
-{/* Mobile hero */}
 <Image
 src="/hero-mobile.png"
 alt="Background"
@@ -161,13 +159,30 @@ c.identity?.display_name || "User"
 
 }
 
+const isUpdate = c.type === "update";
+
+const link = isUpdate && c.parent_commitment_id
+? `/commitment/${c.parent_commitment_id}`
+: `/commitment/${c.id}`;
+
 return(
 
 <Link
 key={c.id}
-href={`/commitment/${c.id}`}
-className="block bg-gray-100 rounded-xl p-6 hover:bg-gray-200 hover:shadow-md transition"
+href={link}
+className={`block rounded-xl p-6 transition hover:shadow-md ${
+isUpdate
+? "bg-gray-50 border"
+: "bg-gray-100 hover:bg-gray-200"
+}`}
 >
+
+{/* UPDATE LABEL */}
+{isUpdate && (
+<div className="text-xs text-blue-600 mb-2">
+🔄 Update
+</div>
+)}
 
 <div className="flex items-start gap-4">
 
@@ -193,13 +208,25 @@ COMPANY
 
 </div>
 
+{/* SUBTEXT FOR UPDATE */}
+{isUpdate && (
+<div className="text-xs text-gray-500 mb-1">
+updated a commitment
+</div>
+)}
+
 <div className="text-gray-800 mb-2">
 {c.text}
 </div>
 
 <div className="text-xs text-gray-500 flex gap-4">
-<span>👁 {c.views}</span>
-<span>🔁 {c.shares || 0}</span>
+<span>👁 {c.views ?? 0}</span>
+
+{/* ONLY commitments have shares */}
+{!isUpdate && (
+<span>🔁 {c.shares ?? 0}</span>
+)}
+
 </div>
 
 </div>
