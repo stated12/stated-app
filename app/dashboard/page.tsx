@@ -18,7 +18,7 @@ type FeedItem = {
   created_at: string;
   views?: number;
   shares?: number;
-  parent_commitment_id?: string; // ✅ added
+  parent_commitment_id?: string;
   identity: Identity;
 };
 
@@ -118,7 +118,8 @@ export default function DashboardPage() {
           : null
       );
 
-      setHasMore(safeData.length === 25);
+      // ✅ FIX: allow more than 25 because updates included
+      setHasMore(safeData.length >= 25);
 
     } catch (err) {
 
@@ -277,6 +278,10 @@ export default function DashboardPage() {
 
                 <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
 
+                  <div className="text-xs text-blue-600 font-medium mb-2">
+                    🔄 Update
+                  </div>
+
                   <div className="flex gap-3 mb-2">
 
                     <img
@@ -285,12 +290,10 @@ export default function DashboardPage() {
                     />
 
                     <div className="text-sm">
-
                       <span className="font-semibold">
                         {c.identity.display_name}
                       </span>{" "}
                       updated a commitment
-
                     </div>
 
                   </div>
@@ -350,7 +353,11 @@ export default function DashboardPage() {
 
                 <div className="text-xs text-gray-500 flex gap-4">
                   <span>👁 {c.views ?? 0}</span>
-                  <span>🔁 {c.shares ?? 0}</span>
+
+                  {/* ❌ hide shares for updates */}
+                  {c.type !== "update" && (
+                    <span>🔁 {c.shares ?? 0}</span>
+                  )}
                 </div>
 
               </div>
