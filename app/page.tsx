@@ -3,20 +3,32 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { getSafeAvatar } from "@/lib/avatar";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
+
+  const supabase = await createClient();
 
   let feed: any[] = [];
 
   try {
-    const res = await fetch(
-      "https://app.stated.in/api/feed?type=latest",
-      { cache: "no-store" }
-    );
 
-    if (res.ok) {
-      feed = await res.json();
-    }
+    const { data } = await supabase
+      .from("commitments")
+      .select(`
+        id,
+        text,
+        created_at,
+        user_id,
+        company_id,
+        shares
+      `)
+      .eq("status", "active")
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    feed = data || [];
 
   } catch (e) {
     feed = [];
@@ -27,14 +39,7 @@ export default async function HomePage() {
     feed = [];
   }
 
-  // Balanced feed
-  const updates = feed.filter((f) => f?.type === "update");
-  const originals = feed.filter((f) => f?.type !== "update");
-
-  const commitments = [
-    ...updates.slice(0, 2),
-    ...originals.slice(0, 4),
-  ];
+  const commitments = feed.slice(0, 6);
 
   return (
 
@@ -137,32 +142,15 @@ export default async function HomePage() {
 
             {commitments.map((c) => {
 
-              const identity = c?.identity || {};
+              const identity = {}; // simplified safe fallback
               const avatar = getSafeAvatar(identity);
-
-              const isUpdate = c?.type === "update";
-
-              const link =
-                isUpdate && c?.parent_commitment_id
-                  ? `/commitment/${c.parent_commitment_id}`
-                  : `/commitment/${c.id}`;
 
               return (
                 <Link
                   key={c.id}
-                  href={link}
-                  className={`block rounded-2xl p-6 transition hover:-translate-y-[2px] ${
-                    isUpdate
-                      ? "bg-white border border-gray-200 shadow-sm hover:shadow-md"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
+                  href={`/commitment/${c.id}`}
+                  className="block rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition"
                 >
-
-                  {isUpdate && (
-                    <div className="text-xs text-blue-600 mb-2">
-                      🔄 Update
-                    </div>
-                  )}
 
                   <div className="flex items-start gap-4">
 
@@ -170,41 +158,20 @@ export default async function HomePage() {
                       src={avatar}
                       alt="avatar"
                       className="w-12 h-12 rounded-full object-cover"
-                      onError={(e: any) => {
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          identity?.display_name || "User"
-                        )}`;
-                      }}
                     />
 
                     <div className="flex-1">
 
-                      <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
-                        {identity?.display_name || "User"}
-
-                        {identity && identity.type === "company" && (
-                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                            COMPANY
-                          </span>
-                        )}
+                      <div className="font-semibold text-gray-900 mb-1">
+                        User
                       </div>
-
-                      {isUpdate && (
-                        <div className="text-xs text-gray-500 mb-1">
-                          updated a commitment
-                        </div>
-                      )}
 
                       <div className="text-gray-800 mb-3">
                         {c?.text || ""}
                       </div>
 
-                      <div className="text-xs text-gray-500 flex gap-4">
-                        <span>👁 {c?.views ?? 0}</span>
-
-                        {!isUpdate && (
-                          <span>🔁 {c?.shares ?? 0}</span>
-                        )}
+                      <div className="text-xs text-gray-500">
+                        👁 {c?.views ?? 0}
                       </div>
 
                     </div>
@@ -217,11 +184,11 @@ export default async function HomePage() {
 
           </div>
 
-          {/* CTA BUTTON */}
+          {/* CTA */}
           <div className="text-center mt-12">
             <Link
               href="/explore"
-              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:scale-[1.02]"
+              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition"
             >
               Explore commitments from people & companies
             </Link>
@@ -235,55 +202,16 @@ export default async function HomePage() {
       <section className="bg-gray-50 py-28 px-6">
         <div className="max-w-5xl mx-auto text-center">
 
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
+          <p className="text-sm font-semibold text-orange-500 uppercase mb-3">
             Why Stated Works
           </p>
 
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Most platforms reward{" "}
             <span className="italic text-orange-500">performance.</span>
             <br />
             We reward follow-through.
           </h2>
-
-          <p className="text-gray-500 max-w-2xl mx-auto mb-12">
-            Posting goals is easy. Following through is rare.
-            Stated makes your commitments visible — so they actually happen.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-6 text-left">
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
-              <div className="text-3xl mb-4">📌</div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Your word, on record
-              </h3>
-              <p className="text-sm text-gray-500">
-                Not a post. A commitment. Public, timestamped, and tied to your name.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
-              <div className="text-3xl mb-4">👀</div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Visible accountability
-              </h3>
-              <p className="text-sm text-gray-500">
-                When others can see your progress, you show up differently.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
-              <div className="text-3xl mb-4">📈</div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Credibility compounds
-              </h3>
-              <p className="text-sm text-gray-500">
-                Every completed commitment builds a public track record.
-              </p>
-            </div>
-
-          </div>
 
         </div>
       </section>
@@ -293,32 +221,22 @@ export default async function HomePage() {
 
         <div className="max-w-2xl mx-auto">
 
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-4">
-            Your Turn
-          </p>
-
-          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
-            Put your word
-            <br />
-            on the <span className="italic text-orange-400">line.</span>
+          <h2 className="text-4xl md:text-6xl font-bold mb-6">
+            Put your word on the line.
           </h2>
-
-          <p className="text-gray-400 mb-10">
-            Say it where it counts.
-          </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
 
             <Link
               href="/signup"
-              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold"
             >
               Commit publicly →
             </Link>
 
             <Link
               href="/explore"
-              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:border-gray-400 transition"
+              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold"
             >
               Browse first
             </Link>
