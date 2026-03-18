@@ -2,14 +2,14 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
-import { getSafeAvatar } from "@/lib/avatar";
 import { createClient } from "@/lib/supabase/server";
+import { getSafeAvatar } from "@/lib/avatar";
 
 export default async function HomePage() {
 
   const supabase = await createClient();
 
-  let feed: any[] = [];
+  let commitments: any[] = [];
 
   try {
 
@@ -21,25 +21,28 @@ export default async function HomePage() {
         created_at,
         user_id,
         company_id,
-        shares
+        shares,
+        profiles (
+          username,
+          display_name,
+          avatar_url
+        ),
+        companies (
+          username,
+          name,
+          logo_url
+        )
       `)
       .eq("status", "active")
       .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(6);
 
-    feed = data || [];
+    commitments = data || [];
 
   } catch (e) {
-    feed = [];
+    commitments = [];
   }
-
-  // ✅ SAFE fallback
-  if (!Array.isArray(feed)) {
-    feed = [];
-  }
-
-  const commitments = feed.slice(0, 6);
 
   return (
 
@@ -50,15 +53,10 @@ export default async function HomePage() {
         <Link href="/explore" className="hover:text-blue-400 transition">
           Explore
         </Link>
-
         <Link href="/login" className="hover:text-blue-400 transition">
           Login
         </Link>
-
-        <Link
-          href="/signup"
-          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
-        >
+        <Link href="/signup" className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
           Sign up
         </Link>
       </header>
@@ -66,18 +64,16 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-36 pb-32 min-h-[90vh]">
 
-        <Image src="/hero-desktop.png" alt="Background" fill priority className="object-cover -z-20 hidden md:block"/>
-        <Image src="/hero-mobile.png" alt="Background" fill priority className="object-cover -z-20 md:hidden"/>
+        <Image src="/hero-desktop.png" alt="" fill priority className="object-cover -z-20 hidden md:block"/>
+        <Image src="/hero-mobile.png" alt="" fill priority className="object-cover -z-20 md:hidden"/>
 
         <div className="absolute inset-0 bg-black/40 -z-10" />
 
-        <Image src="/logo.png" alt="Stated Logo" width={140} height={140} className="mb-4"/>
+        <Image src="/logo.png" alt="logo" width={140} height={140} className="mb-4"/>
 
-        <h2 className="text-3xl font-semibold text-blue-400 mb-4">
-          Stated
-        </h2>
+        <h2 className="text-3xl font-semibold text-blue-400 mb-4">Stated</h2>
 
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+        <h1 className="text-4xl md:text-6xl font-bold leading-tight">
           Say it publicly.
           <br />
           Do it publicly.
@@ -87,46 +83,21 @@ export default async function HomePage() {
           Build credibility. Track progress. Stay accountable.
         </p>
 
-        <form
-          action="/search"
-          method="GET"
-          className="mt-8 flex w-full max-w-xl bg-white rounded-2xl overflow-hidden shadow-lg"
-        >
-          <input
-            type="text"
-            name="q"
-            placeholder="Search commitments, people or companies"
-            className="flex-1 px-4 py-3 text-black outline-none"
-          />
-
-          <button
-            type="submit"
-            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
-          >
-            Search
-          </button>
-        </form>
-
         <Link
           href="/signup"
-          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
+          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition"
         >
           Start with 5 Free Commitments
         </Link>
 
-        {/* TRUST LINE */}
-        <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
+        <div className="mt-5 text-sm text-gray-300">
           ✓ No signup needed to browse or share
         </div>
-
-        <p className="mt-2 text-sm text-gray-300">
-          2 updates per commitment • Public profile included
-        </p>
 
       </section>
 
       {/* FEED */}
-      <section className="bg-white text-black py-28 px-6">
+      <section className="bg-white py-24 px-6">
 
         <div className="max-w-5xl mx-auto">
 
@@ -142,7 +113,22 @@ export default async function HomePage() {
 
             {commitments.map((c) => {
 
-              const identity = {}; // simplified safe fallback
+              const isCompany = !!c.company_id;
+
+              const identity = isCompany
+                ? {
+                    display_name: c.companies?.name,
+                    username: c.companies?.username,
+                    avatar_url: c.companies?.logo_url,
+                    type: "company",
+                  }
+                : {
+                    display_name: c.profiles?.display_name,
+                    username: c.profiles?.username,
+                    avatar_url: c.profiles?.avatar_url,
+                    type: "user",
+                  };
+
               const avatar = getSafeAvatar(identity);
 
               return (
@@ -156,22 +142,18 @@ export default async function HomePage() {
 
                     <img
                       src={avatar}
-                      alt="avatar"
+                      alt=""
                       className="w-12 h-12 rounded-full object-cover"
                     />
 
-                    <div className="flex-1">
+                    <div>
 
                       <div className="font-semibold text-gray-900 mb-1">
-                        User
+                        {identity.display_name || identity.username || "User"}
                       </div>
 
-                      <div className="text-gray-800 mb-3">
-                        {c?.text || ""}
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        👁 {c?.views ?? 0}
+                      <div className="text-gray-800 mb-2">
+                        {c.text}
                       </div>
 
                     </div>
@@ -198,56 +180,44 @@ export default async function HomePage() {
 
       </section>
 
-      {/* WHY STATED WORKS */}
-      <section className="bg-gray-50 py-28 px-6">
-        <div className="max-w-5xl mx-auto text-center">
+      {/* WHY STATED */}
+      <section className="bg-gray-50 py-28 px-6 text-center">
 
-          <p className="text-sm font-semibold text-orange-500 uppercase mb-3">
-            Why Stated Works
-          </p>
+        <p className="text-sm text-orange-500 mb-3 uppercase">
+          Why Stated Works
+        </p>
 
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Most platforms reward{" "}
-            <span className="italic text-orange-500">performance.</span>
-            <br />
-            We reward follow-through.
-          </h2>
+        <h2 className="text-3xl md:text-5xl font-bold">
+          Most platforms reward{" "}
+          <span className="italic text-orange-500">performance.</span>
+          <br />
+          We reward follow-through.
+        </h2>
 
-        </div>
       </section>
 
       {/* FINAL CTA */}
-      <section className="bg-gray-950 text-white py-36 px-6 text-center">
+      <section className="bg-gray-950 text-white py-32 px-6 text-center">
 
-        <div className="max-w-2xl mx-auto">
+        <h2 className="text-4xl md:text-6xl font-bold mb-6">
+          Put your word on the line.
+        </h2>
 
-          <h2 className="text-4xl md:text-6xl font-bold mb-6">
-            Put your word on the line.
-          </h2>
+        <div className="flex flex-col sm:flex-row gap-6 justify-center">
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <Link href="/signup" className="bg-blue-600 px-10 py-4 rounded-xl">
+            Commit publicly →
+          </Link>
 
-            <Link
-              href="/signup"
-              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold"
-            >
-              Commit publicly →
-            </Link>
-
-            <Link
-              href="/explore"
-              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold"
-            >
-              Browse first
-            </Link>
-
-          </div>
-
-          <p className="mt-6 text-sm text-gray-400">
-            Free to start. No credit card required.
-          </p>
+          <Link href="/explore" className="border px-10 py-4 rounded-xl">
+            Browse first
+          </Link>
 
         </div>
+
+        <p className="mt-6 text-sm text-gray-400">
+          Free to start. No credit card required.
+        </p>
 
       </section>
 
