@@ -10,14 +10,14 @@ type Identity = {
   type: "user" | "company";
 };
 
-type Commitment = {
+type FeedItem = {
   id: string;
+  type?: "commitment" | "update";
   text: string;
-  category: string;
+  category?: string;
   created_at: string;
   views?: number;
   shares?: number;
-  latest_update?: string | null;
   identity: Identity;
 };
 
@@ -34,7 +34,7 @@ function timeAgo(date: string) {
 
 export default function DashboardPage() {
 
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [items, setItems] = useState<FeedItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -88,10 +88,10 @@ export default function DashboardPage() {
   }, [hasMore, loadingMore]);
 
   function resetFeed() {
-    setCommitments([]);
+    setItems([]);
     setCursor(null);
     setHasMore(true);
-    setLoading(true); // ✅ FIX
+    setLoading(true);
     loadFeed();
   }
 
@@ -109,7 +109,7 @@ export default function DashboardPage() {
 
       const safeData = Array.isArray(data) ? data : [];
 
-      setCommitments(safeData);
+      setItems(safeData);
 
       setCursor(
         safeData.length
@@ -122,7 +122,7 @@ export default function DashboardPage() {
     } catch (err) {
 
       console.error("Feed error:", err);
-      setCommitments([]);
+      setItems([]);
 
     } finally {
 
@@ -151,7 +151,7 @@ export default function DashboardPage() {
 
       const safeData = Array.isArray(data) ? data : [];
 
-      setCommitments((prev) => [...prev, ...safeData]);
+      setItems((prev) => [...prev, ...safeData]);
 
       if (safeData.length > 0) {
         setCursor(safeData[safeData.length - 1].created_at);
@@ -184,18 +184,17 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* FILTER CARD */}
+      {/* FILTER */}
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
 
-        {/* Latest / Trending */}
         <div className="flex gap-2">
 
           <button
             onClick={() => setActiveTab("latest")}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium ${
+            className={`flex-1 py-2 rounded-xl text-sm ${
               activeTab === "latest"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700"
+                : "bg-gray-100"
             }`}
           >
             Latest
@@ -203,10 +202,10 @@ export default function DashboardPage() {
 
           <button
             onClick={() => setActiveTab("trending")}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium ${
+            className={`flex-1 py-2 rounded-xl text-sm ${
               activeTab === "trending"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700"
+                : "bg-gray-100"
             }`}
           >
             🔥 Trending
@@ -214,19 +213,17 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* Following */}
         <button
           onClick={() => setActiveTab("following")}
-          className={`w-full py-2 rounded-xl text-sm font-medium ${
+          className={`w-full py-2 rounded-xl text-sm ${
             activeTab === "following"
               ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700"
+              : "bg-gray-100"
           }`}
         >
           Following
         </button>
 
-        {/* Category */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -241,14 +238,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* EMPTY STATE */}
-      {!loading && commitments.length === 0 && activeTab === "following" && (
-        <div className="text-center text-gray-500 py-10">
-          👀 No updates yet <br />
-          Follow people to see their commitments
-        </div>
-      )}
-
       {/* FEED */}
       <div className="space-y-4">
 
@@ -258,19 +247,65 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {commitments.map((c) => {
+        {items.map((c) => {
 
           const avatar =
-            c.identity.avatar_url?.trim()
-              ? c.identity.avatar_url
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  c.identity.display_name || c.identity.username
-                )}&background=2563eb&color=fff`;
+            c.identity.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              c.identity.display_name || c.identity.username
+            )}`;
 
           const profileLink =
             c.identity.type === "company"
               ? `/c/${c.identity.username}`
               : `/u/${c.identity.username}`;
+
+          /* =========================
+             UPDATE CARD
+          ========================= */
+
+          if (c.type === "update") {
+            return (
+
+              <div
+                key={c.id}
+                className="bg-gray-50 border rounded-xl p-4"
+              >
+
+                <Link href={profileLink} className="flex gap-3 mb-2">
+
+                  <img
+                    src={avatar}
+                    className="w-8 h-8 rounded-full"
+                  />
+
+                  <div className="text-sm">
+
+                    <span className="font-semibold">
+                      {c.identity.display_name}
+                    </span>{" "}
+                    updated a commitment
+
+                  </div>
+
+                </Link>
+
+                <div className="text-gray-900 text-sm ml-11">
+                  {c.text}
+                </div>
+
+                <div className="text-xs text-gray-400 ml-11 mt-1">
+                  {timeAgo(c.created_at)}
+                </div>
+
+              </div>
+
+            );
+          }
+
+          /* =========================
+             COMMITMENT CARD
+          ========================= */
 
           return (
 
@@ -283,16 +318,18 @@ export default function DashboardPage() {
                   onClick={(e) => e.stopPropagation()}
                   className="flex items-center gap-3 mb-3"
                 >
+
                   <img src={avatar} className="w-10 h-10 rounded-full" />
 
                   <div>
                     <div className="text-sm font-semibold">
-                      {c.identity.display_name || c.identity.username}
+                      {c.identity.display_name}
                     </div>
                     <div className="text-xs text-gray-500">
                       @{c.identity.username}
                     </div>
                   </div>
+
                 </Link>
 
                 <div className="flex justify-between text-xs text-gray-500 mb-2">
@@ -317,7 +354,6 @@ export default function DashboardPage() {
 
         })}
 
-        {/* Loading more */}
         {loadingMore && (
           <div className="text-center text-gray-500 py-4">
             Loading more...
@@ -326,12 +362,11 @@ export default function DashboardPage() {
 
         <div ref={loadMoreRef}></div>
 
-        {/* Load More Button */}
         {hasMore && !loadingMore && (
           <div className="text-center py-4">
             <button
               onClick={loadMore}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
             >
               Load More
             </button>
