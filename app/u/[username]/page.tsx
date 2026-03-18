@@ -68,7 +68,7 @@ export default async function UserPage({
   const { data: commitments, error: commitmentsError } = await supabase
     .from("commitments")
     .select(
-      "id, text, status, created_at, end_date, completed_at, latest_update"
+      "id, text, status, created_at, end_date, completed_at"
     )
     .eq("user_id", profile.id)
     .eq("visibility", "public")
@@ -78,18 +78,35 @@ export default async function UserPage({
     console.log("Commitments error:", commitmentsError);
   }
 
+  /* =========================
+     ENRICH (VIEWS + LATEST UPDATE)
+  ========================= */
+
   const enrichedCommitments =
     commitments && commitments.length > 0
       ? await Promise.all(
           commitments.map(async (c) => {
+
+            /* VIEWS */
             const { count } = await supabase
               .from("commitment_views")
               .select("*", { count: "exact", head: true })
               .eq("commitment_id", c.id);
 
+            /* 🔥 LATEST UPDATE */
+            const { data: update } = await supabase
+              .from("commitment_updates")
+              .select("content, created_at")
+              .eq("commitment_id", c.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
             return {
               ...c,
               views: count || 0,
+              latest_update: update?.content || null,
+              latest_update_created_at: update?.created_at || null,
             };
           })
         )
@@ -179,7 +196,7 @@ export default async function UserPage({
             </p>
           )}
 
-          {/* 🔥 FOLLOW SECTION */}
+          {/* FOLLOW */}
           <div className="mt-6 flex flex-col items-center gap-3">
 
             {currentUser?.id !== profile.id && (
@@ -207,7 +224,7 @@ export default async function UserPage({
 
           </div>
 
-          {/* SOCIAL LINKS */}
+          {/* SOCIAL */}
           <div className="mt-7 flex justify-center flex-wrap gap-3">
             {profile.website && (
               <SocialLink href={profile.website} label={cleanUrl(profile.website)} icon={<span>🌐</span>} />
