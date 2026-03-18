@@ -13,7 +13,7 @@ export default function CommitmentList({
     completed_at?: string;
     end_date?: string;
     views: number;
-    latest_update?: string | null; // ✅ safe add
+    latest_update?: string | null;
   }[];
 }) {
 
@@ -53,42 +53,53 @@ export default function CommitmentList({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
       {commitments.map((c) => (
 
         <Link key={c.id} href={`/commitment/${c.id}`}>
 
-          <div className="bg-white border rounded-xl p-6 shadow-md hover:shadow-lg hover:bg-gray-50 transition cursor-pointer">
+          <div className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-[1px] transition cursor-pointer">
 
             {/* TEXT */}
-            <div className="font-semibold text-lg text-gray-900 mb-2">
+            <div className="font-semibold text-lg text-gray-900 mb-2 leading-relaxed">
               {c.text}
             </div>
 
-            {/* STATUS */}
-            <div className={`text-sm capitalize ${statusColor(c.status)}`}>
-              Status: {c.status}
+            {/* META ROW */}
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+              <span className={`capitalize ${statusColor(c.status)}`}>
+                {c.status}
+              </span>
+              <span>{getDateLabel(c)}</span>
             </div>
 
-            {/* DATE */}
-            <div className="text-xs text-gray-600 mt-2">
-              {getDateLabel(c)}
-            </div>
-
-            {/* 🔥 LATEST UPDATE (NEW) */}
+            {/* 🔥 LATEST UPDATE (UPGRADED UI) */}
             {c.latest_update && (
-              <div className="mt-3 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
-                <span className="font-medium text-gray-900">
-                  Latest update:
-                </span>{" "}
-                {c.latest_update}
+              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-gray-800">
+
+                <div className="text-xs font-semibold text-blue-600 mb-1">
+                  Latest update
+                </div>
+
+                <div className="leading-relaxed">
+                  {c.latest_update}
+                </div>
+
               </div>
             )}
 
-            {/* VIEWS */}
-            <div className="text-xs text-gray-500 mt-4">
-              👁 {c.views || 0} views
+            {/* FOOTER */}
+            <div className="text-xs text-gray-500 mt-4 flex items-center justify-between">
+
+              <span>👁 {c.views || 0} views</span>
+
+              {c.latest_update && (
+                <span className="text-blue-600 font-medium">
+                  Updated
+                </span>
+              )}
+
             </div>
 
           </div>
