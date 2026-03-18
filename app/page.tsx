@@ -22,7 +22,7 @@ export default async function HomePage() {
     feed = [];
   }
 
-  // ✅ Balanced feed
+  // Balanced feed
   const updates = feed.filter((f) => f.type === "update");
   const originals = feed.filter((f) => f.type !== "update");
 
@@ -115,7 +115,7 @@ export default async function HomePage() {
 
       </section>
 
-      {/* FEED (STATIC - NO LIVE FEED) */}
+      {/* FEED */}
       <section className="bg-white text-black py-28 px-6">
 
         <div className="max-w-5xl mx-auto">
@@ -160,12 +160,15 @@ export default async function HomePage() {
 
                   <div className="flex items-start gap-4">
 
-                    <Image
+                    <img
                       src={avatar}
                       alt="avatar"
-                      width={50}
-                      height={50}
-                      className="rounded-full"
+                      className="w-12 h-12 rounded-full object-cover"
+                      onError={(e: any) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          c.identity?.display_name || "User"
+                        )}`;
+                      }}
                     />
 
                     <div className="flex-1">
@@ -222,6 +225,63 @@ export default async function HomePage() {
 
       </section>
 
+      {/* WHY STATED WORKS */}
+      <section className="bg-gray-50 py-28 px-6">
+        <div className="max-w-5xl mx-auto text-center">
+
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
+            Why Stated Works
+          </p>
+
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            Most platforms reward{" "}
+            <span className="italic text-orange-500">performance.</span>
+            <br />
+            We reward follow-through.
+          </h2>
+
+          <p className="text-gray-500 max-w-2xl mx-auto mb-12">
+            Posting goals is easy. Following through is rare.
+            Stated makes your commitments visible — so they actually happen.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 text-left">
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">📌</div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Your word, on record
+              </h3>
+              <p className="text-sm text-gray-500">
+                Not a post. A commitment. Public, timestamped, and tied to your name.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">👀</div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Visible accountability
+              </h3>
+              <p className="text-sm text-gray-500">
+                When others can see your progress, you show up differently.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">📈</div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Credibility compounds
+              </h3>
+              <p className="text-sm text-gray-500">
+                Every completed commitment builds a public track record.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="bg-gray-950 text-white py-36 px-6 text-center">
 
@@ -259,7 +319,6 @@ export default async function HomePage() {
 
           </div>
 
-          {/* ✅ FIXED TEXT */}
           <p className="mt-6 text-sm text-gray-400">
             Free to start. No credit card required.
           </p>
@@ -269,6 +328,5 @@ export default async function HomePage() {
       </section>
 
     </div>
-
   );
 }
