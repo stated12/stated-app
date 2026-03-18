@@ -22,7 +22,14 @@ export default async function HomePage() {
     feed = [];
   }
 
-  const commitments = feed.slice(0, 6);
+  // ✅ FIXED: Balanced feed (updates + commitments)
+  const updates = feed.filter((f) => f.type === "update");
+  const originals = feed.filter((f) => f.type !== "update");
+
+  const commitments = [
+    ...updates.slice(0, 2),
+    ...originals.slice(0, 4),
+  ];
 
   return (
 
@@ -67,7 +74,6 @@ export default async function HomePage() {
           className="object-cover -z-20 md:hidden"
         />
 
-        {/* Overlay for contrast */}
         <div className="absolute inset-0 bg-black/40 -z-10" />
 
         <Image
@@ -121,7 +127,7 @@ export default async function HomePage() {
           Start with 5 Free Commitments
         </Link>
 
-        {/* 🔥 STRONG TRUST LINE */}
+        {/* TRUST LINE */}
         <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
           ✓ No signup needed to browse or share
         </div>
