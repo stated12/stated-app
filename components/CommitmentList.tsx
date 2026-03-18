@@ -53,20 +53,20 @@ export default function CommitmentList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {commitments.map((c) => (
 
         <Link key={c.id} href={`/commitment/${c.id}`}>
 
-          <div className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-[1px] transition cursor-pointer">
+          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100">
 
             {/* TEXT */}
             <div className="font-semibold text-lg text-gray-900 mb-2 leading-relaxed">
               {c.text}
             </div>
 
-            {/* META ROW */}
+            {/* META */}
             <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
               <span className={`capitalize ${statusColor(c.status)}`}>
                 {c.status}
@@ -74,11 +74,11 @@ export default function CommitmentList({
               <span>{getDateLabel(c)}</span>
             </div>
 
-            {/* 🔥 LATEST UPDATE (UPGRADED UI) */}
+            {/* 🔥 LATEST UPDATE (REFINED) */}
             {c.latest_update && (
-              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-gray-800">
+              <div className="mt-4 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
 
-                <div className="text-xs font-semibold text-blue-600 mb-1">
+                <div className="text-xs font-medium text-gray-500 mb-1">
                   Latest update
                 </div>
 
@@ -95,7 +95,7 @@ export default function CommitmentList({
               <span>👁 {c.views || 0} views</span>
 
               {c.latest_update && (
-                <span className="text-blue-600 font-medium">
+                <span className="text-gray-500 font-medium">
                   Updated
                 </span>
               )}
