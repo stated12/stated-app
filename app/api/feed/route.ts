@@ -14,7 +14,10 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-    /* CURRENT USER */
+    /* =========================
+       CURRENT USER
+    ========================= */
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -37,7 +40,7 @@ export async function GET(request: Request) {
       .eq("status", "active")
       .eq("visibility", "public")
       .order("created_at", { ascending: false })
-      .limit(25);
+      .limit(20);
 
     if (category) {
       commitmentQuery = commitmentQuery.eq("category", category);
@@ -66,38 +69,11 @@ export async function GET(request: Request) {
 
     const { data: commitments } = await commitmentQuery;
 
-    if (!commitments || commitments.length === 0) {
-      return NextResponse.json([]);
-    }
-
     /* =========================
-       FETCH VIEWS
+       FETCH UPDATES (INDEPENDENT)
     ========================= */
 
-    const enriched = await Promise.all(
-      commitments.map(async (c: any) => {
-
-        const { count } = await supabase
-          .from("commitment_views")
-          .select("*", { count: "exact", head: true })
-          .eq("commitment_id", c.id);
-
-        return {
-          ...c,
-          views: count ?? c.views ?? 0,
-          shares: c.shares ?? 0,
-        };
-
-      })
-    );
-
-    /* =========================
-       FETCH UPDATES (FIXED)
-    ========================= */
-
-    const commitmentIds = enriched.map((c: any) => c.id);
-
-    const { data: updates } = await supabase
+    let updatesQuery = supabase
       .from("commitment_updates")
       .select(`
         id,
@@ -105,20 +81,73 @@ export async function GET(request: Request) {
         content,
         created_at
       `)
-      .in("commitment_id", commitmentIds)
       .order("created_at", { ascending: false })
-      .limit(25);
+      .limit(20);
+
+    if (cursor) {
+      updatesQuery = updatesQuery.lt("created_at", cursor);
+    }
+
+    const { data: updates } = await updatesQuery;
+
+    /* =========================
+       COLLECT IDS
+    ========================= */
+
+    const allCommitmentIds = [
+      ...(commitments?.map((c: any) => c.id) || []),
+      ...(updates?.map((u: any) => u.commitment_id) || []),
+    ];
+
+    const uniqueCommitmentIds = [...new Set(allCommitmentIds)];
+
+    /* =========================
+       FETCH VIEWS
+    ========================= */
+
+    const viewsMap: any = {};
+
+    await Promise.all(
+      uniqueCommitmentIds.map(async (id) => {
+        const { count } = await supabase
+          .from("commitment_views")
+          .select("*", { count: "exact", head: true })
+          .eq("commitment_id", id);
+
+        viewsMap[id] = count ?? 0;
+      })
+    );
+
+    /* =========================
+       FETCH PARENTS FOR UPDATES
+    ========================= */
+
+    const { data: parentCommitments } = await supabase
+      .from("commitments")
+      .select("id, user_id, company_id")
+      .in("id", uniqueCommitmentIds);
+
+    const parentMap: any = {};
+    parentCommitments?.forEach((c: any) => {
+      parentMap[c.id] = c;
+    });
 
     /* =========================
        FETCH PROFILES / COMPANIES
     ========================= */
 
     const userIds = [
-      ...new Set(enriched.map((c: any) => c.user_id).filter(Boolean)),
+      ...new Set([
+        ...(commitments?.map((c: any) => c.user_id) || []),
+        ...(parentCommitments?.map((c: any) => c.user_id) || []),
+      ].filter(Boolean)),
     ];
 
     const companyIds = [
-      ...new Set(enriched.map((c: any) => c.company_id).filter(Boolean)),
+      ...new Set([
+        ...(commitments?.map((c: any) => c.company_id) || []),
+        ...(parentCommitments?.map((c: any) => c.company_id) || []),
+      ].filter(Boolean)),
     ];
 
     const { data: profiles } = await supabase
@@ -144,22 +173,22 @@ export async function GET(request: Request) {
     let feed: any[] = [];
 
     /* COMMITMENTS */
-    enriched.forEach((c: any) => {
+    commitments?.forEach((c: any) => {
 
       const profile = profileMap[c.user_id];
       const company = companyMap[c.company_id];
 
       const identity = c.company_id
         ? {
-            username: company?.username,
-            display_name: company?.name,
-            avatar_url: company?.logo_url,
+            username: company?.username || "",
+            display_name: company?.name || "Company",
+            avatar_url: company?.logo_url || "",
             type: "company",
           }
         : {
-            username: profile?.username,
-            display_name: profile?.display_name,
-            avatar_url: profile?.avatar_url,
+            username: profile?.username || "",
+            display_name: profile?.display_name || "User",
+            avatar_url: profile?.avatar_url || "",
             type: "user",
           };
 
@@ -169,8 +198,8 @@ export async function GET(request: Request) {
         text: c.text,
         category: c.category,
         created_at: c.created_at,
-        views: c.views,
-        shares: c.shares,
+        views: viewsMap[c.id] || 0,
+        shares: c.shares ?? 0,
         identity,
       });
 
@@ -179,10 +208,7 @@ export async function GET(request: Request) {
     /* UPDATES */
     updates?.forEach((u: any) => {
 
-      const parent = enriched.find(
-        (c: any) => c.id === u.commitment_id
-      );
-
+      const parent = parentMap[u.commitment_id];
       if (!parent) return;
 
       const profile = profileMap[parent.user_id];
@@ -190,15 +216,15 @@ export async function GET(request: Request) {
 
       const identity = parent.company_id
         ? {
-            username: company?.username,
-            display_name: company?.name,
-            avatar_url: company?.logo_url,
+            username: company?.username || "",
+            display_name: company?.name || "Company",
+            avatar_url: company?.logo_url || "",
             type: "company",
           }
         : {
-            username: profile?.username,
-            display_name: profile?.display_name,
-            avatar_url: profile?.avatar_url,
+            username: profile?.username || "",
+            display_name: profile?.display_name || "User",
+            avatar_url: profile?.avatar_url || "",
             type: "user",
           };
 
@@ -214,7 +240,7 @@ export async function GET(request: Request) {
     });
 
     /* =========================
-       SORT FINAL
+       FINAL SORT (MOST IMPORTANT)
     ========================= */
 
     feed.sort(
