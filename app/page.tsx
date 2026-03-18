@@ -48,7 +48,7 @@ export default async function HomePage() {
       </header>
 
       {/* HERO */}
-      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-28 pb-24 min-h-[85vh]">
+      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-36 pb-32 min-h-[90vh]">
 
         <Image
           src="/hero-desktop.png"
@@ -78,20 +78,20 @@ export default async function HomePage() {
           Stated
         </h2>
 
-        <h1 className="text-4xl md:text-5xl font-bold leading-snug">
+        <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
           Say it publicly.
           <br />
           Do it publicly.
         </h1>
 
-        <p className="mt-5 text-gray-300 max-w-xl">
+        <p className="mt-6 text-gray-300 max-w-lg text-lg">
           Build credibility. Track progress. Stay accountable.
         </p>
 
         <form
           action="/search"
           method="GET"
-          className="mt-8 flex w-full max-w-xl bg-white rounded-xl overflow-hidden shadow-lg"
+          className="mt-8 flex w-full max-w-xl bg-white rounded-2xl overflow-hidden shadow-lg"
         >
 
           <input
@@ -112,133 +112,32 @@ export default async function HomePage() {
 
         <Link
           href="/signup"
-          className="mt-8 bg-blue-600 px-10 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition shadow-lg"
+          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl"
         >
           Start with 5 Free Commitments
         </Link>
 
-        <p className="mt-3 text-sm text-gray-300">
+        <p className="mt-3 text-sm text-green-300">
+          ✓ No signup needed to browse or share
+        </p>
+
+        <p className="mt-2 text-sm text-gray-300">
           2 updates per commitment • Public profile included
         </p>
 
       </section>
 
-      {/* 🔥 LIVE PREVIEW */}
-      <section className="bg-white py-12 px-6">
-
-        <div className="max-w-4xl mx-auto">
-
-          <h2 className="text-xl font-semibold text-center mb-8">
-            See how people commit publicly
-          </h2>
-
-          <div className="grid gap-4">
-
-            {feed.slice(0, 3).map((c: any) => {
-
-              let avatar = c.identity?.avatar_url;
-
-              if (
-                !avatar ||
-                avatar === "" ||
-                avatar.includes("undefined") ||
-                !avatar.startsWith("http")
-              ) {
-                avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  c.identity?.display_name || "User"
-                )}&background=2563eb&color=fff`;
-              }
-
-              const isUpdate = c.type === "update";
-
-              const link =
-                isUpdate && c.parent_commitment_id
-                  ? `/commitment/${c.parent_commitment_id}`
-                  : `/commitment/${c.id}`;
-
-              return (
-
-                <Link
-                  key={c.id}
-                  href={link}
-                  className={`block rounded-xl p-4 transition hover:shadow-md ${
-                    isUpdate
-                      ? "bg-gray-50 border"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-
-                  {isUpdate && (
-                    <div className="text-xs text-blue-600 mb-1">
-                      🔄 Update
-                    </div>
-                  )}
-
-                  <div className="flex items-start gap-3">
-
-                    <Image
-                      src={avatar}
-                      alt="avatar"
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-
-                    <div className="flex-1">
-
-                      <div className="text-sm font-medium">
-                        {c.identity?.display_name}
-                      </div>
-
-                      {isUpdate && (
-                        <div className="text-xs text-gray-500 mb-1">
-                          updated a commitment
-                        </div>
-                      )}
-
-                      <div className="text-sm text-gray-800 line-clamp-2">
-                        {c.text}
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </Link>
-
-              );
-
-            })}
-
-          </div>
-
-          {/* 🔥 CTA */}
-          <div className="text-center mt-8">
-
-            <Link
-              href="/explore"
-              className="text-blue-600 font-medium hover:underline"
-            >
-              View commitments from people & companies →
-            </Link>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* RECENT COMMITMENTS */}
-      <section className="bg-white text-black py-16 px-6 flex-1">
+      {/* RECENT COMMITMENTS (MOVED UP) */}
+      <section className="bg-white text-black py-24 px-6">
 
         <div className="max-w-5xl mx-auto">
 
-          <p className="text-center text-gray-500 mb-4">
-            Join people publicly committing to their goals.
+          <p className="text-center text-gray-500 mb-3 text-sm">
+            People on record, right now
           </p>
 
-          <h2 className="text-2xl font-semibold mb-10 text-center">
-            Recent Commitments
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center tracking-tight">
+            Commitments from people & companies
           </h2>
 
           {commitments.length > 0 ? (
@@ -253,6 +152,7 @@ export default async function HomePage() {
                   !avatar ||
                   avatar === "" ||
                   avatar.includes("undefined") ||
+                  avatar.includes("avatar") ||
                   !avatar.startsWith("http")
                 ) {
                   avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -272,10 +172,10 @@ export default async function HomePage() {
                   <Link
                     key={c.id}
                     href={link}
-                    className={`block rounded-xl p-6 transition hover:shadow-md ${
+                    className={`block rounded-2xl p-6 transition duration-200 hover:-translate-y-[2px] ${
                       isUpdate
-                        ? "bg-gray-50 border"
-                        : "bg-gray-100 hover:bg-gray-200"
+                        ? "bg-white border border-gray-200 shadow-sm hover:shadow-md"
+                        : "bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                     }`}
                   >
 
@@ -297,7 +197,7 @@ export default async function HomePage() {
 
                       <div className="flex-1">
 
-                        <div className="flex items-center gap-2 font-semibold mb-1">
+                        <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
 
                           {c.identity?.display_name}
 
@@ -315,7 +215,7 @@ export default async function HomePage() {
                           </div>
                         )}
 
-                        <div className="text-gray-800 mb-2">
+                        <div className="text-gray-800 mb-3 leading-relaxed">
                           {c.text}
                         </div>
 
@@ -348,19 +248,114 @@ export default async function HomePage() {
 
           )}
 
-          <div className="text-center mt-10">
+          <div className="text-center mt-12">
 
             <Link
               href="/explore"
               className="text-blue-600 hover:underline font-medium"
             >
-              Explore more commitments →
+              Explore commitments from people & companies →
             </Link>
 
           </div>
 
         </div>
 
+      </section>
+
+      {/* WHY STATED WORKS */}
+      <section className="bg-gray-50 py-28 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
+            Why Stated Works
+          </p>
+
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-snug">
+            Most platforms reward{" "}
+            <span className="italic text-orange-500">performance.</span>
+            <br />
+            We reward follow-through.
+          </h2>
+
+          <p className="text-gray-500 max-w-xl mb-12">
+            You can post about your goals anywhere. But nowhere does your word
+            actually live on the line — until stated.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6">
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">📌</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Your word, on record</h3>
+              <p className="text-sm text-gray-500">
+                A commitment on Stated isn't a tweet. It's timestamped, public,
+                and attached to your name with a deadline.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">👥</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Real audience, real pressure</h3>
+              <p className="text-sm text-gray-500">
+                Social accountability is the oldest productivity hack — now built in.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-3xl mb-4">📈</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Credibility compounds</h3>
+              <p className="text-sm text-gray-500">
+                Every commitment builds a public track record of follow-through.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="bg-gray-950 text-white py-32 px-6 text-center">
+        <div className="max-w-2xl mx-auto">
+
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-4">
+            Your Turn
+          </p>
+
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
+            Put your word
+            <br />
+            on the <span className="italic text-orange-400">line.</span>
+          </h2>
+
+          <p className="text-gray-400 mb-10">
+            Stop saving goals for private notes. Say it where it counts.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+
+            <Link
+              href="/signup"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl"
+            >
+              Commit publicly →
+            </Link>
+
+            <Link
+              href="/explore"
+              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:border-gray-400 transition"
+            >
+              Browse first
+            </Link>
+
+          </div>
+
+          <p className="mt-6 text-sm text-gray-500">
+            Free to start. No credit card.
+          </p>
+
+        </div>
       </section>
 
     </div>
