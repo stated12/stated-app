@@ -1,396 +1,271 @@
-"use client";
+export const dynamic = "force-dynamic";
 
-import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { getSafeAvatar } from "@/lib/avatar";
 
-type Identity = {
-  username: string;
-  display_name: string;
-  avatar_url?: string | null;
-  type: "user" | "company";
-};
+export default async function HomePage() {
 
-type FeedItem = {
-  id: string;
-  type: "commitment" | "update"; // ✅ FIXED (not optional anymore)
-  text: string;
-  category?: string;
-  created_at: string;
-  views?: number;
-  shares?: number;
-  parent_commitment_id?: string;
-  identity: Identity;
-};
+  let feed: any[] = [];
 
-function timeAgo(date: string) {
-  const seconds = Math.floor(
-    (new Date().getTime() - new Date(date).getTime()) / 1000
-  );
-
-  if (seconds < 60) return "now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
-}
-
-export default function DashboardPage() {
-
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-
-  const [activeTab, setActiveTab] =
-    useState<"latest" | "trending" | "following">("latest");
-
-  const [category, setCategory] = useState("");
-
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
-  const categories = [
-    "",
-    "Fitness",
-    "Learning",
-    "Writing",
-    "Health",
-    "Finance",
-    "Business",
-    "Marketing",
-    "Sales",
-    "Operations",
-    "Product",
-    "Strategic",
-    "Announcement",
-  ];
-
-  useEffect(() => {
-    resetFeed();
-  }, [activeTab, category]);
-
-  useEffect(() => {
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 1 }
+  try {
+    const res = await fetch(
+      "https://app.stated.in/api/feed?type=latest",
+      { cache: "no-store" }
     );
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+    if (res.ok) {
+      feed = await res.json();
     }
 
-    return () => observer.disconnect();
-
-  }, [hasMore, loadingMore]);
-
-  function resetFeed() {
-    setItems([]);
-    setCursor(null);
-    setHasMore(true);
-    setLoading(true);
-    loadFeed();
+  } catch (e) {
+    feed = [];
   }
 
-  async function loadFeed() {
+  // ✅ Balanced feed
+  const updates = feed.filter((f) => f.type === "update");
+  const originals = feed.filter((f) => f.type !== "update");
 
-    try {
-
-      const params = new URLSearchParams();
-      params.append("type", activeTab);
-
-      if (category) params.append("category", category);
-
-      const res = await fetch(`/api/feed?${params.toString()}`);
-      const data = await res.json();
-
-      const safeData = Array.isArray(data) ? data : [];
-
-      setItems(safeData);
-
-      setCursor(
-        safeData.length
-          ? safeData[safeData.length - 1].created_at
-          : null
-      );
-
-      // ✅ FIXED
-      setHasMore(safeData.length >= 25);
-
-    } catch (err) {
-
-      console.error("Feed error:", err);
-      setItems([]);
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }
-
-  async function loadMore() {
-
-    if (!cursor || !hasMore) return;
-
-    try {
-
-      setLoadingMore(true);
-
-      const params = new URLSearchParams();
-      params.append("type", activeTab);
-      params.append("cursor", cursor);
-
-      if (category) params.append("category", category);
-
-      const res = await fetch(`/api/feed?${params.toString()}`);
-      const data = await res.json();
-
-      const safeData = Array.isArray(data) ? data : [];
-
-      setItems((prev) => [...prev, ...safeData]);
-
-      if (safeData.length > 0) {
-        setCursor(safeData[safeData.length - 1].created_at);
-      }
-
-      if (safeData.length < 25) {
-        setHasMore(false);
-      }
-
-    } catch (err) {
-
-      console.error("Load more error:", err);
-
-    } finally {
-
-      setLoadingMore(false);
-
-    }
-
-  }
+  const commitments = [
+    ...updates.slice(0, 2),
+    ...originals.slice(0, 4),
+  ];
 
   return (
 
-    <div className="max-w-xl mx-auto px-4 pt-6 pb-20 space-y-6">
+    <div className="min-h-screen flex flex-col">
 
-      <div>
-        <h1 className="text-2xl font-bold">Public Commitments</h1>
-        <p className="text-sm text-gray-500">
-          Discover commitments from individuals & companies
+      {/* HEADER */}
+      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
+        <Link href="/explore" className="hover:text-blue-400 transition">
+          Explore
+        </Link>
+        <Link href="/login" className="hover:text-blue-400 transition">
+          Login
+        </Link>
+        <Link
+          href="/signup"
+          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
+        >
+          Sign up
+        </Link>
+      </header>
+
+      {/* HERO */}
+      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-36 pb-32 min-h-[90vh]">
+
+        <Image src="/hero-desktop.png" alt="Background" fill priority className="object-cover -z-20 hidden md:block"/>
+        <Image src="/hero-mobile.png" alt="Background" fill priority className="object-cover -z-20 md:hidden"/>
+
+        <div className="absolute inset-0 bg-black/40 -z-10" />
+
+        <Image src="/logo.png" alt="Stated Logo" width={140} height={140} className="mb-4"/>
+
+        <h2 className="text-3xl font-semibold text-blue-400 mb-4">
+          Stated
+        </h2>
+
+        <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+          Say it publicly.
+          <br />
+          Do it publicly.
+        </h1>
+
+        <p className="mt-6 text-gray-300 max-w-lg text-lg">
+          Build credibility. Track progress. Stay accountable.
         </p>
-      </div>
 
-      {/* FILTER */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-
-        <div className="flex gap-2">
-
-          <button
-            onClick={() => setActiveTab("latest")}
-            className={`flex-1 py-2 rounded-xl text-sm ${
-              activeTab === "latest"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100"
-            }`}
-          >
-            Latest
-          </button>
+        <form
+          action="/search"
+          method="GET"
+          className="mt-8 flex w-full max-w-xl bg-white rounded-2xl overflow-hidden shadow-lg"
+        >
+          <input
+            type="text"
+            name="q"
+            placeholder="Search commitments, people or companies"
+            className="flex-1 px-4 py-3 text-black outline-none"
+          />
 
           <button
-            onClick={() => setActiveTab("trending")}
-            className={`flex-1 py-2 rounded-xl text-sm ${
-              activeTab === "trending"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100"
-            }`}
+            type="submit"
+            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
           >
-            🔥 Trending
+            Search
           </button>
+        </form>
 
+        <Link
+          href="/signup"
+          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
+        >
+          Start with 5 Free Commitments
+        </Link>
+
+        {/* TRUST LINE */}
+        <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
+          ✓ No signup needed to browse or share
         </div>
 
-        <button
-          onClick={() => setActiveTab("following")}
-          className={`w-full py-2 rounded-xl text-sm ${
-            activeTab === "following"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100"
-          }`}
-        >
-          Following
-        </button>
+        <p className="mt-2 text-sm text-gray-300">
+          2 updates per commitment • Public profile included
+        </p>
 
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full border rounded-xl px-3 py-2 text-sm"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat || "All Categories"}
-            </option>
-          ))}
-        </select>
-
-      </div>
+      </section>
 
       {/* FEED */}
-      <div className="space-y-4">
+      <section className="bg-white text-black py-28 px-6">
 
-        {loading && (
-          <div className="text-center text-gray-500 py-6">
-            Loading...
-          </div>
-        )}
+        <div className="max-w-5xl mx-auto">
 
-        {items.map((c) => {
+          <p className="text-center text-gray-500 mb-3 text-sm">
+            People on record, right now
+          </p>
 
-          const avatar =
-            c.identity.avatar_url ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              c.identity.display_name || c.identity.username
-            )}`;
+          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-center">
+            Commitments from people & companies
+          </h2>
 
-          const profileLink =
-            c.identity.type === "company"
-              ? `/c/${c.identity.username}`
-              : `/u/${c.identity.username}`;
+          <div className="grid md:grid-cols-2 gap-6">
 
-          const commitmentLink =
-            c.type === "update" && c.parent_commitment_id
-              ? `/commitment/${c.parent_commitment_id}`
-              : `/commitment/${c.id}`;
+            {commitments.map((c) => {
 
-          /* =========================
-             UPDATE CARD
-          ========================= */
+              const avatar = getSafeAvatar(c.identity);
 
-          if (c.type === "update") {
-            return (
+              const isUpdate = c.type === "update";
 
-              <Link key={c.id} href={commitmentLink}>
+              const link =
+                isUpdate && c.parent_commitment_id
+                  ? `/commitment/${c.parent_commitment_id}`
+                  : `/commitment/${c.id}`;
 
-                <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
-
-                  <div className="text-xs text-blue-600 font-medium mb-2">
-                    🔄 Update
-                  </div>
-
-                  <div className="flex gap-3 mb-2">
-
-                    <img
-                      src={avatar}
-                      className="w-8 h-8 rounded-full"
-                    />
-
-                    <div className="text-sm">
-                      <span className="font-semibold">
-                        {c.identity.display_name}
-                      </span>{" "}
-                      updated a commitment
-                    </div>
-
-                  </div>
-
-                  <div className="text-gray-900 text-sm ml-11">
-                    {c.text}
-                  </div>
-
-                  <div className="text-xs text-gray-400 ml-11 mt-1">
-                    {timeAgo(c.created_at)}
-                  </div>
-
-                </div>
-
-              </Link>
-
-            );
-          }
-
-          /* =========================
-             COMMITMENT CARD
-          ========================= */
-
-          return (
-
-            <Link key={c.id} href={commitmentLink}>
-
-              <div className="bg-white rounded-2xl shadow-sm p-5">
-
+              return (
                 <Link
-                  href={profileLink}
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-3 mb-3"
+                  key={c.id}
+                  href={link}
+                  className={`block rounded-2xl p-6 transition hover:-translate-y-[2px] ${
+                    isUpdate
+                      ? "bg-white border border-gray-200 shadow-sm hover:shadow-md"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
                 >
 
-                  <img src={avatar} className="w-10 h-10 rounded-full" />
+                  {isUpdate && (
+                    <div className="text-xs text-blue-600 mb-2">
+                      🔄 Update
+                    </div>
+                  )}
 
-                  <div>
-                    <div className="text-sm font-semibold">
-                      {c.identity.display_name}
+                  <div className="flex items-start gap-4">
+
+                    <Image
+                      src={avatar}
+                      alt="avatar"
+                      width={50}
+                      height={50}
+                      className="rounded-full"
+                    />
+
+                    <div className="flex-1">
+
+                      <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
+                        {c.identity?.display_name}
+
+                        {c.identity?.type === "company" && (
+                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+                            COMPANY
+                          </span>
+                        )}
+                      </div>
+
+                      {isUpdate && (
+                        <div className="text-xs text-gray-500 mb-1">
+                          updated a commitment
+                        </div>
+                      )}
+
+                      <div className="text-gray-800 mb-3">
+                        {c.text}
+                      </div>
+
+                      <div className="text-xs text-gray-500 flex gap-4">
+                        <span>👁 {c.views ?? 0}</span>
+
+                        {!isUpdate && (
+                          <span>🔁 {c.shares ?? 0}</span>
+                        )}
+                      </div>
+
                     </div>
-                    <div className="text-xs text-gray-500">
-                      @{c.identity.username}
-                    </div>
+
                   </div>
 
                 </Link>
+              );
+            })}
 
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
-                  <span>{c.category}</span>
-                  <span>{timeAgo(c.created_at)}</span>
-                </div>
+          </div>
 
-                <div className="text-gray-900 mb-3">
-                  {c.text}
-                </div>
+          {/* CTA BUTTON (UPGRADED) */}
+          <div className="text-center mt-12">
+            <Link
+              href="/explore"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition shadow-md"
+            >
+              Explore commitments from people & companies
+            </Link>
+          </div>
 
-                <div className="text-xs text-gray-500 flex gap-4">
-                  <span>👁 {c.views ?? 0}</span>
+        </div>
 
-                  {c.type === "commitment" && (
-                    <span>🔁 {c.shares ?? 0}</span>
-                  )}
+      </section>
 
-                </div>
+      {/* FINAL CTA */}
+      <section className="bg-gray-950 text-white py-36 px-6 text-center">
 
-              </div>
+        <div className="max-w-2xl mx-auto">
 
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-4">
+            Your Turn
+          </p>
+
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
+            Put your word
+            <br />
+            on the <span className="italic text-orange-400">line.</span>
+          </h2>
+
+          <p className="text-gray-400 mb-10">
+            Say it where it counts.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+
+            <Link
+              href="/signup"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
+            >
+              Commit publicly →
             </Link>
 
-          );
-
-        })}
-
-        {loadingMore && (
-          <div className="text-center text-gray-500 py-4">
-            Loading more...
-          </div>
-        )}
-
-        <div ref={loadMoreRef}></div>
-
-        {hasMore && !loadingMore && (
-          <div className="text-center py-4">
-            <button
-              onClick={loadMore}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+            <Link
+              href="/explore"
+              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:border-gray-400 transition"
             >
-              Load More
-            </button>
-          </div>
-        )}
+              Browse first
+            </Link>
 
-      </div>
+          </div>
+
+          {/* ✅ FIXED TEXT */}
+          <p className="mt-6 text-sm text-gray-400">
+            Free to start. No credit card required.
+          </p>
+
+        </div>
+
+      </section>
 
     </div>
-
   );
-
 }
