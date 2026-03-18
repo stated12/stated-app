@@ -12,7 +12,7 @@ type Identity = {
 
 type FeedItem = {
   id: string;
-  type?: "commitment" | "update";
+  type: "commitment" | "update"; // ✅ FIXED (not optional anymore)
   text: string;
   category?: string;
   created_at: string;
@@ -118,7 +118,7 @@ export default function DashboardPage() {
           : null
       );
 
-      // ✅ FIX: allow more than 25 because updates included
+      // ✅ FIXED
       setHasMore(safeData.length >= 25);
 
     } catch (err) {
@@ -354,10 +354,10 @@ export default function DashboardPage() {
                 <div className="text-xs text-gray-500 flex gap-4">
                   <span>👁 {c.views ?? 0}</span>
 
-                  {/* ❌ hide shares for updates */}
-                  {c.type !== "update" && (
+                  {c.type === "commitment" && (
                     <span>🔁 {c.shares ?? 0}</span>
                   )}
+
                 </div>
 
               </div>
