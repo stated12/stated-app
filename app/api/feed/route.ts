@@ -10,6 +10,7 @@ export async function GET(request: Request) {
 
     const type = searchParams.get("type") || "latest";
     const category = searchParams.get("category");
+    const cursor = searchParams.get("cursor");
 
     const supabase = await createClient();
 
@@ -35,10 +36,15 @@ export async function GET(request: Request) {
       `)
       .eq("status", "active")
       .eq("visibility", "public")
+      .order("created_at", { ascending: false })
       .limit(25);
 
     if (category) {
       commitmentQuery = commitmentQuery.eq("category", category);
+    }
+
+    if (cursor) {
+      commitmentQuery = commitmentQuery.lt("created_at", cursor);
     }
 
     if (type === "following") {
@@ -60,9 +66,36 @@ export async function GET(request: Request) {
 
     const { data: commitments } = await commitmentQuery;
 
+    if (!commitments || commitments.length === 0) {
+      return NextResponse.json([]);
+    }
+
     /* =========================
-       FETCH UPDATES
+       FETCH VIEWS
     ========================= */
+
+    const enriched = await Promise.all(
+      commitments.map(async (c: any) => {
+
+        const { count } = await supabase
+          .from("commitment_views")
+          .select("*", { count: "exact", head: true })
+          .eq("commitment_id", c.id);
+
+        return {
+          ...c,
+          views: count ?? c.views ?? 0,
+          shares: c.shares ?? 0,
+        };
+
+      })
+    );
+
+    /* =========================
+       FETCH UPDATES (FIXED)
+    ========================= */
+
+    const commitmentIds = enriched.map((c: any) => c.id);
 
     const { data: updates } = await supabase
       .from("commitment_updates")
@@ -72,19 +105,20 @@ export async function GET(request: Request) {
         content,
         created_at
       `)
+      .in("commitment_id", commitmentIds)
       .order("created_at", { ascending: false })
       .limit(25);
 
     /* =========================
-       GET IDS
+       FETCH PROFILES / COMPANIES
     ========================= */
 
     const userIds = [
-      ...new Set(commitments?.map((c: any) => c.user_id).filter(Boolean)),
+      ...new Set(enriched.map((c: any) => c.user_id).filter(Boolean)),
     ];
 
     const companyIds = [
-      ...new Set(commitments?.map((c: any) => c.company_id).filter(Boolean)),
+      ...new Set(enriched.map((c: any) => c.company_id).filter(Boolean)),
     ];
 
     const { data: profiles } = await supabase
@@ -110,7 +144,7 @@ export async function GET(request: Request) {
     let feed: any[] = [];
 
     /* COMMITMENTS */
-    commitments?.forEach((c: any) => {
+    enriched.forEach((c: any) => {
 
       const profile = profileMap[c.user_id];
       const company = companyMap[c.company_id];
@@ -135,6 +169,8 @@ export async function GET(request: Request) {
         text: c.text,
         category: c.category,
         created_at: c.created_at,
+        views: c.views,
+        shares: c.shares,
         identity,
       });
 
@@ -143,7 +179,7 @@ export async function GET(request: Request) {
     /* UPDATES */
     updates?.forEach((u: any) => {
 
-      const parent = commitments?.find(
+      const parent = enriched.find(
         (c: any) => c.id === u.commitment_id
       );
 
@@ -177,7 +213,10 @@ export async function GET(request: Request) {
 
     });
 
-    /* SORT */
+    /* =========================
+       SORT FINAL
+    ========================= */
+
     feed.sort(
       (a, b) =>
         new Date(b.created_at).getTime() -
