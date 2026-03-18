@@ -2,207 +2,115 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { getSafeAvatar } from "@/lib/avatar";
 
 export default async function HomePage() {
 
-  let feed: any[] = [];
+  const supabase = await createClient();
+
+  let commitments: any[] = [];
+  let profilesMap: any = {};
+  let companiesMap: any = {};
 
   try {
-    const res = await fetch(
-      "https://app.stated.in/api/feed?type=latest",
-      { cache: "no-store" }
-    );
+    const { data } = await supabase
+      .from("commitments")
+      .select("id, text, user_id, company_id, created_at")
+      .eq("status", "active")
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(6);
 
-    const text = await res.text();
+    commitments = data || [];
 
-    try {
-      feed = JSON.parse(text);
-    } catch {
-      feed = [];
+    const userIds = commitments.map(c => c.user_id).filter(Boolean);
+    const companyIds = commitments.map(c => c.company_id).filter(Boolean);
+
+    if (userIds.length) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .in("id", userIds);
+
+      data?.forEach(p => profilesMap[p.id] = p);
     }
 
-  } catch (e) {
-    feed = [];
+    if (companyIds.length) {
+      const { data } = await supabase
+        .from("companies")
+        .select("id, username, name, logo_url")
+        .in("id", companyIds);
+
+      data?.forEach(c => companiesMap[c.id] = c);
+    }
+
+  } catch {
+    commitments = [];
   }
 
-  const commitments = Array.isArray(feed)
-    ? feed.slice(0, 6)
-    : [];
-
   return (
-
     <div className="min-h-screen flex flex-col">
 
-      {/* HEADER */}
-      <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
-        <Link href="/explore" className="hover:text-blue-400 transition">
-          Explore
-        </Link>
-
-        <Link href="/login" className="hover:text-blue-400 transition">
-          Login
-        </Link>
-
-        <Link
-          href="/signup"
-          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
-        >
-          Sign up
-        </Link>
-      </header>
-
       {/* HERO */}
-      <section className="relative flex flex-col items-center justify-center text-center text-white px-6 pt-36 pb-32 min-h-[90vh]">
+      <section className="relative text-white text-center px-6 pt-36 pb-32">
 
-        <Image src="/hero-desktop.png" alt="" fill priority className="object-cover -z-20 hidden md:block"/>
-        <Image src="/hero-mobile.png" alt="" fill priority className="object-cover -z-20 md:hidden"/>
+        <Image src="/hero-desktop.png" alt="" fill className="object-cover -z-20 hidden md:block"/>
+        <Image src="/hero-mobile.png" alt="" fill className="object-cover -z-20 md:hidden"/>
 
         <div className="absolute inset-0 bg-black/40 -z-10" />
 
-        <Image src="/logo.png" alt="Stated Logo" width={140} height={140} className="mb-4"/>
-
-        <h2 className="text-3xl font-semibold text-blue-400 mb-4">
-          Stated
-        </h2>
-
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
-          Say it publicly.
-          <br />
-          Do it publicly.
+        <h1 className="text-4xl md:text-6xl font-bold">
+          Say it publicly.<br />Do it publicly.
         </h1>
 
-        <p className="mt-6 text-gray-300 max-w-lg text-lg">
-          Build credibility. Track progress. Stay accountable.
-        </p>
-
-        <form
-          action="/search"
-          method="GET"
-          className="mt-8 flex w-full max-w-xl bg-white rounded-2xl overflow-hidden shadow-lg"
-        >
-          <input
-            type="text"
-            name="q"
-            placeholder="Search commitments, people or companies"
-            className="flex-1 px-4 py-3 text-black outline-none"
-          />
-
-          <button
-            type="submit"
-            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
-          >
-            Search
-          </button>
-        </form>
-
-        <Link
-          href="/signup"
-          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
-        >
+        <Link href="/signup" className="mt-10 inline-block bg-blue-600 px-10 py-4 rounded-xl">
           Start with 5 Free Commitments
         </Link>
-
-        <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
-          ✓ No signup needed to browse or share
-        </div>
-
-        <p className="mt-2 text-sm text-gray-300">
-          2 updates per commitment • Public profile included
-        </p>
 
       </section>
 
       {/* FEED */}
-      <section className="bg-white text-black py-28 px-6">
-
+      <section className="bg-white py-24 px-6">
         <div className="max-w-5xl mx-auto">
 
-          <p className="text-center text-gray-500 mb-3 text-sm">
-            People on record, right now
-          </p>
-
-          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-center">
+          <h2 className="text-3xl font-bold mb-10 text-center">
             Commitments from people & companies
           </h2>
-
-          {commitments.length === 0 && (
-            <div className="text-center text-gray-400">
-              No commitments yet
-            </div>
-          )}
 
           <div className="grid md:grid-cols-2 gap-6">
 
             {commitments.map((c) => {
 
-              const avatar = getSafeAvatar(c.identity);
+              const profile = profilesMap[c.user_id];
+              const company = companiesMap[c.company_id];
 
-              const isUpdate = c.type === "update";
+              const name =
+                company?.name ||
+                profile?.display_name ||
+                profile?.username ||
+                "User";
 
-              const link =
-                isUpdate && c.parent_commitment_id
-                  ? `/commitment/${c.parent_commitment_id}`
-                  : `/commitment/${c.id}`;
+              const avatar = getSafeAvatar({
+                display_name: name,
+                avatar_url: company?.logo_url || profile?.avatar_url,
+              });
 
               return (
-                <Link
-                  key={c.id}
-                  href={link}
-                  className={`block rounded-2xl p-6 transition ${
-                    isUpdate
-                      ? "bg-white border border-gray-200 shadow-sm"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
-                >
+                <Link key={c.id} href={`/commitment/${c.id}`}>
 
-                  {isUpdate && (
-                    <div className="text-xs text-blue-600 mb-2">
-                      🔄 Update
-                    </div>
-                  )}
+                  <div className="bg-gray-50 p-6 rounded-xl">
 
-                  <div className="flex items-start gap-4">
+                    <div className="flex gap-3">
 
-                    <img
-                      src={avatar}
-                      alt=""
-                      className="w-12 h-12 rounded-full object-cover"
-                      onError={(e: any) => {
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          c.identity?.display_name || "User"
-                        )}`;
-                      }}
-                    />
+                      <img
+                        src={avatar}
+                        className="w-12 h-12 rounded-full"
+                      />
 
-                    <div className="flex-1">
-
-                      <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
-                        {c.identity?.display_name}
-
-                        {c.identity?.type === "company" && (
-                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                            COMPANY
-                          </span>
-                        )}
-                      </div>
-
-                      {isUpdate && (
-                        <div className="text-xs text-gray-500 mb-1">
-                          updated a commitment
-                        </div>
-                      )}
-
-                      <div className="text-gray-800 mb-3">
-                        {c.text}
-                      </div>
-
-                      <div className="text-xs text-gray-500 flex gap-4">
-                        <span>👁 {c.views ?? 0}</span>
-
-                        {!isUpdate && (
-                          <span>🔁 {c.shares ?? 0}</span>
-                        )}
+                      <div>
+                        <div className="font-semibold">{name}</div>
+                        <div>{c.text}</div>
                       </div>
 
                     </div>
@@ -215,74 +123,32 @@ export default async function HomePage() {
 
           </div>
 
-          <div className="text-center mt-12">
-            <Link
-              href="/explore"
-              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md"
-            >
+          <div className="text-center mt-10">
+            <Link href="/explore" className="bg-blue-600 text-white px-6 py-3 rounded-lg">
               Explore commitments from people & companies
             </Link>
           </div>
 
         </div>
-
       </section>
 
-      {/* WHY STATED WORKS */}
-      <section className="bg-gray-50 py-28 px-6 text-center">
-
-        <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
-          Why Stated Works
-        </p>
-
-        <h2 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
-          Most platforms reward{" "}
-          <span className="italic text-orange-500">performance.</span>
-          <br />
+      {/* WHY */}
+      <section className="bg-gray-50 py-20 text-center">
+        <h2 className="text-3xl font-bold">
+          Most platforms reward <span className="text-orange-500 italic">performance.</span><br />
           We reward follow-through.
         </h2>
-
       </section>
 
-      {/* FINAL CTA */}
-      <section className="bg-gray-950 text-white py-36 px-6 text-center">
+      {/* FINAL */}
+      <section className="bg-gray-950 text-white py-24 text-center">
+        <Link href="/signup" className="bg-blue-600 px-8 py-4 rounded-xl">
+          Commit publicly →
+        </Link>
 
-        <div className="max-w-2xl mx-auto">
-
-          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-            Put your word
-            <br />
-            on the <span className="italic text-orange-400">line.</span>
-          </h2>
-
-          <p className="text-gray-400 mb-10">
-            Say it where it counts.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-
-            <Link
-              href="/signup"
-              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition"
-            >
-              Commit publicly →
-            </Link>
-
-            <Link
-              href="/explore"
-              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold"
-            >
-              Browse first
-            </Link>
-
-          </div>
-
-          <p className="mt-6 text-sm text-gray-400">
-            Free to start. No credit card required.
-          </p>
-
-        </div>
-
+        <p className="mt-4 text-sm text-gray-400">
+          Free to start. No credit card required.
+        </p>
       </section>
 
     </div>
