@@ -2,47 +2,33 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { getSafeAvatar } from "@/lib/avatar";
 
 export default async function HomePage() {
 
-  const supabase = await createClient();
-
-  let commitments: any[] = [];
+  let feed: any[] = [];
 
   try {
+    const res = await fetch(
+      "https://app.stated.in/api/feed?type=latest",
+      { cache: "no-store" }
+    );
 
-    const { data } = await supabase
-      .from("commitments")
-      .select(`
-        id,
-        text,
-        created_at,
-        user_id,
-        company_id,
-        shares,
-        profiles (
-          username,
-          display_name,
-          avatar_url
-        ),
-        companies (
-          username,
-          name,
-          logo_url
-        )
-      `)
-      .eq("status", "active")
-      .eq("visibility", "public")
-      .order("created_at", { ascending: false })
-      .limit(6);
+    const text = await res.text();
 
-    commitments = data || [];
+    try {
+      feed = JSON.parse(text);
+    } catch {
+      feed = [];
+    }
 
   } catch (e) {
-    commitments = [];
+    feed = [];
   }
+
+  const commitments = Array.isArray(feed)
+    ? feed.slice(0, 6)
+    : [];
 
   return (
 
@@ -53,10 +39,15 @@ export default async function HomePage() {
         <Link href="/explore" className="hover:text-blue-400 transition">
           Explore
         </Link>
+
         <Link href="/login" className="hover:text-blue-400 transition">
           Login
         </Link>
-        <Link href="/signup" className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
+
+        <Link
+          href="/signup"
+          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
+        >
           Sign up
         </Link>
       </header>
@@ -69,11 +60,13 @@ export default async function HomePage() {
 
         <div className="absolute inset-0 bg-black/40 -z-10" />
 
-        <Image src="/logo.png" alt="logo" width={140} height={140} className="mb-4"/>
+        <Image src="/logo.png" alt="Stated Logo" width={140} height={140} className="mb-4"/>
 
-        <h2 className="text-3xl font-semibold text-blue-400 mb-4">Stated</h2>
+        <h2 className="text-3xl font-semibold text-blue-400 mb-4">
+          Stated
+        </h2>
 
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+        <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
           Say it publicly.
           <br />
           Do it publicly.
@@ -83,21 +76,45 @@ export default async function HomePage() {
           Build credibility. Track progress. Stay accountable.
         </p>
 
+        <form
+          action="/search"
+          method="GET"
+          className="mt-8 flex w-full max-w-xl bg-white rounded-2xl overflow-hidden shadow-lg"
+        >
+          <input
+            type="text"
+            name="q"
+            placeholder="Search commitments, people or companies"
+            className="flex-1 px-4 py-3 text-black outline-none"
+          />
+
+          <button
+            type="submit"
+            className="bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition"
+          >
+            Search
+          </button>
+        </form>
+
         <Link
           href="/signup"
-          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition"
+          className="mt-10 bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
         >
           Start with 5 Free Commitments
         </Link>
 
-        <div className="mt-5 text-sm text-gray-300">
+        <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
           ✓ No signup needed to browse or share
         </div>
+
+        <p className="mt-2 text-sm text-gray-300">
+          2 updates per commitment • Public profile included
+        </p>
 
       </section>
 
       {/* FEED */}
-      <section className="bg-white py-24 px-6">
+      <section className="bg-white text-black py-28 px-6">
 
         <div className="max-w-5xl mx-auto">
 
@@ -109,34 +126,41 @@ export default async function HomePage() {
             Commitments from people & companies
           </h2>
 
+          {commitments.length === 0 && (
+            <div className="text-center text-gray-400">
+              No commitments yet
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
 
             {commitments.map((c) => {
 
-              const isCompany = !!c.company_id;
+              const avatar = getSafeAvatar(c.identity);
 
-              const identity = isCompany
-                ? {
-                    display_name: c.companies?.name,
-                    username: c.companies?.username,
-                    avatar_url: c.companies?.logo_url,
-                    type: "company",
-                  }
-                : {
-                    display_name: c.profiles?.display_name,
-                    username: c.profiles?.username,
-                    avatar_url: c.profiles?.avatar_url,
-                    type: "user",
-                  };
+              const isUpdate = c.type === "update";
 
-              const avatar = getSafeAvatar(identity);
+              const link =
+                isUpdate && c.parent_commitment_id
+                  ? `/commitment/${c.parent_commitment_id}`
+                  : `/commitment/${c.id}`;
 
               return (
                 <Link
                   key={c.id}
-                  href={`/commitment/${c.id}`}
-                  className="block rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition"
+                  href={link}
+                  className={`block rounded-2xl p-6 transition ${
+                    isUpdate
+                      ? "bg-white border border-gray-200 shadow-sm"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
                 >
+
+                  {isUpdate && (
+                    <div className="text-xs text-blue-600 mb-2">
+                      🔄 Update
+                    </div>
+                  )}
 
                   <div className="flex items-start gap-4">
 
@@ -144,16 +168,41 @@ export default async function HomePage() {
                       src={avatar}
                       alt=""
                       className="w-12 h-12 rounded-full object-cover"
+                      onError={(e: any) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          c.identity?.display_name || "User"
+                        )}`;
+                      }}
                     />
 
-                    <div>
+                    <div className="flex-1">
 
-                      <div className="font-semibold text-gray-900 mb-1">
-                        {identity.display_name || identity.username || "User"}
+                      <div className="flex items-center gap-2 font-semibold text-gray-900 mb-1">
+                        {c.identity?.display_name}
+
+                        {c.identity?.type === "company" && (
+                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
+                            COMPANY
+                          </span>
+                        )}
                       </div>
 
-                      <div className="text-gray-800 mb-2">
+                      {isUpdate && (
+                        <div className="text-xs text-gray-500 mb-1">
+                          updated a commitment
+                        </div>
+                      )}
+
+                      <div className="text-gray-800 mb-3">
                         {c.text}
+                      </div>
+
+                      <div className="text-xs text-gray-500 flex gap-4">
+                        <span>👁 {c.views ?? 0}</span>
+
+                        {!isUpdate && (
+                          <span>🔁 {c.shares ?? 0}</span>
+                        )}
                       </div>
 
                     </div>
@@ -166,11 +215,10 @@ export default async function HomePage() {
 
           </div>
 
-          {/* CTA */}
           <div className="text-center mt-12">
             <Link
               href="/explore"
-              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition"
+              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md"
             >
               Explore commitments from people & companies
             </Link>
@@ -180,14 +228,14 @@ export default async function HomePage() {
 
       </section>
 
-      {/* WHY STATED */}
+      {/* WHY STATED WORKS */}
       <section className="bg-gray-50 py-28 px-6 text-center">
 
-        <p className="text-sm text-orange-500 mb-3 uppercase">
+        <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-3">
           Why Stated Works
         </p>
 
-        <h2 className="text-3xl md:text-5xl font-bold">
+        <h2 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
           Most platforms reward{" "}
           <span className="italic text-orange-500">performance.</span>
           <br />
@@ -197,27 +245,43 @@ export default async function HomePage() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="bg-gray-950 text-white py-32 px-6 text-center">
+      <section className="bg-gray-950 text-white py-36 px-6 text-center">
 
-        <h2 className="text-4xl md:text-6xl font-bold mb-6">
-          Put your word on the line.
-        </h2>
+        <div className="max-w-2xl mx-auto">
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            Put your word
+            <br />
+            on the <span className="italic text-orange-400">line.</span>
+          </h2>
 
-          <Link href="/signup" className="bg-blue-600 px-10 py-4 rounded-xl">
-            Commit publicly →
-          </Link>
+          <p className="text-gray-400 mb-10">
+            Say it where it counts.
+          </p>
 
-          <Link href="/explore" className="border px-10 py-4 rounded-xl">
-            Browse first
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+
+            <Link
+              href="/signup"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition"
+            >
+              Commit publicly →
+            </Link>
+
+            <Link
+              href="/explore"
+              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold"
+            >
+              Browse first
+            </Link>
+
+          </div>
+
+          <p className="mt-6 text-sm text-gray-400">
+            Free to start. No credit card required.
+          </p>
 
         </div>
-
-        <p className="mt-6 text-sm text-gray-400">
-          Free to start. No credit card required.
-        </p>
 
       </section>
 
