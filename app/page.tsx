@@ -22,7 +22,7 @@ export default async function HomePage() {
     feed = [];
   }
 
-  // ✅ KEEP YOUR ORIGINAL WORKING LOGIC
+  // KEEP ORIGINAL WORKING LOGIC
   const updates = feed.filter((f) => f.type === "update");
   const originals = feed.filter((f) => f.type !== "update");
 
@@ -35,14 +35,16 @@ export default async function HomePage() {
 
     <div className="min-h-screen flex flex-col">
 
-      {/* HEADER (RESTORED) */}
+      {/* HEADER */}
       <header className="absolute top-0 left-0 w-full z-20 flex justify-center gap-8 py-6 text-white text-base font-semibold">
         <Link href="/explore" className="hover:text-blue-400 transition">
           Explore
         </Link>
+
         <Link href="/login" className="hover:text-blue-400 transition">
           Login
         </Link>
+
         <Link
           href="/signup"
           className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
@@ -102,7 +104,6 @@ export default async function HomePage() {
           Start with 5 Free Commitments
         </Link>
 
-        {/* TRUST LINE */}
         <div className="mt-5 bg-green-500/10 border border-green-400/30 px-4 py-2 rounded-full text-sm text-green-300 font-medium">
           ✓ No signup needed to browse or share
         </div>
@@ -113,7 +114,7 @@ export default async function HomePage() {
 
       </section>
 
-      {/* FEED (UNCHANGED STRUCTURE) */}
+      {/* FEED */}
       <section className="bg-white text-black py-28 px-6">
 
         <div className="max-w-5xl mx-auto">
@@ -185,7 +186,6 @@ export default async function HomePage() {
                         {c.text}
                       </div>
 
-                      {/* ✅ RESTORED STATS */}
                       <div className="text-xs text-gray-500 flex gap-4">
                         <span>👁 {c.views ?? 0}</span>
                         {!isUpdate && <span>🔁 {c.shares ?? 0}</span>}
@@ -201,11 +201,10 @@ export default async function HomePage() {
 
           </div>
 
-          {/* FIXED BUTTON */}
           <div className="text-center mt-12">
             <Link
               href="/explore"
-              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition"
+              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:scale-[1.02]"
             >
               Explore commitments from people & companies
             </Link>
@@ -215,7 +214,7 @@ export default async function HomePage() {
 
       </section>
 
-      {/* WHY STATED WORKS (RESTORED FULL) */}
+      {/* WHY STATED WORKS */}
       <section className="bg-gray-50 py-28 px-6">
         <div className="max-w-5xl mx-auto text-center">
 
@@ -264,16 +263,45 @@ export default async function HomePage() {
       {/* FINAL CTA */}
       <section className="bg-gray-950 text-white py-36 px-6 text-center">
 
-        <Link
-          href="/signup"
-          className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold"
-        >
-          Commit publicly →
-        </Link>
+        <div className="max-w-2xl mx-auto">
 
-        <p className="mt-6 text-sm text-gray-400">
-          Free to start. No credit card required.
-        </p>
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-4">
+            Your Turn
+          </p>
+
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
+            Put your word
+            <br />
+            on the <span className="italic text-orange-400">line.</span>
+          </h2>
+
+          <p className="text-gray-400 mb-10">
+            Say it where it counts.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+
+            <Link
+              href="/signup"
+              className="bg-blue-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition shadow-xl hover:scale-[1.02]"
+            >
+              Commit publicly →
+            </Link>
+
+            <Link
+              href="/explore"
+              className="border border-gray-600 px-12 py-5 rounded-2xl text-lg font-semibold hover:border-gray-400 transition"
+            >
+              Browse first
+            </Link>
+
+          </div>
+
+          <p className="mt-6 text-sm text-gray-400">
+            Free to start. No credit card required.
+          </p>
+
+        </div>
 
       </section>
 
