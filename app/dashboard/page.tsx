@@ -135,16 +135,9 @@ export default async function DashboardPage() {
       {/* FEED SECTION */}
       <div style={{ padding: "0 16px 24px", background: "#f2f3f7" }}>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "12px 0 10px",
-          }}
-        >
-          <h1 style={{ fontSize: 15, fontWeight: 700, color: "#0f0c29" }}>
-            Public commitments
+        <div style={{ padding: "14px 0 10px", textAlign: "center" }}>
+          <h1 style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+            Discover commitments
           </h1>
         </div>
 
