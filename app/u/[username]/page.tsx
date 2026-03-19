@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,51 @@ import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
 import FollowButton from "@/components/social/FollowButton";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const supabase = createPublicClient();
+  const cleanUsername = decodeURIComponent(username).trim().toLowerCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, username, bio, avatar_url")
+    .ilike("username", cleanUsername)
+    .single();
+
+  if (!profile) return { title: "Stated" };
+
+  const name = profile.display_name || profile.username;
+  const bio = profile.bio || "Putting their word on the line — publicly.";
+  const avatarUrl =
+    profile.avatar_url && profile.avatar_url.startsWith("http")
+      ? profile.avatar_url
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4338ca&color=fff&size=256`;
+  const url = `https://app.stated.in/u/${profile.username}`;
+
+  return {
+    title: `${name} on Stated`,
+    description: bio,
+    openGraph: {
+      title: `${name} on Stated`,
+      description: bio,
+      url,
+      siteName: "Stated",
+      images: [{ url: avatarUrl, width: 256, height: 256, alt: name }],
+      type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title: `${name} on Stated`,
+      description: bio,
+      images: [avatarUrl],
+    },
+  };
+}
 
 export default async function UserPage({
   params,
@@ -262,14 +308,21 @@ export default async function UserPage({
           ))}
         </div>
 
-        {/* Avatar — left-aligned, overlaps banner + steps strip */}
-        <div className="absolute" style={{ bottom: -60, left: 20, zIndex: 30 }}>
+
+      </div>
+
+      {/* PROFILE CARD */}
+      <div className="bg-white" style={{ borderBottom: "1px solid #f0f1f6" }}>
+        {/* Avatar overlapping from top */}
+        <div className="px-5 pt-4">
           <div
             className="rounded-full p-0.5"
             style={{
               background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
-              width: 84, height: 84,
+              width: 80, height: 80,
+              marginTop: -40,
               boxShadow: "0 4px 20px rgba(67,56,202,0.45)",
+              display: "inline-block",
             }}
           >
             <img
@@ -280,14 +333,10 @@ export default async function UserPage({
             />
           </div>
         </div>
-      </div>
-
-      {/* PROFILE CARD */}
-      <div className="bg-white" style={{ paddingTop: 72, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
           {/* Name */}
-          <div className="mb-3">
+          <div className="mb-3 mt-2">
             <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
               {profile.display_name || profile.username}
             </h1>
@@ -394,4 +443,4 @@ export default async function UserPage({
 
     </div>
   );
-}
+                }
