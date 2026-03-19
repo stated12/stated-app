@@ -125,10 +125,16 @@ export default async function UserPage({
               .select("*", { count: "exact", head: true })
               .eq("commitment_id", c.id);
 
+            const { count: sharesCount } = await supabase
+              .from("commitment_shares")
+              .select("*", { count: "exact", head: true })
+              .eq("commitment_id", c.id);
+
             return {
               ...c,
               views: count || 0,
               update_count: updateCount || 0,
+              shares_count: sharesCount || 0,
               latest_update: update?.content || null,
               latest_update_created_at: update?.created_at || null,
             };
@@ -459,4 +465,4 @@ export default async function UserPage({
 
     </div>
   );
-                }
+}
