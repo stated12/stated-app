@@ -12,7 +12,7 @@ type Identity = {
 
 type FeedItem = {
   id: string;
-  type: "commitment" | "update"; // ✅ IMPORTANT
+  type: "commitment" | "update";
   text?: string;
   category?: string;
   created_at: string;
@@ -23,7 +23,6 @@ type FeedItem = {
 };
 
 function timeAgo(date: string) {
-
   const seconds = Math.floor(
     (new Date().getTime() - new Date(date).getTime()) / 1000
   );
@@ -52,13 +51,14 @@ export default function CommitmentFeed({
   endpoint: string;
   showFilters?: boolean;
 }) {
-
   const [items, setItems] = useState<FeedItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
   const [activeTab, setActiveTab] =
-    useState<"latest" | "trending">("latest");
+    useState<"latest" | "trending" | "following">("latest");
+
   const [category, setCategory] = useState("");
 
   const categories = [
@@ -75,7 +75,7 @@ export default function CommitmentFeed({
     "Product",
     "Strategic",
     "Announcement",
-    "Other"
+    "Other",
   ];
 
   useEffect(() => {
@@ -90,7 +90,6 @@ export default function CommitmentFeed({
   }
 
   async function loadInitial() {
-
     const query = new URLSearchParams();
     query.append("type", activeTab);
 
@@ -110,12 +109,10 @@ export default function CommitmentFeed({
         : null
     );
 
-    // ✅ FIX
     setHasMore(safeData.length >= 25);
   }
 
   async function loadMore() {
-
     if (!cursor || !hasMore) return;
 
     setLoading(true);
@@ -149,21 +146,20 @@ export default function CommitmentFeed({
   }
 
   return (
-
     <div className="max-w-3xl mx-auto space-y-6">
 
+      {/* ✅ FIXED FILTER UI */}
       {showFilters && (
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
 
-        <div className="flex justify-between items-center">
-
-          <div className="flex gap-4">
-
+          {/* ROW 1 */}
+          <div className="flex gap-3 mb-3">
             <button
               onClick={() => setActiveTab("latest")}
-              className={`px-4 py-2 rounded ${
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
                 activeTab === "latest"
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-200"
+                  : "bg-gray-100"
               }`}
             >
               Latest
@@ -171,21 +167,35 @@ export default function CommitmentFeed({
 
             <button
               onClick={() => setActiveTab("trending")}
-              className={`px-4 py-2 rounded ${
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
                 activeTab === "trending"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200"
+                  ? "bg-gray-200"
+                  : "bg-gray-100"
               }`}
             >
-              Trending
+              🔥 Trending
             </button>
-
           </div>
 
+          {/* ROW 2 */}
+          <div className="mb-3">
+            <button
+              onClick={() => setActiveTab("following")}
+              className={`w-full py-2 rounded-lg text-sm font-medium ${
+                activeTab === "following"
+                  ? "bg-gray-200"
+                  : "bg-gray-100"
+              }`}
+            >
+              Following
+            </button>
+          </div>
+
+          {/* ROW 3 */}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -195,13 +205,11 @@ export default function CommitmentFeed({
           </select>
 
         </div>
-
       )}
 
+      {/* FEED */}
       <div className="space-y-4">
-
         {items.map((c) => {
-
           const identity = c.identity ?? {};
 
           const avatar =
@@ -223,35 +231,22 @@ export default function CommitmentFeed({
               ? `/commitment/${c.parent_commitment_id}`
               : `/commitment/${c.id}`;
 
-          /* =========================
-             UPDATE CARD
-          ========================= */
-
           if (c.type === "update") {
             return (
-
               <Link key={c.id} href={commitmentLink}>
-
                 <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
-
                   <div className="text-xs text-blue-600 font-medium mb-2">
                     🔄 Update
                   </div>
 
                   <div className="flex items-center gap-3 mb-2">
-
-                    <img
-                      src={avatar}
-                      className="w-8 h-8 rounded-full"
-                    />
-
+                    <img src={avatar} className="w-8 h-8 rounded-full" />
                     <div className="text-sm">
                       <span className="font-semibold">
                         {identity.display_name || identity.username}
                       </span>{" "}
                       updated a commitment
                     </div>
-
                   </div>
 
                   <div className="text-gray-900 text-sm ml-11">
@@ -261,37 +256,25 @@ export default function CommitmentFeed({
                   <div className="text-xs text-gray-400 ml-11 mt-1">
                     {timeAgo(c.created_at)}
                   </div>
-
                 </div>
-
               </Link>
-
             );
           }
 
-          /* =========================
-             COMMITMENT CARD
-          ========================= */
-
           return (
-
             <Link key={c.id} href={commitmentLink}>
-
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition">
 
                 <div className="flex items-center gap-3 mb-3">
 
                   <Link href={profileLink} onClick={(e)=>e.stopPropagation()}>
-
                     <img
                       src={avatar}
                       className="w-10 h-10 rounded-full object-cover"
                     />
-
                   </Link>
 
                   <div>
-
                     <Link
                       href={profileLink}
                       onClick={(e)=>e.stopPropagation()}
@@ -303,7 +286,6 @@ export default function CommitmentFeed({
                     <div className="text-xs text-gray-500">
                       @{identity.username} · {timeAgo(c.created_at)}
                     </div>
-
                   </div>
 
                 </div>
@@ -320,26 +302,17 @@ export default function CommitmentFeed({
 
                 <div className="text-sm text-gray-500 flex gap-4">
                   <span>👁 {c.views ?? 0} views</span>
-
-                  {c.type === "commitment" && (
-                    <span>🔁 {c.shares ?? 0}</span>
-                  )}
+                  <span>🔁 {c.shares ?? 0}</span>
                 </div>
 
               </div>
-
             </Link>
-
           );
-
         })}
-
       </div>
 
       {hasMore && (
-
         <div className="text-center">
-
           <button
             onClick={loadMore}
             disabled={loading}
@@ -347,13 +320,8 @@ export default function CommitmentFeed({
           >
             {loading ? "Loading..." : "Load More"}
           </button>
-
         </div>
-
       )}
-
     </div>
-
   );
-
 }
