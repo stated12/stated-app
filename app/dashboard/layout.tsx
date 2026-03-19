@@ -63,7 +63,7 @@ export default function DashboardLayout({
 
   const isCompanyWorkspace = pathname.startsWith("/dashboard/company");
   const homeLink = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
-  const createLink = "/create";
+  const createLink = "/dashboard/create";
 
   const avatar = isCompanyWorkspace ? company?.logo_url : profile?.avatar_url;
   const displayName = isCompanyWorkspace
@@ -71,6 +71,9 @@ export default function DashboardLayout({
     : profile?.display_name || profile?.username;
   const username = isCompanyWorkspace ? company?.username : profile?.username;
   const credits = profile?.credits ?? 0;
+  const isOnPlan = profile?.plan_key && profile.plan_key !== "free" && profile.plan_key !== null;
+  const upgradeLink = isCompanyWorkspace ? "/upgrade/company" : "/upgrade";
+  const billingLink = "/billing";
 
   async function logout() {
     const supabase = createClient();
@@ -225,8 +228,11 @@ export default function DashboardLayout({
               <NavItem href="/account"            icon={icons.settings}    label="Account Settings" />
             </>
           )}
-          <NavItem href="/upgrade"          icon={icons.upgrade} label="Upgrade" />
-          <NavItem href="/upgrade"          icon={icons.credits} label="Buy Credits" />
+          {isOnPlan ? (
+            <NavItem href={billingLink} icon={icons.credits} label="Buy Credits" />
+          ) : (
+            <NavItem href={upgradeLink} icon={icons.upgrade} label="Upgrade" />
+          )}
           <NavItem href="/dashboard/support" icon={icons.support} label="Support" />
         </nav>
 
