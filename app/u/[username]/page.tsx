@@ -325,7 +325,7 @@ export default async function UserPage({
       <div
         style={{
           position: "absolute",
-          bottom: -50,
+          bottom: -75,
           left: 20,
           zIndex: 50,
           width: 86,
@@ -347,7 +347,7 @@ export default async function UserPage({
 
       {/* PROFILE CARD */}
       <div className="bg-white" style={{ borderBottom: "1px solid #f0f1f6" }}>
-        <div className="px-5 pb-5" style={{ paddingTop: 60 }}>
+        <div className="px-5 pb-5" style={{ paddingTop: 88 }}>
 
           {/* Name + action buttons */}
           <div className="flex items-center justify-between mb-3">
@@ -459,4 +459,4 @@ export default async function UserPage({
 
     </div>
   );
-}
+                }
