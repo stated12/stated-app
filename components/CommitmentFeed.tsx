@@ -101,14 +101,13 @@ export default function CommitmentFeed({
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 600,
-    border: "none",
     cursor: "pointer",
     whiteSpace: "nowrap",
     background: activeTab === tab ? "#4338ca" : "#fff",
     color: activeTab === tab ? "#fff" : "#6b7280",
     boxShadow: activeTab === tab ? "0 2px 8px rgba(67,56,202,0.25)" : "none",
-    border: activeTab === tab ? "none" : "1px solid #e8eaf2",
-  } as React.CSSProperties);
+    border: activeTab === tab ? "1px solid transparent" : "1px solid #e8eaf2",
+  });
 
   return (
     <div style={{ maxWidth: 768, margin: "0 auto" }}>
@@ -302,4 +301,4 @@ export default function CommitmentFeed({
       )}
     </div>
   );
-                          }
+}
