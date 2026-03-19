@@ -192,7 +192,7 @@ export default async function UserPage({
         style={{ borderBottom: "1px solid #ebebf2" }}
       >
         <Link
-          href={currentUser ? "/feed" : "/"}
+          href={currentUser ? "/dashboard" : "/"}
           className="flex items-center gap-1 text-xs font-medium"
           style={{ color: "#4338ca" }}
         >
@@ -325,7 +325,7 @@ export default async function UserPage({
       <div
         style={{
           position: "absolute",
-          bottom: -43,
+          bottom: -50,
           left: 20,
           zIndex: 50,
           width: 86,
@@ -347,7 +347,7 @@ export default async function UserPage({
 
       {/* PROFILE CARD */}
       <div className="bg-white" style={{ borderBottom: "1px solid #f0f1f6" }}>
-        <div className="px-5 pb-5" style={{ paddingTop: 52 }}>
+        <div className="px-5 pb-5" style={{ paddingTop: 60 }}>
 
           {/* Name + action buttons */}
           <div className="flex items-center justify-between mb-3">
