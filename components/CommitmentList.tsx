@@ -13,101 +13,160 @@ export default function CommitmentList({
     completed_at?: string;
     end_date?: string;
     views: number;
+    update_count?: number;
     latest_update?: string | null;
   }[];
 }) {
 
-  function statusColor(status: string) {
+  function getAccentColor(status: string) {
     switch (status) {
-      case "active":
-        return "text-green-600";
-      case "completed":
-        return "text-blue-600";
-      case "paused":
-        return "text-yellow-600";
-      case "withdrawn":
-        return "text-gray-600";
-      case "expired":
-        return "text-red-700 font-semibold";
-      default:
-        return "text-gray-500";
+      case "active":    return "linear-gradient(180deg,#4338ca,#818cf8)";
+      case "completed": return "linear-gradient(180deg,#10b981,#34d399)";
+      case "withdrawn": return "linear-gradient(180deg,#9ca3af,#d1d5db)";
+      case "expired":   return "linear-gradient(180deg,#ef4444,#fca5a5)";
+      case "paused":    return "linear-gradient(180deg,#f59e0b,#fcd34d)";
+      default:          return "linear-gradient(180deg,#9ca3af,#d1d5db)";
+    }
+  }
+
+  function getBadgeStyle(status: string): React.CSSProperties {
+    switch (status) {
+      case "active":    return { background: "#dcfce7", color: "#15803d" };
+      case "completed": return { background: "#dbeafe", color: "#1d4ed8" };
+      case "withdrawn": return { background: "#f3f4f6", color: "#6b7280" };
+      case "expired":   return { background: "#fee2e2", color: "#b91c1c" };
+      case "paused":    return { background: "#fef3c7", color: "#92400e" };
+      default:          return { background: "#f3f4f6", color: "#6b7280" };
     }
   }
 
   function getDateLabel(c: any) {
-
     if (c.status === "completed" && c.completed_at) {
-
       const completed = new Date(c.completed_at);
       const created = new Date(c.created_at);
-
       const days = Math.ceil(
-        (completed.getTime() - created.getTime()) /
-        (1000 * 60 * 60 * 24)
+        (completed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
       );
-
       return `Completed ${completed.toLocaleDateString()} (${days} days)`;
     }
-
     return `Created ${new Date(c.created_at).toLocaleDateString()}`;
   }
 
+  function formatViews(n: number) {
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+  }
+
   return (
-    <div className="space-y-5">
-
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {commitments.map((c) => (
+        <Link key={c.id} href={`/commitment/${c.id}`} style={{ textDecoration: "none" }}>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              overflow: "hidden",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+              border: "1px solid #f0f1f6",
+              cursor: "pointer",
+            }}
+          >
+            {/* Accent bar top */}
+            <div style={{ height: 3, background: getAccentColor(c.status) }} />
 
-        <Link key={c.id} href={`/commitment/${c.id}`}>
+            <div style={{ padding: "14px 16px 12px" }}>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100">
-
-            {/* TEXT */}
-            <div className="font-semibold text-lg text-gray-900 mb-2 leading-relaxed">
-              {c.text}
-            </div>
-
-            {/* META */}
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-              <span className={`capitalize ${statusColor(c.status)}`}>
-                {c.status}
-              </span>
-              <span>{getDateLabel(c)}</span>
-            </div>
-
-            {/* 🔥 LATEST UPDATE (REFINED) */}
-            {c.latest_update && (
-              <div className="mt-4 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
-
-                <div className="text-xs font-medium text-gray-500 mb-1">
-                  Latest update
-                </div>
-
-                <div className="leading-relaxed">
-                  {c.latest_update}
-                </div>
-
+              {/* Title */}
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#0f0c29",
+                  lineHeight: 1.5,
+                  marginBottom: 10,
+                }}
+              >
+                {c.text}
               </div>
-            )}
 
-            {/* FOOTER */}
-            <div className="text-xs text-gray-500 mt-4 flex items-center justify-between">
-
-              <span>👁 {c.views || 0} views</span>
-
-              {c.latest_update && (
-                <span className="text-gray-500 font-medium">
-                  Updated
+              {/* Status + date */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: c.latest_update ? 10 : 0,
+                }}
+              >
+                <span
+                  style={{
+                    ...getBadgeStyle(c.status),
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: "3px 10px",
+                    borderRadius: 20,
+                  }}
+                >
+                  {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                 </span>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>
+                  {getDateLabel(c)}
+                </span>
+              </div>
+
+              {/* Latest update box */}
+              {c.latest_update && (
+                <div
+                  style={{
+                    background: "#f8f9fc",
+                    borderRadius: 10,
+                    padding: "8px 10px",
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}
+                >
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>
+                    Latest update
+                  </div>
+                  <div style={{ fontSize: 12, color: "#4b5563", lineHeight: 1.5 }}>
+                    {c.latest_update}
+                  </div>
+                </div>
               )}
 
+              {/* Footer — views + updates */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: 10,
+                  borderTop: "1px solid #f3f4f8",
+                  marginTop: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.8" stroke="#9ca3af" strokeWidth="1.1"/>
+                    <circle cx="6.5" cy="6.5" r="1.8" stroke="#9ca3af" strokeWidth="1.1"/>
+                  </svg>
+                  {formatViews(c.views || 0)} views
+                </div>
+
+                {(c.update_count ?? 0) > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6366f1", fontWeight: 500 }}>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2 9.5V4.5a1 1 0 011-1h7a1 1 0 011 1v4a1 1 0 01-1 1H4.5L2 9.5z" stroke="#6366f1" strokeWidth="1.1" strokeLinejoin="round"/>
+                      <path d="M4.5 6.5h4M4.5 8h2" stroke="#6366f1" strokeWidth="1.1" strokeLinecap="round"/>
+                    </svg>
+                    {c.update_count} {c.update_count === 1 ? "update" : "updates"}
+                  </div>
+                )}
+              </div>
+
             </div>
-
           </div>
-
         </Link>
-
       ))}
-
     </div>
   );
 }
