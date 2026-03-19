@@ -230,16 +230,17 @@ export default async function UserPage({
           {/* Right — motivational lines */}
           <div className="flex flex-col items-end gap-1.5">
             {[
-              <>Your word is your <em className="not-italic" style={{color:"#fb923c"}}>brand.</em></>,
-              <>Follow-through is <em className="not-italic" style={{color:"#fb923c"}}>everything.</em></>,
-              <>Say it. <em className="not-italic" style={{color:"#fb923c"}}>Own it.</em></>,
+              { pre: "Your word is your ", accent: "brand." },
+              { pre: "Follow-through is ", accent: "everything." },
+              { pre: "Say it. ", accent: "Own it." },
             ].map((line, i) => (
               <span
                 key={i}
                 className="font-bold text-right text-xs"
                 style={{ color: "rgba(255,255,255,0.75)", letterSpacing: "0.3px" }}
               >
-                {line}
+                {line.pre}
+                <span style={{ color: "#fb923c" }}>{line.accent}</span>
               </span>
             ))}
           </div>
@@ -543,4 +544,7 @@ export default async function UserPage({
               >
                 {l}
               </Link>
-         
+            )
+          )}
+        </div>
+        <p 
