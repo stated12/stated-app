@@ -120,9 +120,15 @@ export default async function UserPage({
               .limit(1)
               .maybeSingle();
 
+            const { count: updateCount } = await supabase
+              .from("commitment_updates")
+              .select("*", { count: "exact", head: true })
+              .eq("commitment_id", c.id);
+
             return {
               ...c,
               views: count || 0,
+              update_count: updateCount || 0,
               latest_update: update?.content || null,
               latest_update_created_at: update?.created_at || null,
             };
@@ -186,12 +192,12 @@ export default async function UserPage({
         style={{ borderBottom: "1px solid #ebebf2" }}
       >
         <Link
-          href="/"
+          href={currentUser ? "/feed" : "/"}
           className="flex items-center gap-1 text-xs font-medium"
-          style={{ color: "#6b7280" }}
+          style={{ color: "#4338ca" }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9 2L4 7l5 5" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9 2L4 7l5 5" stroke="#4338ca" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Back
         </Link>
@@ -205,8 +211,11 @@ export default async function UserPage({
         </div>
       </nav>
 
+      {/* BANNER + PROFILE WRAPPER — avatar sits at seam */}
+      <div className="relative">
+
       {/* BANNER */}
-      <div className="relative" style={{ height: 160, background: "#0d0b1e" }}>
+      <div style={{ height: 160, background: "#0d0b1e", overflow: "hidden", position: "relative" }}>
         {/* Gradient */}
         <div
           className="absolute inset-0"
@@ -312,32 +321,45 @@ export default async function UserPage({
 
       </div>
 
+      {/* AVATAR — absolutely at seam, outside overflow:hidden banner */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: -43,
+          left: 20,
+          zIndex: 50,
+          width: 86,
+          height: 86,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
+          padding: 3,
+          boxShadow: "0 4px 20px rgba(67,56,202,0.45)",
+        }}
+      >
+        <img
+          src={avatarUrl}
+          alt={profile.display_name || profile.username}
+          style={{ width: "100%", height: "100%", border: "3px solid #fff", borderRadius: "50%", objectFit: "cover" }}
+        />
+      </div>
+
+      </div>{/* end banner+profile wrapper */}
+
       {/* PROFILE CARD */}
       <div className="bg-white" style={{ borderBottom: "1px solid #f0f1f6" }}>
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5" style={{ paddingTop: 52 }}>
 
-          {/* Avatar + action buttons row */}
-          <div className="flex items-end justify-between" style={{ marginTop: -48 }}>
-            {/* Avatar */}
-            <div
-              className="rounded-full flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
-                width: 86, height: 86,
-                padding: 3,
-                boxShadow: "0 4px 20px rgba(67,56,202,0.45)",
-              }}
-            >
-              <img
-                src={avatarUrl}
-                alt={profile.display_name || profile.username}
-                className="object-cover"
-                style={{ width: "100%", height: "100%", border: "3px solid #fff", borderRadius: "50%" }}
-              />
+          {/* Name + action buttons */}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
+                {profile.display_name || profile.username}
+              </h1>
+              <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
+                @{profile.username}
+              </div>
             </div>
-
-            {/* Buttons — aligned to bottom of avatar */}
-            <div className="flex gap-2 pb-1">
+            <div className="flex gap-2">
               {currentUser?.id !== profile.id && (
                 <FollowButton
                   currentUserId={currentUser?.id}
@@ -348,25 +370,13 @@ export default async function UserPage({
               )}
               <ShareProfileButton
                 username={profile.username}
-                className="px-5 py-2 rounded-full text-sm font-semibold"
-                style={{
-                  background: "linear-gradient(135deg,#4338ca,#6366f1)",
-                  color: "#fff",
-                  boxShadow: "0 4px 12px rgba(67,56,202,0.2)",
-                }}
+                className="px-5 py-2 rounded-full text-sm font-semibold text-white"
+                style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", boxShadow: "0 4px 12px rgba(67,56,202,0.2)" }}
               />
             </div>
           </div>
 
-          {/* Name */}
-          <div className="mb-3 mt-3">
-            <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
-              {profile.display_name || profile.username}
-            </h1>
-            <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
-              @{profile.username}
-            </div>
-          </div>
+
 
           {/* Bio */}
           {profile.bio && (
@@ -449,4 +459,4 @@ export default async function UserPage({
 
     </div>
   );
-        }
+}
