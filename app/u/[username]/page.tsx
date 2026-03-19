@@ -332,21 +332,35 @@ export default async function UserPage({
             </div>
             <div className="flex items-center gap-2 pt-1">
               {currentUser?.id !== profile.id && (
-                <FollowButton
-                  currentUserId={currentUser?.id}
-                  targetUserId={profile.id}
-                  className="px-5 py-2 rounded-full text-xs font-bold text-white border-none"
+                <div
                   style={{
                     background: "linear-gradient(135deg,#4338ca,#6366f1)",
                     boxShadow: "0 4px 12px rgba(67,56,202,0.35)",
+                    borderRadius: "9999px",
+                    overflow: "hidden",
                   }}
-                />
+                >
+                  <FollowButton
+                    currentUserId={currentUser?.id}
+                    targetUserId={profile.id}
+                  />
+                </div>
               )}
-              <ShareProfileButton
-                username={profile.username}
-                className="w-9 h-9 rounded-full flex items-center justify-center border"
-                style={{ background: "#f5f6fa", borderColor: "#e8eaf2" }}
-              />
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  background: "#f5f6fa",
+                  border: "1px solid #e8eaf2",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ShareProfileButton username={profile.username} />
+              </div>
             </div>
           </div>
 
@@ -529,17 +543,4 @@ export default async function UserPage({
               >
                 {l}
               </Link>
-            )
-          )}
-        </div>
-        <p className="text-xs" style={{ color: "#c4c4cc" }}>
-          © 2026 Stated &nbsp;·&nbsp; Built in{" "}
-          <Link href="/" style={{ color: "#6366f1" }}>
-            India
-          </Link>{" "}
-          for the World
-        </p>
-      </footer>
-    </div>
-  );
-}
+         
