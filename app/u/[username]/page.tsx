@@ -59,60 +59,6 @@ export async function generateMetadata({
   };
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ username: string }>;
-}) {
-  const { username } = await params;
-  const supabase = createPublicClient();
-  const cleanUsername = decodeURIComponent(username).trim().toLowerCase();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, username, bio, avatar_url")
-    .ilike("username", cleanUsername)
-    .single();
-
-  if (!profile) return {};
-
-  const displayName = profile.display_name || profile.username;
-  const avatarUrl = profile.avatar_url && profile.avatar_url.startsWith("http")
-    ? profile.avatar_url
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563eb&color=fff`;
-
-  const title = `${displayName} (@${profile.username}) — Stated`;
-  const description = profile.bio
-    ? `${profile.bio} | Public commitments on Stated — Put your word on the line.`
-    : `Follow ${displayName}'s public commitments on Stated — where accountability builds credibility.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: [
-        {
-          url: avatarUrl,
-          width: 400,
-          height: 400,
-          alt: displayName,
-        }
-      ],
-      url: `https://app.stated.in/u/${profile.username}`,
-      siteName: "Stated",
-      type: "profile",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [avatarUrl],
-      site: "@stated_in",
-    },
-  };
-}
 
 export default async function UserPage({
   params,
