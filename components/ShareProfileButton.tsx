@@ -1,6 +1,14 @@
 "use client";
 
-export default function ShareProfileButton({ username }: { username: string }) {
+export default function ShareProfileButton({
+  username,
+  className,
+  style,
+}: {
+  username: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   const shareUrl = `https://app.stated.in/u/${username}`;
 
   const handleShare = async () => {
@@ -18,7 +26,8 @@ export default function ShareProfileButton({ username }: { username: string }) {
   return (
     <button
       onClick={handleShare}
-      className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+      className={className ?? "mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"}
+      style={style}
     >
       Share Profile
     </button>
