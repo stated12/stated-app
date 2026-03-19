@@ -159,7 +159,7 @@ export default async function UserPage({
       </nav>
 
       {/* BANNER */}
-      <div className="relative overflow-hidden" style={{ height: 152, background: "#0d0b1e" }}>
+      <div className="relative overflow-hidden" style={{ height: 160, background: "#0d0b1e" }}>
         {/* Gradient */}
         <div
           className="absolute inset-0"
@@ -263,7 +263,7 @@ export default async function UserPage({
         </div>
 
         {/* Avatar — left-aligned, overlaps banner + steps strip */}
-        <div className="absolute" style={{ bottom: -52, left: 20, zIndex: 30 }}>
+        <div className="absolute" style={{ bottom: -60, left: 20, zIndex: 30 }}>
           <div
             className="rounded-full p-0.5"
             style={{
@@ -283,7 +283,7 @@ export default async function UserPage({
       </div>
 
       {/* PROFILE CARD */}
-      <div className="bg-white" style={{ paddingTop: 62, borderBottom: "1px solid #f0f1f6" }}>
+      <div className="bg-white" style={{ paddingTop: 72, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
           {/* Name */}
