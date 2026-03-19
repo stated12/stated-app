@@ -8,12 +8,16 @@ type Props = {
   currentUserId?: string;
   targetUserId?: string;
   targetCompanyId?: string;
+  className?: string;
+  style?: React.CSSProperties;
 };
 
 export default function FollowButton({
   currentUserId,
   targetUserId,
   targetCompanyId,
+  className,
+  style,
 }: Props) {
 
   const router = useRouter();
@@ -62,7 +66,7 @@ export default function FollowButton({
 
       await fetch("/api/follow", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }, // ✅ FIX
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           followingUserId: targetUserId,
           followingCompanyId: targetCompanyId,
@@ -87,7 +91,7 @@ export default function FollowButton({
 
       await fetch("/api/follow", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" }, // ✅ FIX
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           followingUserId: targetUserId,
           followingCompanyId: targetCompanyId,
@@ -108,11 +112,15 @@ export default function FollowButton({
     <button
       onClick={following ? unfollow : follow}
       disabled={loading}
-      className={`px-3 py-1 rounded-lg text-sm transition ${
-        following
-          ? "bg-gray-200 text-gray-800"
-          : "bg-blue-600 text-white hover:bg-blue-700"
-      }`}
+      style={style}
+      className={
+        className ||
+        `px-3 py-1 rounded-lg text-sm transition ${
+          following
+            ? "bg-gray-200 text-gray-800"
+            : "bg-blue-600 text-white hover:bg-blue-700"
+        }`
+      }
     >
       {loading ? "..." : following ? "Following" : "Follow"}
     </button>
