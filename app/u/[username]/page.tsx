@@ -115,7 +115,7 @@ export default async function UserPage({
   ];
 
   const socialLinks = [
-    { href: profile.website,  label: cleanUrl(profile.website ?? ""), icon: (
+    { href: profile.website,  label: "Website", icon: (
       <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1a5 5 0 100 10A5 5 0 006 1zm0 0c1.5 2 1.5 8 0 10M1 6h10" stroke="#4338ca" strokeWidth="1.1" strokeLinecap="round"/></svg>
     )},
     { href: profile.twitter,  label: "Twitter", icon: (
@@ -262,8 +262,8 @@ export default async function UserPage({
           ))}
         </div>
 
-        {/* Avatar — left-aligned, overlaps banner */}
-        <div className="absolute z-20" style={{ bottom: -42, left: 20 }}>
+        {/* Avatar — left-aligned, overlaps banner + steps strip */}
+        <div className="absolute" style={{ bottom: -42, left: 20, zIndex: 30 }}>
           <div
             className="rounded-full p-0.5"
             style={{
@@ -286,25 +286,31 @@ export default async function UserPage({
       <div className="bg-white" style={{ paddingTop: 52, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
-          {/* Name + action buttons */}
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
-                {profile.display_name || profile.username}
-              </h1>
-              <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
-                @{profile.username}
-              </div>
+          {/* Name */}
+          <div className="mb-3">
+            <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
+              {profile.display_name || profile.username}
+            </h1>
+            <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
+              @{profile.username}
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              {currentUser?.id !== profile.id && (
-                <FollowButton
-                  currentUserId={currentUser?.id}
-                  targetUserId={profile.id}
-                />
-              )}
-              <ShareProfileButton username={profile.username} />
-            </div>
+          </div>
+
+          {/* Action buttons — full width side by side */}
+          <div className="flex gap-2 mb-3">
+            {currentUser?.id !== profile.id && (
+              <FollowButton
+                currentUserId={currentUser?.id}
+                targetUserId={profile.id}
+                className="flex-1 py-2.5 rounded-full text-sm font-bold text-white text-center"
+                style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", boxShadow: "0 4px 12px rgba(67,56,202,0.3)" }}
+              />
+            )}
+            <ShareProfileButton
+              username={profile.username}
+              className="flex-1 py-2.5 rounded-full text-sm font-semibold text-center"
+              style={{ background: "#f5f6fa", border: "1px solid #e8eaf2", color: "#374151" }}
+            />
           </div>
 
           {/* Bio */}
@@ -388,4 +394,4 @@ export default async function UserPage({
 
     </div>
   );
-            }
+}
