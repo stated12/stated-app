@@ -14,6 +14,7 @@ export default function CommitmentList({
     end_date?: string;
     views: number;
     update_count?: number;
+    shares_count?: number;
     latest_update?: string | null;
   }[];
 }) {
@@ -57,7 +58,7 @@ export default function CommitmentList({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {commitments.map((c) => (
         <Link key={c.id} href={`/commitment/${c.id}`} style={{ textDecoration: "none" }}>
           <div
@@ -73,16 +74,16 @@ export default function CommitmentList({
             {/* Accent bar top */}
             <div style={{ height: 3, background: getAccentColor(c.status) }} />
 
-            <div style={{ padding: "14px 16px 12px" }}>
+            <div style={{ padding: "18px 20px 16px" }}>
 
               {/* Title */}
               <div
                 style={{
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: 600,
                   color: "#0f0c29",
                   lineHeight: 1.5,
-                  marginBottom: 10,
+                  marginBottom: 12,
                 }}
               >
                 {c.text}
@@ -100,7 +101,7 @@ export default function CommitmentList({
                 <span
                   style={{
                     ...getBadgeStyle(c.status),
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: 700,
                     padding: "3px 10px",
                     borderRadius: 20,
@@ -108,7 +109,7 @@ export default function CommitmentList({
                 >
                   {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                 </span>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>
+                <span style={{ fontSize: 11, color: "#9ca3af" }}>
                   {getDateLabel(c)}
                 </span>
               </div>
@@ -119,15 +120,15 @@ export default function CommitmentList({
                   style={{
                     background: "#f8f9fc",
                     borderRadius: 10,
-                    padding: "8px 10px",
+                    padding: "10px 12px",
                     marginTop: 10,
-                    marginBottom: 10,
+                    marginBottom: 12,
                   }}
                 >
-                  <div style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>
                     Latest update
                   </div>
-                  <div style={{ fontSize: 12, color: "#4b5563", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 13, color: "#4b5563", lineHeight: 1.5 }}>
                     {c.latest_update}
                   </div>
                 </div>
@@ -152,15 +153,26 @@ export default function CommitmentList({
                   {formatViews(c.views || 0)} views
                 </div>
 
-                {(c.update_count ?? 0) > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6366f1", fontWeight: 500 }}>
-                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                      <path d="M2 9.5V4.5a1 1 0 011-1h7a1 1 0 011 1v4a1 1 0 01-1 1H4.5L2 9.5z" stroke="#6366f1" strokeWidth="1.1" strokeLinejoin="round"/>
-                      <path d="M4.5 6.5h4M4.5 8h2" stroke="#6366f1" strokeWidth="1.1" strokeLinecap="round"/>
-                    </svg>
-                    {c.update_count} {c.update_count === 1 ? "update" : "updates"}
-                  </div>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {(c.update_count ?? 0) > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6366f1", fontWeight: 500 }}>
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M2 9.5V4.5a1 1 0 011-1h7a1 1 0 011 1v4a1 1 0 01-1 1H4.5L2 9.5z" stroke="#6366f1" strokeWidth="1.1" strokeLinejoin="round"/>
+                        <path d="M4.5 6.5h4M4.5 8h2" stroke="#6366f1" strokeWidth="1.1" strokeLinecap="round"/>
+                      </svg>
+                      {c.update_count} {c.update_count === 1 ? "update" : "updates"}
+                    </div>
+                  )}
+                  {(c.shares_count ?? 0) > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#f97316", fontWeight: 500 }}>
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M9 1.5l2.5 2.5L9 6.5" stroke="#f97316" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M11.5 4H5a3 3 0 00-3 3v1" stroke="#f97316" strokeWidth="1.2" strokeLinecap="round"/>
+                      </svg>
+                      {c.shares_count} {c.shares_count === 1 ? "share" : "shares"}
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>
