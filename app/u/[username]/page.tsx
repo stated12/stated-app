@@ -263,7 +263,7 @@ export default async function UserPage({
         </div>
 
         {/* Avatar — left-aligned, overlaps banner + steps strip */}
-        <div className="absolute" style={{ bottom: -42, left: 20, zIndex: 30 }}>
+        <div className="absolute" style={{ bottom: -52, left: 20, zIndex: 30 }}>
           <div
             className="rounded-full p-0.5"
             style={{
@@ -283,7 +283,7 @@ export default async function UserPage({
       </div>
 
       {/* PROFILE CARD */}
-      <div className="bg-white" style={{ paddingTop: 52, borderBottom: "1px solid #f0f1f6" }}>
+      <div className="bg-white" style={{ paddingTop: 62, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
           {/* Name */}
