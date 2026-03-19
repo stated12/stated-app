@@ -101,7 +101,7 @@ export default async function UserPage({
     <div className="min-h-screen pb-16" style={{ background: "#f2f3f7" }}>
       <ViewTracker type="profile" entityId={profile.id} />
 
-      {/* ── NAV ── */}
+      {/* -- NAV -- */}
       <nav
         className="flex items-center justify-between px-5 py-3 bg-white border-b"
         style={{ borderColor: "#ebebf2" }}
@@ -138,7 +138,7 @@ export default async function UserPage({
         </div>
       </nav>
 
-      {/* ── BANNER ── */}
+      {/* -- BANNER -- */}
       <div
         className="relative overflow-hidden"
         style={{ height: 152, background: "#0d0b1e" }}
@@ -198,7 +198,7 @@ export default async function UserPage({
           className="absolute inset-0 flex items-center justify-between px-5 z-10"
           style={{ paddingBottom: 32 }}
         >
-          {/* Left — logo + wordmark + tagline */}
+          {/* Left -- logo + wordmark + tagline */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <img
@@ -227,7 +227,7 @@ export default async function UserPage({
             </span>
           </div>
 
-          {/* Right — motivational lines */}
+          {/* Right -- motivational lines */}
           <div className="flex flex-col items-end gap-1.5">
             {[
               { pre: "Your word is your ", accent: "brand." },
@@ -246,7 +246,7 @@ export default async function UserPage({
           </div>
         </div>
 
-        {/* Bottom strip — Commit · Track · Achieve */}
+        {/* Bottom strip -- Commit · Track · Achieve */}
         <div
           className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-0 z-10"
           style={{
@@ -286,7 +286,7 @@ export default async function UserPage({
           ))}
         </div>
 
-        {/* Avatar — left-aligned, overlapping banner bottom */}
+        {/* Avatar -- left-aligned, overlapping banner bottom */}
         <div className="absolute z-20" style={{ bottom: -42, left: 20 }}>
           <div
             className="rounded-full p-0.5"
@@ -312,7 +312,7 @@ export default async function UserPage({
         </div>
       </div>
 
-      {/* ── PROFILE CARD ── */}
+      {/* -- PROFILE CARD -- */}
       <div
         className="bg-white"
         style={{ paddingTop: 52, borderBottom: "1px solid #f0f1f6" }}
@@ -486,7 +486,7 @@ export default async function UserPage({
         </div>
       </div>
 
-      {/* ── REPUTATION ── */}
+      {/* -- REPUTATION -- */}
       <div className="px-3.5 mt-3">
         <div
           className="flex items-center gap-1.5 text-sm font-bold mb-2"
@@ -500,7 +500,7 @@ export default async function UserPage({
         <ReputationCard userId={profile.id} />
       </div>
 
-      {/* ── COMMITMENTS ── */}
+      {/* -- COMMITMENTS -- */}
       <div className="px-3.5 mt-3">
         <div
           className="flex items-center gap-1.5 text-sm font-bold mb-2"
@@ -528,7 +528,7 @@ export default async function UserPage({
         )}
       </div>
 
-      {/* ── FOOTER ── */}
+      {/* -- FOOTER -- */}
       <footer
         className="mt-8 pt-5 pb-8 text-center"
         style={{ borderTop: "1px solid #f0f1f5", background: "#fff" }}
@@ -547,4 +547,4 @@ export default async function UserPage({
             )
           )}
         </div>
-        <p 
+       
