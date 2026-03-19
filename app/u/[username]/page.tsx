@@ -59,6 +59,61 @@ export async function generateMetadata({
   };
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const { username } = await params;
+  const supabase = createPublicClient();
+  const cleanUsername = decodeURIComponent(username).trim().toLowerCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, username, bio, avatar_url")
+    .ilike("username", cleanUsername)
+    .single();
+
+  if (!profile) return {};
+
+  const displayName = profile.display_name || profile.username;
+  const avatarUrl = profile.avatar_url && profile.avatar_url.startsWith("http")
+    ? profile.avatar_url
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563eb&color=fff`;
+
+  const title = `${displayName} (@${profile.username}) — Stated`;
+  const description = profile.bio
+    ? `${profile.bio} | Public commitments on Stated — Put your word on the line.`
+    : `Follow ${displayName}'s public commitments on Stated — where accountability builds credibility.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: avatarUrl,
+          width: 400,
+          height: 400,
+          alt: displayName,
+        }
+      ],
+      url: `https://app.stated.in/u/${profile.username}`,
+      siteName: "Stated",
+      type: "profile",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [avatarUrl],
+      site: "@stated_in",
+    },
+  };
+}
+
 export default async function UserPage({
   params,
 }: {
@@ -205,7 +260,7 @@ export default async function UserPage({
       </nav>
 
       {/* BANNER */}
-      <div className="relative overflow-hidden" style={{ height: 160, background: "#0d0b1e" }}>
+      <div className="relative" style={{ height: 160, background: "#0d0b1e" }}>
         {/* Gradient */}
         <div
           className="absolute inset-0"
@@ -313,53 +368,58 @@ export default async function UserPage({
 
       {/* PROFILE CARD */}
       <div className="bg-white" style={{ borderBottom: "1px solid #f0f1f6" }}>
-        {/* Avatar overlapping from top */}
-        <div className="px-5 pt-4">
-          <div
-            className="rounded-full p-0.5"
-            style={{
-              background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
-              width: 80, height: 80,
-              marginTop: -40,
-              boxShadow: "0 4px 20px rgba(67,56,202,0.45)",
-              display: "inline-block",
-            }}
-          >
-            <img
-              src={avatarUrl}
-              alt={profile.display_name || profile.username}
-              className="object-cover"
-              style={{ width: "100%", height: "100%", border: "3px solid #fff", borderRadius: "50%" }}
-            />
-          </div>
-        </div>
         <div className="px-5 pb-5">
 
+          {/* Avatar + action buttons row */}
+          <div className="flex items-end justify-between" style={{ marginTop: -48 }}>
+            {/* Avatar */}
+            <div
+              className="rounded-full flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
+                width: 86, height: 86,
+                padding: 3,
+                boxShadow: "0 4px 20px rgba(67,56,202,0.45)",
+              }}
+            >
+              <img
+                src={avatarUrl}
+                alt={profile.display_name || profile.username}
+                className="object-cover"
+                style={{ width: "100%", height: "100%", border: "3px solid #fff", borderRadius: "50%" }}
+              />
+            </div>
+
+            {/* Buttons — aligned to bottom of avatar */}
+            <div className="flex gap-2 pb-1">
+              {currentUser?.id !== profile.id && (
+                <FollowButton
+                  currentUserId={currentUser?.id}
+                  targetUserId={profile.id}
+                  className="px-5 py-2 rounded-full text-sm font-bold text-white"
+                  style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", boxShadow: "0 4px 12px rgba(67,56,202,0.3)" }}
+                />
+              )}
+              <ShareProfileButton
+                username={profile.username}
+                className="px-5 py-2 rounded-full text-sm font-semibold"
+                style={{
+                  background: "linear-gradient(135deg,#4338ca,#6366f1)",
+                  color: "#fff",
+                  boxShadow: "0 4px 12px rgba(67,56,202,0.2)",
+                }}
+              />
+            </div>
+          </div>
+
           {/* Name */}
-          <div className="mb-3 mt-2">
+          <div className="mb-3 mt-3">
             <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>
               {profile.display_name || profile.username}
             </h1>
             <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
               @{profile.username}
             </div>
-          </div>
-
-          {/* Action buttons — full width side by side */}
-          <div className="flex gap-2 mb-3">
-            {currentUser?.id !== profile.id && (
-              <FollowButton
-                currentUserId={currentUser?.id}
-                targetUserId={profile.id}
-                className="flex-1 py-2.5 rounded-full text-sm font-bold text-white text-center"
-                style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", boxShadow: "0 4px 12px rgba(67,56,202,0.3)" }}
-              />
-            )}
-            <ShareProfileButton
-              username={profile.username}
-              className="flex-1 py-2.5 rounded-full text-sm font-semibold text-center"
-              style={{ background: "#f5f6fa", border: "1px solid #e8eaf2", color: "#374151" }}
-            />
           </div>
 
           {/* Bio */}
@@ -443,4 +503,4 @@ export default async function UserPage({
 
     </div>
   );
-                }
+        }
