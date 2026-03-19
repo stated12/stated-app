@@ -26,21 +26,14 @@ function timeAgo(date: string) {
   const seconds = Math.floor(
     (new Date().getTime() - new Date(date).getTime()) / 1000
   );
-
   const intervals: any = {
-    year: 31536000,
-    month: 2592000,
-    day: 86400,
-    hour: 3600,
-    minute: 60,
+    year: 31536000, month: 2592000, day: 86400, hour: 3600, minute: 60,
   };
-
   for (const key in intervals) {
     const interval = Math.floor(seconds / intervals[key]);
     if (interval > 1) return `${interval} ${key}s ago`;
     if (interval === 1) return `1 ${key} ago`;
   }
-
   return "Just now";
 }
 
@@ -55,32 +48,16 @@ export default function CommitmentFeed({
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-
-  const [activeTab, setActiveTab] =
-    useState<"latest" | "trending" | "following">("latest");
-
+  const [activeTab, setActiveTab] = useState<"latest" | "trending" | "following">("latest");
   const [category, setCategory] = useState("");
 
   const categories = [
-    "",
-    "Fitness",
-    "Learning",
-    "Writing",
-    "Health",
-    "Finance",
-    "Business",
-    "Marketing",
-    "Sales",
-    "Operations",
-    "Product",
-    "Strategic",
-    "Announcement",
-    "Other",
+    "", "Fitness", "Learning", "Writing", "Health", "Finance",
+    "Business", "Marketing", "Sales", "Operations", "Product",
+    "Strategic", "Announcement", "Other",
   ];
 
-  useEffect(() => {
-    resetFeed();
-  }, [activeTab, category]);
+  useEffect(() => { resetFeed(); }, [activeTab, category]);
 
   function resetFeed() {
     setItems([]);
@@ -92,110 +69,82 @@ export default function CommitmentFeed({
   async function loadInitial() {
     const query = new URLSearchParams();
     query.append("type", activeTab);
-
     if (category) query.append("category", category);
-
     const res = await fetch(`${endpoint}?${query.toString()}`);
     if (!res.ok) return;
-
     const data = await res.json();
     const safeData = Array.isArray(data) ? data : [];
-
     setItems(safeData);
-
-    setCursor(
-      safeData.length
-        ? safeData[safeData.length - 1].created_at
-        : null
-    );
-
+    setCursor(safeData.length ? safeData[safeData.length - 1].created_at : null);
     setHasMore(safeData.length >= 25);
   }
 
   async function loadMore() {
     if (!cursor || !hasMore) return;
-
     setLoading(true);
-
     const query = new URLSearchParams();
     query.append("type", activeTab);
     query.append("cursor", cursor);
-
     if (category) query.append("category", category);
-
     const res = await fetch(`${endpoint}?${query.toString()}`);
     const data = await res.json();
-
     const safeData = Array.isArray(data) ? data : [];
-
-    const unique = safeData.filter(
-      (item) => !items.some((c) => c.id === item.id)
-    );
-
+    const unique = safeData.filter((item) => !items.some((c) => c.id === item.id));
     setItems((prev) => [...prev, ...unique]);
-
-    if (unique.length > 0) {
-      setCursor(unique[unique.length - 1].created_at);
-    }
-
-    if (unique.length < 25) {
-      setHasMore(false);
-    }
-
+    if (unique.length > 0) setCursor(unique[unique.length - 1].created_at);
+    if (unique.length < 25) setHasMore(false);
     setLoading(false);
   }
 
+  const tabStyle = (tab: string): React.CSSProperties => ({
+    padding: "6px 16px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    background: activeTab === tab ? "#4338ca" : "#fff",
+    color: activeTab === tab ? "#fff" : "#6b7280",
+    boxShadow: activeTab === tab ? "0 2px 8px rgba(67,56,202,0.25)" : "none",
+    border: activeTab === tab ? "none" : "1px solid #e8eaf2",
+  } as React.CSSProperties);
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div style={{ maxWidth: 768, margin: "0 auto" }}>
 
-      {/* ✅ FIXED FILTER UI */}
+      {/* FILTERS */}
       {showFilters && (
-        <div className="bg-white rounded-xl p-4 border shadow-sm">
+        <div style={{ marginBottom: 16 }}>
 
-          {/* ROW 1 */}
-          <div className="flex gap-3 mb-3">
-            <button
-              onClick={() => setActiveTab("latest")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                activeTab === "latest"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100"
-              }`}
-            >
+          {/* Tab pills row */}
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2, marginBottom: 10 }}>
+            <button onClick={() => setActiveTab("latest")} style={tabStyle("latest")}>
               Latest
             </button>
-
-            <button
-              onClick={() => setActiveTab("trending")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                activeTab === "trending"
-                  ? "bg-gray-200"
-                  : "bg-gray-100"
-              }`}
-            >
+            <button onClick={() => setActiveTab("trending")} style={tabStyle("trending")}>
               🔥 Trending
             </button>
-          </div>
-
-          {/* ROW 2 */}
-          <div className="mb-3">
-            <button
-              onClick={() => setActiveTab("following")}
-              className={`w-full py-2 rounded-lg text-sm font-medium ${
-                activeTab === "following"
-                  ? "bg-gray-200"
-                  : "bg-gray-100"
-              }`}
-            >
+            <button onClick={() => setActiveTab("following")} style={tabStyle("following")}>
               Following
             </button>
           </div>
 
-          {/* ROW 3 */}
+          {/* Category dropdown */}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            style={{
+              width: "100%",
+              border: "1px solid #e8eaf2",
+              borderRadius: 10,
+              padding: "9px 14px",
+              fontSize: 13,
+              color: category ? "#0f0c29" : "#9ca3af",
+              background: "#fff",
+              outline: "none",
+              fontFamily: "inherit",
+            }}
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -203,58 +152,60 @@ export default function CommitmentFeed({
               </option>
             ))}
           </select>
-
         </div>
       )}
 
-      {/* FEED */}
-      <div className="space-y-4">
+      {/* FEED ITEMS */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {items.map((c) => {
           const identity = c.identity ?? {};
+          const avatar = identity.avatar_url?.trim()
+            ? identity.avatar_url.trim()
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                identity.display_name || identity.username || "User"
+              )}&background=4338ca&color=fff`;
 
-          const avatar =
-            identity.avatar_url?.trim()
-              ? identity.avatar_url.trim()
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  identity.display_name ||
-                    identity.username ||
-                    "User"
-                )}&background=2563eb&color=fff`;
+          const profileLink = identity.type === "company"
+            ? `/c/${identity.username}`
+            : `/u/${identity.username}`;
 
-          const profileLink =
-            identity.type === "company"
-              ? `/c/${identity.username}`
-              : `/u/${identity.username}`;
-
-          const commitmentLink =
-            c.type === "update" && c.parent_commitment_id
-              ? `/commitment/${c.parent_commitment_id}`
-              : `/commitment/${c.id}`;
+          const commitmentLink = c.type === "update" && c.parent_commitment_id
+            ? `/commitment/${c.parent_commitment_id}`
+            : `/commitment/${c.id}`;
 
           if (c.type === "update") {
             return (
-              <Link key={c.id} href={commitmentLink}>
-                <div className="bg-gray-50 border rounded-xl p-4 hover:bg-gray-100 transition">
-                  <div className="text-xs text-blue-600 font-medium mb-2">
-                    🔄 Update
+              <Link key={c.id} href={commitmentLink} style={{ textDecoration: "none" }}>
+                <div
+                  style={{
+                    background: "#f8f9fc",
+                    border: "1px solid #f0f1f6",
+                    borderRadius: 14,
+                    padding: "12px 14px",
+                  }}
+                >
+                  {/* Update tag */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 8.5V5a4 4 0 018 0v3.5" stroke="#4338ca" strokeWidth="1.2" strokeLinecap="round"/>
+                      <path d="M0 8.5h12" stroke="#4338ca" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#4338ca" }}>Update</span>
                   </div>
 
-                  <div className="flex items-center gap-3 mb-2">
-                    <img src={avatar} className="w-8 h-8 rounded-full" />
-                    <div className="text-sm">
-                      <span className="font-semibold">
-                        {identity.display_name || identity.username}
-                      </span>{" "}
-                      updated a commitment
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <img src={avatar} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+                        {identity.display_name || identity.username} updated a commitment
+                      </div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2, lineHeight: 1.4 }}>
+                        {c.text}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 4 }}>
+                        {timeAgo(c.created_at)}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="text-gray-900 text-sm ml-11">
-                    {c.text}
-                  </div>
-
-                  <div className="text-xs text-gray-400 ml-11 mt-1">
-                    {timeAgo(c.created_at)}
                   </div>
                 </div>
               </Link>
@@ -262,66 +213,93 @@ export default function CommitmentFeed({
           }
 
           return (
-            <Link key={c.id} href={commitmentLink}>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition">
+            <Link key={c.id} href={commitmentLink} style={{ textDecoration: "none" }}>
+              <div
+                style={{
+                  background: "#fff",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  border: "1px solid #f0f1f6",
+                  boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
+                }}
+              >
+                {/* Accent bar */}
+                <div style={{ height: 3, background: "linear-gradient(90deg,#4338ca,#818cf8)" }} />
 
-                <div className="flex items-center gap-3 mb-3">
-
-                  <Link href={profileLink} onClick={(e)=>e.stopPropagation()}>
-                    <img
-                      src={avatar}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  </Link>
-
-                  <div>
-                    <Link
-                      href={profileLink}
-                      onClick={(e)=>e.stopPropagation()}
-                      className="font-medium"
-                    >
-                      {identity.display_name || identity.username}
+                <div style={{ padding: "12px 14px 10px" }}>
+                  {/* Avatar + name + handle */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <Link href={profileLink} onClick={(e) => e.stopPropagation()}>
+                      <img src={avatar} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                     </Link>
+                    <div style={{ flex: 1 }}>
+                      <Link href={profileLink} onClick={(e) => e.stopPropagation()} style={{ textDecoration: "none" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29" }}>
+                          {identity.display_name || identity.username}
+                        </div>
+                      </Link>
+                      <div style={{ fontSize: 10, color: "#9ca3af" }}>
+                        @{identity.username} · {timeAgo(c.created_at)}
+                      </div>
+                    </div>
+                    {c.category && (
+                      <div style={{ fontSize: 9, fontWeight: 600, color: "#4338ca", background: "#eef2ff", padding: "2px 8px", borderRadius: 20, flexShrink: 0 }}>
+                        {c.category}
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="text-xs text-gray-500">
-                      @{identity.username} · {timeAgo(c.created_at)}
+                  {/* Commitment text */}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29", lineHeight: 1.5, marginBottom: 10 }}>
+                    {c.text}
+                  </div>
+
+                  {/* Footer — views + shares */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, paddingTop: 8, borderTop: "1px solid #f3f4f8" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <ellipse cx="6" cy="6" rx="5" ry="3.5" stroke="#9ca3af" strokeWidth="1.1"/>
+                        <circle cx="6" cy="6" r="1.6" stroke="#9ca3af" strokeWidth="1.1"/>
+                      </svg>
+                      {c.views ?? 0} views
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M9 1.5l2 2-2 2" stroke="#9ca3af" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M11 3.5H5A3 3 0 002 6.5v1" stroke="#9ca3af" strokeWidth="1.1" strokeLinecap="round"/>
+                      </svg>
+                      {c.shares ?? 0}
                     </div>
                   </div>
-
                 </div>
-
-                {c.category && (
-                  <div className="text-xs text-blue-600 mb-2">
-                    {c.category}
-                  </div>
-                )}
-
-                <div className="mb-3 whitespace-pre-wrap text-gray-800">
-                  {c.text}
-                </div>
-
-                <div className="text-sm text-gray-500 flex gap-4">
-                  <span>👁 {c.views ?? 0} views</span>
-                  <span>🔁 {c.shares ?? 0}</span>
-                </div>
-
               </div>
             </Link>
           );
         })}
       </div>
 
+      {/* LOAD MORE */}
       {hasMore && (
-        <div className="text-center">
+        <div style={{ textAlign: "center", marginTop: 16 }}>
           <button
             onClick={loadMore}
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+            style={{
+              background: loading ? "#f3f4f6" : "#fff",
+              border: "1px solid #e8eaf2",
+              borderRadius: 22,
+              padding: "9px 28px",
+              fontSize: 12,
+              fontWeight: 600,
+              color: loading ? "#9ca3af" : "#4338ca",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+            }}
           >
-            {loading ? "Loading..." : "Load More"}
+            {loading ? "Loading..." : "View more commitments"}
           </button>
         </div>
       )}
     </div>
   );
-}
+                          }
