@@ -17,7 +17,7 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const latestCheck = useRef("");
 
-  const reservedUsernames = ["admin","login","signup","dashboard","api","support","billing","settings","stated","company","commitments"];
+  const reservedUsernames = ["admin","login","signup","dashboard","api","support","billing","settings","company","commitments"];
 
   function isValidPassword(p: string) {
     return p.length >= 8 && /[0-9!@#$%^&*(),.?":{}|<>]/.test(p);
@@ -46,7 +46,12 @@ export default function SignupPage() {
     if (loading) return;
     setError("");
 
-    if (usernameStatus !== "available") { setError("Username is not available"); return; }
+    if (!username) { setError("Please enter a username"); return; }
+    if (usernameStatus === "checking") { setError("Please wait — checking username availability"); return; }
+    if (usernameStatus === "taken") { setError("That username is already taken. Please choose another."); return; }
+    if (usernameStatus !== "available") { setError("Please enter a valid username (min 3 chars, letters/numbers only)"); return; }
+    if (!email) { setError("Please enter your email address"); return; }
+    if (!password) { setError("Please enter a password"); return; }
     if (!isValidPassword(password)) { setError("Password must be at least 8 characters and include a number or special character."); return; }
 
     setLoading(true);
@@ -206,8 +211,8 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          disabled={loading || usernameStatus !== "available"}
-          style={{ width: "100%", padding: "13px", background: loading || usernameStatus !== "available" ? "#9ca3af" : "linear-gradient(135deg,#4338ca,#6366f1)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: loading || usernameStatus !== "available" ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: loading || usernameStatus !== "available" ? "none" : "0 3px 12px rgba(67,56,202,0.3)" }}
+          disabled={loading}
+          style={{ width: "100%", padding: "13px", background: loading ? "#9ca3af" : "linear-gradient(135deg,#4338ca,#6366f1)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: loading ? "none" : "0 3px 12px rgba(67,56,202,0.3)" }}
         >
           {loading ? "Creating account..." : `Create ${isCompany ? "Company" : ""} Account`}
         </button>
@@ -222,4 +227,4 @@ export default function SignupPage() {
       </form>
     </div>
   );
-}
+        }
