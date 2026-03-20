@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CheerButton from "@/components/CheerButton";
-import CheerButton from "@/components/CheerButton";
 
 type Identity = {
   username?: string;
@@ -305,4 +304,4 @@ export default function CommitmentFeed({
       )}
     </div>
   );
-}
+                      }
