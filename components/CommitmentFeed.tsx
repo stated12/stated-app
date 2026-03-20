@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CheerButton from "@/components/CheerButton";
+import CheerButton from "@/components/CheerButton";
 
 type Identity = {
   username?: string;
@@ -18,6 +20,8 @@ type FeedItem = {
   created_at: string;
   views?: number;
   shares?: number;
+  cheers?: number;
+  cheers?: number;
   parent_commitment_id?: string;
   identity?: Identity | null;
 };
