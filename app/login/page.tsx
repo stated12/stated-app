@@ -1,33 +1,79 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const inviteToken = searchParams.get("invite");
+  const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    errorParam === "verification_failed"
+      ? "Verification failed. Please try again."
+      : errorParam === "missing_code"
+      ? "Invalid verification link."
+      : ""
+  );
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setError(error.message);
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
       return;
+    }
+
+    // If came from invite link — go back to it
+    if (inviteToken) {
+      router.push(`/invite/${inviteToken}`);
+      router.refresh();
+      return;
+    }
+
+    // Check if user has a company — redirect accordingly
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+
+      if (company) {
+        router.push("/dashboard/company");
+        router.refresh();
+        return;
+      }
+
+      const { data: membership } = await supabase
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (membership) {
+        router.push("/dashboard/company");
+        router.refresh();
+        return;
+      }
     }
 
     router.push("/dashboard");
@@ -35,21 +81,33 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md border">
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f3f7", padding: "0 16px" }}>
+      <div style={{ background: "#fff", borderRadius: 24, padding: "40px 32px", width: "100%", maxWidth: 400, boxShadow: "0 4px 24px rgba(0,0,0,0.07)", border: "1px solid #f0f1f6" }}>
 
-        <h1 className="text-3xl font-semibold text-center text-blue-600 mb-2">
-          Stated
-        </h1>
+        {/* Logo + title */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: "#4338ca", marginBottom: 6, fontFamily: "inherit" }}>
+            Stated
+          </div>
+          <div style={{ fontSize: 13, color: "#9ca3af" }}>
+            {inviteToken ? "Login to accept your invitation" : "Login to your accountability profile"}
+          </div>
+        </div>
 
-        <p className="text-center text-gray-500 mb-6">
-          Login to your accountability profile
-        </p>
+        {/* Invite banner */}
+        {inviteToken && (
+          <div style={{ background: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: 12, padding: "10px 14px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8h12M8 2l6 6-6 6" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#0e7490" }}>You have a pending company invitation</span>
+          </div>
+        )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin}>
 
-          <div>
-            <label className="block mb-1 text-sm font-medium">
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, letterSpacing: 0.3 }}>
               Email
             </label>
             <input
@@ -58,12 +116,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@email.com"
-              className="w-full border rounded-lg px-3 py-2"
+              style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
             />
           </div>
 
-          <div>
-            <label className="block mb-1 text-sm font-medium">
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, letterSpacing: 0.3 }}>
               Password
             </label>
             <input
@@ -72,22 +130,18 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full border rounded-lg px-3 py-2"
+              style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
             />
           </div>
 
-          {/* Forgot password link */}
-          <div className="text-right text-sm">
-            <Link
-              href="/forgot-password"
-              className="text-blue-600 hover:underline"
-            >
+          <div style={{ textAlign: "right", marginBottom: 20 }}>
+            <Link href="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: "#4338ca", textDecoration: "none" }}>
               Forgot password?
             </Link>
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm">
+            <div style={{ background: "#fff5f5", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#dc2626", fontWeight: 500 }}>
               {error}
             </div>
           )}
@@ -95,19 +149,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+            style={{ width: "100%", padding: "13px", background: loading ? "#9ca3af" : "linear-gradient(135deg,#4338ca,#6366f1)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: loading ? "none" : "0 3px 12px rgba(67,56,202,0.3)" }}
           >
             {loading ? "Logging in..." : "Login"}
           </button>
 
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Don’t have an account?{" "}
-          <Link
-            href="/signup"
-            className="text-blue-600 hover:underline"
-          >
+        <p style={{ textAlign: "center", fontSize: 13, color: "#9ca3af", marginTop: 20 }}>
+          Don't have an account?{" "}
+          <Link href="/signup" style={{ color: "#4338ca", fontWeight: 600, textDecoration: "none" }}>
             Create account
           </Link>
         </p>
