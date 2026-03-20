@@ -3,194 +3,148 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
 
-try {
+  try {
 
-const { type, entityId, sessionId } = await req.json();
+    const { type, entityId, sessionId } = await req.json();
 
-if (!type || !entityId) {
-return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-}
+    if (!type || !entityId) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
 
-const supabase = await createClient();
+    const supabase = await createClient();
 
-const {
-data: { user },
-} = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-const viewerId = user?.id ?? null;
+    const viewerId = user?.id ?? null;
 
-/* REQUIRE SESSION FOR ANONYMOUS */
+    if (!viewerId && !sessionId) {
+      return NextResponse.json({ error: "Session required" }, { status: 400 });
+    }
 
-if (!viewerId && !sessionId) {
-return NextResponse.json({ error: "Session required" }, { status: 400 });
-}
+    const sessionKey = viewerId ? null : sessionId;
 
-const sessionKey = viewerId ? null : sessionId;
+    /* PREVENT SELF PROFILE VIEW */
+    if (viewerId && type === "profile" && viewerId === entityId) {
+      return NextResponse.json({ success: true });
+    }
 
-const table =
-type === "profile" ? "profile_views" : "commitment_views";
+    /* PREVENT SELF COMMITMENT VIEW */
+    if (viewerId && type === "commitment") {
+      const { data: commitment } = await supabase
+        .from("commitments")
+        .select("user_id, company_id, created_by_user_id")
+        .eq("id", entityId)
+        .maybeSingle();
 
-const column =
-type === "profile" ? "profile_id" : "commitment_id";
+      if (
+        commitment &&
+        (commitment.user_id === viewerId ||
+          commitment.created_by_user_id === viewerId)
+      ) {
+        return NextResponse.json({ success: true });
+      }
+    }
 
-/* PREVENT SELF PROFILE VIEW */
+    /* INSERT VIEW — using dedup function (one DB call instead of two) */
+    if (type === "commitment") {
 
-if (viewerId && type === "profile" && viewerId === entityId) {
-return NextResponse.json({ success: true });
-}
+      const { data: inserted } = await supabase.rpc("insert_commitment_view", {
+        p_commitment_id: entityId,
+        p_viewer_id: viewerId,
+        p_session_key: sessionKey,
+      });
 
-/* PREVENT SELF COMMITMENT VIEW */
+      // If false — already viewed in last 24hrs, skip everything
+      if (!inserted) {
+        return NextResponse.json({ success: true });
+      }
 
-if (viewerId && type === "commitment") {
+      /* INCREMENT CACHED VIEW COUNTER */
+      const { error: viewIncrementError } = await supabase.rpc(
+        "increment_commitment_views",
+        { commitment_id_input: entityId }
+      );
 
-const { data: commitment } = await supabase
-.from("commitments")
-.select("user_id, company_id, created_by_user_id")
-.eq("id", entityId)
-.maybeSingle();
+      if (viewIncrementError) {
+        console.error("View counter increment failed:", viewIncrementError);
+      }
 
-if (
-commitment &&
-(commitment.user_id === viewerId ||
-commitment.created_by_user_id === viewerId)
-) {
-return NextResponse.json({ success: true });
-}
+      /* ENGAGEMENT MILESTONE NOTIFICATIONS */
+      const { count } = await supabase
+        .from("commitment_views")
+        .select("*", { count: "exact", head: true })
+        .eq("commitment_id", entityId);
 
-}
+      const views = count ?? 0;
+      const milestones = [50, 100, 500, 1000];
 
-/* CHECK EXISTING VIEW (24h) */
+      if (milestones.includes(views)) {
 
-const { data: existing } = await supabase
-.from(table)
-.select("id")
-.eq(column, entityId)
-.eq(viewerId ? "viewer_id" : "session_key", viewerId ?? sessionKey)
-.gte(
-"created_at",
-new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-)
-.maybeSingle();
+        const { data: commitment } = await supabase
+          .from("commitments")
+          .select("id, text, user_id, company_id")
+          .eq("id", entityId)
+          .maybeSingle();
 
-if (existing) {
-return NextResponse.json({ success: true });
-}
+        if (commitment) {
 
-/* INSERT VIEW EVENT */
+          let ownerUserId = commitment.user_id;
 
-await supabase
-.from(table)
-.insert({
-[column]: entityId,
-viewer_id: viewerId,
-session_key: sessionKey,
-})
-.throwOnError();
+          if (commitment.company_id) {
+            const { data: company } = await supabase
+              .from("companies")
+              .select("owner_user_id")
+              .eq("id", commitment.company_id)
+              .maybeSingle();
+            ownerUserId = company?.owner_user_id;
+          }
 
-/* ============================== */
-/* UPDATE CACHED VIEW COUNTER */
-/* ============================== */
+          if (ownerUserId) {
+            const typeKey = `views_${views}`;
 
-if (type === "commitment") {
+            const { data: existingNotification } = await supabase
+              .from("notifications")
+              .select("id")
+              .eq("commitment_id", entityId)
+              .eq("notification_type", typeKey)
+              .limit(1);
 
-const { error: viewIncrementError } =
-await supabase.rpc("increment_commitment_views", {
-commitment_id_input: entityId,
-});
+            if (!existingNotification || existingNotification.length === 0) {
+              await supabase.from("notifications").insert({
+                user_id: ownerUserId,
+                title: "👀 Your commitment is gaining attention",
+                message: `Your commitment reached ${views} views.`,
+                link: `/commitment/${entityId}`,
+                is_read: false,
+                notification_type: typeKey,
+                commitment_id: entityId,
+              });
+            }
+          }
+        }
+      }
 
-if (viewIncrementError) {
-console.error("View counter increment failed:", viewIncrementError);
-}
+    } else {
 
-}
+      /* PROFILE VIEW — using dedup function */
+      const { data: inserted } = await supabase.rpc("insert_profile_view", {
+        p_profile_id: entityId,
+        p_viewer_id: viewerId,
+        p_session_key: sessionKey,
+      });
 
-/* ============================== */
-/* ENGAGEMENT MILESTONE LOGIC */
-/* ============================== */
+      if (!inserted) {
+        return NextResponse.json({ success: true });
+      }
 
-if (type === "commitment") {
+    }
 
-const { count } = await supabase
-.from("commitment_views")
-.select("*", { count: "exact", head: true })
-.eq("commitment_id", entityId);
+    return NextResponse.json({ success: true });
 
-const views = count ?? 0;
-
-/* VIEW MILESTONES */
-
-const milestones = [50, 100, 500, 1000];
-
-if (milestones.includes(views)) {
-
-const { data: commitment } = await supabase
-.from("commitments")
-.select("id, text, user_id, company_id")
-.eq("id", entityId)
-.maybeSingle();
-
-if (!commitment) {
-return NextResponse.json({ success: true });
-}
-
-let ownerUserId = commitment.user_id;
-
-/* COMPANY OWNER */
-
-if (commitment.company_id) {
-
-const { data: company } = await supabase
-.from("companies")
-.select("owner_user_id")
-.eq("id", commitment.company_id)
-.maybeSingle();
-
-ownerUserId = company?.owner_user_id;
-
-}
-
-if (ownerUserId) {
-
-const typeKey = `views_${views}`;
-
-const { data: existingNotification } = await supabase
-.from("notifications")
-.select("id")
-.eq("commitment_id", entityId)
-.eq("notification_type", typeKey)
-.limit(1);
-
-if (!existingNotification || existingNotification.length === 0) {
-
-await supabase.from("notifications").insert({
-user_id: ownerUserId,
-title: "👀 Your commitment is gaining attention",
-message: `Your commitment reached ${views} views.`,
-link: `/commitment/${entityId}`,
-is_read: false,
-notification_type: typeKey,
-commitment_id: entityId,
-});
-
-}
-
-}
-
-}
-
-}
-
-return NextResponse.json({ success: true });
-
-} catch (err) {
-
-console.error("Tracking failed:", err);
-
-return NextResponse.json(
-{ error: "Tracking failed" },
-{ status: 500 }
-);
-
-}
-
+  } catch (err) {
+    console.error("Tracking failed:", err);
+    return NextResponse.json({ error: "Tracking failed" }, { status: 500 });
+  }
 }
