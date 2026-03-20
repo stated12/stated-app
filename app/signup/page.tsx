@@ -84,7 +84,7 @@ export default function SignupPage() {
             username: lower,
             name: username,
             owner_id: user.id,
-            owner_user_id: user.id, // ← FIXED: both columns set
+            owner_user_id: user.id,
             plan_key: "free",
             credits: 5,
             member_limit: 2,
@@ -92,14 +92,29 @@ export default function SignupPage() {
           .select()
           .single();
 
-        if (companyError || !company) { setError("Could not create company."); setLoading(false); return; }
+        if (companyError || !company) {
+          // Rollback — delete profile and auth user
+          await supabase.from("profiles").delete().eq("id", user.id);
+          await supabase.auth.admin?.deleteUser(user.id);
+          setError("Could not create company. Please try again.");
+          setLoading(false);
+          return;
+        }
 
         const { error: membershipError } = await supabase.from("company_members").insert({
           company_id: company.id,
           user_id: user.id,
           role: "owner",
         });
-        if (membershipError) { setError("Could not create company membership."); setLoading(false); return; }
+
+        if (membershipError) {
+          // Rollback — delete company, profile and auth user
+          await supabase.from("companies").delete().eq("id", company.id);
+          await supabase.from("profiles").delete().eq("id", user.id);
+          setError("Could not create company membership. Please try again.");
+          setLoading(false);
+          return;
+        }
 
         router.push("/dashboard/company");
         return;
@@ -227,4 +242,4 @@ export default function SignupPage() {
       </form>
     </div>
   );
-        }
+}
