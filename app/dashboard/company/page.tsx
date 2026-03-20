@@ -140,7 +140,7 @@ export default async function CompanyDashboardPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0 10px" }}>
           <h1 style={{ fontSize: 14, fontWeight: 700, color: "#0f0c29" }}>Public commitments</h1>
           {(userRole === "owner" || userRole === "admin" || userRole === "member") && (
-            <Link href="/dashboard/create" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>
+            <Link href="/dashboard/create?workspace=company" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>
               + Create
             </Link>
           )}
