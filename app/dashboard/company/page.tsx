@@ -3,504 +3,151 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-
-/* TYPES */
-
-type Profile = {
-id: string;
-username: string;
-display_name: string | null;
-avatar_url: string | null;
-};
-
-type Member = {
-id: string;
-role: string;
-user_id: string;
-profiles: Profile | null;
-};
-
-type Company = {
-id: string;
-name: string;
-username: string;
-owner_user_id: string;
-};
-
-type Commitment = {
-id: string;
-text: string;
-category: string | null;
-views: number;
-created_at: string;
-created_by_user_id: string | null;
-profiles: {
-display_name: string | null;
-username: string | null;
-} | null;
-commitment_updates: {
-text: string | null;
-created_at: string;
-}[];
-};
-
-/* PAGE */
+import CommitmentFeed from "@/components/CommitmentFeed";
+import DashboardGreeting from "@/components/DashboardGreeting";
 
 export default async function CompanyDashboardPage() {
-
-const supabase = await createClient();
-
-const { data:{user} } = await supabase.auth.getUser();
-
-if(!user){
-redirect("/login");
-}
-
-/* COMPANY */
-
-const { data:companyData } = await supabase
-.from("companies")
-.select("*")
-.eq("owner_user_id",user.id)
-.maybeSingle();
-
-if(!companyData){
-redirect("/dashboard");
-}
-
-const company:Company = {
-id:String(companyData.id),
-name:String(companyData.name),
-username:String(companyData.username),
-owner_user_id:String(companyData.owner_user_id)
-};
-
-/* MEMBERSHIP */
-
-const { data:membership } = await supabase
-.from("company_members")
-.select("role")
-.eq("user_id",user.id)
-.eq("company_id",company.id)
-.maybeSingle();
-
-/* MEMBERS */
-
-const { data:membersData } = await supabase
-.from("company_members")
-.select(`
-id,
-role,
-user_id,
-profiles(
-id,
-username,
-display_name,
-avatar_url
-)
-`)
-.eq("company_id",company.id);
-
-const members:Member[] =
-(membersData ?? []).map((m:any)=>({
-id:String(m.id),
-role:String(m.role),
-user_id:String(m.user_id),
-profiles:m.profiles ? {
-id:String(m.profiles.id),
-username:String(m.profiles.username),
-display_name:m.profiles.display_name ?? null,
-avatar_url:m.profiles.avatar_url ?? null
-} : null
-}));
-
-/* COMMITMENTS */
-
-const { data:commitmentsData } = await supabase
-.from("commitments")
-.select(`
-id,
-text,
-category,
-views,
-created_at,
-created_by_user_id,
-profiles:profiles!commitments_created_by_user_id_fkey(
-display_name,
-username
-),
-commitment_updates(
-text,
-created_at
-)
-`)
-.eq("company_id",company.id)
-.eq("status","active")
-.order("created_at",{ascending:false})
-.limit(25);
-
-const commitments: Commitment[] = (commitmentsData ?? []).map((c:any)=>({
-id:String(c.id),
-text:String(c.text),
-category:c.category ?? null,
-views:c.views ?? 0,
-created_at:String(c.created_at),
-created_by_user_id:c.created_by_user_id ?? null,
-profiles:c.profiles
-? {
-display_name:c.profiles.display_name ?? null,
-username:c.profiles.username ?? null
-}
-: null,
-commitment_updates:c.commitment_updates ?? []
-}));
-
-/* PAGE UI */
-
-return(
-
-<div className="max-w-4xl mx-auto space-y-10">
-
-<div>
-
-<h1 className="text-2xl font-bold">
-Company Commitments
-</h1>
-
-<div className="text-sm text-gray-500">
-{company.name} (@{company.username})
-</div>
-
-</div>
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-<Link
-href={`/c/${company.username}`}
-className="bg-white rounded-xl shadow p-5 hover:shadow-md"
->
-Public Page
-</Link>
-
-<Link
-href="/dashboard/company/insights"
-className="bg-white rounded-xl shadow p-5 hover:shadow-md"
->
-Company Analytics
-</Link>
-
-<Link
-href="/dashboard/company/settings"
-className="bg-white rounded-xl shadow p-5 hover:shadow-md"
->
-Company Settings
-</Link>
-
-</div>
-
-<div>
-
-<div className="flex justify-between items-center mb-4">
-
-<h2 className="text-lg font-semibold">
-Company Commitments
-</h2>
-
-<Link
-href="/dashboard/create"
-className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
->
-+ Create
-</Link>
-
-</div>
-
-<div className="space-y-4">
-
-{commitments.map((c)=>{
-
-const latestUpdate = c.commitment_updates?.[0] || null;
-
-const creator =
-c.created_by_user_id === company.owner_user_id
-? company.name
-: c.profiles?.display_name ||
-c.profiles?.username ||
-"Member";
-
-return(
-
-<div
-key={c.id}
-className="bg-white rounded-xl shadow p-5"
->
-
-<div className="font-medium mb-1">
-{c.text}
-</div>
-
-{c.category && (
-<div className="text-xs text-gray-500 mb-2">
-{c.category}
-</div>
-)}
-
-<div className="text-xs text-gray-500 mb-2">
-Posted by {creator}
-</div>
-
-{latestUpdate ? (
-
-<div className="text-sm text-gray-600">
-Latest update: {latestUpdate.text}
-</div>
-
-) : (
-
-<div className="text-sm text-gray-400">
-No updates yet
-</div>
-
-)}
-
-<div className="text-xs text-gray-400 mt-2">
-👁 {c.views} views
-</div>
-
-</div>
-
-);
-
-})}
-
-{commitments.length === 0 && (
-<div className="text-sm text-gray-500">
-No commitments yet.
-</div>
-)}
-
-</div>
-
-</div>
-
-<div>
-
-<div className="flex justify-between items-center mb-4">
-
-<h2 className="text-lg font-semibold">
-Members
-</h2>
-
-{membership?.role==="owner" || membership?.role==="admin" ? (
-
-<Link
-href="/dashboard/company/invite"
-className="bg-blue-600 text-white px-4 py-2 rounded"
->
-Invite Member
-</Link>
-
-) : null}
-
-</div>
-
-<div className="space-y-4">
-
-{members.map((m)=>(
-<MemberRow
-key={m.id}
-member={m}
-isOwner={m.user_id === company.owner_user_id}
-isSelf={m.user_id === user.id}
-canManage={
-membership?.role==="owner" ||
-membership?.role==="admin"
-}
-/>
-))}
-
-</div>
-
-</div>
-
-</div>
-
-);
-
-}
-
-/* MEMBER ROW */
-
-function MemberRow({
-member,
-isOwner,
-isSelf,
-canManage
-}:{
-member:Member
-isOwner:boolean
-isSelf:boolean
-canManage:boolean
-}){
-
-const avatar =
-member.profiles?.avatar_url?.trim()
-? member.profiles.avatar_url.trim()
-: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-member.profiles?.display_name ||
-member.profiles?.username ||
-"User"
-)}&background=2563eb&color=fff`;
-
-return(
-
-<div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
-
-<div className="flex items-center gap-3">
-
-<img
-src={avatar}
-className="w-10 h-10 rounded-full"
-/>
-
-<div>
-
-<div className="font-medium">
-{member.profiles?.display_name ||
-member.profiles?.username}
-</div>
-
-<div className="text-xs text-gray-500">
-@{member.profiles?.username}
-</div>
-
-</div>
-
-</div>
-
-<div className="flex items-center gap-3">
-
-{isOwner ? (
-
-<div className="text-sm bg-black text-white px-3 py-1 rounded">
-owner
-</div>
-
-) : canManage ? (
-
-<>
-<RoleSelector
-memberId={member.id}
-currentRole={member.role}
-disabled={isSelf}
-/>
-
-<RemoveButton
-memberId={member.id}
-disabled={isSelf}
-/>
-</>
-
-) : (
-
-<div className="text-xs text-gray-500">
-{member.role}
-</div>
-
-)}
-
-</div>
-
-</div>
-
-)
-
-}
-
-/* ROLE SELECTOR */
-
-function RoleSelector({
-memberId,
-currentRole,
-disabled
-}:{
-memberId:string
-currentRole:string
-disabled:boolean
-}){
-
-async function changeRole(role:string){
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"role",
-memberId,
-role
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<select
-disabled={disabled}
-defaultValue={currentRole}
-onChange={(e)=>changeRole(e.target.value)}
-className="border rounded px-2 py-1 text-sm"
->
-
-<option value="viewer">viewer</option>
-<option value="member">member</option>
-<option value="admin">admin</option>
-
-</select>
-
-)
-
-}
-
-/* REMOVE BUTTON */
-
-function RemoveButton({
-memberId,
-disabled
-}:{
-memberId:string
-disabled:boolean
-}){
-
-async function remove(){
-
-if(!confirm("Remove this member?")) return;
-
-await fetch("/api/company/member",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-action:"remove",
-memberId
-})
-})
-
-window.location.reload()
-
-}
-
-return(
-
-<button
-disabled={disabled}
-onClick={remove}
-className="text-red-600 text-sm"
->
-Remove
-</button>
-
-)
-
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Check ownership first
+  let company: any = null;
+  let userRole = "viewer";
+
+  const { data: ownedCompany } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("owner_user_id", user.id)
+    .maybeSingle();
+
+  if (ownedCompany) {
+    company = ownedCompany;
+    userRole = "owner";
+  } else {
+    // Check membership
+    const { data: membership } = await supabase
+      .from("company_members")
+      .select("role, company_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (membership) {
+      const { data: memberCompany } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", membership.company_id)
+        .maybeSingle();
+
+      if (memberCompany) {
+        company = memberCompany;
+        userRole = membership.role;
+      }
+    }
   }
+
+  if (!company) redirect("/dashboard");
+
+  // Stats
+  const { count: activeCount } = await supabase
+    .from("commitments")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", company.id)
+    .eq("status", "active");
+
+  const { count: memberCount } = await supabase
+    .from("company_members")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", company.id);
+
+  const { data: commitments } = await supabase
+    .from("commitments")
+    .select("id")
+    .eq("company_id", company.id);
+
+  let totalViews = 0;
+  if (commitments && commitments.length > 0) {
+    for (const c of commitments) {
+      const { count } = await supabase
+        .from("commitment_views")
+        .select("*", { count: "exact", head: true })
+        .eq("commitment_id", c.id);
+      totalViews += count || 0;
+    }
+  }
+
+  const formatNum = (n: number) =>
+    n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+
+  const logoUrl = company.logo_url?.trim()
+    ? company.logo_url.trim()
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=0891b2&color=fff&size=128`;
+
+  const stats = [
+    { num: activeCount ?? 0,        label: "Active",   color: "#10b981" },
+    { num: formatNum(totalViews),   label: "Views",    color: "#0f0c29" },
+    { num: (memberCount ?? 0) + 1,  label: "Members",  color: "#0891b2" },
+  ];
+
+  return (
+    <div style={{ margin: "-32px -24px" }}>
+
+      {/* Company greeting band */}
+      <div style={{ background: "#fff", padding: "14px 16px 12px", borderBottom: "1px solid #f0f1f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 10, background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: 2, flexShrink: 0 }}>
+            <img src={logoUrl} alt={company.name} style={{ width: "100%", height: "100%", borderRadius: 8, objectFit: "cover", border: "2px solid #fff" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#0f0c29" }}>{company.name}</div>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>@{company.username} · Company workspace</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#0891b2", background: "#e0f2fe", padding: "3px 10px", borderRadius: 20, textTransform: "capitalize" }}>
+          {userRole}
+        </div>
+      </div>
+
+      {/* Stats strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, padding: "10px 16px", background: "#f2f3f7" }}>
+        {stats.map((s, i) => (
+          <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "10px 6px", textAlign: "center", border: "1px solid #f0f1f6" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.num}</div>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick links — admin/owner only */}
+      {(userRole === "owner" || userRole === "admin") && (
+        <div style={{ display: "flex", gap: 8, padding: "0 16px 10px", background: "#f2f3f7", overflowX: "auto" }}>
+          {[
+            { href: `/c/${company.username}`, label: "View Profile" },
+            { href: "/dashboard/company/members", label: "Members" },
+            { href: "/dashboard/company/invite", label: "Invite" },
+            { href: "/dashboard/company/insights", label: "Insights" },
+            { href: "/dashboard/company/settings", label: "Settings" },
+          ].map((l) => (
+            <Link key={l.href} href={l.href} style={{ fontSize: 11, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", padding: "6px 14px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Feed */}
+      <div style={{ padding: "0 16px 24px", background: "#f2f3f7" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0 10px" }}>
+          <h1 style={{ fontSize: 14, fontWeight: 700, color: "#0f0c29" }}>Public commitments</h1>
+          {(userRole === "owner" || userRole === "admin" || userRole === "member") && (
+            <Link href="/dashboard/create" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>
+              + Create
+            </Link>
+          )}
+        </div>
+        <CommitmentFeed endpoint="https://app.stated.in/api/feed" showFilters={true} />
+      </div>
+
+    </div>
+  );
+}
