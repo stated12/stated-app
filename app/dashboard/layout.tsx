@@ -63,7 +63,7 @@ export default function DashboardLayout({
 
   const isCompanyWorkspace = pathname.startsWith("/dashboard/company");
   const homeLink = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
-  const createLink = "/dashboard/create";
+  const createLink = isCompanyWorkspace ? "/dashboard/create?workspace=company" : "/dashboard/create";
 
   const avatar = isCompanyWorkspace ? company?.logo_url : profile?.avatar_url;
   const displayName = isCompanyWorkspace
@@ -337,4 +337,4 @@ export default function DashboardLayout({
       </main>
     </div>
   );
-}
+                            }
