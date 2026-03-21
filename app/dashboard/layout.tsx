@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
+  const [memberCompany, setMemberCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
@@ -28,16 +29,28 @@ export default function DashboardLayout({
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) { router.push("/login"); return; }
 
       const { data: profileData } = await supabase
         .from("profiles").select("*").eq("id", user.id).single();
       if (mounted) setProfile(profileData);
 
-      const { data: companyData } = await supabase
+      // Check ownership
+      const { data: ownedCompany } = await supabase
         .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
-      if (mounted) setCompany(companyData);
+      if (mounted && ownedCompany) setCompany(ownedCompany);
+
+      // Check membership (for workspace switcher)
+      if (!ownedCompany) {
+        const { data: membership } = await supabase
+          .from("company_members").select("company_id")
+          .eq("user_id", user.id).maybeSingle();
+        if (membership) {
+          const { data: mc } = await supabase
+            .from("companies").select("*").eq("id", membership.company_id).maybeSingle();
+          if (mounted && mc) setMemberCompany(mc);
+        }
+      }
 
       const { count: followersCount } = await supabase
         .from("follows").select("*", { count: "exact", head: true })
@@ -49,8 +62,8 @@ export default function DashboardLayout({
       if (mounted) {
         setFollowers(followersCount || 0);
         setFollowing(followingCount || 0);
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     load();
@@ -61,19 +74,27 @@ export default function DashboardLayout({
 
   if (loading) return null;
 
-  const isCompanyWorkspace = pathname.startsWith("/dashboard/company");
+  const activeCompany = company || memberCompany;
+  const isCompanyWorkspace = !!activeCompany && pathname.startsWith("/dashboard/company");
+  const isOwner = !!company;
+
   const homeLink = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
   const createLink = isCompanyWorkspace ? "/dashboard/create?workspace=company" : "/dashboard/create";
 
-  const avatar = isCompanyWorkspace ? company?.logo_url : profile?.avatar_url;
+  const avatar = isCompanyWorkspace
+    ? activeCompany?.logo_url?.trim() || null
+    : profile?.avatar_url?.trim() || null;
   const displayName = isCompanyWorkspace
-    ? company?.name
+    ? activeCompany?.name
     : profile?.display_name || profile?.username;
-  const username = isCompanyWorkspace ? company?.username : profile?.username;
+  const username = isCompanyWorkspace ? activeCompany?.username : profile?.username;
   const credits = profile?.credits ?? 0;
-  const isOnPlan = profile?.plan_key && profile.plan_key !== "free" && profile.plan_key !== null;
-  const upgradeLink = isCompanyWorkspace ? "/upgrade/company" : "/upgrade";
-  const billingLink = "/billing";
+
+  const PRO_INDIVIDUAL = ["ind_499","ind_899","ind_1299"];
+  const PRO_COMPANY    = ["comp_1999","comp_2999","comp_4999"];
+  const isOnPlan = isCompanyWorkspace
+    ? PRO_COMPANY.includes(activeCompany?.plan_key)
+    : PRO_INDIVIDUAL.includes(profile?.plan_key);
 
   async function logout() {
     const supabase = createClient();
@@ -84,25 +105,8 @@ export default function DashboardLayout({
   const NavItem = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => {
     const active = pathname === href || pathname.startsWith(href + "/");
     return (
-      <Link
-        href={href}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "10px 14px",
-          borderRadius: 12,
-          textDecoration: "none",
-          background: active ? "#eef2ff" : "transparent",
-          color: active ? "#4338ca" : "#374151",
-          fontWeight: active ? 600 : 500,
-          fontSize: 14,
-          transition: "background 0.15s",
-        }}
-      >
-        <span style={{ color: active ? "#4338ca" : "#9ca3af", display: "flex", flexShrink: 0 }}>
-          {icon}
-        </span>
+      <Link href={href} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, textDecoration: "none", background: active ? "#eef2ff" : "transparent", color: active ? "#4338ca" : "#374151", fontWeight: active ? 600 : 500, fontSize: 14, transition: "background 0.15s" }}>
+        <span style={{ color: active ? "#4338ca" : "#9ca3af", display: "flex", flexShrink: 0 }}>{icon}</span>
         {label}
       </Link>
     );
@@ -118,6 +122,8 @@ export default function DashboardLayout({
     support:     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5"/><path d="M9 10.5v.5M9 7a2 2 0 011.5 3.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
     invite:      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M1 16c0-3.3 2.7-6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 11v6M10 14h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
     company:     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6 6V4a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+    members:     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 15c0-2.8 2.2-5 5-5h6c2.8 0 5 2.2 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+    switch:      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h12M11 5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
     logout:      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 16H3a1 1 0 01-1-1V3a1 1 0 011-1h4M12 13l4-4-4-4M16 9H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
     home:        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 9L10 2l8 7v8a1 1 0 01-1 1H3a1 1 0 01-1-1V9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 20v-6h6v6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>,
     search:      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M14 14l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
@@ -126,58 +132,45 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-gray-50">
 
-      {/* MOBILE OVERLAY */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setOpen(false)} />
       )}
 
-      {/* SIDEBAR */}
       <aside
-        className={`fixed md:static top-0 left-0 h-[100dvh] w-68 bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={`fixed md:static top-0 left-0 h-[100dvh] bg-white border-r flex flex-col z-50 transform transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
         style={{ width: 260 }}
       >
         {/* PROFILE HEADER */}
         <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid #f3f4f8" }}>
-          <Link href="/profile/edit" style={{ textDecoration: "none" }}>
+          <Link
+            href={isCompanyWorkspace ? "/dashboard/company/settings" : "/profile/edit"}
+            style={{ textDecoration: "none" }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)",
-                  padding: 2,
-                  flexShrink: 0,
-                }}
-              >
+              <div style={{ width: 44, height: 44, borderRadius: isCompanyWorkspace ? 10 : "50%", background: isCompanyWorkspace ? "linear-gradient(135deg,#0891b2,#0e7490)" : "linear-gradient(135deg,#4338ca,#7c3aed,#ec4899)", padding: 2, flexShrink: 0 }}>
                 {avatar ? (
-                  <img
-                    src={avatar}
-                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "2px solid #fff" }}
-                  />
+                  <img src={avatar} style={{ width: "100%", height: "100%", borderRadius: isCompanyWorkspace ? 8 : "50%", objectFit: "cover", border: "2px solid #fff" }} />
                 ) : (
-                  <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "#4338ca", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff" }}>
-                    {displayName?.charAt(0)}
+                  <div style={{ width: "100%", height: "100%", borderRadius: isCompanyWorkspace ? 8 : "50%", background: isCompanyWorkspace ? "#0891b2" : "#4338ca", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#fff" }}>
+                    {displayName?.charAt(0)?.toUpperCase()}
                   </div>
                 )}
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#0f0c29" }}>{displayName}</div>
                 <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>@{username}</div>
-                <div style={{ fontSize: 11, color: "#d97706", fontWeight: 600, marginTop: 2 }}>
-                  ⭐ {credits} credits
-                </div>
+                {!isCompanyWorkspace && (
+                  <div style={{ fontSize: 11, color: "#d97706", fontWeight: 600, marginTop: 2 }}>⭐ {credits} credits</div>
+                )}
+                {isCompanyWorkspace && (
+                  <div style={{ fontSize: 10, color: "#0891b2", fontWeight: 600, marginTop: 2 }}>Company workspace</div>
+                )}
               </div>
             </div>
           </Link>
 
-          {/* Followers / Following */}
-          {username && (
+          {/* Followers/Following — individual only */}
+          {!isCompanyWorkspace && username && (
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
               <Link href={`/u/${username}/followers`} style={{ textDecoration: "none", textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#0f0c29" }}>{followers}</div>
@@ -193,32 +186,35 @@ export default function DashboardLayout({
 
           <Link
             href={isCompanyWorkspace ? `/c/${username}` : `/u/${username}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              fontSize: 12,
-              fontWeight: 600,
-              color: "#4338ca",
-              textDecoration: "none",
-              background: "#eef2ff",
-              padding: "5px 12px",
-              borderRadius: 20,
-            }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: isCompanyWorkspace ? "#0891b2" : "#4338ca", textDecoration: "none", background: isCompanyWorkspace ? "#e0f2fe" : "#eef2ff", padding: "5px 12px", borderRadius: 20 }}
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4.5" r="2" stroke="#4338ca" strokeWidth="1.2"/><path d="M1 11c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="#4338ca" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 11c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
             View Profile
           </Link>
         </div>
 
-        {/* NAVIGATION */}
+        {/* NAV */}
         <nav style={{ padding: "12px 12px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
           {isCompanyWorkspace ? (
             <>
-              <NavItem href="/dashboard/company"          icon={icons.company}     label="Company Commitments" />
-              <NavItem href="/dashboard/company/insights" icon={icons.insights}    label="Insights" />
-              <NavItem href="/dashboard/company/invite"   icon={icons.invite}      label="Invite Members" />
-              <NavItem href="/dashboard/company/settings" icon={icons.settings}    label="Company Settings" />
+              <NavItem href="/dashboard/company/commitments" icon={icons.company}  label="Company Commitments" />
+              <NavItem href="/dashboard/company/members"     icon={icons.members}  label="Members" />
+              <NavItem href="/dashboard/company/insights"    icon={icons.insights} label="Insights" />
+              <NavItem href="/dashboard/company/invite"      icon={icons.invite}   label="Invite Members" />
+              <NavItem href="/dashboard/company/settings"    icon={icons.settings} label="Company Settings" />
+              {/* Switch to individual */}
+              {isOwner && (
+                <Link
+                  href="/dashboard"
+                  onClick={async () => {
+                    // clear company context by navigating to individual
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, textDecoration: "none", color: "#6b7280", fontWeight: 500, fontSize: 14, marginTop: 4 }}
+                >
+                  <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{icons.switch}</span>
+                  Individual Dashboard
+                </Link>
+              )}
             </>
           ) : (
             <>
@@ -226,83 +222,62 @@ export default function DashboardLayout({
               <NavItem href="/dashboard/insights" icon={icons.insights}    label="Insights" />
               <NavItem href="/billing"            icon={icons.billing}     label="Billing" />
               <NavItem href="/account"            icon={icons.settings}    label="Account Settings" />
+              {/* ✅ Workspace switcher for invited members */}
+              {memberCompany && (
+                <Link
+                  href="/dashboard/company"
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, textDecoration: "none", color: "#0891b2", fontWeight: 600, fontSize: 14, background: "#f0f9ff", marginTop: 4 }}
+                >
+                  <span style={{ color: "#0891b2", display: "flex", flexShrink: 0 }}>{icons.switch}</span>
+                  {memberCompany.name} workspace
+                </Link>
+              )}
             </>
           )}
           {isOnPlan ? (
-            <NavItem href={billingLink} icon={icons.credits} label="Buy Credits" />
+            <NavItem href="/billing"  icon={icons.credits} label="Buy Credits" />
           ) : (
-            <NavItem href={upgradeLink} icon={icons.upgrade} label="Upgrade" />
+            <NavItem href="/upgrade"  icon={icons.upgrade} label="Upgrade" />
           )}
           <NavItem href="/dashboard/support" icon={icons.support} label="Support" />
         </nav>
 
         {/* LOGOUT */}
         <div style={{ padding: "12px 12px 24px" }}>
-          <button
-            onClick={logout}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: "10px 14px",
-              borderRadius: 12,
-              border: "none",
-              background: "#fff5f5",
-              color: "#dc2626",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-              width: "100%",
-              fontFamily: "inherit",
-            }}
-          >
+          <button onClick={logout} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, border: "none", background: "#fff5f5", color: "#dc2626", fontWeight: 600, fontSize: 14, cursor: "pointer", width: "100%", fontFamily: "inherit" }}>
             <span style={{ color: "#dc2626", display: "flex" }}>{icons.logout}</span>
             Logout
           </button>
         </div>
       </aside>
 
-      {/* MAIN */}
       <main className="flex-1 flex flex-col pb-24">
-
-        {/* MOBILE HEADER */}
         <div className="bg-white border-b px-4 py-3 flex items-center justify-between md:hidden">
-          <button
-            onClick={() => setOpen(!open)}
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", flexDirection: "column", gap: 4 }}
-          >
+          <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ display: "block", width: 18, height: 2, background: "#374151", borderRadius: 2 }} />
             <span style={{ display: "block", width: 18, height: 2, background: "#374151", borderRadius: 2 }} />
             <span style={{ display: "block", width: 18, height: 2, background: "#374151", borderRadius: 2 }} />
           </button>
-
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href={homeLink} className="flex items-center gap-2">
             <Image src="/logo.png" alt="" width={28} height={28} />
             <span style={{ fontWeight: 800, color: "#4338ca", fontSize: 16 }}>Stated</span>
           </Link>
-
           <NotificationBell />
         </div>
 
-        {/* DESKTOP HEADER */}
         <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href={homeLink} className="flex items-center gap-2">
             <Image src="/logo.png" alt="" width={32} height={32} />
             <span style={{ fontWeight: 800, color: "#4338ca", fontSize: 18 }}>Stated</span>
           </Link>
           <NotificationBell />
         </div>
 
-        {/* PAGE CONTENT */}
         <div className="px-6 py-8 max-w-4xl mx-auto w-full">
           {children}
         </div>
 
-        {/* MOBILE BOTTOM NAV */}
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-white md:hidden"
-          style={{ borderTop: "1px solid #ebebf2" }}
-        >
+        <div className="fixed bottom-0 left-0 right-0 bg-white md:hidden" style={{ borderTop: "1px solid #ebebf2" }}>
           <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "8px 24px 14px" }}>
             <Link href={homeLink} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === homeLink ? "#4338ca" : "#9ca3af" }}>
               {icons.home}
@@ -312,29 +287,13 @@ export default function DashboardLayout({
               {icons.search}
               <span style={{ fontSize: 9, fontWeight: 500 }}>Search</span>
             </Link>
-            <Link
-              href={createLink}
-              style={{
-                background: "linear-gradient(135deg,#4338ca,#6366f1)",
-                color: "#fff",
-                padding: "8px 20px",
-                borderRadius: 22,
-                fontSize: 12,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                textDecoration: "none",
-                boxShadow: "0 3px 10px rgba(67,56,202,0.3)",
-              }}
-            >
+            <Link href={createLink} style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "8px 20px", borderRadius: 22, fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5, textDecoration: "none", boxShadow: "0 3px 10px rgba(67,56,202,0.3)" }}>
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
               Create
             </Link>
           </div>
         </div>
-
       </main>
     </div>
   );
-                            }
+      }
