@@ -74,9 +74,8 @@ export default function CompanySettingsPage() {
 
   async function deleteCompany() {
     if (!companyId) return;
-    const confirm = window.prompt('Type DELETE to confirm company deletion');
+    const confirm = window.prompt("Type DELETE to confirm company deletion");
     if (confirm !== "DELETE") return;
-
     await supabase.from("companies").delete().eq("id", companyId);
     router.push("/dashboard");
   }
@@ -111,7 +110,7 @@ export default function CompanySettingsPage() {
   };
 
   const labelStyle = {
-    display: "block",
+    display: "block" as const,
     fontSize: 12,
     fontWeight: 600,
     color: "#374151",
@@ -121,7 +120,6 @@ export default function CompanySettingsPage() {
   return (
     <div style={{ margin: "-32px -24px", background: "#f2f3f7", minHeight: "100vh", paddingBottom: 40 }}>
 
-      {/* Header */}
       <div style={{ background: "#fff", padding: "16px 16px 14px", borderBottom: "1px solid #f0f1f6" }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: "#0f0c29" }}>Company Settings</div>
         <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>@{company.username}</div>
@@ -129,7 +127,6 @@ export default function CompanySettingsPage() {
 
       <div style={{ padding: 16 }}>
 
-        {/* Logo preview */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #f0f1f6", marginBottom: 12, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ width: 56, height: 56, borderRadius: 12, background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: 2.5, flexShrink: 0 }}>
             <img src={logoUrl} alt={company.name} style={{ width: "100%", height: "100%", borderRadius: 10, objectFit: "cover", border: "2px solid #fff" }} />
@@ -140,9 +137,8 @@ export default function CompanySettingsPage() {
           </div>
         </div>
 
-        {/* Form */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #f0f1f6", marginBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>Company Info</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", letterSpacing: 2, textTransform: "uppercase" as const, marginBottom: 16 }}>Company Info</div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Company Name</label>
@@ -155,9 +151,11 @@ export default function CompanySettingsPage() {
             />
           </div>
 
-          {/* Username — locked, not editable */}
           <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Username <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 400 }}>(permanent — cannot be changed)</span></label>
+            <label style={labelStyle}>
+              Username{" "}
+              <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 400 }}>(permanent — cannot be changed)</span>
+            </label>
             <input
               style={{ ...inputStyle, color: "#9ca3af", cursor: "not-allowed" }}
               value={company.username || ""}
@@ -168,7 +166,7 @@ export default function CompanySettingsPage() {
           <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Description</label>
             <textarea
-              style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
+              style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }}
               value={company.description || ""}
               onChange={(e) => setCompany({ ...company, description: e.target.value })}
               placeholder="What does your company commit to publicly?"
@@ -185,7 +183,9 @@ export default function CompanySettingsPage() {
               placeholder="https://your-logo-url.com/logo.png"
               disabled={!isOwner}
             />
-            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>Paste a direct image URL. Square images work best.</div>
+            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+              Paste a direct image URL. Square images work best.
+            </div>
           </div>
 
           <div style={{ marginBottom: 16 }}>
@@ -209,37 +209,32 @@ export default function CompanySettingsPage() {
             <button
               onClick={updateCompany}
               disabled={saving}
-              style={{ width: "100%", padding: "13px", background: saved ? "linear-gradient(135deg,#10b981,#34d399)" : saving ? "#9ca3af" : "linear-gradient(135deg,#0891b2,#0e7490)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", transition: "background 0.2s" }}
+              style={{ width: "100%", padding: "13px", background: saved ? "linear-gradient(135deg,#10b981,#34d399)" : saving ? "#9ca3af" : "linear-gradient(135deg,#0891b2,#0e7490)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit" }}
             >
               {saved ? "✓ Saved!" : saving ? "Saving..." : "Save Changes"}
             </button>
           )}
 
           {!isOwner && (
-            <div style={{ background: "#f8f9fc", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
+            <div style={{ background: "#f8f9fc", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#9ca3af", textAlign: "center" as const }}>
               Only the company owner can edit settings
             </div>
           )}
         </div>
 
-        {/* Public profile link */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f1f6", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29" }}>Public Profile</div>
             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>app.stated.in/c/{company.username}</div>
           </div>
-          
-            href={`/c/${company.username}`}
-            style={{ fontSize: 12, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}
-          >
-            View →
+          <a href={`/c/${company.username}`} style={{ fontSize: 12, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>
+            View
           </a>
         </div>
 
-        {/* Danger zone — owner only */}
         {isOwner && (
           <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #fee2e2", marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", letterSpacing: 2, textTransform: "uppercase" as const, marginBottom: 12 }}>Danger Zone</div>
             <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 14, lineHeight: 1.5 }}>
               Deleting your company is permanent. All commitments, members and data will be lost.
             </div>
