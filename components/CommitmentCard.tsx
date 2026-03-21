@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import FollowButton from "@/components/social/FollowButton";
+import CheerButton from "@/components/CheerButton";
 
 type Commitment = {
   id: string;
@@ -13,10 +14,12 @@ type Commitment = {
 
   creatorName: string;
   creatorUsername: string;
+  creatorAvatar?: string | null; // ✅ added for avatar display
   creatorId: string;
   creatorType: "user" | "company";
 
   currentUserId?: string | null;
+  cheers?: number; // ✅ added for CheerButton
 };
 
 export default function CommitmentCard({
@@ -36,40 +39,48 @@ export default function CommitmentCard({
     commitment.creatorType === "user" &&
     commitment.currentUserId === commitment.creatorId;
 
+  const profileLink =
+    commitment.creatorType === "company"
+      ? `/c/${commitment.creatorUsername}`
+      : `/u/${commitment.creatorUsername}`;
+
+  // Fallback avatar via ui-avatars
+  const avatar = commitment.creatorAvatar?.trim()
+    ? commitment.creatorAvatar.trim()
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        commitment.creatorName || commitment.creatorUsername || "User"
+      )}&background=4338ca&color=fff`;
+
   let completedText = null;
 
   if (commitment.status === "completed" && commitment.completed_at) {
-
     const completed = new Date(commitment.completed_at);
-
     const daysTaken = Math.ceil(
-      (completed.getTime() - start.getTime()) /
-        (1000 * 60 * 60 * 24)
+      (completed.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
     );
-
     completedText = (
       <p className="text-sm text-green-600 mt-1">
         Completed in {daysTaken} days
       </p>
     );
-
   }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 w-full max-w-md mx-auto hover:shadow-md transition">
 
-      {/* Creator + Follow */}
+      {/* Creator row — avatar + name + follow */}
       <div className="flex justify-between items-center mb-3">
 
-        <Link
-          href={
-            commitment.creatorType === "user"
-              ? `/u/${commitment.creatorUsername}`
-              : `/c/${commitment.creatorUsername}`
-          }
-          className="font-medium text-gray-900 hover:underline"
-        >
-          {commitment.creatorName}
+        {/* ✅ Avatar + name both link to profile */}
+        <Link href={profileLink} className="flex items-center gap-2 group">
+          <img
+            src={avatar}
+            alt={commitment.creatorName}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          />
+          <span className="font-medium text-gray-900 group-hover:underline">
+            {commitment.creatorName}
+          </span>
         </Link>
 
         {/* Follow Button */}
@@ -118,8 +129,17 @@ export default function CommitmentCard({
         {startFormatted} → {endFormatted}
       </p>
 
-      {/* Completed Info */}
+      {/* Completed info */}
       {completedText}
+
+      {/* ✅ CheerButton footer */}
+      <div className="flex justify-end mt-3 pt-3 border-t border-gray-100">
+        <CheerButton
+          commitmentId={commitment.id}
+          initialCount={commitment.cheers ?? 0}
+          size="small"
+        />
+      </div>
 
     </div>
   );
