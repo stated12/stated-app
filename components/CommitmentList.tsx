@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import CheerButton from "@/components/CheerButton";
 
 export default function CommitmentList({
   commitments,
@@ -13,6 +14,7 @@ export default function CommitmentList({
     completed_at?: string;
     end_date?: string;
     views: number;
+    cheers?: number; // ✅ added for CheerButton
     update_count?: number;
     shares_count?: number;
     latest_update?: string | null;
@@ -71,7 +73,7 @@ export default function CommitmentList({
               cursor: "pointer",
             }}
           >
-            {/* Accent bar top */}
+            {/* Accent bar */}
             <div style={{ height: 3, background: getAccentColor(c.status) }} />
 
             <div style={{ padding: "18px 20px 16px" }}>
@@ -134,7 +136,7 @@ export default function CommitmentList({
                 </div>
               )}
 
-              {/* Footer — views + updates */}
+              {/* Footer — views · updates · shares · CheerButton */}
               <div
                 style={{
                   display: "flex",
@@ -145,6 +147,7 @@ export default function CommitmentList({
                   marginTop: 10,
                 }}
               >
+                {/* Left side — views */}
                 <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <ellipse cx="6.5" cy="6.5" rx="5.5" ry="3.8" stroke="#9ca3af" strokeWidth="1.1"/>
@@ -153,6 +156,7 @@ export default function CommitmentList({
                   {formatViews(c.views || 0)} views
                 </div>
 
+                {/* Right side — updates + shares + CheerButton */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   {(c.update_count ?? 0) > 0 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6366f1", fontWeight: 500 }}>
@@ -172,6 +176,15 @@ export default function CommitmentList({
                       {c.shares_count} {c.shares_count === 1 ? "share" : "shares"}
                     </div>
                   )}
+
+                  {/* ✅ CheerButton — stopPropagation prevents card nav */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <CheerButton
+                      commitmentId={c.id}
+                      initialCount={c.cheers ?? 0}
+                      size="small"
+                    />
+                  </div>
                 </div>
               </div>
 
