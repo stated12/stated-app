@@ -19,8 +19,7 @@ type FeedItem = {
   created_at: string;
   views?: number;
   shares?: number;
-  cheers?: number;
-  cheers?: number;
+  cheers?: number; // ✅ Removed duplicate — was declared twice before
   parent_commitment_id?: string;
   identity?: Identity | null;
 };
@@ -30,7 +29,11 @@ function timeAgo(date: string) {
     (new Date().getTime() - new Date(date).getTime()) / 1000
   );
   const intervals: any = {
-    year: 31536000, month: 2592000, day: 86400, hour: 3600, minute: 60,
+    year: 31536000,
+    month: 2592000,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
   };
   for (const key in intervals) {
     const interval = Math.floor(seconds / intervals[key]);
@@ -55,12 +58,25 @@ export default function CommitmentFeed({
   const [category, setCategory] = useState("");
 
   const categories = [
-    "", "Fitness", "Learning", "Writing", "Health", "Finance",
-    "Business", "Marketing", "Sales", "Operations", "Product",
-    "Strategic", "Announcement", "Other",
+    "",
+    "Fitness",
+    "Learning",
+    "Writing",
+    "Health",
+    "Finance",
+    "Business",
+    "Marketing",
+    "Sales",
+    "Operations",
+    "Product",
+    "Strategic",
+    "Announcement",
+    "Other",
   ];
 
-  useEffect(() => { resetFeed(); }, [activeTab, category]);
+  useEffect(() => {
+    resetFeed();
+  }, [activeTab, category]);
 
   function resetFeed() {
     setItems([]);
@@ -108,19 +124,27 @@ export default function CommitmentFeed({
     whiteSpace: "nowrap",
     background: activeTab === tab ? "#4338ca" : "#fff",
     color: activeTab === tab ? "#fff" : "#6b7280",
-    boxShadow: activeTab === tab ? "0 2px 8px rgba(67,56,202,0.25)" : "none",
-    border: activeTab === tab ? "1px solid transparent" : "1px solid #e8eaf2",
+    boxShadow:
+      activeTab === tab ? "0 2px 8px rgba(67,56,202,0.25)" : "none",
+    border:
+      activeTab === tab ? "1px solid transparent" : "1px solid #e8eaf2",
   });
 
   return (
     <div style={{ maxWidth: 768, margin: "0 auto" }}>
-
       {/* FILTERS */}
       {showFilters && (
         <div style={{ marginBottom: 16 }}>
-
-          {/* Tab pills row */}
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2, marginBottom: 10 }}>
+          {/* Tab pills */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              paddingBottom: 2,
+              marginBottom: 10,
+            }}
+          >
             <button onClick={() => setActiveTab("latest")} style={tabStyle("latest")}>
               Latest
             </button>
@@ -167,14 +191,17 @@ export default function CommitmentFeed({
                 identity.display_name || identity.username || "User"
               )}&background=4338ca&color=fff`;
 
-          const profileLink = identity.type === "company"
-            ? `/c/${identity.username}`
-            : `/u/${identity.username}`;
+          const profileLink =
+            identity.type === "company"
+              ? `/c/${identity.username}`
+              : `/u/${identity.username}`;
 
-          const commitmentLink = c.type === "update" && c.parent_commitment_id
-            ? `/commitment/${c.parent_commitment_id}`
-            : `/commitment/${c.id}`;
+          const commitmentLink =
+            c.type === "update" && c.parent_commitment_id
+              ? `/commitment/${c.parent_commitment_id}`
+              : `/commitment/${c.id}`;
 
+          // ── UPDATE CARD ──────────────────────────────────────────────
           if (c.type === "update") {
             return (
               <Link key={c.id} href={commitmentLink} style={{ textDecoration: "none" }}>
@@ -187,21 +214,56 @@ export default function CommitmentFeed({
                   }}
                 >
                   {/* Update tag */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      marginBottom: 8,
+                    }}
+                  >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 8.5V5a4 4 0 018 0v3.5" stroke="#4338ca" strokeWidth="1.2" strokeLinecap="round"/>
-                      <path d="M0 8.5h12" stroke="#4338ca" strokeWidth="1.2" strokeLinecap="round"/>
+                      <path
+                        d="M2 8.5V5a4 4 0 018 0v3.5"
+                        stroke="#4338ca"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M0 8.5h12"
+                        stroke="#4338ca"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                      />
                     </svg>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: "#4338ca" }}>Update</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#4338ca" }}>
+                      Update
+                    </span>
                   </div>
 
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <img src={avatar} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                    <div>
+                    <img
+                      src={avatar}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
                         {identity.display_name || identity.username} updated a commitment
                       </div>
-                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2, lineHeight: 1.4 }}>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#6b7280",
+                          marginTop: 2,
+                          lineHeight: 1.4,
+                        }}
+                      >
                         {c.text}
                       </div>
                       <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 4 }}>
@@ -214,6 +276,7 @@ export default function CommitmentFeed({
             );
           }
 
+          // ── COMMITMENT CARD ──────────────────────────────────────────
           return (
             <Link key={c.id} href={commitmentLink} style={{ textDecoration: "none" }}>
               <div
@@ -226,17 +289,51 @@ export default function CommitmentFeed({
                 }}
               >
                 {/* Accent bar */}
-                <div style={{ height: 3, background: "linear-gradient(90deg,#4338ca,#818cf8)" }} />
+                <div
+                  style={{
+                    height: 3,
+                    background: "linear-gradient(90deg,#4338ca,#818cf8)",
+                  }}
+                />
 
                 <div style={{ padding: "12px 14px 10px" }}>
                   {/* Avatar + name + handle */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <Link href={profileLink} onClick={(e) => e.stopPropagation()}>
-                      <img src={avatar} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Link
+                      href={profileLink}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <img
+                        src={avatar}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          flexShrink: 0,
+                        }}
+                      />
                     </Link>
                     <div style={{ flex: 1 }}>
-                      <Link href={profileLink} onClick={(e) => e.stopPropagation()} style={{ textDecoration: "none" }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29" }}>
+                      <Link
+                        href={profileLink}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "#0f0c29",
+                          }}
+                        >
                           {identity.display_name || identity.username}
                         </div>
                       </Link>
@@ -245,32 +342,106 @@ export default function CommitmentFeed({
                       </div>
                     </div>
                     {c.category && (
-                      <div style={{ fontSize: 9, fontWeight: 600, color: "#4338ca", background: "#eef2ff", padding: "2px 8px", borderRadius: 20, flexShrink: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 600,
+                          color: "#4338ca",
+                          background: "#eef2ff",
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          flexShrink: 0,
+                        }}
+                      >
                         {c.category}
                       </div>
                     )}
                   </div>
 
                   {/* Commitment text */}
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29", lineHeight: 1.5, marginBottom: 10 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#0f0c29",
+                      lineHeight: 1.5,
+                      marginBottom: 10,
+                    }}
+                  >
                     {c.text}
                   </div>
 
-                  {/* Footer — views + shares */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, paddingTop: 8, borderTop: "1px solid #f3f4f8" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
+                  {/* Footer — views · shares · CheerButton */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      paddingTop: 8,
+                      borderTop: "1px solid #f3f4f8",
+                    }}
+                  >
+                    {/* Views */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 11,
+                        color: "#9ca3af",
+                      }}
+                    >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <ellipse cx="6" cy="6" rx="5" ry="3.5" stroke="#9ca3af" strokeWidth="1.1"/>
-                        <circle cx="6" cy="6" r="1.6" stroke="#9ca3af" strokeWidth="1.1"/>
+                        <ellipse
+                          cx="6"
+                          cy="6"
+                          rx="5"
+                          ry="3.5"
+                          stroke="#9ca3af"
+                          strokeWidth="1.1"
+                        />
+                        <circle cx="6" cy="6" r="1.6" stroke="#9ca3af" strokeWidth="1.1" />
                       </svg>
                       {c.views ?? 0} views
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>
+
+                    {/* Shares */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 11,
+                        color: "#9ca3af",
+                      }}
+                    >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M9 1.5l2 2-2 2" stroke="#9ca3af" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M11 3.5H5A3 3 0 002 6.5v1" stroke="#9ca3af" strokeWidth="1.1" strokeLinecap="round"/>
+                        <path
+                          d="M9 1.5l2 2-2 2"
+                          stroke="#9ca3af"
+                          strokeWidth="1.1"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M11 3.5H5A3 3 0 002 6.5v1"
+                          stroke="#9ca3af"
+                          strokeWidth="1.1"
+                          strokeLinecap="round"
+                        />
                       </svg>
                       {c.shares ?? 0}
+                    </div>
+
+                    {/* ✅ CheerButton — stopPropagation prevents card navigation */}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <CheerButton
+                        commitmentId={c.id}
+                        initialCount={c.cheers ?? 0}
+                      />
                     </div>
                   </div>
                 </div>
@@ -304,4 +475,4 @@ export default function CommitmentFeed({
       )}
     </div>
   );
-                      }
+}
