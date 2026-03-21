@@ -46,7 +46,7 @@ export default async function InsightsPage() {
     commitmentViews = data?.length ?? 0;
   }
 
-  // ✅ Total cheers across all user commitments
+  // Total cheers across all user commitments
   let totalCheers = 0;
   if (commitmentIds.length > 0) {
     const { count } = await supabase
@@ -55,7 +55,7 @@ export default async function InsightsPage() {
     totalCheers = count ?? 0;
   }
 
-  // ✅ Who cheered — only fetched for pro users (name + avatar + commitment)
+  // Who cheered — pro users only
   let cheerLeaders: {
     display_name: string | null;
     username: string;
@@ -100,10 +100,10 @@ export default async function InsightsPage() {
     }
   }
 
-  const total     = commitments?.length ?? 0;
-  const active    = commitments?.filter((c) => c.status === "active").length ?? 0;
-  const completed = commitments?.filter((c) => c.status === "completed").length ?? 0;
-  const paused    = commitments?.filter((c) => c.status === "paused" || c.status === "withdrawn").length ?? 0;
+  const total       = commitments?.length ?? 0;
+  const active      = commitments?.filter((c) => c.status === "active").length ?? 0;
+  const completed   = commitments?.filter((c) => c.status === "completed").length ?? 0;
+  const paused      = commitments?.filter((c) => c.status === "paused" || c.status === "withdrawn").length ?? 0;
   const totalShares = commitments?.reduce((sum, c) => sum + (c.shares ?? 0), 0) ?? 0;
 
   const stats = [
@@ -113,14 +113,12 @@ export default async function InsightsPage() {
     { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>, label: "Following",         num: following ?? 0,    bg: "#fef3c7", color: "#d97706" },
     { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 2l3 3-3 3" stroke="#f97316" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 5H7a5 5 0 00-5 5v1" stroke="#f97316" strokeWidth="1.3" strokeLinecap="round"/></svg>, label: "Total Shares",      num: totalShares,       bg: "#fff7ed", color: "#f97316" },
     { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h9M2 12h6" stroke="#7c3aed" strokeWidth="1.3" strokeLinecap="round"/></svg>, label: "Total Commitments", num: total,             bg: "#f5f3ff", color: "#7c3aed" },
-    // ✅ Cheers stat card
-    { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 6v4a.5.5 0 00.5.5H4L6.5 13V3L4 5.5H2.5A.5.5 0 002 6z" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/><path d="M6.5 3.5L12 1.5v13l-5.5-2" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/><path d="M13.5 5.5c.6.6.8 1.5.8 2.5s-.2 1.9-.8 2.5" stroke="#ea580c" strokeWidth="1.3" strokeLinecap="round"/></svg>, label: "Total Cheers",      num: totalCheers,       bg: "#fff7ed", color: "#ea580c" },
   ];
 
   const statusStats = [
-    { num: active,    label: "Active",             color: "#10b981", bg: "#dcfce7" },
-    { num: completed, label: "Completed",           color: "#4338ca", bg: "#eef2ff" },
-    { num: paused,    label: "Paused / Withdrawn",  color: "#9ca3af", bg: "#f3f4f6" },
+    { num: active,    label: "Active",            color: "#10b981" },
+    { num: completed, label: "Completed",          color: "#4338ca" },
+    { num: paused,    label: "Paused / Withdrawn", color: "#9ca3af" },
   ];
 
   function timeAgo(date: string) {
@@ -147,7 +145,7 @@ export default async function InsightsPage() {
 
       <div style={{ padding: 16, position: "relative" }}>
 
-        {/* Stats grid */}
+        {/* Stats grid — 6 cards, 2 columns */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           {stats.map((s, i) => (
             <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f1f6", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
@@ -162,6 +160,97 @@ export default async function InsightsPage() {
           ))}
         </div>
 
+        {/* ✅ CHEERS — full-width row between grid and status strip */}
+        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #f0f1f6", overflow: "hidden", marginBottom: 12, boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+
+          {/* Count + label row */}
+          <div style={{ padding: "14px 16px 12px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 6v4a.5.5 0 00.5.5H4L6.5 13V3L4 5.5H2.5A.5.5 0 002 6z" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/>
+                <path d="M6.5 3.5L12 1.5v13l-5.5-2" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/>
+                <path d="M13.5 5.5c.6.6.8 1.5.8 2.5s-.2 1.9-.8 2.5" stroke="#ea580c" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginBottom: 2 }}>Total Cheers</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: "#ea580c", lineHeight: 1 }}>{totalCheers}</div>
+            </div>
+            {!isPro && (
+              <Link
+                href="/upgrade"
+                style={{ fontSize: 11, fontWeight: 700, color: "#4338ca", background: "#eef2ff", padding: "5px 12px", borderRadius: 12, textDecoration: "none", whiteSpace: "nowrap" }}
+              >
+                See who →
+              </Link>
+            )}
+            {isPro && cheerLeaders.length > 0 && (
+              <span style={{ fontSize: 11, color: "#ea580c", fontWeight: 600 }}>
+                {cheerLeaders.length} recent
+              </span>
+            )}
+          </div>
+
+          {/* Pro: real cheerleader list */}
+          {isPro && cheerLeaders.length > 0 && (
+            <div style={{ borderTop: "1px solid #f3f4f8" }}>
+              {cheerLeaders.slice(0, 5).map((cl, i) => {
+                const avatar = cl.avatar_url?.trim()
+                  ? cl.avatar_url
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(cl.display_name || cl.username)}&background=4338ca&color=fff`;
+                return (
+                  <div key={i} style={{ padding: "10px 16px", borderBottom: i < Math.min(cheerLeaders.length, 5) - 1 ? "1px solid #f3f4f8" : "none", display: "flex", alignItems: "center", gap: 10 }}>
+                    <Link href={`/u/${cl.username}`}>
+                      <img src={avatar} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    </Link>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#0f0c29" }}>
+                        <Link href={`/u/${cl.username}`} style={{ textDecoration: "none", color: "inherit" }}>
+                          {cl.display_name || cl.username}
+                        </Link>
+                      </span>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}> cheered </span>
+                      <span style={{ fontSize: 12, color: "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block", maxWidth: 120, verticalAlign: "bottom" }}>
+                        "{cl.commitment_text.length > 30 ? cl.commitment_text.slice(0, 30) + "…" : cl.commitment_text}"
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }}>{timeAgo(cl.cheered_at)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pro: no cheers yet */}
+          {isPro && cheerLeaders.length === 0 && (
+            <div style={{ borderTop: "1px solid #f3f4f8", padding: "14px 16px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
+              No cheers yet — share your commitments!
+            </div>
+          )}
+
+          {/* Free: blurred rows + lock */}
+          {!isPro && (
+            <div style={{ position: "relative", borderTop: "1px solid #f3f4f8" }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f8", display: "flex", alignItems: "center", gap: 10, filter: "blur(4px)", userSelect: "none", pointerEvents: "none" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0 }} />
+                  <div>
+                    <div style={{ width: 90, height: 9, background: "#e5e7eb", borderRadius: 4, marginBottom: 5 }} />
+                    <div style={{ width: 140, height: 8, background: "#f3f4f6", borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "rgba(255,255,255,0.75)", backdropFilter: "blur(2px)" }}>
+                <span style={{ fontSize: 15 }}>🔒</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f0c29" }}>See who cheered on PRO</span>
+                <Link href="/upgrade" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#4338ca,#6366f1)", padding: "5px 12px", borderRadius: 12, textDecoration: "none" }}>
+                  Upgrade →
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Status strip */}
         <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f1f6", marginBottom: 12, display: "grid", gridTemplateColumns: "repeat(3,1fr)" }}>
           {statusStats.map((s, i) => (
@@ -172,99 +261,7 @@ export default async function InsightsPage() {
           ))}
         </div>
 
-        {/* ✅ WHO CHEERED SECTION */}
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #f0f1f6", overflow: "hidden", marginBottom: 12 }}>
-          {/* Section header */}
-          <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid #f3f4f8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M2 6v4a.5.5 0 00.5.5H4L6.5 13V3L4 5.5H2.5A.5.5 0 002 6z" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/>
-                <path d="M6.5 3.5L12 1.5v13l-5.5-2" stroke="#ea580c" strokeWidth="1.3" strokeLinejoin="round"/>
-                <path d="M13.5 5.5c.6.6.8 1.5.8 2.5s-.2 1.9-.8 2.5" stroke="#ea580c" strokeWidth="1.3" strokeLinecap="round"/>
-              </svg>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29" }}>Who cheered you</span>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#ea580c", background: "#fff7ed", padding: "2px 8px", borderRadius: 20 }}>
-              {totalCheers} total
-            </span>
-          </div>
-
-          {/* Free plan — blurred placeholder rows */}
-          {!isPro && (
-            <div style={{ position: "relative" }}>
-              {/* Fake blurred rows */}
-              {[1,2,3].map((i) => (
-                <div key={i} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f8", display: "flex", alignItems: "center", gap: 10, filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ width: 100, height: 10, background: "#e5e7eb", borderRadius: 4, marginBottom: 6 }} />
-                    <div style={{ width: 160, height: 8, background: "#f3f4f6", borderRadius: 4 }} />
-                  </div>
-                </div>
-              ))}
-              {/* Lock overlay */}
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, background: "rgba(255,255,255,0.7)", backdropFilter: "blur(2px)" }}>
-                <div style={{ fontSize: 22 }}>🔒</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29" }}>PRO feature</div>
-                <div style={{ fontSize: 11, color: "#6b7280", textAlign: "center", maxWidth: 200, lineHeight: 1.5 }}>
-                  See exactly who cheered your commitments
-                </div>
-                <Link
-                  href="/upgrade"
-                  style={{ background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "8px 20px", borderRadius: 20, fontSize: 12, fontWeight: 700, textDecoration: "none" }}
-                >
-                  Upgrade to PRO →
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Pro plan — real cheerleaders */}
-          {isPro && cheerLeaders.length === 0 && (
-            <div style={{ padding: "24px 16px", textAlign: "center", fontSize: 13, color: "#9ca3af" }}>
-              No cheers yet — share your commitments to get cheered!
-            </div>
-          )}
-
-          {isPro && cheerLeaders.length > 0 && (
-            <div>
-              {cheerLeaders.map((cl, i) => {
-                const avatar = cl.avatar_url?.trim()
-                  ? cl.avatar_url
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(cl.display_name || cl.username)}&background=4338ca&color=fff`;
-                return (
-                  <div
-                    key={i}
-                    style={{ padding: "12px 16px", borderBottom: i < cheerLeaders.length - 1 ? "1px solid #f3f4f8" : "none", display: "flex", alignItems: "center", gap: 10 }}
-                  >
-                    <Link href={`/u/${cl.username}`}>
-                      <img
-                        src={avatar}
-                        style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                      />
-                    </Link>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29" }}>
-                        <Link href={`/u/${cl.username}`} style={{ textDecoration: "none", color: "inherit" }}>
-                          {cl.display_name || cl.username}
-                        </Link>
-                        <span style={{ fontWeight: 400, color: "#6b7280" }}> cheered</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        "{cl.commitment_text.length > 50 ? cl.commitment_text.slice(0, 50) + "…" : cl.commitment_text}"
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }}>
-                      {timeAgo(cl.cheered_at)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Lock overlay for free users — covers stats grid */}
+        {/* Lock overlay for free users — covers everything */}
         {!isPro && (
           <div style={{ position: "absolute", inset: 16, background: "rgba(242,243,247,0.85)", backdropFilter: "blur(6px)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
             <div style={{ textAlign: "center", padding: 24 }}>
@@ -273,10 +270,7 @@ export default async function InsightsPage() {
               <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 20, lineHeight: 1.5 }}>
                 Unlock detailed analytics — profile views, commitment views, follower details and more
               </div>
-              <Link
-                href="/upgrade"
-                style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none", boxShadow: "0 3px 12px rgba(67,56,202,0.3)" }}
-              >
+              <Link href="/upgrade" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none", boxShadow: "0 3px 12px rgba(67,56,202,0.3)" }}>
                 Upgrade to PRO →
               </Link>
             </div>
@@ -293,4 +287,4 @@ export default async function InsightsPage() {
 
     </div>
   );
-}
+                                            }
