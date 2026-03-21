@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ViewTracker from "@/components/ViewTracker";
 import FollowButton from "@/components/social/FollowButton";
+import CheerButton from "@/components/CheerButton"; // ✅ added
 
 export default function CommitmentClient({
   commitmentId,
@@ -21,6 +22,7 @@ export default function CommitmentClient({
   const [updates, setUpdates] = useState<any[]>([]);
   const [viewCount, setViewCount] = useState<number>(0);
   const [shareCount, setShareCount] = useState<number>(0);
+  const [cheerCount, setCheerCount] = useState<number>(0); // ✅ added
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [followerCount, setFollowerCount] = useState<number>(0);
@@ -30,6 +32,7 @@ export default function CommitmentClient({
     loadUpdates();
     loadViews();
     loadShares();
+    loadCheers(); // ✅ added
     loadUser();
   }, []);
 
@@ -81,6 +84,14 @@ export default function CommitmentClient({
       .from("commitment_shares").select("*", { count: "exact", head: true })
       .eq("commitment_id", commitmentId);
     setShareCount(count || 0);
+  }
+
+  // ✅ Load cheer count from commitment_cheers table
+  async function loadCheers() {
+    const { count } = await supabase
+      .from("commitment_cheers").select("*", { count: "exact", head: true })
+      .eq("commitment_id", commitmentId);
+    setCheerCount(count || 0);
   }
 
   async function loadFollowers() {
@@ -234,7 +245,7 @@ export default function CommitmentClient({
               Created {new Date(commitment.created_at).toLocaleDateString()}
             </div>
 
-            {/* Views + shares */}
+            {/* Views + shares + cheers count row */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, paddingTop: 12, borderTop: "1px solid #f3f4f8", marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#6b7280" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -252,33 +263,43 @@ export default function CommitmentClient({
               </div>
             </div>
 
-            {/* Share button */}
-            <button
-              onClick={share}
-              style={{
-                background: "linear-gradient(135deg,#4338ca,#6366f1)",
-                color: "#fff",
-                border: "none",
-                borderRadius: 12,
-                padding: "11px 24px",
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                display: "flex",
-                alignItems: "center",
-                gap: 7,
-                boxShadow: "0 3px 12px rgba(67,56,202,0.3)",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="11" cy="3" r="1.8" stroke="#fff" strokeWidth="1.2"/>
-                <circle cx="3" cy="7" r="1.8" stroke="#fff" strokeWidth="1.2"/>
-                <circle cx="11" cy="11" r="1.8" stroke="#fff" strokeWidth="1.2"/>
-                <path d="M4.7 6.1l4.6-2.3M4.7 7.9l4.6 2.3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-              Share commitment
-            </button>
+            {/* Action buttons row — Share + CheerButton */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              {/* Share button */}
+              <button
+                onClick={share}
+                style={{
+                  background: "linear-gradient(135deg,#4338ca,#6366f1)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "11px 24px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  boxShadow: "0 3px 12px rgba(67,56,202,0.3)",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="11" cy="3" r="1.8" stroke="#fff" strokeWidth="1.2"/>
+                  <circle cx="3" cy="7" r="1.8" stroke="#fff" strokeWidth="1.2"/>
+                  <circle cx="11" cy="11" r="1.8" stroke="#fff" strokeWidth="1.2"/>
+                  <path d="M4.7 6.1l4.6-2.3M4.7 7.9l4.6 2.3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Share commitment
+              </button>
+
+              {/* ✅ CheerButton — full size, live count from DB */}
+              <CheerButton
+                commitmentId={commitmentId}
+                initialCount={cheerCount}
+              />
+            </div>
+
           </div>
         </div>
 
@@ -304,7 +325,7 @@ export default function CommitmentClient({
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {updates.map((update, i) => (
+              {updates.map((update) => (
                 <div
                   key={update.id}
                   style={{
@@ -340,7 +361,6 @@ export default function CommitmentClient({
               overflow: "hidden",
             }}
           >
-            {/* Stars */}
             <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,0.8) 0%,transparent 100%),radial-gradient(1px 1px at 75% 15%,rgba(255,255,255,0.6) 0%,transparent 100%),radial-gradient(1px 1px at 45% 70%,rgba(255,255,255,0.5) 0%,transparent 100%),radial-gradient(1px 1px at 85% 60%,rgba(255,255,255,0.4) 0%,transparent 100%)" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
@@ -372,4 +392,4 @@ export default function CommitmentClient({
       </div>
     </div>
   );
-              }
+                         }
