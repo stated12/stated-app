@@ -1,219 +1,258 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CompanySettingsPage() {
+  const supabase = createClient();
+  const router = useRouter();
 
-const supabase = createClient();
+  const [company, setCompany] = useState<any>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
-const [company,setCompany] = useState<any>(null)
-const [companyId,setCompanyId] = useState<string | null>(null)
+  useEffect(() => { loadCompany(); }, []);
 
-const [loading,setLoading] = useState(true)
-const [saving,setSaving] = useState(false)
+  async function loadCompany() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
 
-/* ---------------- LOAD COMPANY ---------------- */
+    const { data: ownedCompany } = await supabase
+      .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
 
-useEffect(()=>{
-loadCompany()
-},[])
+    if (ownedCompany) {
+      setCompany(ownedCompany);
+      setCompanyId(ownedCompany.id);
+      setIsOwner(true);
+      setLoading(false);
+      return;
+    }
 
-async function loadCompany(){
+    const { data: membership } = await supabase
+      .from("company_members").select("company_id").eq("user_id", user.id).maybeSingle();
 
-const {data:{user}} = await supabase.auth.getUser()
+    if (!membership) { setLoading(false); return; }
 
-if(!user){
-setLoading(false)
-return
-}
+    const { data } = await supabase
+      .from("companies").select("*").eq("id", membership.company_id).single();
 
-/* FIRST TRY OWNER */
+    setCompany(data);
+    setCompanyId(membership.company_id);
+    setIsOwner(false);
+    setLoading(false);
+  }
 
-const {data:ownerCompany} = await supabase
-.from("companies")
-.select("*")
-.eq("owner_user_id",user.id)
-.maybeSingle()
+  async function updateCompany() {
+    if (!companyId || !company) return;
+    setError("");
+    setSaving(true);
 
-if(ownerCompany){
+    const { error: updateError } = await supabase
+      .from("companies")
+      .update({
+        name: company.name,
+        description: company.description,
+        logo_url: company.logo_url,
+        website: company.website,
+      })
+      .eq("id", companyId);
 
-setCompany(ownerCompany)
-setCompanyId(ownerCompany.id)
-setLoading(false)
-return
+    setSaving(false);
 
-}
+    if (updateError) {
+      setError("Failed to save. Please try again.");
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  }
 
-/* FALLBACK: MEMBER */
+  async function deleteCompany() {
+    if (!companyId) return;
+    const confirm = window.prompt('Type DELETE to confirm company deletion');
+    if (confirm !== "DELETE") return;
 
-const {data:membership} = await supabase
-.from("company_members")
-.select("company_id")
-.eq("user_id",user.id)
-.maybeSingle()
+    await supabase.from("companies").delete().eq("id", companyId);
+    router.push("/dashboard");
+  }
 
-if(!membership){
-setLoading(false)
-return
-}
+  if (loading) return (
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ fontSize: 13, color: "#9ca3af" }}>Loading settings...</div>
+    </div>
+  );
 
-const {data} = await supabase
-.from("companies")
-.select("*")
-.eq("id",membership.company_id)
-.single()
+  if (!company) return (
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ fontSize: 13, color: "#9ca3af" }}>Company not found</div>
+    </div>
+  );
 
-setCompany(data)
-setCompanyId(membership.company_id)
+  const logoUrl = company.logo_url?.trim()
+    ? company.logo_url.trim()
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=0891b2&color=fff&size=128`;
 
-setLoading(false)
+  const inputStyle = {
+    width: "100%",
+    border: "1px solid #e8eaf2",
+    borderRadius: 10,
+    padding: "11px 14px",
+    fontSize: 14,
+    color: "#0f0c29",
+    outline: "none",
+    fontFamily: "inherit",
+    background: "#f8f9fc",
+    boxSizing: "border-box" as const,
+  };
 
-}
+  const labelStyle = {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#374151",
+    marginBottom: 6,
+  };
 
-/* ---------------- UPDATE COMPANY ---------------- */
+  return (
+    <div style={{ margin: "-32px -24px", background: "#f2f3f7", minHeight: "100vh", paddingBottom: 40 }}>
 
-async function updateCompany(){
+      {/* Header */}
+      <div style={{ background: "#fff", padding: "16px 16px 14px", borderBottom: "1px solid #f0f1f6" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#0f0c29" }}>Company Settings</div>
+        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>@{company.username}</div>
+      </div>
 
-if(!companyId || !company) return
+      <div style={{ padding: 16 }}>
 
-setSaving(true)
+        {/* Logo preview */}
+        <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #f0f1f6", marginBottom: 12, display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 12, background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: 2.5, flexShrink: 0 }}>
+            <img src={logoUrl} alt={company.name} style={{ width: "100%", height: "100%", borderRadius: 10, objectFit: "cover", border: "2px solid #fff" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f0c29" }}>{company.name}</div>
+            <div style={{ fontSize: 11, color: "#9ca3af" }}>@{company.username} · Company</div>
+          </div>
+        </div>
 
-await supabase
-.from("companies")
-.update({
-name:company.name,
-username:company.username,
-description:company.description
-})
-.eq("id",companyId)
+        {/* Form */}
+        <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #f0f1f6", marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>Company Info</div>
 
-setSaving(false)
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Company Name</label>
+            <input
+              style={inputStyle}
+              value={company.name || ""}
+              onChange={(e) => setCompany({ ...company, name: e.target.value })}
+              placeholder="Your company name"
+              disabled={!isOwner}
+            />
+          </div>
 
-alert("Company updated")
+          {/* Username — locked, not editable */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Username <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 400 }}>(permanent — cannot be changed)</span></label>
+            <input
+              style={{ ...inputStyle, color: "#9ca3af", cursor: "not-allowed" }}
+              value={company.username || ""}
+              disabled
+            />
+          </div>
 
-}
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Description</label>
+            <textarea
+              style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
+              value={company.description || ""}
+              onChange={(e) => setCompany({ ...company, description: e.target.value })}
+              placeholder="What does your company commit to publicly?"
+              disabled={!isOwner}
+            />
+          </div>
 
-/* ---------------- DELETE COMPANY ---------------- */
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Logo URL</label>
+            <input
+              style={inputStyle}
+              value={company.logo_url || ""}
+              onChange={(e) => setCompany({ ...company, logo_url: e.target.value })}
+              placeholder="https://your-logo-url.com/logo.png"
+              disabled={!isOwner}
+            />
+            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>Paste a direct image URL. Square images work best.</div>
+          </div>
 
-async function deleteCompany(){
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Website</label>
+            <input
+              style={inputStyle}
+              value={company.website || ""}
+              onChange={(e) => setCompany({ ...company, website: e.target.value })}
+              placeholder="https://yourcompany.com"
+              disabled={!isOwner}
+            />
+          </div>
 
-if(!companyId) return
+          {error && (
+            <div style={{ background: "#fff5f5", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: "#dc2626" }}>
+              {error}
+            </div>
+          )}
 
-const confirmDelete = prompt(
-"Type DELETE to confirm company deletion"
-)
+          {isOwner && (
+            <button
+              onClick={updateCompany}
+              disabled={saving}
+              style={{ width: "100%", padding: "13px", background: saved ? "linear-gradient(135deg,#10b981,#34d399)" : saving ? "#9ca3af" : "linear-gradient(135deg,#0891b2,#0e7490)", border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", transition: "background 0.2s" }}
+            >
+              {saved ? "✓ Saved!" : saving ? "Saving..." : "Save Changes"}
+            </button>
+          )}
 
-if(confirmDelete !== "DELETE") return
+          {!isOwner && (
+            <div style={{ background: "#f8f9fc", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
+              Only the company owner can edit settings
+            </div>
+          )}
+        </div>
 
-await supabase
-.from("companies")
-.delete()
-.eq("id",companyId)
+        {/* Public profile link */}
+        <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f1f6", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29" }}>Public Profile</div>
+            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>app.stated.in/c/{company.username}</div>
+          </div>
+          
+            href={`/c/${company.username}`}
+            style={{ fontSize: 12, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}
+          >
+            View →
+          </a>
+        </div>
 
-alert("Company deleted")
+        {/* Danger zone — owner only */}
+        {isOwner && (
+          <div style={{ background: "#fff", borderRadius: 14, padding: "16px", border: "1px solid #fee2e2", marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
+            <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 14, lineHeight: 1.5 }}>
+              Deleting your company is permanent. All commitments, members and data will be lost.
+            </div>
+            <button
+              onClick={deleteCompany}
+              style={{ background: "none", border: "1.5px solid #fca5a5", borderRadius: 10, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "#dc2626", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Delete Company
+            </button>
+          </div>
+        )}
 
-window.location.href="/dashboard"
-
-}
-
-/* ---------------- LOADING ---------------- */
-
-if(loading){
-
-return(
-<div className="max-w-2xl mx-auto py-10">
-<div className="text-gray-500">
-Loading company settings...
-</div>
-</div>
-)
-
-}
-
-if(!company){
-
-return(
-<div className="max-w-2xl mx-auto py-10">
-<div className="text-gray-500">
-Company not found
-</div>
-</div>
-)
-
-}
-
-/* ---------------- PAGE ---------------- */
-
-return(
-
-<div className="max-w-2xl mx-auto py-10 space-y-8">
-
-<h1 className="text-2xl font-bold">
-Company Settings
-</h1>
-
-<div className="space-y-4">
-
-<input
-value={company.name || ""}
-onChange={(e)=>
-setCompany({
-...company,
-name:e.target.value
-})
-}
-placeholder="Company Name"
-className="w-full border rounded-lg px-4 py-2"
-/>
-
-<input
-value={company.username || ""}
-onChange={(e)=>
-setCompany({
-...company,
-username:e.target.value
-})
-}
-placeholder="Username"
-className="w-full border rounded-lg px-4 py-2"
-/>
-
-<textarea
-value={company.description || ""}
-onChange={(e)=>
-setCompany({
-...company,
-description:e.target.value
-})
-}
-placeholder="Company Description"
-className="w-full border rounded-lg px-4 py-2"
-/>
-
-<button
-onClick={updateCompany}
-disabled={saving}
-className="bg-blue-600 text-white px-6 py-2 rounded-lg"
->
-{saving ? "Saving..." : "Save Changes"}
-</button>
-
-</div>
-
-<div className="border-t pt-6">
-
-<button
-onClick={deleteCompany}
-className="text-red-600 font-medium"
->
-Delete Company
-</button>
-
-</div>
-
-</div>
-
-)
-
+      </div>
+    </div>
+  );
 }
