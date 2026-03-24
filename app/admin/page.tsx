@@ -9,8 +9,13 @@ const PLAN_REVENUE: Record<string, number> = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  free: "Free", ind_499: "Starter", ind_899: "Growth", ind_1299: "Pro Creator",
-  comp_1999: "Team", comp_2999: "Growth", comp_4999: "Scale",
+  free: "Free",
+  ind_499: "Starter",
+  ind_899: "Growth",
+  ind_1299: "Pro Creator",
+  comp_1999: "Team",
+  comp_2999: "Growth",
+  comp_4999: "Scale",
 };
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -40,14 +45,17 @@ function sinceDate(period: string): string | null {
   return null;
 }
 
-// ✅ Server actions
+// Server actions
 async function resolveTicket(formData: FormData) {
   "use server";
   const ticketId = formData.get("ticketId") as string;
   if (!ticketId) return;
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
-  await supabase.from("support_tickets").update({ status: "resolved" }).eq("id", ticketId);
+  await supabase
+    .from("support_tickets")
+    .update({ status: "resolved" })
+    .eq("id", ticketId);
   const { redirect } = await import("next/navigation");
   redirect("/admin");
 }
@@ -58,7 +66,10 @@ async function reopenTicket(formData: FormData) {
   if (!ticketId) return;
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
-  await supabase.from("support_tickets").update({ status: "open" }).eq("id", ticketId);
+  await supabase
+    .from("support_tickets")
+    .update({ status: "open" })
+    .eq("id", ticketId);
   const { redirect } = await import("next/navigation");
   redirect("/admin");
 }
@@ -148,43 +159,57 @@ export default async function AdminPage({
   const openList =
     (allTickets || []).filter((t: any) => t.status === "open");
 
+  const resolvedList =
+    (allTickets || []).filter((t: any) => t.status === "resolved");
+
   return (
-    <div style={{ padding: 20 }}>
-      
-      {/* ALWAYS visible */}
+    <div style={{ minHeight: "100vh", padding: 20 }}>
       <h1>Admin Dashboard</h1>
 
-      {/* Revenue */}
       <div>Total Revenue: ₹{totalRevenue}</div>
-
-      {/* Users */}
       <div>Users: {totalIndividuals || 0}</div>
-
-      {/* Commitments */}
+      <div>Companies: {totalCompanies || 0}</div>
       <div>Total Commitments: {totalCommitments || 0}</div>
 
-      {/* Tickets CTA (FIXED) */}
+      {/* FIXED LINK */}
       <div style={{ marginTop: 20 }}>
         <a href={`?period=${period}&tab=tickets`}>
           View Tickets ({openTickets || 0})
         </a>
       </div>
 
-      {/* Empty state (IMPORTANT) */}
+      {/* SAFE FALLBACK */}
       {(!allTickets || allTickets.length === 0) && (
         <div style={{ marginTop: 20, color: "#888" }}>
           No tickets yet
         </div>
       )}
 
-      {/* Tickets list */}
-      {openList.map((t: any) => (
-        <div key={t.id} style={{ marginTop: 10 }}>
+      {/* OPEN TICKETS */}
+      {tab === "tickets" && openList.map((t: any) => (
+        <div key={t.id} style={{ marginTop: 15 }}>
           <strong>{t.subject}</strong>
           <div>{t.message}</div>
+
+          <form action={resolveTicket}>
+            <input type="hidden" name="ticketId" value={t.id} />
+            <button type="submit">Mark Resolved</button>
+          </form>
         </div>
       ))}
 
+      {/* RESOLVED */}
+      {tab === "tickets" && resolvedList.map((t: any) => (
+        <div key={t.id} style={{ marginTop: 15, opacity: 0.6 }}>
+          <strong>{t.subject}</strong>
+          <div>{t.message}</div>
+
+          <form action={reopenTicket}>
+            <input type="hidden" name="ticketId" value={t.id} />
+            <button type="submit">Reopen</button>
+          </form>
+        </div>
+      ))}
     </div>
   );
 }
