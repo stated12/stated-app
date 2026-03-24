@@ -67,17 +67,23 @@ export default function SignupPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) { setError("Session not ready. Please try again."); setLoading(false); return; }
 
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: user.id,
-        username: lower,
-        display_name: username,
-        account_type: accountType,
-        credits: 5,
-        plan_key: "free",
-      });
-      if (profileError) { setError("Could not create profile. Please try again."); setLoading(false); return; }
+      if (accountType === "individual") {
+        // ── Individual: create profile only ──
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: user.id,
+          username: lower,
+          display_name: username,
+          account_type: "individual",
+          credits: 5,
+          plan_key: "free",
+        });
+        if (profileError) { setError("Could not create profile. Please try again."); setLoading(false); return; }
+        router.push("/dashboard");
+        return;
+      }
 
       if (accountType === "company") {
+        // ── Company: NO profile row — company row only ──
         const { data: company, error: companyError } = await supabase
           .from("companies")
           .insert({
@@ -93,8 +99,6 @@ export default function SignupPage() {
           .single();
 
         if (companyError || !company) {
-          // Rollback — delete profile and auth user
-          await supabase.from("profiles").delete().eq("id", user.id);
           await supabase.auth.admin?.deleteUser(user.id);
           setError("Could not create company. Please try again.");
           setLoading(false);
@@ -108,9 +112,7 @@ export default function SignupPage() {
         });
 
         if (membershipError) {
-          // Rollback — delete company, profile and auth user
           await supabase.from("companies").delete().eq("id", company.id);
-          await supabase.from("profiles").delete().eq("id", user.id);
           setError("Could not create company membership. Please try again.");
           setLoading(false);
           return;
@@ -120,7 +122,6 @@ export default function SignupPage() {
         return;
       }
 
-      router.push("/dashboard");
     } catch {
       setError("Unexpected error. Please try again.");
     }
@@ -148,26 +149,35 @@ export default function SignupPage() {
               key={type}
               type="button"
               onClick={() => setAccountType(type)}
-              style={{ flex: 1, padding: "9px", borderRadius: 9, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, background: accountType === type ? "#fff" : "transparent", color: accountType === type ? "#4338ca" : "#9ca3af", boxShadow: accountType === type ? "0 1px 6px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s", textTransform: "capitalize" }}
+              style={{ flex: 1, padding: "9px", borderRadius: 9, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, background: accountType === type ? "#fff" : "transparent", color: accountType === type ? "#4338ca" : "#9ca3af", boxShadow: accountType === type ? "0 1px 6px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s", textTransform: "capitalize" as const }}
             >
               {type === "individual" ? "👤 Individual" : "🏢 Company"}
             </button>
           ))}
         </div>
 
+        {/* Company note */}
+        {isCompany && (
+          <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#0369a1", lineHeight: 1.5 }}>
+            🏢 Company account — you can invite team members to manage it after signup.
+          </div>
+        )}
+
         {/* Username */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Username</label>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+            {isCompany ? "Company Username" : "Username"}
+          </label>
           <div style={{ position: "relative" }}>
             <input
               type="text"
-              placeholder="yourname"
+              placeholder={isCompany ? "companyname" : "yourname"}
               value={username}
               required
               minLength={3}
               maxLength={20}
               onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-              style={{ width: "100%", border: `1.5px solid ${usernameStatus === "available" ? "#10b981" : usernameStatus === "taken" ? "#ef4444" : "#e8eaf2"}`, borderRadius: 10, padding: "11px 40px 11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
+              style={{ width: "100%", border: `1.5px solid ${usernameStatus === "available" ? "#10b981" : usernameStatus === "taken" ? "#ef4444" : "#e8eaf2"}`, borderRadius: 10, padding: "11px 40px 11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" as const }}
             />
             <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>
               {usernameStatus === "checking" && <span style={{ color: "#9ca3af" }}>⟳</span>}
@@ -175,12 +185,8 @@ export default function SignupPage() {
               {usernameStatus === "taken" && <span style={{ color: "#ef4444" }}>✗</span>}
             </div>
           </div>
-
-          {/* Profile URL preview */}
           <div style={{ marginTop: 6, padding: "7px 12px", background: usernameStatus === "available" ? "#f0fdf4" : "#f8f9fc", borderRadius: 8, border: `1px solid ${usernameStatus === "available" ? "#bbf7d0" : "#f0f1f6"}` }}>
-            <span style={{ fontSize: 11, color: usernameStatus === "available" ? "#15803d" : "#9ca3af", fontWeight: 500 }}>
-              {profileUrl}
-            </span>
+            <span style={{ fontSize: 11, color: usernameStatus === "available" ? "#15803d" : "#9ca3af", fontWeight: 500 }}>{profileUrl}</span>
           </div>
           <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>Permanent — cannot be changed after signup</div>
         </div>
@@ -194,7 +200,7 @@ export default function SignupPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
+            style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" as const }}
           />
         </div>
 
@@ -208,14 +214,16 @@ export default function SignupPage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
+            style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" as const }}
           />
         </div>
 
         {/* Free credits note */}
         <div style={{ background: "#eef2ff", borderRadius: 10, padding: "10px 14px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>🎁</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#4338ca" }}>Start with 5 free commitments — no credit card needed</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#4338ca" }}>
+            {isCompany ? "Start with 5 free company credits — no credit card needed" : "Start with 5 free commitments — no credit card needed"}
+          </span>
         </div>
 
         {error && (
@@ -234,12 +242,10 @@ export default function SignupPage() {
 
         <p style={{ textAlign: "center", fontSize: 13, color: "#9ca3af", marginTop: 20 }}>
           Already have an account?{" "}
-          <span onClick={() => router.push("/login")} style={{ color: "#4338ca", fontWeight: 600, cursor: "pointer" }}>
-            Login
-          </span>
+          <span onClick={() => router.push("/login")} style={{ color: "#4338ca", fontWeight: 600, cursor: "pointer" }}>Login</span>
         </p>
 
       </form>
     </div>
   );
-}
+                }
