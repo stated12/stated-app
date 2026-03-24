@@ -12,7 +12,7 @@ export default async function InvitePage({
   const supabase = await createClient();
   const token = params.token;
 
-  /* FIND INVITE */
+  /* ── FIND INVITE ── */
   const { data: invite } = await supabase
     .from("company_invites")
     .select("*")
@@ -28,15 +28,13 @@ export default async function InvitePage({
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "#0f0c29", marginBottom: 8 }}>Invalid Invitation</h1>
           <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>This invitation link is not valid or has already been used.</p>
-          <Link href="/" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Go to Stated →
-          </Link>
+          <Link href="/" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Go to Stated →</Link>
         </div>
       </div>
     );
   }
 
-  /* EXPIRED CHECK */
+  /* ── EXPIRED ── */
   if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
     return (
       <div style={{ minHeight: "100vh", background: "#f2f3f7", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -46,15 +44,13 @@ export default async function InvitePage({
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "#0f0c29", marginBottom: 8 }}>Invite Expired</h1>
           <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>This invitation has expired. Ask the company admin to send a new invite.</p>
-          <Link href="/" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Go to Stated →
-          </Link>
+          <Link href="/" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Go to Stated →</Link>
         </div>
       </div>
     );
   }
 
-  /* ALREADY ACCEPTED */
+  /* ── ALREADY ACCEPTED ── */
   if (invite.status === "accepted") {
     return (
       <div style={{ minHeight: "100vh", background: "#f2f3f7", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -64,29 +60,62 @@ export default async function InvitePage({
           </div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "#0f0c29", marginBottom: 8 }}>Already Accepted</h1>
           <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>This invitation was already accepted. Head to your dashboard.</p>
-          <Link href="/dashboard/company" style={{ display: "inline-block", background: "linear-gradient(135deg,#0891b2,#0e7490)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Go to Dashboard →
-          </Link>
+          <Link href="/dashboard/company" style={{ display: "inline-block", background: "linear-gradient(135deg,#0891b2,#0e7490)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Go to Dashboard →</Link>
         </div>
       </div>
     );
   }
 
-  /* GET COMPANY */
+  /* ── GET COMPANY ── */
   const { data: company } = await supabase
     .from("companies")
     .select("name, username, logo_url")
     .eq("id", invite.company_id)
     .single();
 
-  /* CHECK LOGIN */
+  /* ── CHECK LOGIN ── */
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?invite=${token}`);
 
-  if (!user) {
-    redirect(`/login?invite=${token}`);
+  /* ── CREATE INDIVIDUAL PROFILE IF NOT EXISTS ──
+     Invited users are always individuals — give them 5 free credits
+     so they can post personal commitments too.                        */
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!existingProfile) {
+    // Derive a username from their email (e.g. john.doe@x.com → johndoe)
+    const emailUsername = user.email
+      ?.split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 20) || `user${Date.now().toString().slice(-6)}`;
+
+    // Make sure it's unique — append random suffix if taken
+    const { data: taken } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", emailUsername)
+      .maybeSingle();
+
+    const finalUsername = taken
+      ? `${emailUsername.slice(0, 14)}${Math.floor(Math.random() * 999999)}`
+      : emailUsername;
+
+    await supabase.from("profiles").insert({
+      id: user.id,
+      username: finalUsername,
+      display_name: finalUsername,
+      account_type: "individual",
+      credits: 5,
+      plan_key: "free",
+    });
   }
 
-  /* CHECK EXISTING MEMBER */
+  /* ── ADD TO COMPANY MEMBERS IF NOT ALREADY ── */
   const { data: existing } = await supabase
     .from("company_members")
     .select("id")
@@ -102,12 +131,12 @@ export default async function InvitePage({
     });
   }
 
-  /* MARK ACCEPTED */
+  /* ── MARK ACCEPTED ── */
   await supabase
     .from("company_invites")
     .update({ status: "accepted", accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
 
-  /* REDIRECT */
+  /* ── REDIRECT TO COMPANY DASHBOARD ── */
   redirect("/dashboard/company");
 }
