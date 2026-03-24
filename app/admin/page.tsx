@@ -46,7 +46,6 @@ async function reopenTicket(formData: FormData) {
 }
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ period?: string; tab?: string }> }) {
-  // Next.js 15: searchParams is async
   const { period: rawPeriod, tab: rawTab } = await searchParams;
 
   const supabase = await createClient();
@@ -66,9 +65,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     { data: allProfiles }, { data: allCompanies },
     { count: totalCommitments }, { count: newCommitments },
     { count: activeC }, { count: completedC }, { count: withdrawnC }, { count: expiredC },
-    { count: totalUpdates }, { count: newUpdates },
+    { count: totalUpdates },  { count: newUpdates },
     { count: totalCheers },
-    { count: totalShares }, { count: newShares },
+    { count: totalShares },   { count: newShares },
+    { count: totalCommitmentViews }, { count: newCommitmentViews },
+    { count: totalProfileViews },    { count: newProfileViews },
     { count: openTickets }, { count: resolvedTickets },
     { data: allTickets },
   ] = await Promise.all([
@@ -80,9 +81,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     cnt("commitments").eq("status","completed"),
     cnt("commitments").eq("status","withdrawn"),
     cnt("commitments").eq("status","expired"),
-    cnt("commitment_updates"), cntF("commitment_updates"),
+    cnt("commitment_updates"),  cntF("commitment_updates"),
     cnt("commitment_cheers"),
-    cnt("commitment_shares"), cntF("commitment_shares"),
+    cnt("commitment_shares"),   cntF("commitment_shares"),
+    cnt("commitment_views"),    cntF("commitment_views"),
+    cnt("profile_views"),       cntF("profile_views"),
     cnt("support_tickets").eq("status","open"),
     cnt("support_tickets").eq("status","resolved"),
     supabase.from("support_tickets").select("id,subject,message,status,created_at").order("created_at",{ascending:false}),
@@ -216,12 +219,29 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             </div>
 
             <div style={sectionLabel}>Engagement</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10 }}>
+
+            {/* Updates */}
+            <div style={{ fontSize:11, fontWeight:600, color:"#c4b5fd", textTransform:"uppercase" as const, letterSpacing:0.5, marginBottom:6 }}>Updates</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, marginBottom:14 }}>
               <Stat label="Total Updates" value={totalUpdates||0} sub="all time"              color="#6366f1" />
               <Stat label="New Updates"   value={newUpdates||0}   sub={PERIOD_LABELS[period]} color="#10b981" />
-              <Stat label="Total Cheers"  value={totalCheers||0}  sub="all time"              color="#f59e0b" />
-              <Stat label="Total Shares"  value={totalShares||0}  sub="all time"              color="#0891b2" />
-              <Stat label="New Shares"    value={newShares||0}    sub={PERIOD_LABELS[period]} color="#10b981" />
+            </div>
+
+            {/* Cheers & Shares */}
+            <div style={{ fontSize:11, fontWeight:600, color:"#fcd34d", textTransform:"uppercase" as const, letterSpacing:0.5, marginBottom:6 }}>Cheers & Shares</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, marginBottom:14 }}>
+              <Stat label="Total Cheers" value={totalCheers||0}  sub="all time"              color="#f59e0b" />
+              <Stat label="Total Shares" value={totalShares||0}  sub="all time"              color="#0891b2" />
+              <Stat label="New Shares"   value={newShares||0}    sub={PERIOD_LABELS[period]} color="#10b981" />
+            </div>
+
+            {/* Views */}
+            <div style={{ fontSize:11, fontWeight:600, color:"#6ee7b7", textTransform:"uppercase" as const, letterSpacing:0.5, marginBottom:6 }}>Views</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10 }}>
+              <Stat label="Commitment Views"     value={totalCommitmentViews||0} sub="all time"              color="#0d9488" />
+              <Stat label="New Commit. Views"    value={newCommitmentViews||0}   sub={PERIOD_LABELS[period]} color="#10b981" />
+              <Stat label="Profile Views"        value={totalProfileViews||0}    sub="all time"              color="#0891b2" />
+              <Stat label="New Profile Views"    value={newProfileViews||0}      sub={PERIOD_LABELS[period]} color="#10b981" />
             </div>
 
             <div style={sectionLabel}>Plan Breakdown</div>
