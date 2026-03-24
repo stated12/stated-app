@@ -3,214 +3,237 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default async function BillingPage() {
-  const supabase = await createClient();
+const PLAN_LABELS: Record<string, string> = {
+  free:      "Free",
+  ind_499:   "Starter",
+  ind_899:   "Growth",
+  ind_1299:  "Pro Creator",
+  comp_1999: "Team",
+  comp_2999: "Growth",
+  comp_4999: "Scale",
+};
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const PACK_LABELS: Record<string, string> = {
+  pack_10: "10 Credit Pack",
+  pack_25: "25 Credit Pack",
+  pack_50: "50 Credit Pack",
+};
 
-  if (!user) {
+const PLAN_FEATURES: Record<string, string[]> = {
+  free:      ["5 credits", "2 updates per commitment", "No analytics", "2 team members (company)"],
+  ind_499:   ["20 credits", "5 updates per commitment", "Analytics unlocked"],
+  ind_899:   ["40 credits", "10 updates per commitment", "Analytics unlocked", "PRO badge", "Extended insights"],
+  ind_1299:  ["60 credits", "15 updates per commitment", "Analytics unlocked", "PRO badge", "Extended insights"],
+  comp_1999: ["25 shared credits", "Up to 5 members", "5 updates per commitment", "Company analytics"],
+  comp_2999: ["50 shared credits", "Up to 10 members", "10 updates per commitment", "Company analytics"],
+  comp_4999: ["75 shared credits", "Up to 15 members", "15 updates per commitment", "Company analytics"],
+};
+
+function planColor(planKey: string) {
+  if (planKey.startsWith("comp_")) return { accent: "#0891b2", light: "#e0f2fe", text: "#0369a1" };
+  if (planKey === "free")          return { accent: "#9ca3af", light: "#f3f4f6", text: "#6b7280" };
+  return                                  { accent: "#4338ca", light: "#eef2ff", text: "#4338ca" };
+}
+
+function PaymentTable({ payments }: { payments: any[] }) {
+  if (!payments || payments.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Link
-          href="/login"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
-        >
-          Login
-        </Link>
+      <div style={{ padding: "20px", textAlign: "center" as const, fontSize: 13, color: "#9ca3af" }}>
+        No payments yet.
       </div>
     );
   }
+  return (
+    <div style={{ overflowX: "auto" as const }}>
+      <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 13 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #f0f1f6" }}>
+            {["Date", "Plan / Pack", "Amount", "Credits", "Type", "Status"].map((h) => (
+              <th key={h} style={{ padding: "8px 12px", textAlign: "left" as const, fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" as const, letterSpacing: 0.4, whiteSpace: "nowrap" as const }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((p, i) => (
+            <tr key={p.id} style={{ borderBottom: i < payments.length - 1 ? "1px solid #f8f9fc" : "none" }}>
+              <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" as const }}>
+                {new Date(p.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </td>
+              <td style={{ padding: "10px 12px", fontWeight: 600, color: "#0f0c29" }}>
+                {PLAN_LABELS[p.plan_key] || PACK_LABELS[p.plan_key] || p.plan_key}
+              </td>
+              <td style={{ padding: "10px 12px", fontWeight: 700, color: "#0f0c29" }}>
+                ₹{Math.round((p.amount || 0) / 100)}
+              </td>
+              <td style={{ padding: "10px 12px", color: "#374151" }}>
+                +{p.credits_added || 0}
+              </td>
+              <td style={{ padding: "10px 12px" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: p.payment_type === "credit_pack" ? "#f0fdf4" : "#eef2ff", color: p.payment_type === "credit_pack" ? "#15803d" : "#4338ca", whiteSpace: "nowrap" as const }}>
+                  {p.payment_type === "credit_pack" ? "Credit Pack" : "Plan"}
+                </span>
+              </td>
+              <td style={{ padding: "10px 12px" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: p.status === "paid" ? "#dcfce7" : "#fee2e2", color: p.status === "paid" ? "#15803d" : "#dc2626" }}>
+                  {p.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-  // ================= PROFILE =================
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  const isPro = !!profile?.plan_key;
-  const credits = profile?.credits ?? 0;
-
-  // ================= PAYMENTS =================
-  const { data: payments } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const totalCreditsPurchased =
-    payments?.reduce(
-      (sum, p) => sum + (p.credits_purchased || 0),
-      0
-    ) ?? 0;
+function PlanSection({
+  planKey, credits, payments, isCompany = false,
+}: {
+  planKey: string; credits: number; payments: any[]; isCompany?: boolean;
+}) {
+  const color    = planColor(planKey);
+  const isFree   = planKey === "free";
+  const features = PLAN_FEATURES[planKey] || [];
+  const totalCreditsAdded = payments.reduce((s, p) => s + (p.credits_added || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #f0f1f6", overflow: "hidden", boxShadow: "0 1px 8px rgba(0,0,0,0.04)", marginBottom: 16 }}>
+      <div style={{ height: 3, background: `linear-gradient(90deg,${color.accent},${color.accent}88)` }} />
+      <div style={{ padding: "18px 20px" }}>
 
-        {/* ================= HEADER ================= */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Stated logo"
-              width={40}
-              height={40}
-            />
-            <h1 className="text-2xl font-bold text-blue-600">
-              Billing
-            </h1>
+        {/* Plan header row */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 10, marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" as const, letterSpacing: 0.5, marginBottom: 4 }}>
+              {isCompany ? "Company Plan" : "Individual Plan"}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 17, fontWeight: 800, color: "#0f0c29" }}>
+                {PLAN_LABELS[planKey] || planKey}
+              </span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: color.light, color: color.text }}>
+                {isFree ? "FREE" : "ACTIVE"}
+              </span>
+            </div>
+            {!isFree && features.length > 0 && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column" as const, gap: 3 }}>
+                {features.map((f, i) => (
+                  <div key={i} style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ color: "#10b981" }}>✓</span> {f}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-
           <Link
-            href="/dashboard"
-            className="text-sm text-gray-500 hover:underline"
+            href="/upgrade"
+            style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg,${color.accent},${color.accent}cc)`, padding: "8px 16px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap" as const, boxShadow: `0 2px 8px ${color.accent}33`, flexShrink: 0 }}
           >
-            ← Back to Dashboard
+            {isFree ? "Upgrade" : "Buy Credits"}
           </Link>
         </div>
 
-        {/* ================= CURRENT PLAN ================= */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="flex justify-between items-center flex-wrap gap-4">
+        {/* Stats row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+          {[
+            { label: "Credits Left",    value: credits,           color: isCompany ? "#0891b2" : "#d97706" },
+            { label: "Credits Bought",  value: totalCreditsAdded, color: "#4338ca" },
+            { label: "Payments",        value: payments.length,   color: "#10b981" },
+          ].map((s) => (
+            <div key={s.label} style={{ background: "#f8f9fc", borderRadius: 12, padding: "10px 8px", textAlign: "center" as const, border: "1px solid #f0f1f6" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Payment history */}
+        <div style={{ borderTop: "1px solid #f0f1f6", paddingTop: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29", marginBottom: 10 }}>Payment History</div>
+          <PaymentTable payments={payments} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default async function BillingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // ── Individual profile ──
+  const { data: profile } = await supabase
+    .from("profiles").select("*").eq("id", user.id).maybeSingle();
+
+  // ── Company owned by this user ──
+  const { data: ownedCompany } = await supabase
+    .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
+
+  // ── Individual payments (no company linked) ──
+  const { data: individualPayments } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("user_id", user.id)
+    .is("company_id", null)
+    .order("created_at", { ascending: false });
+
+  // ── Company payments ──
+  const { data: companyPayments } = ownedCompany
+    ? await supabase
+        .from("payments")
+        .select("*")
+        .eq("company_id", ownedCompany.id)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f2f3f7", padding: "24px 16px 60px" }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Image src="/logo.png" alt="" width={32} height={32} />
             <div>
-              <div className="text-sm text-gray-500">
-                Current Plan
-              </div>
-              <div className="text-xl font-semibold mt-1">
-                {isPro ? "Pro Plan" : "Free Plan"}
-              </div>
-              {profile?.plan_purchased_at && (
-                <div className="text-xs text-gray-400 mt-1">
-                  Activated{" "}
-                  {new Date(
-                    profile.plan_purchased_at
-                  ).toLocaleDateString()}
-                </div>
-              )}
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#4338ca" }}>Billing</div>
+              <div style={{ fontSize: 11, color: "#9ca3af" }}>Plans, credits & payment history</div>
             </div>
-
-            {!isPro && (
-              <Link
-                href="/upgrade"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                Upgrade to Pro
-              </Link>
-            )}
           </div>
+          <Link href="/dashboard" style={{ fontSize: 12, color: "#6b7280", textDecoration: "none", fontWeight: 600 }}>← Dashboard</Link>
         </div>
 
-        {/* ================= CREDITS SUMMARY ================= */}
-        <div className="bg-white rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div>
-            <div className="text-sm text-gray-500">
-              Credits Remaining
-            </div>
-            <div className="text-2xl font-bold mt-1">
-              {credits}
-            </div>
-          </div>
+        {/* Individual billing */}
+        {profile && (
+          <PlanSection
+            planKey={profile.plan_key || "free"}
+            credits={profile.credits ?? 0}
+            payments={individualPayments || []}
+            isCompany={false}
+          />
+        )}
 
-          <div>
-            <div className="text-sm text-gray-500">
-              Total Credits Purchased
-            </div>
-            <div className="text-2xl font-bold mt-1">
-              {totalCreditsPurchased}
-            </div>
-          </div>
+        {/* Company billing */}
+        {ownedCompany && (
+          <PlanSection
+            planKey={ownedCompany.plan_key || "free"}
+            credits={ownedCompany.credits ?? 0}
+            payments={companyPayments || []}
+            isCompany={true}
+          />
+        )}
 
-          <div>
-            <div className="text-sm text-gray-500">
-              Total Payments
-            </div>
-            <div className="text-2xl font-bold mt-1">
-              {payments?.length ?? 0}
-            </div>
-          </div>
-        </div>
-
-        {/* ================= PAYMENT HISTORY ================= */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="text-lg font-semibold mb-4">
-            Payment History
-          </div>
-
-          {payments && payments.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b text-gray-500">
-                  <tr>
-                    <th className="py-3 text-left">Date</th>
-                    <th className="py-3 text-left">Amount</th>
-                    <th className="py-3 text-left">Credits</th>
-                    <th className="py-3 text-left">Method</th>
-                    <th className="py-3 text-left">Status</th>
-                    <th className="py-3 text-left">Receipt</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr
-                      key={payment.id}
-                      className="border-b last:border-none"
-                    >
-                      <td className="py-3">
-                        {new Date(
-                          payment.created_at
-                        ).toLocaleDateString()}
-                      </td>
-
-                      <td className="py-3">
-                        ₹{(payment.amount || 0) / 100}
-                      </td>
-
-                      <td className="py-3">
-                        {payment.credits_purchased}
-                      </td>
-
-                      <td className="py-3 capitalize">
-                        {payment.payment_method || "-"}
-                      </td>
-
-                      <td className="py-3">
-                        <span
-                          className={`px-2 py-1 text-xs rounded ${
-                            payment.status === "paid"
-                              ? "bg-green-100 text-green-600"
-                              : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          {payment.status}
-                        </span>
-                      </td>
-
-                      <td className="py-3 text-xs">
-                        {payment.status === "paid" ? (
-                          <span className="text-gray-600">
-                            Receipt sent via email
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">
-                            —
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-gray-500 text-sm">
-              No payments yet.
-            </div>
-          )}
+        {/* Footer */}
+        <div style={{ textAlign: "center" as const, fontSize: 11, color: "#9ca3af", marginTop: 8, lineHeight: 1.8 }}>
+          Secure payments via Razorpay • Receipts sent via email at time of purchase<br />
+          Questions?{" "}
+          <Link href="/dashboard/support" style={{ color: "#4338ca", textDecoration: "none", fontWeight: 600 }}>
+            Contact Support
+          </Link>
         </div>
 
       </div>
