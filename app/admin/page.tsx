@@ -23,6 +23,7 @@ function sinceDate(period: string): string | null {
   return null;
 }
 
+// ── Server action to resolve a ticket ──
 async function resolveTicket(formData: FormData) {
   "use server";
   const ticketId = formData.get("ticketId") as string;
@@ -34,6 +35,7 @@ async function resolveTicket(formData: FormData) {
   redirect("/admin");
 }
 
+// ── Server action to reopen a ticket ──
 async function reopenTicket(formData: FormData) {
   "use server";
   const ticketId = formData.get("ticketId") as string;
@@ -111,20 +113,28 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
   function TicketCard({ ticket, isOpen }: { ticket: any; isOpen: boolean }) {
     return (
       <div style={{ background:"#fff", borderRadius:14, border:`1px solid ${isOpen ? "#fecaca" : "#f0f1f6"}`, padding:"14px 16px", boxShadow:"0 1px 6px rgba(0,0,0,0.04)" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", gap:10 }}>
-          <div>
-            <div style={{ marginBottom:6 }}>
+        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:10, flexWrap:"wrap" as const }}>
+          <div style={{ flex:1 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
               <span style={{ fontSize:10, fontWeight:700, padding:"2px 10px", borderRadius:20, background:isOpen?"#fee2e2":"#dcfce7", color:isOpen?"#dc2626":"#15803d" }}>
                 {isOpen ? "Open" : "Resolved"}
               </span>
+              <span style={{ fontSize:11, color:"#9ca3af" }}>
+                {new Date(ticket.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+              </span>
             </div>
-            <div style={{ fontWeight:700 }}>{ticket.subject}</div>
-            <div style={{ fontSize:13 }}>{ticket.message}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#0f0c29", marginBottom:6 }}>{ticket.subject}</div>
+            <div style={{ fontSize:13, color:"#6b7280", lineHeight:1.6, background:"#f8f9fc", borderRadius:10, padding:"10px 12px" }}>
+              {ticket.message}
+            </div>
           </div>
           <form action={isOpen ? resolveTicket : reopenTicket}>
             <input type="hidden" name="ticketId" value={ticket.id} />
-            <button type="submit">
-              {isOpen ? "Resolve" : "Reopen"}
+            <button
+              type="submit"
+              style={{ padding:"8px 14px", borderRadius:10, border:"none", fontFamily:"inherit", fontSize:12, fontWeight:700, cursor:"pointer", background:isOpen?"linear-gradient(135deg,#10b981,#059669)":"#f3f4f6", color:isOpen?"#fff":"#6b7280", whiteSpace:"nowrap" as const, boxShadow:isOpen?"0 2px 8px rgba(16,185,129,0.25)":"none" }}
+            >
+              {isOpen ? "✓ Mark Resolved" : "↩ Reopen"}
             </button>
           </form>
         </div>
@@ -133,17 +143,64 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
   }
 
   return (
-    <div style={{ padding:20 }}>
-      <h1>Admin Dashboard</h1>
+    <div style={{ minHeight:"100vh", background:"#f2f3f7", padding:"24px 16px 60px" }}>
+      <div style={{ maxWidth:900, margin:"0 auto" }}>
 
-      {(openTickets || 0) > 0 && (
-        <div style={{ marginTop:12 }}>
-          <a href={`?period=${period}&tab=tickets`}>
-            🎫 View {openTickets} open tickets →
-          </a>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap" as const, gap:12, marginBottom:24 }}>
+          <div>
+            <div style={{ fontSize:18, fontWeight:800, color:"#0f0c29" }}>⚙️ Admin Dashboard</div>
+            <div style={{ fontSize:11, color:"#9ca3af" }}>app.stated.in — internal overview</div>
+          </div>
+          <div style={{ display:"flex", gap:4, background:"#fff", borderRadius:12, padding:3, border:"1px solid #f0f1f6" }}>
+            {Object.entries(PERIOD_LABELS).map(([p, lbl]) => (
+              <a key={p} href={`?period=${p}&tab=${tab}`} style={{ padding:"6px 11px", borderRadius:9, fontSize:11, fontWeight:700, textDecoration:"none", background:period===p?"#4338ca":"transparent", color:period===p?"#fff":"#6b7280" }}>
+                {lbl}
+              </a>
+            ))}
+          </div>
         </div>
-      )}
 
+        <div style={{ display:"flex", gap:8, marginBottom:24 }}>
+          {[["overview","📊 Overview"], ["tickets","🎫 Support Tickets"]].map(([t, lbl]) => (
+            <a key={t} href={`?period=${period}&tab=${t}`} style={{ padding:"9px 18px", borderRadius:12, fontSize:13, fontWeight:700, textDecoration:"none", background:tab===t?"#0f0c29":"#fff", color:tab===t?"#fff":"#6b7280", border:"1px solid #f0f1f6", boxShadow: tab===t?"0 2px 8px rgba(0,0,0,0.1)":"none" }}>
+              {lbl}
+              {t === "tickets" && (openTickets || 0) > 0 && (
+                <span style={{ marginLeft:6, background:"#ef4444", color:"#fff", borderRadius:20, fontSize:10, fontWeight:800, padding:"1px 6px" }}>
+                  {openTickets}
+                </span>
+              )}
+            </a>
+          ))}
+        </div>
+
+        {tab === "overview" && (
+          <>
+            <div style={{ background:"linear-gradient(135deg,#4338ca,#6366f1)", borderRadius:16, padding:"20px 24px", marginBottom:4, color:"#fff", boxShadow:"0 4px 20px rgba(67,56,202,0.2)" }}>
+              <div style={{ fontSize:11, fontWeight:600, opacity:0.75, textTransform:"uppercase" as const, letterSpacing:0.5, marginBottom:6 }}>Total Inferred Revenue (All Time)</div>
+              <div style={{ fontSize:36, fontWeight:800, marginBottom:8 }}>₹{totalRevenue.toLocaleString()}</div>
+              <div style={{ display:"flex", gap:24, flexWrap:"wrap" as const, fontSize:12, opacity:0.85 }}>
+                <span>👤 Individual: ₹{indRevenue.toLocaleString()} ({paidInd} paid)</span>
+                <span>🏢 Company: ₹{compRevenue.toLocaleString()} ({paidComp} paid)</span>
+              </div>
+            </div>
+
+            <div style={sectionLabel}>Support Summary</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <Stat label="Open Tickets" value={openTickets||0} />
+              <Stat label="Resolved Tickets" value={resolvedTickets||0} />
+            </div>
+
+            {(openTickets || 0) > 0 && (
+              <div style={{ marginTop:12 }}>
+                <a href={`?period=${period}&tab=tickets`} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:13, fontWeight:700, color:"#ef4444", textDecoration:"none", background:"#fef2f2", padding:"8px 16px", borderRadius:10, border:"1px solid #fecaca" }}>
+                  🎫 View {openTickets} open ticket{(openTickets||0)>1?"s":""} →
+                </a>
+              </div>
+            )}
+          </>
+        )}
+
+      </div>
     </div>
   );
 }
