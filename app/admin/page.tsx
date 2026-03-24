@@ -23,7 +23,6 @@ function sinceDate(period: string): string | null {
   return null;
 }
 
-// ── Server action to resolve a ticket ──
 async function resolveTicket(formData: FormData) {
   "use server";
   const ticketId = formData.get("ticketId") as string;
@@ -35,7 +34,6 @@ async function resolveTicket(formData: FormData) {
   redirect("/admin");
 }
 
-// ── Server action to reopen a ticket ──
 async function reopenTicket(formData: FormData) {
   "use server";
   const ticketId = formData.get("ticketId") as string;
@@ -47,14 +45,17 @@ async function reopenTicket(formData: FormData) {
   redirect("/admin");
 }
 
-export default async function AdminPage({ searchParams }: { searchParams: { period?: string; tab?: string } }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ period?: string; tab?: string }> }) {
+  // Next.js 15: searchParams is async
+  const { period: rawPeriod, tab: rawTab } = await searchParams;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   if (!process.env.ADMIN_USER_ID || user.id !== process.env.ADMIN_USER_ID) redirect("/dashboard");
 
-  const period = searchParams.period || "month";
-  const tab    = searchParams.tab || "overview";
+  const period = rawPeriod || "month";
+  const tab    = rawTab    || "overview";
   const since  = sinceDate(period);
 
   const cnt  = (t: string) => supabase.from(t).select("*", { count: "exact", head: true });
@@ -65,7 +66,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
     { data: allProfiles }, { data: allCompanies },
     { count: totalCommitments }, { count: newCommitments },
     { count: activeC }, { count: completedC }, { count: withdrawnC }, { count: expiredC },
-    { count: totalUpdates }, { count: newUpdates }, { count: totalCheers },
+    { count: totalUpdates }, { count: newUpdates },
+    { count: totalCheers },
+    { count: totalShares }, { count: newShares },
     { count: openTickets }, { count: resolvedTickets },
     { data: allTickets },
   ] = await Promise.all([
@@ -77,14 +80,16 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
     cnt("commitments").eq("status","completed"),
     cnt("commitments").eq("status","withdrawn"),
     cnt("commitments").eq("status","expired"),
-    cnt("commitment_updates"), cntF("commitment_updates"), cnt("commitment_cheers"),
+    cnt("commitment_updates"), cntF("commitment_updates"),
+    cnt("commitment_cheers"),
+    cnt("commitment_shares"), cntF("commitment_shares"),
     cnt("support_tickets").eq("status","open"),
     cnt("support_tickets").eq("status","resolved"),
     supabase.from("support_tickets").select("id,subject,message,status,created_at").order("created_at",{ascending:false}),
   ]);
 
-  const indRevenue  = (allProfiles  || []).reduce((s,p) => s+(PLAN_REVENUE[p.plan_key]||0), 0);
-  const compRevenue = (allCompanies || []).reduce((s,c) => s+(PLAN_REVENUE[c.plan_key]||0), 0);
+  const indRevenue   = (allProfiles  || []).reduce((s,p) => s+(PLAN_REVENUE[p.plan_key]||0), 0);
+  const compRevenue  = (allCompanies || []).reduce((s,c) => s+(PLAN_REVENUE[c.plan_key]||0), 0);
   const totalRevenue = indRevenue + compRevenue;
   const paidInd  = (allProfiles  || []).filter(p => p.plan_key && p.plan_key !== "free").length;
   const paidComp = (allCompanies || []).filter(c => c.plan_key && c.plan_key !== "free").length;
@@ -97,7 +102,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
   const openList     = (allTickets || []).filter((t:any) => t.status === "open");
   const resolvedList = (allTickets || []).filter((t:any) => t.status === "resolved");
 
-  // ── Styles ──
   const cardStyle = { background:"#fff", borderRadius:14, padding:"14px 16px", border:"1px solid #f0f1f6", boxShadow:"0 1px 6px rgba(0,0,0,0.04)" };
   const sectionLabel = { fontSize:12, fontWeight:700, color:"#9ca3af", textTransform:"uppercase" as const, letterSpacing:1, marginBottom:10, marginTop:24 };
 
@@ -129,7 +133,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
               {ticket.message}
             </div>
           </div>
-          {/* Action button */}
           <form action={isOpen ? resolveTicket : reopenTicket}>
             <input type="hidden" name="ticketId" value={ticket.id} />
             <button
@@ -156,7 +159,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
           </div>
           <div style={{ display:"flex", gap:4, background:"#fff", borderRadius:12, padding:3, border:"1px solid #f0f1f6" }}>
             {Object.entries(PERIOD_LABELS).map(([p, lbl]) => (
-              <a key={p} href={`?period=${p}&tab=${tab}`} style={{ padding:"6px 11px", borderRadius:9, fontSize:11, fontWeight:700, textDecoration:"none", background:period===p?"#4338ca":"transparent", color:period===p?"#fff":"#6b7280" }}>
+              <a key={p} href={`/admin?period=${p}&tab=${tab}`} style={{ padding:"6px 11px", borderRadius:9, fontSize:11, fontWeight:700, textDecoration:"none", background:period===p?"#4338ca":"transparent", color:period===p?"#fff":"#6b7280" }}>
                 {lbl}
               </a>
             ))}
@@ -166,7 +169,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
         {/* Tab nav */}
         <div style={{ display:"flex", gap:8, marginBottom:24 }}>
           {[["overview","📊 Overview"], ["tickets","🎫 Support Tickets"]].map(([t, lbl]) => (
-            <a key={t} href={`?period=${period}&tab=${t}`} style={{ padding:"9px 18px", borderRadius:12, fontSize:13, fontWeight:700, textDecoration:"none", background:tab===t?"#0f0c29":"#fff", color:tab===t?"#fff":"#6b7280", border:"1px solid #f0f1f6", boxShadow: tab===t?"0 2px 8px rgba(0,0,0,0.1)":"none" }}>
+            <a key={t} href={`/admin?period=${period}&tab=${t}`} style={{ padding:"9px 18px", borderRadius:12, fontSize:13, fontWeight:700, textDecoration:"none", background:tab===t?"#0f0c29":"#fff", color:tab===t?"#fff":"#6b7280", border:"1px solid #f0f1f6", boxShadow:tab===t?"0 2px 8px rgba(0,0,0,0.1)":"none" }}>
               {lbl}
               {t === "tickets" && (openTickets || 0) > 0 && (
                 <span style={{ marginLeft:6, background:"#ef4444", color:"#fff", borderRadius:20, fontSize:10, fontWeight:800, padding:"1px 6px" }}>
@@ -195,21 +198,21 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
 
             <div style={sectionLabel}>Users — {PERIOD_LABELS[period]}</div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10 }}>
-              <Stat label="Individuals"      value={totalIndividuals||0} sub="all time"               color="#7c3aed" />
-              <Stat label="Companies"        value={totalCompanies||0}   sub="all time"               color="#0891b2" />
-              <Stat label="New Signups"      value={newSignups||0}       sub={PERIOD_LABELS[period]}  color="#10b981" />
-              <Stat label="Paid Individuals" value={paidInd}             sub="on a plan"              color="#4338ca" />
-              <Stat label="Paid Companies"   value={paidComp}            sub="on a plan"              color="#0891b2" />
+              <Stat label="Individuals"      value={totalIndividuals||0} sub="all time"              color="#7c3aed" />
+              <Stat label="Companies"        value={totalCompanies||0}   sub="all time"              color="#0891b2" />
+              <Stat label="New Signups"      value={newSignups||0}       sub={PERIOD_LABELS[period]} color="#10b981" />
+              <Stat label="Paid Individuals" value={paidInd}             sub="on a plan"             color="#4338ca" />
+              <Stat label="Paid Companies"   value={paidComp}            sub="on a plan"             color="#0891b2" />
             </div>
 
             <div style={sectionLabel}>Commitments</div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:10 }}>
-              <Stat label="Total"     value={totalCommitments||0}  sub="all time"              color="#4338ca" />
-              <Stat label="New"       value={newCommitments||0}    sub={PERIOD_LABELS[period]} color="#10b981" />
-              <Stat label="Active"    value={activeC||0}                                       color="#10b981" />
-              <Stat label="Completed" value={completedC||0}                                    color="#4338ca" />
-              <Stat label="Withdrawn" value={withdrawnC||0}                                    color="#f59e0b" />
-              <Stat label="Expired"   value={expiredC||0}                                      color="#ef4444" />
+              <Stat label="Total"     value={totalCommitments||0} sub="all time"              color="#4338ca" />
+              <Stat label="New"       value={newCommitments||0}   sub={PERIOD_LABELS[period]} color="#10b981" />
+              <Stat label="Active"    value={activeC||0}                                      color="#10b981" />
+              <Stat label="Completed" value={completedC||0}                                   color="#4338ca" />
+              <Stat label="Withdrawn" value={withdrawnC||0}                                   color="#f59e0b" />
+              <Stat label="Expired"   value={expiredC||0}                                     color="#ef4444" />
             </div>
 
             <div style={sectionLabel}>Engagement</div>
@@ -217,6 +220,8 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
               <Stat label="Total Updates" value={totalUpdates||0} sub="all time"              color="#6366f1" />
               <Stat label="New Updates"   value={newUpdates||0}   sub={PERIOD_LABELS[period]} color="#10b981" />
               <Stat label="Total Cheers"  value={totalCheers||0}  sub="all time"              color="#f59e0b" />
+              <Stat label="Total Shares"  value={totalShares||0}  sub="all time"              color="#0891b2" />
+              <Stat label="New Shares"    value={newShares||0}    sub={PERIOD_LABELS[period]} color="#10b981" />
             </div>
 
             <div style={sectionLabel}>Plan Breakdown</div>
@@ -241,7 +246,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
             </div>
             {(openTickets || 0) > 0 && (
               <div style={{ marginTop:12 }}>
-                <a href={`?period=${period}&tab=tickets`} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:13, fontWeight:700, color:"#ef4444", textDecoration:"none", background:"#fef2f2", padding:"8px 16px", borderRadius:10, border:"1px solid #fecaca" }}>
+                <a href={`/admin?period=${period}&tab=tickets`} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:13, fontWeight:700, color:"#ef4444", textDecoration:"none", background:"#fef2f2", padding:"8px 16px", borderRadius:10, border:"1px solid #fecaca" }}>
                   🎫 View {openTickets} open ticket{(openTickets||0)>1?"s":""} →
                 </a>
               </div>
@@ -252,7 +257,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
         {/* ── TICKETS TAB ── */}
         {tab === "tickets" && (
           <>
-            {/* Open tickets */}
             <div style={{ fontSize:14, fontWeight:700, color:"#0f0c29", marginBottom:12, display:"flex", alignItems:"center", gap:8 }}>
               Open Tickets
               {openList.length > 0 && (
@@ -270,7 +274,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
               </div>
             )}
 
-            {/* Resolved tickets */}
             <div style={{ fontSize:14, fontWeight:700, color:"#0f0c29", marginBottom:12 }}>
               Resolved Tickets <span style={{ fontSize:12, color:"#9ca3af", fontWeight:400 }}>({resolvedList.length})</span>
             </div>
@@ -289,4 +292,4 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
       </div>
     </div>
   );
-                           }
+}
