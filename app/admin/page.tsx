@@ -97,6 +97,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
   const openList     = (allTickets || []).filter((t:any) => t.status === "open");
   const resolvedList = (allTickets || []).filter((t:any) => t.status === "resolved");
 
+  // ── Styles ──
   const cardStyle = { background:"#fff", borderRadius:14, padding:"14px 16px", border:"1px solid #f0f1f6", boxShadow:"0 1px 6px rgba(0,0,0,0.04)" };
   const sectionLabel = { fontSize:12, fontWeight:700, color:"#9ca3af", textTransform:"uppercase" as const, letterSpacing:1, marginBottom:10, marginTop:24 };
 
@@ -128,6 +129,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
               {ticket.message}
             </div>
           </div>
+          {/* Action button */}
           <form action={isOpen ? resolveTicket : reopenTicket}>
             <input type="hidden" name="ticketId" value={ticket.id} />
             <button
@@ -146,6 +148,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
     <div style={{ minHeight:"100vh", background:"#f2f3f7", padding:"24px 16px 60px" }}>
       <div style={{ maxWidth:900, margin:"0 auto" }}>
 
+        {/* Header */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap" as const, gap:12, marginBottom:24 }}>
           <div>
             <div style={{ fontSize:18, fontWeight:800, color:"#0f0c29" }}>⚙️ Admin Dashboard</div>
@@ -160,6 +163,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
           </div>
         </div>
 
+        {/* Tab nav */}
         <div style={{ display:"flex", gap:8, marginBottom:24 }}>
           {[["overview","📊 Overview"], ["tickets","🎫 Support Tickets"]].map(([t, lbl]) => (
             <a key={t} href={`?period=${period}&tab=${t}`} style={{ padding:"9px 18px", borderRadius:12, fontSize:13, fontWeight:700, textDecoration:"none", background:tab===t?"#0f0c29":"#fff", color:tab===t?"#fff":"#6b7280", border:"1px solid #f0f1f6", boxShadow: tab===t?"0 2px 8px rgba(0,0,0,0.1)":"none" }}>
@@ -173,8 +177,10 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
           ))}
         </div>
 
+        {/* ── OVERVIEW TAB ── */}
         {tab === "overview" && (
           <>
+            {/* Revenue banner */}
             <div style={{ background:"linear-gradient(135deg,#4338ca,#6366f1)", borderRadius:16, padding:"20px 24px", marginBottom:4, color:"#fff", boxShadow:"0 4px 20px rgba(67,56,202,0.2)" }}>
               <div style={{ fontSize:11, fontWeight:600, opacity:0.75, textTransform:"uppercase" as const, letterSpacing:0.5, marginBottom:6 }}>Total Inferred Revenue (All Time)</div>
               <div style={{ fontSize:36, fontWeight:800, marginBottom:8 }}>₹{totalRevenue.toLocaleString()}</div>
@@ -183,13 +189,56 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
                 <span>🏢 Company: ₹{compRevenue.toLocaleString()} ({paidComp} paid)</span>
               </div>
             </div>
+            <div style={{ fontSize:10, color:"#9ca3af", marginBottom:8, padding:"4px 2px" }}>
+              * Based on current plan keys × price. Does not include credit pack purchases.
+            </div>
+
+            <div style={sectionLabel}>Users — {PERIOD_LABELS[period]}</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10 }}>
+              <Stat label="Individuals"      value={totalIndividuals||0} sub="all time"               color="#7c3aed" />
+              <Stat label="Companies"        value={totalCompanies||0}   sub="all time"               color="#0891b2" />
+              <Stat label="New Signups"      value={newSignups||0}       sub={PERIOD_LABELS[period]}  color="#10b981" />
+              <Stat label="Paid Individuals" value={paidInd}             sub="on a plan"              color="#4338ca" />
+              <Stat label="Paid Companies"   value={paidComp}            sub="on a plan"              color="#0891b2" />
+            </div>
+
+            <div style={sectionLabel}>Commitments</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:10 }}>
+              <Stat label="Total"     value={totalCommitments||0}  sub="all time"              color="#4338ca" />
+              <Stat label="New"       value={newCommitments||0}    sub={PERIOD_LABELS[period]} color="#10b981" />
+              <Stat label="Active"    value={activeC||0}                                       color="#10b981" />
+              <Stat label="Completed" value={completedC||0}                                    color="#4338ca" />
+              <Stat label="Withdrawn" value={withdrawnC||0}                                    color="#f59e0b" />
+              <Stat label="Expired"   value={expiredC||0}                                      color="#ef4444" />
+            </div>
+
+            <div style={sectionLabel}>Engagement</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10 }}>
+              <Stat label="Total Updates" value={totalUpdates||0} sub="all time"              color="#6366f1" />
+              <Stat label="New Updates"   value={newUpdates||0}   sub={PERIOD_LABELS[period]} color="#10b981" />
+              <Stat label="Total Cheers"  value={totalCheers||0}  sub="all time"              color="#f59e0b" />
+            </div>
+
+            <div style={sectionLabel}>Plan Breakdown</div>
+            <div style={{ background:"#fff", borderRadius:14, border:"1px solid #f0f1f6", overflow:"hidden" }}>
+              {Object.keys(planCounts).length === 0 ? (
+                <div style={{ padding:24, textAlign:"center" as const, fontSize:13, color:"#9ca3af" }}>No paid plans yet</div>
+              ) : Object.entries(planCounts).sort((a,b)=>b[1]-a[1]).map(([key,count],i,arr) => (
+                <div key={key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderBottom:i<arr.length-1?"1px solid #f0f1f6":"none" }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#0f0c29" }}>{PLAN_LABELS[key]||key} <span style={{ fontSize:10, color:"#9ca3af" }}>({key})</span></div>
+                    <div style={{ fontSize:11, color:"#9ca3af" }}>₹{PLAN_REVENUE[key]||0} × {count} = ₹{((PLAN_REVENUE[key]||0)*count).toLocaleString()}</div>
+                  </div>
+                  <div style={{ fontSize:20, fontWeight:800, color:"#4338ca" }}>{count}</div>
+                </div>
+              ))}
+            </div>
 
             <div style={sectionLabel}>Support Summary</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-              <Stat label="Open Tickets" value={openTickets||0} />
-              <Stat label="Resolved Tickets" value={resolvedTickets||0} />
+              <Stat label="Open Tickets"     value={openTickets||0}     sub="awaiting response" color="#ef4444" />
+              <Stat label="Resolved Tickets" value={resolvedTickets||0} sub="closed"            color="#10b981" />
             </div>
-
             {(openTickets || 0) > 0 && (
               <div style={{ marginTop:12 }}>
                 <a href={`?period=${period}&tab=tickets`} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:13, fontWeight:700, color:"#ef4444", textDecoration:"none", background:"#fef2f2", padding:"8px 16px", borderRadius:10, border:"1px solid #fecaca" }}>
@@ -200,7 +249,44 @@ export default async function AdminPage({ searchParams }: { searchParams: { peri
           </>
         )}
 
+        {/* ── TICKETS TAB ── */}
+        {tab === "tickets" && (
+          <>
+            {/* Open tickets */}
+            <div style={{ fontSize:14, fontWeight:700, color:"#0f0c29", marginBottom:12, display:"flex", alignItems:"center", gap:8 }}>
+              Open Tickets
+              {openList.length > 0 && (
+                <span style={{ background:"#ef4444", color:"#fff", borderRadius:20, fontSize:11, fontWeight:800, padding:"2px 8px" }}>{openList.length}</span>
+              )}
+            </div>
+            {openList.length === 0 ? (
+              <div style={{ background:"#fff", borderRadius:14, padding:"28px", textAlign:"center" as const, border:"1px solid #f0f1f6", marginBottom:24 }}>
+                <div style={{ fontSize:24, marginBottom:8 }}>🎉</div>
+                <div style={{ fontSize:13, color:"#9ca3af" }}>No open tickets — all caught up!</div>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column" as const, gap:10, marginBottom:28 }}>
+                {openList.map((t:any) => <TicketCard key={t.id} ticket={t} isOpen={true} />)}
+              </div>
+            )}
+
+            {/* Resolved tickets */}
+            <div style={{ fontSize:14, fontWeight:700, color:"#0f0c29", marginBottom:12 }}>
+              Resolved Tickets <span style={{ fontSize:12, color:"#9ca3af", fontWeight:400 }}>({resolvedList.length})</span>
+            </div>
+            {resolvedList.length === 0 ? (
+              <div style={{ background:"#fff", borderRadius:14, padding:"28px", textAlign:"center" as const, border:"1px solid #f0f1f6" }}>
+                <div style={{ fontSize:13, color:"#9ca3af" }}>No resolved tickets yet.</div>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column" as const, gap:10 }}>
+                {resolvedList.map((t:any) => <TicketCard key={t.id} ticket={t} isOpen={false} />)}
+              </div>
+            )}
+          </>
+        )}
+
       </div>
     </div>
   );
-}
+                           }
