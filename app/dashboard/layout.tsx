@@ -312,4 +312,12 @@ export default function DashboardLayout({
               href={createLink}
               style={{ background: isCompanyWorkspace ? "linear-gradient(135deg,#0891b2,#0e7490)" : "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "8px 20px", borderRadius: 22, fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5, textDecoration: "none", boxShadow: isCompanyWorkspace ? "0 3px 10px rgba(8,145,178,0.3)" : "0 3px 10px rgba(67,56,202,0.3)" }}
             >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              Create
+            </Link>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
