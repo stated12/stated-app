@@ -8,9 +8,11 @@ import Link from "next/link";
 export default async function InvitePage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
-  const token = decodeURIComponent(params.token).trim();
+  // Next.js 15+: params is a Promise and must be awaited
+  const { token: rawToken } = await params;
+  const token = decodeURIComponent(rawToken).trim();
 
   const { data: adminRow, error: adminError } = await supabaseAdmin
     .from("company_invites")
