@@ -77,8 +77,8 @@ export default function DashboardLayout({
 
   const homeLink   = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
   const createLink = isCompanyWorkspace ? "/dashboard/company/create" : "/dashboard/create";
-  const upgradeLink = isCompanyWorkspace ? "/upgrade?workspace=company" : "/upgrade";
-  const billingLink = isCompanyWorkspace ? "/billing?workspace=company" : "/billing";
+  const upgradeLink = isCompanyWorkspace ? "/dashboard/company/upgrade" : "/upgrade";
+  const billingLink = isCompanyWorkspace ? "/dashboard/company/billing" : "/billing";
 
   const avatar = isCompanyWorkspace
     ? activeCompany?.logo_url?.trim() || null
@@ -214,14 +214,8 @@ export default function DashboardLayout({
                 ? <NavItem href={billingLink}  icon={I.credits} label="Buy Credits" />
                 : <NavItem href={upgradeLink}  icon={I.upgrade} label="Upgrade" />
               }
-              <NavItem href="/dashboard/support?workspace=company" icon={I.support} label="Support" />
-              <Link
-                href="/dashboard"
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, textDecoration: "none", color: "#6b7280", fontWeight: 500, fontSize: 14, marginTop: 4 }}
-              >
-                <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{I.sw}</span>
-                Individual Dashboard
-              </Link>
+              <NavItem href="/dashboard/company/support" icon={I.support} label="Support" />
+
             </>
           ) : (
             <>
