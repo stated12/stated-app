@@ -1,47 +1,64 @@
 "use client";
 
+// Prevent Next.js from attempting static generation at build time.
+// This page fetches user-specific data and must always be rendered dynamically.
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 
 export default function InvitePage() {
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [email,   setEmail]   = useState("");
+  const [role,    setRole]    = useState("member");
   const [loading, setLoading] = useState(false);
   const [invites, setInvites] = useState<any[]>([]);
 
   useEffect(() => { loadInvites(); }, []);
 
   async function loadInvites() {
-    const res = await fetch("/api/company/invites");
-    const data = await res.json();
-    setInvites(data.invites || []);
+    try {
+      const res  = await fetch("/api/company/invites");
+      if (!res.ok) return;
+      const data = await res.json();
+      setInvites(data.invites || []);
+    } catch {
+      // silently ignore — component is mounting client-side only
+    }
   }
 
   async function sendInvite() {
     if (!email.trim()) { alert("Enter email"); return; }
     setLoading(true);
-    const res = await fetch("/api/company/invite", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
-    });
-    const data = await res.json();
-    if (!res.ok) { alert(data.error); setLoading(false); return; }
-    alert("Invitation sent");
-    setEmail("");
-    loadInvites();
+    try {
+      const res  = await fetch("/api/company/invite", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error); setLoading(false); return; }
+      alert("Invitation sent");
+      setEmail("");
+      loadInvites();
+    } catch {
+      alert("Something went wrong. Please try again.");
+    }
     setLoading(false);
   }
 
   async function cancelInvite(id: string) {
     if (!confirm("Cancel this invite?")) return;
-    await fetch(`/api/company/invite/${id}`, { method: "DELETE" });
-    loadInvites();
+    try {
+      await fetch(`/api/company/invite/${id}`, { method: "DELETE" });
+      loadInvites();
+    } catch { /* ignore */ }
   }
 
   async function resendInvite(id: string) {
-    await fetch(`/api/company/invite/${id}`, { method: "POST" });
-    alert("Invite resent");
-    loadInvites();
+    try {
+      await fetch(`/api/company/invite/${id}`, { method: "POST" });
+      alert("Invite resent");
+      loadInvites();
+    } catch { /* ignore */ }
   }
 
   const roleMeta: Record<string, { label: string; desc: string; bg: string; color: string }> = {
@@ -73,7 +90,7 @@ export default function InvitePage() {
               placeholder="colleague@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc" }}
+              style={{ width: "100%", border: "1px solid #e8eaf2", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" }}
             />
           </div>
 
@@ -121,25 +138,31 @@ export default function InvitePage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {invites.map((invite) => {
               const expired = invite.expires_at && new Date(invite.expires_at) < new Date();
-              const meta = roleMeta[invite.role] || roleMeta.viewer;
+              const meta    = roleMeta[invite.role] || roleMeta.viewer;
               return (
                 <div key={invite.id} style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f1f6" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#0f0c29", marginBottom: 6 }}>{invite.email}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: meta.bg, color: meta.color }}>{meta.label}</span>
                         <span style={{ fontSize: 10, color: expired ? "#ef4444" : "#f59e0b", fontWeight: 600 }}>{expired ? "Expired" : "Pending"}</span>
                         <span style={{ fontSize: 10, color: "#9ca3af" }}>Sent {new Date(invite.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
                       {!expired && (
-                        <button onClick={() => resendInvite(invite.id)} style={{ fontSize: 11, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                        <button
+                          onClick={() => resendInvite(invite.id)}
+                          style={{ fontSize: 11, fontWeight: 600, color: "#0891b2", background: "#e0f2fe", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit" }}
+                        >
                           Resend
                         </button>
                       )}
-                      <button onClick={() => cancelInvite(invite.id)} style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "#fff5f5", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+                      <button
+                        onClick={() => cancelInvite(invite.id)}
+                        style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "#fff5f5", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "inherit" }}
+                      >
                         Cancel
                       </button>
                     </div>
