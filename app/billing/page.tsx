@@ -67,7 +67,7 @@ function PaymentTable({ payments }: { payments: any[] }) {
                 {PLAN_LABELS[p.plan_key] || PACK_LABELS[p.plan_key] || p.plan_key}
               </td>
               <td style={{ padding: "10px 12px", fontWeight: 700, color: "#0f0c29" }}>
-                ₹{Math.round((p.amount || 0) / 100)}
+                Rs.{Math.round((p.amount || 0) / 100)}
               </td>
               <td style={{ padding: "10px 12px", color: "#374151" }}>
                 +{p.credits_added || 0}
@@ -91,9 +91,9 @@ function PaymentTable({ payments }: { payments: any[] }) {
 }
 
 function PlanSection({
-  planKey, credits, payments, isCompany = false,
+  planKey, credits, payments, isCompany, upgradeHref,
 }: {
-  planKey: string; credits: number; payments: any[]; isCompany?: boolean;
+  planKey: string; credits: number; payments: any[]; isCompany: boolean; upgradeHref: string;
 }) {
   const color    = planColor(planKey);
   const isFree   = planKey === "free";
@@ -102,10 +102,9 @@ function PlanSection({
 
   return (
     <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #f0f1f6", overflow: "hidden", boxShadow: "0 1px 8px rgba(0,0,0,0.04)", marginBottom: 16 }}>
-      <div style={{ height: 3, background: `linear-gradient(90deg,${color.accent},${color.accent}88)` }} />
+      <div style={{ height: 3, background: "linear-gradient(90deg," + color.accent + "," + color.accent + "88)" }} />
       <div style={{ padding: "18px 20px" }}>
 
-        {/* Plan header row */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 10, marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" as const, letterSpacing: 0.5, marginBottom: 4 }}>
@@ -123,26 +122,30 @@ function PlanSection({
               <div style={{ marginTop: 8, display: "flex", flexDirection: "column" as const, gap: 3 }}>
                 {features.map((f, i) => (
                   <div key={i} style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ color: "#10b981" }}>✓</span> {f}
+                    <span style={{ color: "#10b981" }}>v</span> {f}
                   </div>
                 ))}
               </div>
             )}
+            {isFree && features.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: 12, color: "#92400e", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "6px 10px", lineHeight: 1.6 }}>
+                <strong>Free plan:</strong> {features.join(", ")}. Upgrade to unlock more features.
+              </div>
+            )}
           </div>
           <Link
-            href="/upgrade"
-            style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg,${color.accent},${color.accent}cc)`, padding: "8px 16px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap" as const, boxShadow: `0 2px 8px ${color.accent}33`, flexShrink: 0 }}
+            href={upgradeHref}
+            style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg," + color.accent + "," + color.accent + "cc)", padding: "8px 16px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap" as const, boxShadow: "0 2px 8px " + color.accent + "33", flexShrink: 0 }}
           >
             {isFree ? "Upgrade" : "Buy Credits"}
           </Link>
         </div>
 
-        {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           {[
-            { label: "Credits Left",    value: credits,           color: isCompany ? "#0891b2" : "#d97706" },
-            { label: "Credits Bought",  value: totalCreditsAdded, color: "#4338ca" },
-            { label: "Payments",        value: payments.length,   color: "#10b981" },
+            { label: "Credits Left",   value: credits,           color: isCompany ? "#0891b2" : "#d97706" },
+            { label: "Credits Bought", value: totalCreditsAdded, color: "#4338ca" },
+            { label: "Payments",       value: payments.length,   color: "#10b981" },
           ].map((s) => (
             <div key={s.label} style={{ background: "#f8f9fc", borderRadius: 12, padding: "10px 8px", textAlign: "center" as const, border: "1px solid #f0f1f6" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -151,7 +154,6 @@ function PlanSection({
           ))}
         </div>
 
-        {/* Payment history */}
         <div style={{ borderTop: "1px solid #f0f1f6", paddingTop: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f0c29", marginBottom: 10 }}>Payment History</div>
           <PaymentTable payments={payments} />
@@ -161,77 +163,97 @@ function PlanSection({
   );
 }
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: { workspace?: string };
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // ── Individual profile ──
+  // Detect workspace from query param (server component -- no useSearchParams needed)
+  const isCompanyContext = searchParams?.workspace === "company";
+
   const { data: profile } = await supabase
     .from("profiles").select("*").eq("id", user.id).maybeSingle();
 
-  // ── Company owned by this user ──
   const { data: ownedCompany } = await supabase
     .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
 
-  // ── Individual payments (no company linked) ──
   const { data: individualPayments } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("user_id", user.id)
-    .is("company_id", null)
+    .from("payments").select("*")
+    .eq("user_id", user.id).is("company_id", null)
     .order("created_at", { ascending: false });
 
-  // ── Company payments ──
   const { data: companyPayments } = ownedCompany
-    ? await supabase
-        .from("payments")
-        .select("*")
+    ? await supabase.from("payments").select("*")
         .eq("company_id", ownedCompany.id)
         .order("created_at", { ascending: false })
     : { data: [] };
+
+  // Dashboard back link respects workspace context
+  const dashboardHref   = isCompanyContext ? "/dashboard/company" : "/dashboard";
+  const dashboardLabel  = isCompanyContext ? "Company Dashboard" : "Dashboard";
+  const upgradeHref     = isCompanyContext ? "/upgrade?workspace=company" : "/upgrade";
+  const pageTitle       = isCompanyContext ? "Company Billing" : "Billing";
+  const pageSubtitle    = isCompanyContext ? "Company plan, credits & payment history" : "Plans, credits & payment history";
 
   return (
     <div style={{ minHeight: "100vh", background: "#f2f3f7", padding: "24px 16px 60px" }}>
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
 
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Image src="/logo.png" alt="" width={32} height={32} />
             <div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#4338ca" }}>Billing</div>
-              <div style={{ fontSize: 11, color: "#9ca3af" }}>Plans, credits & payment history</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: isCompanyContext ? "#0891b2" : "#4338ca" }}>{pageTitle}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af" }}>{pageSubtitle}</div>
             </div>
           </div>
-          <Link href="/dashboard" style={{ fontSize: 12, color: "#6b7280", textDecoration: "none", fontWeight: 600 }}>← Dashboard</Link>
+          <Link href={dashboardHref} style={{ fontSize: 12, color: "#6b7280", textDecoration: "none", fontWeight: 600 }}>
+            {"<- "}{dashboardLabel}
+          </Link>
         </div>
 
-        {/* Individual billing */}
-        {profile && (
-          <PlanSection
-            planKey={profile.plan_key || "free"}
-            credits={profile.credits ?? 0}
-            payments={individualPayments || []}
-            isCompany={false}
-          />
-        )}
-
-        {/* Company billing */}
-        {ownedCompany && (
+        {/* Show ONLY company section when in company context */}
+        {isCompanyContext && ownedCompany && (
           <PlanSection
             planKey={ownedCompany.plan_key || "free"}
             credits={ownedCompany.credits ?? 0}
             payments={companyPayments || []}
             isCompany={true}
+            upgradeHref={upgradeHref}
           />
         )}
 
-        {/* Footer */}
+        {/* Show ONLY individual section when in individual context */}
+        {!isCompanyContext && profile && (
+          <PlanSection
+            planKey={profile.plan_key || "free"}
+            credits={profile.credits ?? 0}
+            payments={individualPayments || []}
+            isCompany={false}
+            upgradeHref={upgradeHref}
+          />
+        )}
+
+        {/* If company owner visits plain /billing (no param), show both */}
+        {!isCompanyContext && ownedCompany && (
+          <PlanSection
+            planKey={ownedCompany.plan_key || "free"}
+            credits={ownedCompany.credits ?? 0}
+            payments={companyPayments || []}
+            isCompany={true}
+            upgradeHref="/upgrade?workspace=company"
+          />
+        )}
+
         <div style={{ textAlign: "center" as const, fontSize: 11, color: "#9ca3af", marginTop: 8, lineHeight: 1.8 }}>
-          Secure payments via Razorpay • Receipts sent via email at time of purchase<br />
+          Secure payments via Razorpay * Receipts sent via email at time of purchase
+          <br />
           Questions?{" "}
-          <Link href="/dashboard/support" style={{ color: "#4338ca", textDecoration: "none", fontWeight: 600 }}>
+          <Link href={isCompanyContext ? "/dashboard/support?workspace=company" : "/dashboard/support"} style={{ color: isCompanyContext ? "#0891b2" : "#4338ca", textDecoration: "none", fontWeight: 600 }}>
             Contact Support
           </Link>
         </div>
@@ -239,4 +261,4 @@ export default async function BillingPage() {
       </div>
     </div>
   );
-}
+        }
