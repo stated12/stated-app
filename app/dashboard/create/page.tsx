@@ -6,7 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const e = React.createElement;
 
-// ------------ Profanity ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Profanity
 const BANNED = [
   "fuck","fucking","fucker","shit","shitty","asshole","bitch","cunt",
   "dick","cock","pussy","bastard","crap","wtf","stfu","gtfo",
@@ -19,13 +19,13 @@ function hasProfanity(s: string): boolean {
   return BANNED.some((w) => new RegExp("\\b" + w + "\\b").test(clean));
 }
 
-// ------------ Plan names ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Plan names
 const PLAN_NAMES: Record<string, string> = {
   free: "Free", ind_499: "Starter", ind_899: "Growth", ind_1299: "Pro Creator",
   comp_1999: "Team", comp_2999: "Growth", comp_4999: "Scale",
 };
 
-// ------------ Categories ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Categories
 const IND_CATS = [
   { label: "Fitness" }, { label: "Learning" }, { label: "Writing" },
   { label: "Health" }, { label: "Finance" }, { label: "Business" },
@@ -40,7 +40,7 @@ const CO_CATS = [
   { label: "Finance" }, { label: "Legal & Compliance" }, { label: "Customer Success" },
 ];
 
-// ------------ Deadline ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Deadline
 const DEADLINES = [
   { v: "1w", l: "1 Week" }, { v: "2w", l: "2 Weeks" }, { v: "3w", l: "3 Weeks" },
   { v: "1m", l: "1 Month" }, { v: "3m", l: "3 Months" }, { v: "6m", l: "6 Months" },
@@ -60,7 +60,7 @@ function toDate(v: string, custom: string): string {
   return d.toISOString().split("T")[0];
 }
 
-// ------------ Styles ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Styles
 const S = {
   page:    { margin: "-32px -24px", background: "#f2f3f7", minHeight: "100vh" } as React.CSSProperties,
   header:  { background: "#fff", padding: "16px 16px 14px", borderBottom: "1px solid #f0f1f6" } as React.CSSProperties,
@@ -75,7 +75,7 @@ const S = {
   charCnt: (over: boolean): React.CSSProperties => ({ fontSize: 11, color: over ? "#ef4444" : "#9ca3af", marginTop: 6, textAlign: "right" }),
 };
 
-// ------------ Upgrade Modal ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Upgrade Modal
 function UpgradeModal(props: { onClose: () => void; isCo: boolean; planName: string }) {
   const grad = props.isCo ? "linear-gradient(135deg,#0891b2,#0e7490)" : "linear-gradient(135deg,#4338ca,#6366f1)";
   const shad = props.isCo ? "rgba(8,145,178,0.3)" : "rgba(67,56,202,0.3)";
@@ -104,23 +104,30 @@ function UpgradeModal(props: { onClose: () => void; isCo: boolean; planName: str
   );
 }
 
-// ------------ Form ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------ Fallback UI
+function FallbackUI() {
+  return e("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f3f7" } as React.CSSProperties },
+    e("div", { style: { fontSize: 13, color: "#9ca3af" } as React.CSSProperties }, "Loading...")
+  );
+}
+
+// ------------ Form
 function CreateCommitmentForm() {
   const supabase     = createClient();
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
 
-  const [text,    setText]    = useState("");
-  const [cat,     setCat]     = useState("");
-  const [dl,      setDl]      = useState("");
-  const [custom,  setCustom]  = useState("");
-  const [profile, setProfile] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [initLoad,setInitLoad]= useState(true);
-  const [showUp,  setShowUp]  = useState(false);
-  const [badWord, setBadWord] = useState(false);
+  const [text,     setText]     = useState("");
+  const [cat,      setCat]      = useState("");
+  const [dl,       setDl]       = useState("");
+  const [custom,   setCustom]   = useState("");
+  const [profile,  setProfile]  = useState<any>(null);
+  const [company,  setCompany]  = useState<any>(null);
+  const [loading,  setLoading]  = useState(false);
+  const [initLoad, setInitLoad] = useState(true);
+  const [showUp,   setShowUp]   = useState(false);
+  const [badWord,  setBadWord]  = useState(false);
 
   const isCo = pathname.startsWith("/dashboard/company") || searchParams.get("workspace") === "company";
   const cats = isCo ? CO_CATS : IND_CATS;
@@ -179,12 +186,12 @@ function CreateCommitmentForm() {
   }
 
   async function submit() {
-    if (!text.trim())             { alert("Please write your commitment"); return; }
-    if (hasProfanity(text))       { setBadWord(true); return; }
-    if (!cat)                     { alert("Please select a category"); return; }
-    if (!dl)                      { alert("Please select a deadline"); return; }
+    if (!text.trim())               { alert("Please write your commitment"); return; }
+    if (hasProfanity(text))         { setBadWord(true); return; }
+    if (!cat)                       { alert("Please select a category"); return; }
+    if (!dl)                        { alert("Please select a deadline"); return; }
     if (dl === "custom" && !custom) { alert("Please pick a custom date"); return; }
-    if (credits <= 0)             { setShowUp(true); return; }
+    if (credits <= 0)               { setShowUp(true); return; }
 
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -210,12 +217,12 @@ function CreateCommitmentForm() {
     );
   }
 
-  // ------------ Render ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // ------------ Render
   const btnDisabled = loading || badWord;
-  const btnBg    = badWord ? "#fee2e2" : loading ? "#9ca3af" : credits <= 0 ? "#fee2e2" : grad;
-  const btnColor = badWord || credits <= 0 ? "#dc2626" : "#fff";
+  const btnBg     = badWord ? "#fee2e2" : loading ? "#9ca3af" : credits <= 0 ? "#fee2e2" : grad;
+  const btnColor  = badWord || credits <= 0 ? "#dc2626" : "#fff";
   const btnBorder = badWord || credits <= 0 ? "1.5px solid #fecaca" : "none";
-  const btnLabel = loading ? "Publishing..." : badWord ? "Inappropriate language detected" : credits <= 0 ? "Get Credits to Publish" : "Publish Commitment";
+  const btnLabel  = loading ? "Publishing..." : badWord ? "Inappropriate language detected" : credits <= 0 ? "Get Credits to Publish" : "Publish Commitment";
   const btnShadow = btnDisabled || credits <= 0 ? "none" : "0 4px 14px rgba(" + (isCo && company ? "8,145,178" : "67,56,202") + ",0.3)";
 
   return e("div", { style: S.page },
@@ -298,4 +305,38 @@ function CreateCommitmentForm() {
         e("label", { style: S.lblGap }, "Deadline"),
         e("div", { style: S.chips },
           ...DEADLINES.map((d) =>
-   
+            e("button", {
+              key: d.v,
+              type: "button",
+              onClick: () => setDl(d.v),
+              style: { padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, border: "1.5px solid " + (dl === d.v ? ac : "#e8eaf2"), background: dl === d.v ? ac : "#fff", color: dl === d.v ? "#fff" : "#6b7280", cursor: "pointer", fontFamily: "inherit" } as React.CSSProperties,
+            }, d.l)
+          ),
+        ),
+        dl === "custom" ? e("input", {
+          type: "date",
+          value: custom,
+          onChange: (ev: React.ChangeEvent<HTMLInputElement>) => setCustom(ev.target.value),
+          min: new Date().toISOString().split("T")[0],
+          style: { marginTop: 12, width: "100%", border: "1.5px solid #e8eaf2", borderRadius: 10, padding: "10px 14px", fontSize: 14, color: "#0f0c29", outline: "none", fontFamily: "inherit", background: "#f8f9fc", boxSizing: "border-box" } as React.CSSProperties,
+        }) : null,
+      ),
+
+      // Submit button
+      e("button", {
+        type: "button",
+        disabled: btnDisabled,
+        onClick: submit,
+        style: { width: "100%", padding: "15px", borderRadius: 14, fontSize: 15, fontWeight: 700, border: btnBorder, background: btnBg, color: btnColor, cursor: btnDisabled ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: btnShadow, transition: "opacity 0.15s" } as React.CSSProperties,
+      }, btnLabel),
+
+    ), // end body
+  ); // end page
+}
+
+// ------------ Page export with Suspense
+export default function CreateCommitmentPage() {
+  return e(Suspense, { fallback: e(FallbackUI, null) },
+    e(CreateCommitmentForm, null)
+  );
+      }
