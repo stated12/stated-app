@@ -1,12 +1,10 @@
 "use client";
 
-// Prevent Next.js from attempting static generation at build time.
-// This page fetches user-specific data and must always be rendered dynamically.
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function InvitePage() {
+function InvitePageInner() {
   const [email,   setEmail]   = useState("");
   const [role,    setRole]    = useState("member");
   const [loading, setLoading] = useState(false);
@@ -174,5 +172,17 @@ export default function InvitePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function InvitePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f3f7" }}>
+        <div style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</div>
+      </div>
+    }>
+      <InvitePageInner />
+    </Suspense>
   );
 }
