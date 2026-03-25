@@ -13,11 +13,15 @@ export default async function InvitePage({
   const token = params.token;
 
   /* ── FIND INVITE ── */
-  const { data: invite } = await supabase
-    .from("company_invites")
-    .select("*")
-    .eq("token", token)
-    .maybeSingle();
+const { data: invite, error } = await supabase
+  .from("company_invites")
+  .select("*")
+  .eq("token", token)
+  .maybeSingle();
+
+console.log("TOKEN:", token);
+console.log("INVITE:", invite);
+console.log("ERROR:", error);
 
   if (!invite) {
     return (
