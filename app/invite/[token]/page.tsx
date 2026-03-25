@@ -11,54 +11,48 @@ export default async function InvitePage({
   params: { token: string };
 }) {
   const supabase = await createClient();
-  const token = params.token;
+
+  /* ✅ FIX: CLEAN TOKEN */
+  const token = decodeURIComponent(params.token).trim();
 
   /* ── FIND INVITE (ADMIN - BYPASS RLS) ── */
   const { data: invite, error } = await supabaseAdmin
     .from("company_invites")
     .select("*")
-    .eq("token", token)
-    .maybeSingle();
+    .ilike("token", token); // ✅ FIX: ilike instead of eq
 
   console.log("TOKEN:", token);
-  console.log("INVITE:", invite);
+  console.log("INVITE ARRAY:", invite);
   console.log("ERROR:", error);
 
-  if (!invite) {
+  /* ✅ FIX: HANDLE ARRAY RESULT */
+  const inviteRow = invite?.[0];
+
+  if (!inviteRow) {
     return (
       <div style={{ minHeight: "100vh", background: "#f2f3f7", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: "40px 32px", textAlign: "center", maxWidth: 400, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: "#0f0c29", marginBottom: 8 }}>Invalid Invitation</h1>
-          <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>
-            This invitation link is not valid or has already been used.
-          </p>
-          <Link href="/" style={{ display: "inline-block", background: "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: "11px 28px", borderRadius: 22, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Go to Stated →
-          </Link>
+          <h1 style={{ fontSize: 20, fontWeight: 800 }}>Invalid Invitation</h1>
+          <p>This invitation link is not valid or has already been used.</p>
+          <Link href="/">Go to Stated →</Link>
         </div>
       </div>
     );
   }
 
   /* ── EXPIRED ── */
-  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+  if (inviteRow.expires_at && new Date(inviteRow.expires_at) < new Date()) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f2f3f7", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: "40px 32px", textAlign: "center", maxWidth: 400, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
-          <h1 style={{ fontSize: 20, fontWeight: 800 }}>Invite Expired</h1>
-          <p>This invitation has expired.</p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div>
+          <h1>Invite Expired</h1>
         </div>
       </div>
     );
   }
 
   /* ── ALREADY ACCEPTED ── */
-  if (invite.status === "accepted") {
+  if (inviteRow.status === "accepted") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div>
@@ -68,13 +62,6 @@ export default async function InvitePage({
       </div>
     );
   }
-
-  /* ── GET COMPANY ── */
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name, username, logo_url")
-    .eq("id", invite.company_id)
-    .single();
 
   /* ── CHECK LOGIN ── */
   const {
@@ -112,15 +99,15 @@ export default async function InvitePage({
   const { data: existing } = await supabase
     .from("company_members")
     .select("id")
-    .eq("company_id", invite.company_id)
+    .eq("company_id", inviteRow.company_id)
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (!existing) {
     await supabase.from("company_members").insert({
-      company_id: invite.company_id,
+      company_id: inviteRow.company_id,
       user_id: user.id,
-      role: invite.role,
+      role: inviteRow.role,
     });
   }
 
@@ -131,7 +118,7 @@ export default async function InvitePage({
       status: "accepted",
       accepted_at: new Date().toISOString(),
     })
-    .eq("id", invite.id);
+    .eq("id", inviteRow.id);
 
   /* ── REDIRECT ── */
   redirect("/dashboard/company");
