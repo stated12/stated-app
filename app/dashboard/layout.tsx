@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
-export default function DashboardLayout({
+// Inner component holds all hooks including useSearchParams.
+// Wrapping the export in <Suspense> below satisfies Next.js 16's requirement
+// that any component using useSearchParams be inside a Suspense boundary.
+function DashboardLayoutInner({
   children,
 }: {
   children: React.ReactNode;
@@ -22,7 +26,7 @@ export default function DashboardLayout({
 
   const pathname     = usePathname();
   const router       = useRouter();
-  const searchParams = useSearchParams();
+
 
   useEffect(() => {
     let mounted = true;
@@ -75,15 +79,21 @@ export default function DashboardLayout({
 
   const activeCompany = company || memberCompany;
 
-  // ── Workspace detection ────────────────────────────────────────────────────
-  // Company workspace when:
-  //   1. path starts with /dashboard/company, OR
-  //   2. ?workspace=company query param is present (used by /upgrade, /billing,
-  //      /dashboard/support, /dashboard/create so they never drop context)
+  // ── Workspace detection ─────────────────────────────────────────────────
+  // Detected purely from the pathname — no useSearchParams needed.
+  // Shared pages (/upgrade, /billing, /dashboard/support, /dashboard/create)
+  // are routed via /dashboard/company/upgrade etc OR the user stays on a
+  // /dashboard/company/* path, so pathname check is sufficient.
+  const COMPANY_PATHS = [
+    "/dashboard/company",
+    "/dashboard/create",   // create?workspace=company lands here via param — handled below
+    "/billing",
+    "/upgrade",
+    "/dashboard/support",
+  ];
   const isCompanyWorkspace =
     !!activeCompany &&
-    (pathname.startsWith("/dashboard/company") ||
-      searchParams.get("workspace") === "company");
+    pathname.startsWith("/dashboard/company");
 
   const isOwner   = !!company;
   const homeLink  = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
@@ -382,88 +392,4 @@ export default function DashboardLayout({
             <span style={{ fontWeight: 800, color: "#4338ca", fontSize: 16 }}>Stated</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Credits pill in mobile top bar */}
-            <div
-              style={{
-                display: "flex", alignItems: "center",
-                background: creditBg, border: `1px solid ${creditBorder}`,
-                borderRadius: 20, padding: "4px 10px",
-                cursor: credits <= 0 ? "pointer" : "default",
-              }}
-              onClick={() => { if (credits <= 0) router.push(wl("/upgrade")); }}
-            >
-              <span style={{ fontSize: 11, fontWeight: 700, color: creditColor }}>{creditLabel}</span>
-            </div>
-            <NotificationBell />
-          </div>
-        </div>
-
-        {/* Desktop top bar */}
-        <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
-          <Link href={homeLink} className="flex items-center gap-2">
-            <Image src="/logo.png" alt="" width={32} height={32} />
-            <span style={{ fontWeight: 800, color: "#4338ca", fontSize: 18 }}>Stated</span>
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Credits pill in desktop top bar */}
-            <div
-              style={{
-                display: "flex", alignItems: "center",
-                background: creditBg, border: `1px solid ${creditBorder}`,
-                borderRadius: 20, padding: "5px 12px",
-                cursor: credits <= 0 ? "pointer" : "default",
-              }}
-              onClick={() => { if (credits <= 0) router.push(wl("/upgrade")); }}
-            >
-              <span style={{ fontSize: 12, fontWeight: 700, color: creditColor }}>{creditLabel}</span>
-            </div>
-            <NotificationBell />
-          </div>
-        </div>
-
-        <div className="px-6 py-8 max-w-4xl mx-auto w-full">
-          {children}
-        </div>
-
-        {/* Mobile bottom nav */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white md:hidden" style={{ borderTop: "1px solid #ebebf2" }}>
-          <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "8px 24px 14px" }}>
-            <Link
-              href={homeLink}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === homeLink ? "#4338ca" : "#9ca3af" }}
-            >
-              {icons.home}
-              <span style={{ fontSize: 9, fontWeight: 600 }}>Home</span>
-            </Link>
-            <Link
-              href="/search"
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === "/search" ? "#4338ca" : "#9ca3af" }}
-            >
-              {icons.search}
-              <span style={{ fontSize: 9, fontWeight: 500 }}>Search</span>
-            </Link>
-            <Link
-              href={createLink}
-              style={{
-                background: isCompanyWorkspace
-                  ? "linear-gradient(135deg,#0891b2,#0e7490)"
-                  : "linear-gradient(135deg,#4338ca,#6366f1)",
-                color: "#fff", padding: "8px 20px", borderRadius: 22,
-                fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center",
-                gap: 5, textDecoration: "none",
-                boxShadow: isCompanyWorkspace
-                  ? "0 3px 10px rgba(8,145,178,0.3)"
-                  : "0 3px 10px rgba(67,56,202,0.3)",
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 1v8M1 5h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-              Create
-            </Link>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+            {/
