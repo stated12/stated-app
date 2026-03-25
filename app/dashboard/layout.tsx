@@ -390,4 +390,80 @@ export default function DashboardLayout({
                 borderRadius: 20, padding: "4px 10px",
                 cursor: credits <= 0 ? "pointer" : "default",
               }}
-              o
+              onClick={() => { if (credits <= 0) router.push(wl("/upgrade")); }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 700, color: creditColor }}>{creditLabel}</span>
+            </div>
+            <NotificationBell />
+          </div>
+        </div>
+
+        {/* Desktop top bar */}
+        <div className="hidden md:flex justify-between items-center bg-white border-b px-8 py-4">
+          <Link href={homeLink} className="flex items-center gap-2">
+            <Image src="/logo.png" alt="" width={32} height={32} />
+            <span style={{ fontWeight: 800, color: "#4338ca", fontSize: 18 }}>Stated</span>
+          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Credits pill in desktop top bar */}
+            <div
+              style={{
+                display: "flex", alignItems: "center",
+                background: creditBg, border: `1px solid ${creditBorder}`,
+                borderRadius: 20, padding: "5px 12px",
+                cursor: credits <= 0 ? "pointer" : "default",
+              }}
+              onClick={() => { if (credits <= 0) router.push(wl("/upgrade")); }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: creditColor }}>{creditLabel}</span>
+            </div>
+            <NotificationBell />
+          </div>
+        </div>
+
+        <div className="px-6 py-8 max-w-4xl mx-auto w-full">
+          {children}
+        </div>
+
+        {/* Mobile bottom nav */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white md:hidden" style={{ borderTop: "1px solid #ebebf2" }}>
+          <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "8px 24px 14px" }}>
+            <Link
+              href={homeLink}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === homeLink ? "#4338ca" : "#9ca3af" }}
+            >
+              {icons.home}
+              <span style={{ fontSize: 9, fontWeight: 600 }}>Home</span>
+            </Link>
+            <Link
+              href="/search"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === "/search" ? "#4338ca" : "#9ca3af" }}
+            >
+              {icons.search}
+              <span style={{ fontSize: 9, fontWeight: 500 }}>Search</span>
+            </Link>
+            <Link
+              href={createLink}
+              style={{
+                background: isCompanyWorkspace
+                  ? "linear-gradient(135deg,#0891b2,#0e7490)"
+                  : "linear-gradient(135deg,#4338ca,#6366f1)",
+                color: "#fff", padding: "8px 20px", borderRadius: 22,
+                fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center",
+                gap: 5, textDecoration: "none",
+                boxShadow: isCompanyWorkspace
+                  ? "0 3px 10px rgba(8,145,178,0.3)"
+                  : "0 3px 10px rgba(67,56,202,0.3)",
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M5 1v8M1 5h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Create
+            </Link>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
