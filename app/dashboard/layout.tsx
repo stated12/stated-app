@@ -76,7 +76,7 @@ export default function DashboardLayout({
   const isCompanyWorkspace = !!activeCompany && pathname.startsWith("/dashboard/company");
 
   const homeLink   = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
-  const createLink = isCompanyWorkspace ? "/dashboard/create?workspace=company" : "/dashboard/create";
+  const createLink = isCompanyWorkspace ? "/dashboard/company/create" : "/dashboard/create";
   const upgradeLink = isCompanyWorkspace ? "/upgrade?workspace=company" : "/upgrade";
   const billingLink = isCompanyWorkspace ? "/billing?workspace=company" : "/billing";
 
@@ -171,7 +171,7 @@ export default function DashboardLayout({
                   onClick={() => { if (credits <= 0) router.push(upgradeLink); }}
                 >
                   <span style={{ fontSize: 11, fontWeight: 700, color: creditColor }}>
-                    {isCompanyWorkspace ? "Co" : "St"} {creditLabel}
+                    {isCompanyWorkspace ? "Company" : "Individual"}: {creditLabel}
                   </span>
                 </div>
               </div>
