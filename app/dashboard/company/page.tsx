@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CommitmentFeed from "@/components/CommitmentFeed";
@@ -14,7 +13,6 @@ export default async function CompanyDashboardPage() {
   let company: any = null;
   let userRole = "viewer";
 
-  // Check ownership first
   const { data: ownedCompany } = await supabase
     .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
 
@@ -22,13 +20,11 @@ export default async function CompanyDashboardPage() {
     company = ownedCompany;
     userRole = "owner";
   } else {
-    // Use admin client to bypass RLS for membership lookup
-    const { data: membership } = await supabaseAdmin
+    const { data: membership } = await supabase
       .from("company_members").select("role, company_id")
       .eq("user_id", user.id).maybeSingle();
-
     if (membership) {
-      const { data: memberCompany } = await supabaseAdmin
+      const { data: memberCompany } = await supabase
         .from("companies").select("*").eq("id", membership.company_id).maybeSingle();
       if (memberCompany) {
         company = memberCompany;
@@ -37,7 +33,6 @@ export default async function CompanyDashboardPage() {
     }
   }
 
-  // No company found -- member may not have accepted or was not invited
   if (!company) redirect("/dashboard");
 
   const { count: activeCount } = await supabase
@@ -72,12 +67,10 @@ export default async function CompanyDashboardPage() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const stats = [
-    { num: activeCount ?? 0,      label: "Active",  color: "#10b981" },
-    { num: formatNum(totalViews), label: "Views",   color: "#0f0c29" },
+    { num: activeCount ?? 0,       label: "Active",  color: "#10b981" },
+    { num: formatNum(totalViews),  label: "Views",   color: "#0f0c29" },
     { num: (memberCount ?? 0) + 1, label: "Members", color: "#0891b2" },
   ];
-
-  const canCreate = userRole === "owner" || userRole === "admin" || userRole === "member";
 
   return (
     <div style={{ margin: "-32px -24px" }}>
@@ -90,11 +83,6 @@ export default async function CompanyDashboardPage() {
             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
               {activeCount ?? 0} active {(activeCount ?? 0) === 1 ? "commitment" : "commitments"} - Company workspace
             </div>
-            {userRole !== "owner" && (
-              <div style={{ fontSize: 10, color: "#0891b2", fontWeight: 600, marginTop: 3, background: "#e0f2fe", display: "inline-block", padding: "2px 8px", borderRadius: 20 }}>
-                {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-              </div>
-            )}
           </div>
           <Link href={"/c/" + company.username}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: 2.5, flexShrink: 0 }}>
@@ -122,9 +110,9 @@ export default async function CompanyDashboardPage() {
           <h1 style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", letterSpacing: "0.5px", textTransform: "uppercase" }}>
             Discover commitments
           </h1>
-          {canCreate && (
+          {(userRole === "owner" || userRole === "admin" || userRole === "member") && (
             <Link
-              href="/dashboard/company/create"
+              href="/dashboard/create?workspace=company"
               style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}
             >
               + Create
