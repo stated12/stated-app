@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const { planKey } = await req.json();
+    const { planKey, forCompany } = await req.json();
 
     if (!planKey) {
       return NextResponse.json({ error: "Invalid plan selected" }, { status: 400 });
@@ -35,38 +35,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // For company plans, find the company this user owns so webhook
-    // can credit the company account instead of the individual profile.
-    // Look up company for comp_ plans AND pack_ purchases
-    // (company owners buying credit packs should credit the company)
+    // Look up company for:
+    // - all comp_ plans
+    // - pack_ purchases when explicitly for company (forCompany=true)
+    // Never route ind_ plans to company
     let companyId: string | null = null;
-    const { data: co } = await supabase
-      .from("companies")
-      .select("id")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-    if (co) companyId = co.id;
-    // For individual plans, never route to company
-    if (planKey.startsWith("ind_")) companyId = null;
+    if (!planKey.startsWith("ind_")) {
+      const { data: co } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (co) companyId = co.id;
+    }
 
     const razorpay = new Razorpay({
       key_id:     process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
 
+    const amountInPaise = price * 100;
+
     const notes: Record<string, string> = {
       user_id:  user.id,
       plan_key: planKey,
       credits:  credits.toString(),
+      amount:   amountInPaise.toString(), // for webhook validation
     };
 
-    // Pass company_id in notes so webhook routes credits to correct account
     if (companyId) {
       notes.company_id = companyId;
     }
 
     const order = await razorpay.orders.create({
-      amount:   price * 100,
+      amount:   amountInPaise,
       currency: "INR",
       receipt:  "receipt_" + Date.now(),
       notes,
