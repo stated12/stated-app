@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
+    // Verify signature
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
       .update(body)
@@ -23,18 +24,37 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(body);
+
+    // Only handle successful captures
     if (event.event !== "payment.captured") {
       return NextResponse.json({ message: "Event ignored" }, { status: 200 });
     }
 
-    const payment      = event.payload.payment.entity;
+    const payment = event.payload.payment.entity;
+
+    // Validate payment status
+    if (payment.status !== "captured") {
+      return NextResponse.json({ message: "Payment not captured" }, { status: 200 });
+    }
+
     const userId       = payment.notes?.user_id;
     const companyId    = payment.notes?.company_id || null;
     const creditsToAdd = Number(payment.notes?.credits || 0);
     const planKey      = payment.notes?.plan_key || "";
+    const noteAmount   = Number(payment.notes?.amount || 0);
 
     if (!userId) {
       return NextResponse.json({ error: "Missing user_id in notes" }, { status: 400 });
+    }
+    if (creditsToAdd <= 0) {
+      return NextResponse.json({ error: "Invalid credits amount" }, { status: 400 });
+    }
+
+    // Validate amount matches expected (prevents tampered payments)
+    // noteAmount is in paise, payment.amount is in paise
+    if (noteAmount > 0 && payment.amount !== noteAmount) {
+      console.error("Amount mismatch:", payment.amount, "vs notes:", noteAmount);
+      return NextResponse.json({ error: "Amount mismatch" }, { status: 400 });
     }
 
     const supabase = createClient(
@@ -42,7 +62,7 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Idempotency -- check if already processed
+    // Idempotency -- skip if already processed
     const { data: existing } = await supabase
       .from("payments")
       .select("id, status")
@@ -54,9 +74,10 @@ export async function POST(req: NextRequest) {
     }
 
     const isCompanyPlan = planKey.startsWith("comp_");
-    const paymentType   = planKey.startsWith("pack_") ? "credit_pack" : "plan";
+    const isPack        = planKey.startsWith("pack_");
+    const paymentType   = isPack ? "credit_pack" : "plan";
 
-    // Record payment with correct column names
+    // Record payment
     const { data: inserted, error: insertError } = await supabase
       .from("payments")
       .upsert({
@@ -78,51 +99,54 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insert failed" }, { status: 500 });
     }
 
-    if (companyId && (isCompanyPlan || planKey.startsWith("pack_"))) {
-      // --- COMPANY: add credits to companies table ---
-      const { data: co } = await supabase
-        .from("companies")
-        .select("credits")
-        .eq("id", companyId)
-        .single();
+    // Route credits to correct account
+    if (companyId && (isCompanyPlan || isPack)) {
+      // COMPANY -- atomic increment using RPC to prevent race conditions
+      const { error: rpcError } = await supabase.rpc("increment_company_credits", {
+        company_id_input: companyId,
+        credit_amount:    creditsToAdd,
+      });
 
-      const current = co?.credits ?? 0;
-
-      const companyUpdate: Record<string, unknown> = {
-        credits: current + creditsToAdd,
-      };
-      if (isCompanyPlan) {
-        companyUpdate.plan_key          = planKey;
-        companyUpdate.plan_purchased_at = new Date().toISOString();
+      if (rpcError) {
+        // Fallback to direct update
+        const { data: co } = await supabase
+          .from("companies").select("credits").eq("id", companyId).single();
+        await supabase
+          .from("companies")
+          .update({ credits: (co?.credits ?? 0) + creditsToAdd })
+          .eq("id", companyId);
       }
 
-      await supabase
-        .from("companies")
-        .update(companyUpdate)
-        .eq("id", companyId);
+      // Update plan key for plan purchases
+      if (isCompanyPlan) {
+        await supabase
+          .from("companies")
+          .update({ plan_key: planKey, plan_purchased_at: new Date().toISOString() })
+          .eq("id", companyId);
+      }
 
     } else {
-      // --- INDIVIDUAL: add credits to profiles table ---
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("credits")
-        .eq("id", userId)
-        .single();
+      // INDIVIDUAL -- atomic increment
+      const { error: rpcError } = await supabase.rpc("increment_credits", {
+        user_id_input: userId,
+        credit_amount: creditsToAdd,
+      });
 
-      const current = prof?.credits ?? 0;
-
-      const profileUpdate: Record<string, unknown> = {
-        credits: current + creditsToAdd,
-      };
-      if (planKey && !planKey.startsWith("pack_")) {
-        profileUpdate.plan_key          = planKey;
-        profileUpdate.plan_purchased_at = new Date().toISOString();
+      if (rpcError) {
+        const { data: prof } = await supabase
+          .from("profiles").select("credits").eq("id", userId).single();
+        await supabase
+          .from("profiles")
+          .update({ credits: (prof?.credits ?? 0) + creditsToAdd })
+          .eq("id", userId);
       }
 
-      await supabase
-        .from("profiles")
-        .update(profileUpdate)
-        .eq("id", userId);
+      if (planKey && !isPack) {
+        await supabase
+          .from("profiles")
+          .update({ plan_key: planKey, plan_purchased_at: new Date().toISOString() })
+          .eq("id", userId);
+      }
     }
 
     return NextResponse.json({ message: "Payment processed" }, { status: 200 });
