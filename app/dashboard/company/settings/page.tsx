@@ -81,9 +81,7 @@ export default function CompanySettingsPage() {
 
     const { error: updateError } = await supabase.from("companies").update({
       name:         company.name,
-      display_name: company.display_name,
       description:  company.description,
-      bio:          company.bio,
       website:      company.website,
       linkedin_url: company.linkedin_url,
       twitter_url:  company.twitter_url,
@@ -188,33 +186,17 @@ export default function CompanySettingsPage() {
           </div>
 
           <div style={FIELD}>
-            <label style={LS}>Display Name <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 400 }}>(shown on profile)</span></label>
-            <input style={IS} value={company.display_name || ""} onChange={(ev) => setCompany({ ...company, display_name: ev.target.value })} placeholder="e.g. Stated Inc." disabled={!isOwner} />
-          </div>
-
-          <div style={FIELD}>
             <label style={LS}>Username <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 400 }}>(permanent - cannot be changed)</span></label>
             <input style={{ ...IS, color: "#9ca3af", cursor: "not-allowed" }} value={company.username || ""} disabled />
           </div>
 
-          <div style={FIELD}>
+          <div style={{ marginBottom: 0 }}>
             <label style={LS}>Description</label>
             <textarea
               style={{ ...IS, minHeight: 70, resize: "vertical" as const }}
               value={company.description || ""}
               onChange={(ev) => setCompany({ ...company, description: ev.target.value })}
-              placeholder="What does your company commit to publicly?"
-              disabled={!isOwner}
-            />
-          </div>
-
-          <div style={{ marginBottom: 0 }}>
-            <label style={LS}>Bio</label>
-            <textarea
-              style={{ ...IS, minHeight: 70, resize: "vertical" as const }}
-              value={company.bio || ""}
-              onChange={(ev) => setCompany({ ...company, bio: ev.target.value })}
-              placeholder="A short bio for your company"
+              placeholder="A bio about your company"
               disabled={!isOwner}
             />
           </div>
