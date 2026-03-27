@@ -37,15 +37,17 @@ export async function POST(req: Request) {
 
     // For company plans, find the company this user owns so webhook
     // can credit the company account instead of the individual profile.
+    // Look up company for comp_ plans AND pack_ purchases
+    // (company owners buying credit packs should credit the company)
     let companyId: string | null = null;
-    if (planKey.startsWith("comp_")) {
-      const { data: co } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("owner_user_id", user.id)
-        .maybeSingle();
-      companyId = co?.id || null;
-    }
+    const { data: co } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("owner_user_id", user.id)
+      .maybeSingle();
+    if (co) companyId = co.id;
+    // For individual plans, never route to company
+    if (planKey.startsWith("ind_")) companyId = null;
 
     const razorpay = new Razorpay({
       key_id:     process.env.RAZORPAY_KEY_ID!,
