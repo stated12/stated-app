@@ -110,5 +110,5 @@ export default async function InvitePage({
     .update({ status: "accepted", accepted_at: new Date().toISOString() })
     .eq("id", inviteRow.id);
 
-  redirect("/dashboard/company");
-}
+  redirect("/dashboard"); // lands on individual with company switcher visible
+        }
