@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
+import BackButton from "@/components/BackButton";
 
 export async function generateMetadata({
   params,
@@ -185,12 +186,7 @@ export default async function CompanyPublicPage({
 
       {/* NAV */}
       <nav className="flex items-center justify-between px-5 py-3 bg-white" style={{ borderBottom: "1px solid #ebebf2" }}>
-        <Link href="/" className="flex items-center gap-1 text-xs font-medium" style={{ color: "#0891b2" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9 2L4 7l5 5" stroke="#0891b2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Back
-        </Link>
+        <BackButton fallback="/dashboard" />
         <span className="font-extrabold text-base" style={{ color: "#1e1b4b" }}>
           St<span style={{ color: "#4f46e5" }}>a</span>ted
         </span>
@@ -236,8 +232,8 @@ export default async function CompanyPublicPage({
           ))}
         </div>
 
-        {/* -- FIX: logo avatar - positioned to overlap banner bottom visibly -- */}
-        <div style={{ position: "absolute", bottom: -44, left: 20, zIndex: 30 }}>
+        {/* logo avatar -- RIGHT side so "Commit" label is never blocked */}
+        <div style={{ position: "absolute", bottom: -44, right: 20, zIndex: 30 }}>
           <div style={{ background: "linear-gradient(135deg,#0891b2,#38bdf8)", padding: 3, width: 80, height: 80, boxShadow: "0 4px 20px rgba(8,145,178,0.5)", borderRadius: 16 }}>
             <img
               src={logoUrl}
@@ -248,7 +244,7 @@ export default async function CompanyPublicPage({
         </div>
       </div>
 
-      {/* PROFILE CARD - paddingTop accounts for logo overlap */}
+      {/* PROFILE CARD */}
       <div className="bg-white" style={{ paddingTop: 56, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
