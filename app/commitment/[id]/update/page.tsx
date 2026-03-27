@@ -6,17 +6,17 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CommitmentUpdatePage() {
-  const supabase = createClient();
-  const router = useRouter();
-  const params = useParams();
+  const supabase     = createClient();
+  const router       = useRouter();
+  const params       = useParams();
   const commitmentId = params.id as string;
 
-  const [content, setContent] = useState("");
+  const [content,        setContent]        = useState("");
   const [commitmentText, setCommitmentText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [error, setError] = useState("");
-  const [limitInfo, setLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  const [isCompany,      setIsCompany]      = useState(false);
+  const [loading,        setLoading]        = useState(false);
+  const [checking,       setChecking]       = useState(true);
+  const [error,          setError]          = useState("");
 
   const UPDATE_LIMITS: Record<string, number> = {
     free: 2, ind_499: 5, ind_899: 10, ind_1299: 15,
@@ -30,7 +30,10 @@ export default function CommitmentUpdatePage() {
     if (!user) { router.push("/login"); return; }
 
     const { data, error } = await supabase
-      .from("commitments").select("text, user_id, company_id").eq("id", commitmentId).single();
+      .from("commitments")
+      .select("text, user_id, company_id")
+      .eq("id", commitmentId)
+      .single();
 
     if (error || !data) { setError("Commitment not found"); setChecking(false); return; }
 
@@ -39,8 +42,12 @@ export default function CommitmentUpdatePage() {
     }
 
     setCommitmentText(data.text);
+    setIsCompany(!!data.company_id);
     setChecking(false);
   }
+
+  // Redirect target depends on whether this is a company commitment
+  const backUrl = isCompany ? "/dashboard/company" : "/dashboard";
 
   async function submitUpdate() {
     if (!content.trim()) { setError("Write your progress update"); return; }
@@ -65,14 +72,14 @@ export default function CommitmentUpdatePage() {
 
     const limit = UPDATE_LIMITS[planKey] ?? 2;
     const { count } = await supabase
-      .from("commitment_updates").select("*", { count: "exact", head: true }).eq("commitment_id", commitmentId);
+      .from("commitment_updates")
+      .select("*", { count: "exact", head: true })
+      .eq("commitment_id", commitmentId);
 
     if ((count ?? 0) >= limit) {
-      setError(`Update limit reached (${limit}). Upgrade your plan to add more updates.`);
+      setError("Update limit reached (" + limit + "). Upgrade your plan to add more updates.");
       setLoading(false); return;
     }
-
-    setLimitInfo({ used: (count ?? 0) + 1, limit });
 
     const { error: insertError } = await supabase
       .from("commitment_updates")
@@ -81,13 +88,15 @@ export default function CommitmentUpdatePage() {
     if (insertError) { setError(insertError.message); setLoading(false); return; }
 
     await supabase.from("notifications").insert({
-      user_id: user.id, type: "update",
-      title: "📈 Progress Updated",
+      user_id: user.id,
+      type: "update",
+      title: "Progress Updated",
       message: "You added a new progress update.",
-      link: "/dashboard/my", read: false,
+      link: isCompany ? "/dashboard/company/commitments" : "/dashboard/my",
+      read: false,
     });
 
-    router.push("/dashboard");
+    router.push(backUrl);
   }
 
   if (checking) {
@@ -101,33 +110,38 @@ export default function CommitmentUpdatePage() {
   if (error === "Commitment not found" || error === "You do not have permission") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f3f7" }}>
-        <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", textAlign: "center", border: "1px solid #f0f1f6", boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-          <div style={{ color: "#ef4444", fontWeight: 600, fontSize: 14 }}>{error}</div>
-          <Link href="/dashboard" style={{ display: "inline-block", marginTop: 16, fontSize: 12, color: "#4338ca", textDecoration: "none", fontWeight: 600 }}>← Back to dashboard</Link>
+        <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", textAlign: "center" as const, border: "1px solid #f0f1f6" }}>
+          <div style={{ color: "#ef4444", fontWeight: 600, fontSize: 14, marginBottom: 16 }}>{error}</div>
+          <Link href={backUrl} style={{ fontSize: 12, color: "#4338ca", textDecoration: "none", fontWeight: 600 }}>Back to dashboard</Link>
         </div>
       </div>
     );
   }
 
+  const accentColor = isCompany ? "#0891b2" : "#4338ca";
+  const gradColor   = isCompany
+    ? "linear-gradient(135deg,#0891b2,#0e7490)"
+    : "linear-gradient(135deg,#4338ca,#6366f1)";
+
   return (
     <div style={{ minHeight: "100vh", background: "#f2f3f7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #f0f1f6" }}>
 
-        <div style={{ height: 4, background: "linear-gradient(90deg,#4338ca,#818cf8)" }} />
+        <div style={{ height: 4, background: gradColor }} />
 
         <div style={{ padding: "24px 20px" }}>
-          <Link href="/dashboard" style={{ textDecoration: "none" }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#4338ca", marginBottom: 20, letterSpacing: -0.5 }}>Stated</div>
+          <Link href={backUrl} style={{ textDecoration: "none" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: accentColor, marginBottom: 20, letterSpacing: -0.5 }}>Stated</div>
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#eef2ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>📈</div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: "#0f0c29", margin: 0 }}>Add Progress Update</h1>
+            {isCompany && (
+              <span style={{ fontSize: 10, fontWeight: 700, background: "#e0f2fe", color: "#0891b2", padding: "2px 8px", borderRadius: 20 }}>Company</span>
+            )}
           </div>
 
-          {/* Commitment text */}
-          <div style={{ background: "#f8f9fc", borderRadius: 12, padding: "10px 14px", marginBottom: 18, borderLeft: "3px solid #4338ca" }}>
+          <div style={{ background: "#f8f9fc", borderRadius: 12, padding: "10px 14px", marginBottom: 18, borderLeft: "3px solid " + accentColor }}>
             <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.5 }}>{commitmentText}</div>
           </div>
 
@@ -143,7 +157,7 @@ export default function CommitmentUpdatePage() {
           </div>
 
           <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 18, lineHeight: 1.5 }}>
-            💡 Regular updates build credibility and keep your followers engaged.
+            Regular updates build credibility and keep your followers engaged.
           </div>
 
           {error && (
@@ -155,12 +169,12 @@ export default function CommitmentUpdatePage() {
           <button
             onClick={submitUpdate}
             disabled={loading}
-            style={{ width: "100%", background: loading ? "#a5b4fc" : "linear-gradient(135deg,#4338ca,#6366f1)", color: "#fff", padding: 13, borderRadius: 14, fontSize: 14, fontWeight: 700, border: "none", cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: "0 3px 12px rgba(67,56,202,0.3)" }}
+            style={{ width: "100%", background: loading ? "#9ca3af" : gradColor, color: "#fff", padding: 13, borderRadius: 14, fontSize: 14, fontWeight: 700, border: "none", cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit" }}
           >
-            {loading ? "Saving..." : "📈 Add Update"}
+            {loading ? "Saving..." : "Add Update"}
           </button>
 
-          <Link href="/dashboard" style={{ display: "block", textAlign: "center" as const, marginTop: 12, fontSize: 12, color: "#9ca3af", textDecoration: "none" }}>
+          <Link href={backUrl} style={{ display: "block", textAlign: "center" as const, marginTop: 12, fontSize: 12, color: "#9ca3af", textDecoration: "none" }}>
             Cancel
           </Link>
         </div>
