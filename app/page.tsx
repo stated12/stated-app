@@ -39,12 +39,15 @@ export default async function HomePage() {
         <p className="mt-2 text-sm text-gray-300">2 updates per commitment • Public profile included</p>
       </section>
 
-      {/* FEED — uses same CommitmentFeed as explore, capped at 6 */}
+      {/* FEED */}
       <section className="bg-white text-black py-20 px-4">
         <div className="max-w-2xl mx-auto">
           <p className="text-center text-gray-500 mb-3 text-sm">People on record, right now</p>
           <h2 className="text-3xl md:text-4xl font-bold mb-10 text-center">Commitments from people &amp; companies</h2>
-          <CommitmentFeed endpoint="/api/feed" showFilters={false} limit={6} />
+
+          {/* limit passed as query param in the endpoint so CommitmentFeed doesn't need a limit prop */}
+          <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
+
           <div className="text-center mt-10">
             <Link href="/explore" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:scale-[1.02]">
               Explore all commitments
