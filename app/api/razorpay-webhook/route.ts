@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.text();
+    const body      = await req.text();
     const signature = req.headers.get("x-razorpay-signature");
 
     if (!signature) {
@@ -23,17 +23,15 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(body);
-
     if (event.event !== "payment.captured") {
       return NextResponse.json({ message: "Event ignored" }, { status: 200 });
     }
 
-    const payment = event.payload.payment.entity;
-
-    const userId    = payment.notes?.user_id;
-    const companyId = payment.notes?.company_id;   // set this when creating order
+    const payment      = event.payload.payment.entity;
+    const userId       = payment.notes?.user_id;
+    const companyId    = payment.notes?.company_id || null;
     const creditsToAdd = Number(payment.notes?.credits || 0);
-    const planKey   = payment.notes?.plan_key || "";
+    const planKey      = payment.notes?.plan_key || "";
 
     if (!userId) {
       return NextResponse.json({ error: "Missing user_id in notes" }, { status: 400 });
@@ -44,37 +42,33 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Idempotency check
+    // Idempotency -- check if already processed
     const { data: existing } = await supabase
       .from("payments")
-      .select("id, is_processed")
+      .select("id, status")
       .eq("razorpay_payment_id", payment.id)
       .maybeSingle();
 
-    if (existing?.is_processed) {
+    if (existing?.status === "paid") {
       return NextResponse.json({ message: "Already processed" }, { status: 200 });
     }
 
     const isCompanyPlan = planKey.startsWith("comp_");
+    const paymentType   = planKey.startsWith("pack_") ? "credit_pack" : "plan";
 
-    // Determine which table to record payment against
+    // Record payment with correct column names
     const { data: inserted, error: insertError } = await supabase
       .from("payments")
       .upsert({
-        user_id:              userId,
-        company_id:           isCompanyPlan ? (companyId || null) : null,
-        razorpay_order_id:    payment.order_id,
-        razorpay_payment_id:  payment.id,
-        razorpay_signature:   signature,
-        amount:               payment.amount,
-        currency:             payment.currency,
-        credits_purchased:    creditsToAdd,
-        credits_added:        creditsToAdd,
-        plan_key:             planKey || null,
-        payment_type:         planKey.startsWith("pack_") ? "credit_pack" : "plan",
-        status:               "paid",
-        payment_method:       payment.method,
-        is_processed:         false,
+        user_id:             userId,
+        company_id:          companyId,
+        razorpay_order_id:   payment.order_id,
+        razorpay_payment_id: payment.id,
+        amount:              payment.amount,
+        credits_added:       creditsToAdd,
+        plan_key:            planKey || null,
+        payment_type:        paymentType,
+        status:              "paid",
       })
       .select()
       .single();
@@ -84,58 +78,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insert failed" }, { status: 500 });
     }
 
-    if (isCompanyPlan && companyId) {
-      // --- COMPANY PLAN ---
-      // Get current company credits
+    if (companyId && (isCompanyPlan || planKey.startsWith("pack_"))) {
+      // --- COMPANY: add credits to companies table ---
       const { data: co } = await supabase
         .from("companies")
-        .select("credits, plan_key")
+        .select("credits")
         .eq("id", companyId)
         .single();
 
-      const currentCredits = co?.credits ?? 0;
+      const current = co?.credits ?? 0;
 
-      // Add credits on top of existing balance (never reset)
+      const companyUpdate: Record<string, unknown> = {
+        credits: current + creditsToAdd,
+      };
+      if (isCompanyPlan) {
+        companyUpdate.plan_key          = planKey;
+        companyUpdate.plan_purchased_at = new Date().toISOString();
+      }
+
       await supabase
         .from("companies")
-        .update({
-          credits:           currentCredits + creditsToAdd,
-          plan_key:          planKey,
-          plan_purchased_at: new Date().toISOString(),
-        })
+        .update(companyUpdate)
         .eq("id", companyId);
 
     } else {
-      // --- INDIVIDUAL PLAN or CREDIT PACK ---
+      // --- INDIVIDUAL: add credits to profiles table ---
       const { data: prof } = await supabase
         .from("profiles")
-        .select("credits, plan_key")
+        .select("credits")
         .eq("id", userId)
         .single();
 
-      const currentCredits = prof?.credits ?? 0;
+      const current = prof?.credits ?? 0;
 
-      const updateData: Record<string, unknown> = {
-        credits: currentCredits + creditsToAdd,
+      const profileUpdate: Record<string, unknown> = {
+        credits: current + creditsToAdd,
       };
-
-      // Update plan key for plan purchases (always, even if upgrading)
       if (planKey && !planKey.startsWith("pack_")) {
-        updateData.plan_key          = planKey;
-        updateData.plan_purchased_at = new Date().toISOString();
+        profileUpdate.plan_key          = planKey;
+        profileUpdate.plan_purchased_at = new Date().toISOString();
       }
 
       await supabase
         .from("profiles")
-        .update(updateData)
+        .update(profileUpdate)
         .eq("id", userId);
     }
-
-    // Mark payment processed
-    await supabase
-      .from("payments")
-      .update({ is_processed: true })
-      .eq("id", inserted.id);
 
     return NextResponse.json({ message: "Payment processed" }, { status: 200 });
 
