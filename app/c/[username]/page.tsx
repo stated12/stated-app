@@ -4,14 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import dynamicImport from "next/dynamic";
 import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
 import BackButton from "@/components/BackButton";
-
-const FollowButton = dynamicImport(() => import("@/components/FollowButton"), { ssr: false });
-const ShareProfileButton = dynamicImport(() => import("@/components/ShareProfileButton"), { ssr: false });
+import CompanyProfileActions from "@/components/CompanyProfileActions";
 
 export async function generateMetadata({
   params,
@@ -244,21 +241,15 @@ export default async function CompanyPublicPage({
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#4b5563" }}>{company.description}</p>
           )}
 
-          {/* Follow + Share - wired to real components, matching individual profile */}
-          <div className="flex gap-2 mb-4">
-            {!isOwner && (
-              <FollowButton
-                currentUserId={currentUser?.id}
-                targetCompanyId={company.id}
-                style={{ flex: 1, padding: "9px 0", background: "linear-gradient(135deg,#0891b2,#0e7490)", border: "none", borderRadius: 22, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 8px rgba(8,145,178,0.3)" }}
-              />
-            )}
-            <ShareProfileButton
-              username={company.username}
-              profileType="company"
-              style={{ flex: 1, padding: "9px 0", background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: 22, fontSize: 13, fontWeight: 700, color: "#0891b2", cursor: "pointer", fontFamily: "inherit" }}
-            />
-          </div>
+          {/* Follow + Share - single client wrapper avoids RSC import issues */}
+          <CompanyProfileActions
+            companyId={company.id}
+            companyName={company.name}
+            username={company.username}
+            currentUserId={currentUser?.id ?? null}
+            isOwner={isOwner}
+          />
+
 
           {/* Social links */}
           {socialLinks.length > 0 && (
@@ -316,4 +307,4 @@ export default async function CompanyPublicPage({
 
     </div>
   );
-          }
+}
