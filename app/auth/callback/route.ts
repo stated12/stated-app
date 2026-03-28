@@ -8,38 +8,36 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/dashboard";
 
   if (!code) {
-    // No code — redirect to login with error
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+    return NextResponse.redirect(origin + "/login?error=missing_code");
   }
 
   const supabase = await createClient();
-
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     console.error("Auth callback error:", error.message);
-    return NextResponse.redirect(`${origin}/login?error=verification_failed`);
+    return NextResponse.redirect(origin + "/login?error=verification_failed");
   }
 
-  // Get user after session is created
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) {
-    return NextResponse.redirect(`${origin}/login?error=no_user`);
+    return NextResponse.redirect(origin + "/login?error=no_user");
   }
 
-  // Check if user has a company — redirect accordingly
-  const { data: company } = await supabase
+  // Company OWNERS go to company dashboard
+  const { data: ownedCompany } = await supabase
     .from("companies")
     .select("id")
     .eq("owner_user_id", user.id)
     .maybeSingle();
 
-  if (company) {
-    return NextResponse.redirect(`${origin}/dashboard/company`);
+  if (ownedCompany) {
+    return NextResponse.redirect(origin + "/dashboard/company");
   }
 
-  // Check if user is a company member
+  // Invited MEMBERS go to individual dashboard
+  // Their individual account is primary; company access is via the workspace switcher
+  // This avoids confusion between individual and company profiles
   const { data: membership } = await supabase
     .from("company_members")
     .select("company_id")
@@ -47,9 +45,9 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (membership) {
-    return NextResponse.redirect(`${origin}/dashboard/company`);
+    return NextResponse.redirect(origin + "/dashboard");
   }
 
-  // Default — individual dashboard
-  return NextResponse.redirect(`${origin}/dashboard`);
+  // Pure individual or next param redirect
+  return NextResponse.redirect(origin + "/" + next);
 }
