@@ -8,6 +8,8 @@ import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
 import BackButton from "@/components/BackButton";
+import FollowButton from "@/components/FollowButton";
+import ShareProfileButton from "@/components/ShareProfileButton";
 
 export async function generateMetadata({
   params,
@@ -37,19 +39,12 @@ export async function generateMetadata({
     title,
     description,
     openGraph: {
-      title,
-      description,
+      title, description,
       images: [{ url: logoUrl, width: 256, height: 256, alt: company.name }],
       url: "https://app.stated.in/c/" + company.username,
-      siteName: "Stated",
-      type: "profile",
+      siteName: "Stated", type: "profile",
     },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [logoUrl],
-    },
+    twitter: { card: "summary_large_image", title, description, images: [logoUrl] },
   };
 }
 
@@ -64,21 +59,15 @@ export default async function CompanyPublicPage({
   const { data: { user: currentUser } } = await supabase.auth.getUser();
 
   const { data: company } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("username", username)
-    .single();
-
+    .from("companies").select("*").eq("username", username).single();
   if (!company) return notFound();
 
   const { count: followersCount } = await supabase
-    .from("follows")
-    .select("*", { count: "exact", head: true })
+    .from("follows").select("*", { count: "exact", head: true })
     .eq("following_company_id", company.id);
 
   const { count: membersCount } = await supabase
-    .from("company_members")
-    .select("*", { count: "exact", head: true })
+    .from("company_members").select("*", { count: "exact", head: true })
     .eq("company_id", company.id);
 
   const { data: commitments } = await supabase
@@ -91,28 +80,18 @@ export default async function CompanyPublicPage({
   const enrichedCommitments = commitments && commitments.length > 0
     ? await Promise.all(commitments.map(async (c) => {
         const { count: views } = await supabase
-          .from("commitment_views")
-          .select("*", { count: "exact", head: true })
+          .from("commitment_views").select("*", { count: "exact", head: true })
           .eq("commitment_id", c.id);
-
         const { count: updateCount } = await supabase
-          .from("commitment_updates")
-          .select("*", { count: "exact", head: true })
+          .from("commitment_updates").select("*", { count: "exact", head: true })
           .eq("commitment_id", c.id);
-
         const { count: sharesCount } = await supabase
-          .from("commitment_shares")
-          .select("*", { count: "exact", head: true })
+          .from("commitment_shares").select("*", { count: "exact", head: true })
           .eq("commitment_id", c.id);
-
         const { data: update } = await supabase
-          .from("commitment_updates")
-          .select("content, created_at")
-          .eq("commitment_id", c.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
+          .from("commitment_updates").select("content, created_at")
+          .eq("commitment_id", c.id).order("created_at", { ascending: false })
+          .limit(1).maybeSingle();
         return {
           ...c,
           views: views || 0,
@@ -133,7 +112,6 @@ export default async function CompanyPublicPage({
 
   const isOwner = currentUser?.id === company.owner_user_id;
 
-  // -- FIX: use correct column names from DB ----------------------------------
   const socialLinks = [
     { href: company.website,      label: "Website",  icon: "globe"    },
     { href: company.twitter_url,  label: "Twitter",  icon: "twitter"  },
@@ -149,7 +127,6 @@ export default async function CompanyPublicPage({
     { num: formatViews(totalViews),    label: "Total Views" },
   ];
 
-  // -- Icon SVGs (inline, no emoji, no non-ASCII) ----------------------------
   function SocialIcon({ icon }: { icon: string }) {
     if (icon === "globe") return (
       <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
@@ -182,6 +159,8 @@ export default async function CompanyPublicPage({
 
   return (
     <div className="min-h-screen pb-16" style={{ background: "#f2f3f7" }}>
+
+      {/* ViewTracker - logs profile view, same as individual */}
       <ViewTracker type="profile" entityId={company.id} />
 
       {/* NAV */}
@@ -195,13 +174,11 @@ export default async function CompanyPublicPage({
         </div>
       </nav>
 
-      {/* BANNER - increased height so logo avatar is fully visible */}
+      {/* BANNER - fully visible, no overlap */}
       <div className="relative overflow-hidden" style={{ height: 140, background: "#0d1829" }}>
         <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#0c4a6e 0%,#0891b2 40%,#0e7490 70%,#164e63 100%)" }} />
         <div className="absolute rounded-full" style={{ width: 180, height: 180, top: -60, right: -30, background: "radial-gradient(circle,rgba(56,189,248,0.5) 0%,transparent 70%)" }} />
-        <div className="absolute rounded-full" style={{ width: 140, height: 140, bottom: -50, left: 20, background: "radial-gradient(circle,rgba(14,116,144,0.4) 0%,transparent 70%)" }} />
         <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(1.5px 1.5px at 8% 20%,#fff 0%,transparent 100%),radial-gradient(1px 1px at 20% 70%,rgba(255,255,255,0.8) 0%,transparent 100%),radial-gradient(1px 1px at 72% 25%,rgba(255,255,255,0.85) 0%,transparent 100%),radial-gradient(1px 1px at 85% 65%,rgba(255,255,255,0.7) 0%,transparent 100%)" }} />
-
         <div className="absolute inset-0 flex items-center justify-between z-10 px-5" style={{ paddingBottom: 28 }}>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -216,13 +193,12 @@ export default async function CompanyPublicPage({
             ))}
           </div>
         </div>
-
-        {/* Bottom strip */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center z-10" style={{ background: "rgba(0,0,0,0.28)", borderTop: "1px solid rgba(255,255,255,0.07)", padding: "5px 20px" }}>
+        {/* Bottom strip - fully visible now */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center z-10" style={{ background: "rgba(0,0,0,0.28)", borderTop: "1px solid rgba(255,255,255,0.07)", padding: "5px 20px" }}>
           {[
             { dot: "#38bdf8", label: "Commit", color: "rgba(56,189,248,0.9)" },
             { dot: "#7dd3fc", label: "Track",  color: "rgba(125,211,252,0.9)" },
-            { dot: "#34d399", label: "Achieve",color: "rgba(52,211,153,0.9)"  },
+            { dot: "#34d399", label: "Achieve", color: "rgba(52,211,153,0.9)" },
           ].map((s, i) => (
             <div key={i} className="flex items-center flex-1 justify-center gap-1.5">
               {i > 0 && <div className="self-stretch w-px mx-2" style={{ background: "rgba(255,255,255,0.1)" }} />}
@@ -231,15 +207,14 @@ export default async function CompanyPublicPage({
             </div>
           ))}
         </div>
-
       </div>
 
-      {/* PROFILE CARD - no overlap padding needed, logo is inline */}
+      {/* PROFILE CARD */}
       <div className="bg-white" style={{ paddingTop: 16, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
+          {/* Logo + name row */}
           <div className="flex items-center justify-between mb-3">
-            {/* Logo + name + handle stacked together */}
             <div className="flex items-center gap-3">
               <div style={{ background: "linear-gradient(135deg,#0891b2,#38bdf8)", padding: 2.5, width: 52, height: 52, borderRadius: 12, flexShrink: 0, boxShadow: "0 2px 10px rgba(8,145,178,0.3)" }}>
                 <img
@@ -267,7 +242,23 @@ export default async function CompanyPublicPage({
             <p className="text-sm leading-relaxed mb-3" style={{ color: "#4b5563" }}>{company.description}</p>
           )}
 
-          {/* -- FIX: social links now show because column names match -- */}
+          {/* Follow + Share - wired to real components, matching individual profile */}
+          <div className="flex gap-2 mb-4">
+            {!isOwner && (
+              <FollowButton
+                currentUserId={currentUser?.id}
+                targetCompanyId={company.id}
+                style={{ flex: 1, padding: "9px 0", background: "linear-gradient(135deg,#0891b2,#0e7490)", border: "none", borderRadius: 22, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 8px rgba(8,145,178,0.3)" }}
+              />
+            )}
+            <ShareProfileButton
+              username={company.username}
+              profileType="company"
+              style={{ flex: 1, padding: "9px 0", background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: 22, fontSize: 13, fontWeight: 700, color: "#0891b2", cursor: "pointer", fontFamily: "inherit" }}
+            />
+          </div>
+
+          {/* Social links */}
           {socialLinks.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {socialLinks.map((s, i) => (
@@ -281,6 +272,7 @@ export default async function CompanyPublicPage({
             </div>
           )}
 
+          {/* Stats */}
           <div className="flex pt-4" style={{ borderTop: "1px solid #f3f4f8" }}>
             {stats.map((s, i) => (
               <div key={i} className="flex-1 text-center" style={{ borderLeft: i > 0 ? "1px solid #f3f4f8" : "none" }}>
