@@ -10,18 +10,20 @@ function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const inviteToken = searchParams.get("invite");
-  const errorParam  = searchParams.get("error");
+  const inviteToken   = searchParams.get("invite");
+  const errorParam    = searchParams.get("error");
+  const confirmedParam = searchParams.get("confirmed");
+  const typeParam     = searchParams.get("type"); // "company" if confirmed company signup
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState(
-    errorParam === "verification_failed"
-      ? "Verification failed. Please try again."
-      : errorParam === "missing_code"
-      ? "Invalid verification link."
-      : ""
+    errorParam === "verification_failed"   ? "Verification failed. Please try again." :
+    errorParam === "missing_code"          ? "Invalid verification link." :
+    errorParam === "profile_creation_failed" ? "Account confirmed but profile setup failed. Please contact support." :
+    errorParam === "username_taken"        ? "That username was taken during signup. Please sign up again with a new username." :
+    ""
   );
 
   async function handleLogin(e: React.FormEvent) {
@@ -37,7 +39,6 @@ function LoginForm() {
       return;
     }
 
-    // If came from invite link -- go back to complete acceptance
     if (inviteToken) {
       router.push("/invite/" + inviteToken);
       router.refresh();
@@ -47,7 +48,6 @@ function LoginForm() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      // Company OWNERS always go to company dashboard
       const { data: ownedCompany } = await supabase
         .from("companies")
         .select("id")
@@ -60,8 +60,6 @@ function LoginForm() {
         return;
       }
 
-      // Invited MEMBERS go to individual dashboard (layout shows company switcher)
-      // They have their own individual account + access to company via switcher
       const { data: membership } = await supabase
         .from("company_members")
         .select("company_id")
@@ -75,10 +73,12 @@ function LoginForm() {
       }
     }
 
-    // Pure individual
     router.push("/dashboard");
     router.refresh();
   }
+
+  const isConfirmed = confirmedParam === "1";
+  const isCompanyConfirmed = isConfirmed && typeParam === "company";
 
   return (
     <div style={{ background: "#fff", borderRadius: 24, padding: "40px 32px", width: "100%", maxWidth: 400, boxShadow: "0 4px 24px rgba(0,0,0,0.07)", border: "1px solid #f0f1f6" }}>
@@ -90,6 +90,24 @@ function LoginForm() {
         </div>
       </div>
 
+      {/* Email confirmed banner */}
+      {isConfirmed && (
+        <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 12, padding: "12px 14px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#10b981,#34d399)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#15803d", marginBottom: 2 }}>Email confirmed!</div>
+            <div style={{ fontSize: 12, color: "#166534", lineHeight: 1.5 }}>
+              Your {isCompanyConfirmed ? "company" : "individual"} account is ready. Log in below to get started.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite banner */}
       {inviteToken && (
         <div style={{ background: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: 12, padding: "10px 14px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
