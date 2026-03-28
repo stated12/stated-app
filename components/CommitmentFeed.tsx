@@ -110,6 +110,7 @@ export default function CommitmentFeed({
 
   // Apply limit only for display — does not affect fetching
   const displayItems = limit ? items.slice(0, limit) : items;
+  // Never show load more on homepage (when limit is set)
   const showLoadMore = !limit && hasMore;
 
   return (
@@ -243,4 +244,4 @@ export default function CommitmentFeed({
       )}
     </div>
   );
-}
+                      }
