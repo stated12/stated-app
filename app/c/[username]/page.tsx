@@ -196,7 +196,7 @@ export default async function CompanyPublicPage({
       </nav>
 
       {/* BANNER - increased height so logo avatar is fully visible */}
-      <div className="relative overflow-visible" style={{ height: 140, background: "#0d1829" }}>
+      <div className="relative overflow-hidden" style={{ height: 140, background: "#0d1829" }}>
         <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#0c4a6e 0%,#0891b2 40%,#0e7490 70%,#164e63 100%)" }} />
         <div className="absolute rounded-full" style={{ width: 180, height: 180, top: -60, right: -30, background: "radial-gradient(circle,rgba(56,189,248,0.5) 0%,transparent 70%)" }} />
         <div className="absolute rounded-full" style={{ width: 140, height: 140, bottom: -50, left: 20, background: "radial-gradient(circle,rgba(14,116,144,0.4) 0%,transparent 70%)" }} />
@@ -232,32 +232,32 @@ export default async function CompanyPublicPage({
           ))}
         </div>
 
-        {/* logo avatar -- RIGHT side so "Commit" label is never blocked */}
-        <div style={{ position: "absolute", bottom: -44, right: 20, zIndex: 30 }}>
-          <div style={{ background: "linear-gradient(135deg,#0891b2,#38bdf8)", padding: 3, width: 80, height: 80, boxShadow: "0 4px 20px rgba(8,145,178,0.5)", borderRadius: 16 }}>
-            <img
-              src={logoUrl}
-              alt={company.name}
-              style={{ width: "100%", height: "100%", border: "2.5px solid #fff", borderRadius: 13, objectFit: "cover", display: "block" }}
-            />
-          </div>
-        </div>
       </div>
 
-      {/* PROFILE CARD */}
-      <div className="bg-white" style={{ paddingTop: 56, borderBottom: "1px solid #f0f1f6" }}>
+      {/* PROFILE CARD - no overlap padding needed, logo is inline */}
+      <div className="bg-white" style={{ paddingTop: 16, borderBottom: "1px solid #f0f1f6" }}>
         <div className="px-5 pb-5">
 
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>{company.name}</h1>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#0891b2", background: "#e0f2fe", padding: "2px 8px", borderRadius: 20 }}>COMPANY</span>
+            {/* Logo + name + handle stacked together */}
+            <div className="flex items-center gap-3">
+              <div style={{ background: "linear-gradient(135deg,#0891b2,#38bdf8)", padding: 2.5, width: 52, height: 52, borderRadius: 12, flexShrink: 0, boxShadow: "0 2px 10px rgba(8,145,178,0.3)" }}>
+                <img
+                  src={logoUrl}
+                  alt={company.name}
+                  style={{ width: "100%", height: "100%", border: "2px solid #fff", borderRadius: 10, objectFit: "cover", display: "block" }}
+                />
               </div>
-              <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>@{company.username}</div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-extrabold text-xl" style={{ color: "#0f0c29", letterSpacing: "-0.3px" }}>{company.name}</h1>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#0891b2", background: "#e0f2fe", padding: "2px 8px", borderRadius: 20 }}>COMPANY</span>
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>@{company.username}</div>
+              </div>
             </div>
             {isOwner && (
-              <Link href="/dashboard/company" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "7px 14px", borderRadius: 20, textDecoration: "none" }}>
+              <Link href="/dashboard/company" style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "7px 14px", borderRadius: 20, textDecoration: "none", flexShrink: 0 }}>
                 Dashboard
               </Link>
             )}
