@@ -5,6 +5,7 @@ import ShareProfileButton from "@/components/ShareProfileButton";
 
 type Props = {
   companyId: string;
+  companyName: string;
   username: string;
   currentUserId: string | null;
   isOwner: boolean;
@@ -17,17 +18,12 @@ export default function CompanyProfileActions({ companyId, username, currentUser
         <FollowButton
           currentUserId={currentUserId ?? undefined}
           targetCompanyId={companyId}
-          className="follow-btn-company"
           style={{
             padding: "8px 20px",
             background: "linear-gradient(135deg,#0891b2,#0e7490)",
-            border: "none",
-            borderRadius: 22,
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#fff",
-            cursor: "pointer",
-            fontFamily: "inherit",
+            border: "none", borderRadius: 22,
+            fontSize: 13, fontWeight: 700, color: "#fff",
+            cursor: "pointer", fontFamily: "inherit",
             boxShadow: "0 2px 8px rgba(8,145,178,0.3)",
             minWidth: 100,
           }}
@@ -38,14 +34,9 @@ export default function CompanyProfileActions({ companyId, username, currentUser
         profileType="company"
         style={{
           padding: "8px 20px",
-          background: "#f0f9ff",
-          border: "1.5px solid #bae6fd",
-          borderRadius: 22,
-          fontSize: 13,
-          fontWeight: 700,
-          color: "#0891b2",
-          cursor: "pointer",
-          fontFamily: "inherit",
+          background: "#f0f9ff", border: "1.5px solid #bae6fd",
+          borderRadius: 22, fontSize: 13, fontWeight: 700,
+          color: "#0891b2", cursor: "pointer", fontFamily: "inherit",
           minWidth: 120,
         }}
       />
