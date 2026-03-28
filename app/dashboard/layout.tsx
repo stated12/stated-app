@@ -171,7 +171,7 @@ export default function DashboardLayout({
                   onClick={() => { if (credits <= 0) router.push(upgradeLink); }}
                 >
                   <span style={{ fontSize: 11, fontWeight: 700, color: creditColor }}>
-                    {isCompanyWorkspace ? "Company" : "Individual"}: {creditLabel}
+                    {credits <= 0 ? "No credits" : credits + " credits"}
                   </span>
                 </div>
               </div>
@@ -215,6 +215,16 @@ export default function DashboardLayout({
                 : <NavItem href={upgradeLink}  icon={I.upgrade} label="Upgrade" />
               }
               <NavItem href="/dashboard/company/support" icon={I.support} label="Support" />
+              {/* Switch to individual -- only shown for invited members, not owners */}
+              {!company && memberCompany && (
+                <Link
+                  href="/dashboard"
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, textDecoration: "none", color: "#6b7280", fontWeight: 500, fontSize: 14, marginTop: 4 }}
+                >
+                  <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{I.sw}</span>
+                  My Dashboard
+                </Link>
+              )}
 
             </>
           ) : (
