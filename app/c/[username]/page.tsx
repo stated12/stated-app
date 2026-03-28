@@ -4,12 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import dynamicImport from "next/dynamic";
 import ReputationCard from "@/components/ReputationCard";
 import ViewTracker from "@/components/ViewTracker";
 import CommitmentList from "@/components/CommitmentList";
 import BackButton from "@/components/BackButton";
-import FollowButton from "@/components/FollowButton";
-import ShareProfileButton from "@/components/ShareProfileButton";
+
+const FollowButton = dynamicImport(() => import("@/components/FollowButton"), { ssr: false });
+const ShareProfileButton = dynamicImport(() => import("@/components/ShareProfileButton"), { ssr: false });
 
 export async function generateMetadata({
   params,
@@ -314,4 +316,4 @@ export default async function CompanyPublicPage({
 
     </div>
   );
-}
+          }
