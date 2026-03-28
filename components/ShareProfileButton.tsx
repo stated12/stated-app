@@ -2,21 +2,21 @@
 
 export default function ShareProfileButton({
   username,
+  profileType = "individual",
   className,
   style,
 }: {
   username: string;
+  profileType?: "individual" | "company";
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const shareUrl = `https://app.stated.in/u/${username}`;
+  const path = profileType === "company" ? "/c/" : "/u/";
+  const shareUrl = "https://app.stated.in" + path + username;
 
   const handleShare = async () => {
     if (navigator.share) {
-      await navigator.share({
-        title: `${username} on Stated`,
-        url: shareUrl,
-      });
+      await navigator.share({ title: username + " on Stated", url: shareUrl });
     } else {
       await navigator.clipboard.writeText(shareUrl);
       alert("Profile link copied to clipboard");
