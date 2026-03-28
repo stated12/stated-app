@@ -50,7 +50,7 @@ function PaymentTable({ payments }: { payments: any[] }) {
       <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: "1px solid #f0f1f6" }}>
-            {["Date", "Plan / Pack", "Amount", "Credits", "Type", "Status"].map((h) => (
+            {["Date", "Plan / Pack", "Amount", "Credits", "Status", "Txn ID"].map((h) => (
               <th key={h} style={{ padding: "8px 12px", textAlign: "left" as const, fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" as const, letterSpacing: 0.4, whiteSpace: "nowrap" as const }}>
                 {h}
               </th>
@@ -81,6 +81,9 @@ function PaymentTable({ payments }: { payments: any[] }) {
                 <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: p.status === "paid" ? "#dcfce7" : "#fee2e2", color: p.status === "paid" ? "#15803d" : "#dc2626" }}>
                   {p.status}
                 </span>
+              </td>
+              <td style={{ padding: "10px 12px", color: "#9ca3af", fontSize: 10, fontFamily: "monospace" }}>
+                {p.razorpay_payment_id ? p.razorpay_payment_id.slice(0, 12) + "..." : "-"}
               </td>
             </tr>
           ))}
@@ -182,12 +185,12 @@ export default async function BillingPage({
     .from("companies").select("*").eq("owner_user_id", user.id).maybeSingle();
 
   const { data: individualPayments } = await supabase
-    .from("payments").select("*")
+    .from("payments").select("id, user_id, company_id, razorpay_payment_id, amount, credits_added, plan_key, payment_type, status, created_at")
     .eq("user_id", user.id).is("company_id", null)
     .order("created_at", { ascending: false });
 
   const { data: companyPayments } = ownedCompany
-    ? await supabase.from("payments").select("*")
+    ? await supabase.from("payments").select("id, user_id, company_id, razorpay_payment_id, amount, credits_added, plan_key, payment_type, status, created_at")
         .eq("company_id", ownedCompany.id)
         .order("created_at", { ascending: false })
     : { data: [] };
@@ -261,4 +264,4 @@ export default async function BillingPage({
       </div>
     </div>
   );
-        }
+}
