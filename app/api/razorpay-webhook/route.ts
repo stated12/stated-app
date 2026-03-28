@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         plan_key:            planKey || null,
         payment_type:        paymentType,
         status:              "paid",
-      })
+      }, { onConflict: "razorpay_payment_id" })
       .select()
       .single();
 
