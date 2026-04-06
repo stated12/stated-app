@@ -1,8 +1,53 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import CommitmentFeed from "@/components/CommitmentFeed";
+
+export const metadata: Metadata = {
+  title: "Stated — Turn Commitments into Credibility",
+  description:
+    "Stated is the public accountability platform where individuals and companies post commitments, track progress, and build a verifiable reputation. Browse free — no signup required. First 5 commitments free.",
+  metadataBase: new URL("https://app.stated.in"),
+  openGraph: {
+    title: "Stated — Turn Commitments into Credibility",
+    description:
+      "Post commitments publicly. Build credibility over time. Every promise you keep raises your reputation score. Free to browse — no signup needed.",
+    url: "https://app.stated.in",
+    siteName: "Stated",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1270,
+        height: 760,
+        alt: "Stated — Turn Commitments into Credibility",
+      },
+    ],
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Stated — Turn Commitments into Credibility",
+    description:
+      "Post commitments publicly. Build credibility over time. Free to browse — no signup needed.",
+    images: ["/og-image.png"],
+  },
+  keywords: [
+    "public accountability",
+    "commitments",
+    "credibility",
+    "follow-through",
+    "reputation",
+    "goal tracking",
+    "public goals",
+    "accountability platform",
+  ],
+  alternates: {
+    canonical: "https://app.stated.in",
+  },
+};
 
 export default async function HomePage() {
   return (
@@ -44,10 +89,7 @@ export default async function HomePage() {
         <div className="max-w-2xl mx-auto">
           <p className="text-center text-gray-500 mb-3 text-sm">People on record, right now</p>
           <h2 className="text-3xl md:text-4xl font-bold mb-10 text-center">Commitments from people &amp; companies</h2>
-
-          {/* limit passed as query param in the endpoint so CommitmentFeed doesn't need a limit prop */}
           <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
-
           <div className="text-center mt-10">
             <Link href="/explore" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:scale-[1.02]">
               Explore all commitments
