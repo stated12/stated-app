@@ -1,327 +1,292 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import CommitmentFeed from "@/components/CommitmentFeed";
 
 export const metadata: Metadata = {
-  title: "Stated — Turn Commitments into Credibility",
+  title: "Stated — Say it. Do it. Prove it.",
   description:
-    "Stated is the public accountability platform where individuals and companies post commitments, track progress, and build a verifiable reputation. Browse free — no signup required. First 5 commitments free.",
+    "Stated is the public accountability platform where individuals, companies, founders, NGOs and government initiatives post commitments, run challenges, and build a verifiable record of execution. Browse free — no signup required.",
   metadataBase: new URL("https://app.stated.in"),
   openGraph: {
-    title: "Stated — Turn Commitments into Credibility",
+    title: "Stated — Say it. Do it. Prove it.",
     description:
       "Post commitments publicly. Build credibility over time. Every promise you keep raises your reputation score. Free to browse — no signup needed.",
     url: "https://app.stated.in",
     siteName: "Stated",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1270,
-        height: 760,
-        alt: "Stated — Turn Commitments into Credibility",
-      },
-    ],
+    images: [{ url: "/og-image.png", width: 1270, height: 760, alt: "Stated — Say it. Do it. Prove it." }],
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Stated — Turn Commitments into Credibility",
-    description:
-      "Post commitments publicly. Build credibility over time. Free to browse — no signup needed.",
+    title: "Stated — Say it. Do it. Prove it.",
+    description: "Post commitments publicly. Build credibility over time. Free to browse — no signup needed.",
     images: ["/og-image.png"],
   },
   keywords: [
-    "public accountability",
-    "commitments",
-    "credibility",
-    "follow-through",
-    "reputation",
-    "goal tracking",
-    "public goals",
-    "accountability platform",
+    "public accountability", "commitments", "credibility", "follow-through",
+    "reputation", "goal tracking", "public goals", "accountability platform",
+    "hiring challenge", "cofounder hunt", "execution platform",
   ],
-  alternates: {
-    canonical: "https://app.stated.in",
-  },
+  alternates: { canonical: "https://app.stated.in" },
 };
+
+// ─── Static data ─────────────────────────────────────────────────────────────
+
+const howSteps = [
+  { num: "01", icon: "📝", name: "Commit",   desc: "Post what you're going to do — publicly. Your word, your name, your timestamp. On record forever." },
+  { num: "02", icon: "📈", name: "Track",    desc: "Log progress with updates as you move. Let followers see the journey, not just the destination." },
+  { num: "03", icon: "📸", name: "Prove",    desc: "Attach real proof — a link, screenshot, or video. Real outcomes, not just good intentions." },
+  { num: "04", icon: "🏆", name: "Complete", desc: "Finish strong. Your credibility score rises. Your public record grows with every completion." },
+];
+
+const whyCards = [
+  { icon: "📌", title: "Your word, on record",    body: "Public, timestamped, tied to your name. No escaping it — and that's exactly the point. Social pressure that actually works." },
+  { icon: "📈", title: "Credibility compounds",   body: "Every commitment kept raises your reputation score. Over time your public profile becomes the most credible thing about you." },
+  { icon: "🎯", title: "Work filters everything", body: "Challenges replace resumes and cold pitches with actual work submitted as proof. The best executor wins — not the best talker." },
+  { icon: "🌐", title: "Free to browse, forever", body: "No signup to view any commitment or challenge. Everything is public by default. An open record, not a walled garden." },
+  { icon: "🏛️", title: "For everyone",            body: "Individuals, companies, founders, NGOs, government initiatives, and institutions — anyone who makes public commitments belongs here." },
+  { icon: "🇮🇳", title: "Built in India",         body: "Made for the Indian execution-first mindset. Priced for Indian companies. Serving the world's fastest-growing builder community." },
+];
+
+const execRewards = [
+  { icon: "🛡️", title: "No Cost",       body: "Completely free to join. No credit card required." },
+  { icon: "🎁", title: "Credits",       body: "Get credits to create up to 5 commitments free to start." },
+  { icon: "📣", title: "Recognition",   body: "Top executors get featured, PR distribution & a premium upgrade." },
+  { icon: "👥", title: "Teams Welcome", body: "Work solo or with your team. Build a shared credibility score." },
+];
+
+const challengeTypes = [
+  { icon: "💼", title: "Hiring Challenge",     for: "Companies · Anyone",        desc: "Post a real task. Receive actual work as applications. Hire the best executor — not the best CV writer.",           price: "from ₹999",  top: "from-blue-600 to-blue-400",    bg: "bg-blue-50",   pc: "text-blue-600"   },
+  { icon: "🤝", title: "Cofounder Hunt",       for: "Founders · Individuals",    desc: "Post a scoped task. See who actually builds with you before committing. Find the right partner with proof.",          price: "from ₹499",  top: "from-violet-600 to-violet-400",bg: "bg-violet-50", pc: "text-violet-600" },
+  { icon: "🔗", title: "Partner Hunt",         for: "Companies · Founders",      desc: "Find integration partners, resellers, or allies. Evaluate real intent through a proposal — not a pitch.",            price: "from ₹799",  top: "from-green-600 to-green-400",  bg: "bg-green-50",  pc: "text-green-600"  },
+  { icon: "🧠", title: "Consultant Hunt",      for: "Companies · Anyone",        desc: "Post the problem. Get a solution as the application. Hire the expert who already showed you what they can do.",      price: "from ₹999",  top: "from-teal-600 to-teal-400",    bg: "bg-teal-50",   pc: "text-teal-600"   },
+  { icon: "📡", title: "Investor Signal",      for: "Founders · Companies",      desc: "Let investors evaluate your real execution history — not a polished deck. 18 months of proof speaks louder.",        price: "from ₹999",  top: "from-amber-600 to-amber-400",  bg: "bg-amber-50",  pc: "text-amber-600"  },
+  { icon: "⚡", title: "Collaborator Hunt",    for: "Individuals · Creators",    desc: "Find collaborators who prove they'll add value before joining. No more co-creators who disappear after week one.",   price: "from ₹299",  top: "from-rose-600 to-rose-400",    bg: "bg-rose-50",   pc: "text-rose-600"   },
+  { icon: "🌱", title: "Impact Challenge",     for: "NGOs · Govt. Initiatives",  desc: "NGOs and government initiatives post public accountability commitments and open challenges for volunteers or partners. Every outcome is on public record.", price: "from ₹499", top: "from-slate-500 to-slate-400", bg: "bg-slate-50", pc: "text-slate-600" },
+  { icon: "🎓", title: "Grant & Fellowship",   for: "Institutions · Accelerators", desc: "Accelerators and grant bodies post selection challenges. Applicants submit real work. The best execution wins the seat — not the best essay.",          price: "Contact us", top: "from-violet-600 to-amber-400", bg: "bg-violet-50", pc: "text-violet-600" },
+];
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#060c1a]">
+    <div className="min-h-screen flex flex-col bg-white text-gray-900">
 
-      {/* ── HEADER ───────────────────────────────────── */}
-      <header className="absolute top-0 left-0 w-full z-20 flex items-center justify-between px-6 md:px-10 py-5">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold">✓</div>
-          <span className="text-white font-bold text-base tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>stated</span>
+      {/* Fonts + global animations */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+        body { font-family: 'DM Sans', sans-serif; }
+        .font-display { font-family: 'Bricolage Grotesque', sans-serif; }
+        @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+        @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+        .pulse-dot { animation: pulse-dot 1.6s ease infinite; }
+        .hero-dots {
+          background-image: radial-gradient(circle, #bfdbfe 1.5px, transparent 1.5px);
+          background-size: 30px 30px;
+          mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 10%, transparent 75%);
+        }
+      `}</style>
+
+      {/* ── NAV ────────────────────────────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold">✓</div>
+            <span className="font-display text-xl font-bold text-gray-900 tracking-tight">stated</span>
+          </Link>
+          <nav className="flex items-center gap-1">
+            <Link href="/explore" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Explore</Link>
+            <Link href="/login"   className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Login</Link>
+            <Link href="/signup"  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-sm">Sign up free</Link>
+          </nav>
         </div>
-        {/* Nav */}
-        <nav className="flex items-center gap-1">
-          <Link href="/explore" className="text-white/60 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/8 transition">Explore</Link>
-          <Link href="/login"   className="text-white/60 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/8 transition">Login</Link>
-          <Link href="/signup"  className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-5 py-2 rounded-lg transition shadow-lg shadow-blue-900/40">Sign up</Link>
-        </nav>
       </header>
 
-      {/* ── HERO ─────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center text-center text-white px-5 pt-36 pb-28 min-h-screen overflow-hidden">
+      {/* ── HERO ───────────────────────────────────────────────────────── */}
+      <section className="relative pt-32 pb-0 overflow-hidden" style={{ background: "linear-gradient(180deg,#eef5ff 0%,#ffffff 100%)" }}>
+        <div className="hero-dots absolute inset-0 opacity-70 pointer-events-none" />
 
-        {/* Background images — unchanged from original */}
-        <Image src="/hero-desktop.png" alt="Background" fill priority className="object-cover -z-20 hidden md:block" />
-        <Image src="/hero-mobile.png"  alt="Background" fill priority className="object-cover -z-20 md:hidden" />
+        <div className="relative max-w-4xl mx-auto px-6 text-center">
 
-        {/* Overlay — slightly deeper than original for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/70 -z-10" />
+          {/* Live badge */}
+          <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-blue-700 text-xs font-semibold tracking-wide uppercase px-4 py-2 rounded-full mb-8 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-blue-500 pulse-dot" />
+            🚀 Execution Challenge — Live Now
+          </div>
 
-        {/* Challenge badge — creates urgency */}
-        <div className="flex items-center gap-2 bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-medium tracking-widest uppercase px-4 py-2 rounded-full mb-7">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-          🚀 Execution Challenge — Live Now
-        </div>
+          {/* Headline */}
+          <h1 className="font-display text-5xl md:text-7xl font-extrabold text-gray-900 leading-[1.02] tracking-tight mb-6">
+            Say it publicly.<br />
+            <span className="text-blue-600">Do it publicly.</span>
+          </h1>
 
-        {/* Logo + brand name */}
-        <Image src="/logo.png" alt="Stated Logo" width={120} height={120} className="mb-3 drop-shadow-2xl" />
-        <p className="text-blue-400 font-semibold text-base tracking-wider mb-4">Stated</p>
+          {/* Sub */}
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8 font-light">
+            The public accountability platform for{" "}
+            <strong className="text-gray-900 font-semibold">individuals, companies, founders, NGOs</strong>{" "}
+            and organisations. Post commitments. Build credibility that lasts.
+          </p>
 
-        {/* Headline */}
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.07] tracking-tight max-w-2xl">
-          Say it publicly.<br />
-          <span className="text-blue-400">Do it</span> publicly.
-        </h1>
-
-        {/* Sub */}
-        <p className="mt-5 text-white/60 max-w-md text-base md:text-lg leading-relaxed font-light">
-          Build credibility. Track progress. Stay accountable.<br />
-          Turn your commitments into visible outcomes.
-        </p>
-
-        {/* 4-step strip */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-7 mb-8">
-          {[
-            { icon: "📝", label: "Commit" },
-            { icon: "📈", label: "Track"  },
-            { icon: "📸", label: "Prove"  },
-            { icon: "🏆", label: "Complete" },
-          ].map(({ icon, label }, i, arr) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <div className="flex items-center gap-1.5 bg-white/8 border border-white/10 text-white/75 text-xs font-medium uppercase tracking-wider px-3 py-1.5 rounded-md">
+          {/* Feature pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+            {[
+              { icon: "📝", label: "Post commitments"  },
+              { icon: "🎯", label: "Run challenges"    },
+              { icon: "📊", label: "Track progress"    },
+              { icon: "🏆", label: "Build credibility" },
+            ].map(({ icon, label }) => (
+              <div key={label} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full shadow-sm">
                 <span>{icon}</span> {label}
               </div>
-              {i < arr.length - 1 && <span className="text-white/20 text-sm">→</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* Search */}
-        <form action="/search" method="GET" className="w-full max-w-lg flex bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl overflow-hidden shadow-xl mb-5">
-          <input
-            type="text"
-            name="q"
-            placeholder="Search commitments, people or companies"
-            className="flex-1 px-4 py-3.5 bg-transparent text-white placeholder-white/35 text-sm outline-none"
-          />
-          <button type="submit" className="bg-blue-600 hover:bg-blue-500 px-6 text-white text-sm font-medium transition shrink-0">
-            Search
-          </button>
-        </form>
-
-        {/* Primary CTA */}
-        <Link
-          href="/signup"
-          className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-base px-10 py-4 rounded-xl shadow-2xl shadow-blue-900/60 transition hover:-translate-y-0.5 hover:shadow-blue-800/70 w-full max-w-sm text-center"
-        >
-          🚀 Start with 5 Free Commitments
-        </Link>
-
-        {/* Secondary CTA */}
-        <Link
-          href="/explore"
-          className="mt-3 text-white/50 hover:text-white text-sm border border-white/12 hover:border-white/30 rounded-xl px-10 py-3 w-full max-w-sm text-center transition"
-        >
-          Browse first — no signup needed
-        </Link>
-
-        <p className="mt-4 text-xs text-white/30">
-          Free to start · No credit card · 2 updates per commitment · Public profile included
-        </p>
-      </section>
-
-      {/* ── SOCIAL PROOF TICKER ──────────────────────── */}
-      <div className="border-y border-white/6 bg-white/[0.03] py-3.5 overflow-hidden">
-        <div
-          className="flex gap-12 w-max"
-          style={{ animation: "ticker 32s linear infinite" }}
-        >
-          {[
-            { name: "@posivity",      text: "I will end each day with one visible outcome I can point to." },
-            { name: "Credorium Labs", text: "We commit to building strong interpretation tools for founders." },
-            { name: "@rishi_dev",     text: "Shipping 3 features this week — publicly tracked." },
-            { name: "@meenakshi",     text: "Read 20 pages every morning before 8 AM." },
-            { name: "@buildinpublic", text: "Post a build update every single Monday." },
-            // duplicate for seamless loop
-            { name: "@posivity",      text: "I will end each day with one visible outcome I can point to." },
-            { name: "Credorium Labs", text: "We commit to building strong interpretation tools for founders." },
-            { name: "@rishi_dev",     text: "Shipping 3 features this week — publicly tracked." },
-            { name: "@meenakshi",     text: "Read 20 pages every morning before 8 AM." },
-            { name: "@buildinpublic", text: "Post a build update every single Monday." },
-          ].map(({ name, text }, i) => (
-            <div key={i} className="flex items-center gap-2.5 text-xs text-white/40 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-              <span className="text-white/70 font-medium">{name}</span>
-              — {text}
-            </div>
-          ))}
-        </div>
-        <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
-      </div>
-
-      {/* ── COMMITMENT FEED ───────────────────────────── */}
-      <section className="bg-white text-black py-20 px-4">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-center text-gray-400 mb-2 text-sm tracking-wide uppercase font-medium">People on record, right now</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-10 text-center tracking-tight">
-            Commitments from people &amp; companies
-          </h2>
-          <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
-          <div className="text-center mt-10">
-            <Link
-              href="/explore"
-              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:scale-[1.02]"
-            >
-              Explore all commitments
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────── */}
-      <section className="bg-[#080f20] py-24 px-6 border-y border-white/5">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-3 text-center">How it works</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center tracking-tight leading-tight mb-3">
-            Commit. Track. Prove. Complete.
-          </h2>
-          <p className="text-white/45 text-center text-sm mb-12 max-w-md mx-auto">
-            Four steps to turn your word into a public record of execution.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { num: "01", icon: "📝", name: "Commit",   desc: "Create commitments publicly. Your word, timestamped, on record." },
-              { num: "02", icon: "📈", name: "Track",    desc: "Log updates and milestones. Show the world you're moving." },
-              { num: "03", icon: "📸", name: "Prove",    desc: "Add proof. Share results. Real outcomes, not just intentions." },
-              { num: "04", icon: "🏆", name: "Complete", desc: "Finish strong. Get recognized. Credibility compounds." },
-            ].map(({ num, icon, name, desc }) => (
-              <div
-                key={name}
-                className="bg-white/[0.04] border border-white/8 rounded-2xl p-5 hover:border-blue-500/40 hover:-translate-y-1 transition-all group"
-              >
-                <div className="text-white/6 font-extrabold text-3xl leading-none mb-2">{num}</div>
-                <div className="text-2xl mb-3">{icon}</div>
-                <div className="text-blue-400 font-bold text-sm mb-1.5">{name}</div>
-                <div className="text-white/45 text-xs leading-relaxed">{desc}</div>
-              </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ── WHY STATED WORKS ─────────────────────────── */}
-      <section className="bg-gray-50 py-24 px-6">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-3">Why Stated Works</p>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight tracking-tight">
-            Most platforms reward{" "}
-            <span className="italic text-orange-500">performance.</span>
-            <br />We reward follow-through.
-          </h2>
-          <p className="text-gray-400 text-sm mb-14 max-w-sm mx-auto">
-            The accountability layer the internet was missing.
-          </p>
-          <div className="grid md:grid-cols-3 gap-5 text-left">
-            {[
-              { icon: "📌", title: "Your word, on record",   body: "Public, timestamped, tied to your name. No escaping it — and that's exactly the point." },
-              { icon: "👥", title: "Real accountability",    body: "Social pressure that actually works. When others can see it, you follow through." },
-              { icon: "📈", title: "Credibility compounds",  body: "A public track record of follow-through. Every completion makes the next one more credible." },
-            ].map(({ icon, title, body }) => (
-              <div key={title} className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="text-3xl mb-4">{icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── EXECUTION CHALLENGE REWARDS ──────────────── */}
-      <section className="bg-[#060c1a] py-24 px-6 border-t border-white/5">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold text-amber-400 uppercase tracking-widest mb-3 text-center">Execution Challenge</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center tracking-tight mb-3">
-            Win for doing what you said.
-          </h2>
-          <p className="text-white/40 text-center text-sm mb-12 max-w-sm mx-auto">
-            Top executors get more than recognition — they get a platform.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: "🛡️", title: "No Cost",           body: "Completely free to join. No credit card required." },
-              { icon: "🎁", title: "Credits",            body: "Get credits to create up to 5 commitments free." },
-              { icon: "📣", title: "Recognition",        body: "Top executors get featured, PR distribution & premium upgrade." },
-              { icon: "👥", title: "Teams Welcome",      body: "Work solo or with your team. Build a shared credibility score." },
-            ].map(({ icon, title, body }) => (
-              <div
-                key={title}
-                className="bg-white/[0.04] border border-white/8 rounded-2xl p-5 text-center hover:border-amber-400/30 hover:-translate-y-1 transition-all"
-              >
-                <div className="text-3xl mb-3">{icon}</div>
-                <div className="text-amber-400 font-bold text-sm mb-1.5">{title}</div>
-                <div className="text-white/40 text-xs leading-relaxed">{body}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ────────────────────────────────── */}
-      <section className="bg-gray-950 text-white py-32 px-6 text-center relative overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-700/20 blur-[80px] rounded-full" />
-        </div>
-
-        <div className="relative max-w-2xl mx-auto">
-          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-4">Your Turn</p>
-          <h2 className="text-4xl md:text-6xl font-extrabold mb-5 leading-tight tracking-tight">
-            Put your word<br />on the{" "}
-            <span className="italic text-orange-400">line.</span>
-          </h2>
-          <p className="text-gray-400 mb-10 text-base leading-relaxed">
-            Say it where it counts. Join the Execution Challenge — free.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* CTA row */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Link
               href="/signup"
-              className="bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-xl text-base font-semibold transition shadow-xl shadow-blue-900/50 hover:scale-[1.02]"
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
             >
-              Commit publicly
+              🚀 Start free — 5 commitments included
             </Link>
             <Link
               href="/explore"
-              className="border border-gray-700 hover:border-gray-400 px-10 py-4 rounded-xl text-base font-semibold transition hover:scale-[1.02]"
+              className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-8 py-4 rounded-xl border border-gray-300 transition-all"
             >
-              Browse first
+              Browse what people are doing →
             </Link>
           </div>
-          <p className="mt-6 text-sm text-gray-500">Free to start. No credit card required.</p>
+
+          {/* Search */}
+          <form action="/search" method="GET" className="flex max-w-xl mx-auto bg-white border border-gray-300 rounded-xl overflow-hidden shadow-md mb-14">
+            <input
+              type="text"
+              name="q"
+              placeholder="Search commitments, people or organisations…"
+              className="flex-1 px-5 py-3.5 text-gray-900 text-sm outline-none placeholder-gray-400 bg-transparent"
+            />
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 transition-colors shrink-0">
+              Search
+            </button>
+          </form>
+
+          {/* Mini preview cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
+            {[
+              { initials: "S",  bg: "bg-blue-600",    name: "Stated",        text: "We will launch Stated on March 29th",             badge: "✓ Done",      bc: "bg-green-100 text-green-700 border-green-200" },
+              { initials: "CL", bg: "bg-violet-600",  name: "Credorium Labs", text: "Building strong interpretation tools for founders", badge: "In progress", bc: "bg-amber-100 text-amber-700 border-amber-200" },
+              { initials: "P",  bg: "bg-emerald-600", name: "Priya K.",       text: "Read 20 pages every morning for 30 days",           badge: "✓ Done",      bc: "bg-green-100 text-green-700 border-green-200" },
+            ].map(({ initials, bg, name, text, badge, bc }) => (
+              <div key={name} className="bg-white border border-gray-200 rounded-xl p-4 text-left shadow-sm">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className={`w-8 h-8 rounded-full ${bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>{initials}</div>
+                  <span className="text-sm font-semibold text-gray-900">{name}</span>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-2.5">{text}</p>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${bc}`}>{badge}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-    </div>
-  );
-}
+      {/* ── TICKER ─────────────────────────────────────────────────────── */}
+      <div className="bg-blue-600 py-3.5 overflow-hidden">
+        <div className="flex gap-12 w-max" style={{ animation: "ticker 35s linear infinite" }}>
+          {[
+            { name: "@posivity",      text: "I will end each day with one visible outcome I can point to."   },
+            { name: "Credorium Labs", text: "We commit to building strong interpretation tools for founders." },
+            { name: "@rishi_dev",     text: "Shipping 3 features this week — publicly tracked."              },
+            { name: "@meenakshi",     text: "Read 20 pages every morning before 8 AM."                       },
+            { name: "@buildinpublic", text: "Post a build update every single Monday."                        },
+            { name: "GreenNGO",       text: "Plant 500 trees by June — publicly tracked with proof."          },
+            { name: "@posivity",      text: "I will end each day with one visible outcome I can point to."   },
+            { name: "Credorium Labs", text: "We commit to building strong interpretation tools for founders." },
+            { name: "@rishi_dev",     text: "Shipping 3 features this week — publicly tracked."              },
+            { name: "@meenakshi",     text: "Read 20 pages every morning before 8 AM."                       },
+            { name: "@buildinpublic", text: "Post a build update every single Monday."                        },
+            { name: "GreenNGO",       text: "Plant 500 trees by June — publicly tracked with proof."          },
+          ].map(({ name, text }, i) => (
+            <div key={i} className="flex items-center gap-2.5 text-xs text-blue-100 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-300 shrink-0" />
+              <span className="text-white font-semibold">{name}</span>
+              <span>— {text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── WHAT IS STATED ─────────────────────────────────────────────── */}
+      <section className="bg-white py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
+            What is Stated
+          </p>
+          <div className="grid md:grid-cols-2 gap-14 items-start">
+
+            {/* Left */}
+            <div>
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
+                The platform where your{" "}
+                <span className="text-blue-600">word</span>{" "}
+                becomes your{" "}
+                <span className="text-blue-600">record.</span>
+              </h2>
+              <p className="text-gray-600 text-base leading-relaxed mb-8">
+                Stated is where individuals, companies, founders, NGOs, and government initiatives make public commitments — and prove them with real updates and proof. Every action builds a permanent, verifiable credibility score that compounds over time.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { icon: "👤", label: "Individuals"       },
+                  { icon: "🏢", label: "Companies"         },
+                  { icon: "🚀", label: "Founders"          },
+                  { icon: "🌱", label: "NGOs"              },
+                  { icon: "🏛️", label: "Govt. Initiatives" },
+                  { icon: "🎓", label: "Institutions"      },
+                ].map(({ icon, label }) => (
+                  <div key={label} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
+                    <span>{icon}</span> {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — comparison */}
+            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              <div className="grid grid-cols-2">
+                <div className="bg-red-50 px-5 py-3 border-b border-r border-gray-200">
+                  <span className="text-xs font-bold text-red-600 uppercase tracking-wider">✕ Everywhere else</span>
+                </div>
+                <div className="bg-green-50 px-5 py-3 border-b border-gray-200">
+                  <span className="text-xs font-bold text-green-700 uppercase tracking-wider">✓ On Stated</span>
+                </div>
+              </div>
+              {[
+                ["Claims without proof",                  "Every commitment has timestamped proof"   ],
+                ["Resumes over results",                  "Challenges filter by actual work done"    ],
+                ["Hidden, private, unverifiable",         "Public record anyone can see"             ],
+                ["Reputation fades or resets",            "Credibility score compounds forever"      ],
+                ["Tools track tasks, not accountability", "Stated tracks commitments with proof"     ],
+              ].map(([bad, good], i) => (
+                <div key={i} className="grid grid-cols-2">
+                  <div className="px-5 py-3.5 border-b border-r border-gray-100 text-sm text-gray-400 flex items-start gap-2">
+                    <span className="shrink-0 mt-0.5 text-red-300">—</span>{bad}
+                  </div>
+                  <div className="px-5 py-3.5 border-b border-gray-100 text-sm text-gray-800 font-medium flex items-start gap-2">
+                    <span className="text-green-600 font-bold shrink-0 mt-0.5">✓</span>{good}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ───────────────────────────────────────────────── */}
+      <section className="bg-gray-900 py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-5 flex items-center gap-
