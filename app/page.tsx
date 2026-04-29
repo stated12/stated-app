@@ -126,7 +126,7 @@ export default async function HomePage() {
               href="/explore"
               className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-8 py-4 rounded-xl border border-gray-300 transition-all"
             >
-              Browse what people are doing ->
+              Browse what people are doing
             </Link>
           </div>
 
@@ -299,7 +299,7 @@ export default async function HomePage() {
               href="/explore"
               className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-md hover:-translate-y-0.5"
             >
-              Explore all commitments ->
+              Explore all commitments
             </Link>
           </div>
         </div>
@@ -497,7 +497,7 @@ export default async function HomePage() {
                 href="/explore"
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-10 py-4 rounded-xl border border-gray-300 transition-all"
               >
-                Browse first ->
+                Browse first
               </Link>
             </div>
 
