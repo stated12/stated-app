@@ -1,17 +1,39 @@
+/* =========================
+   Tailwind Import
+========================= */
 @import "tailwindcss";
 
+/* =========================
+   Google Fonts
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+
+/* =========================
+   Theme Variables
+========================= */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Fonts */
+  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Bricolage Grotesque', sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Override Tailwind font system */
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
+
+/* =========================
+   Dark Mode
+========================= */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,8 +41,69 @@
   }
 }
 
+
+/* =========================
+   Base Styles
+========================= */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* =========================
+   Typography Utility
+========================= */
+.font-display {
+  font-family: var(--font-display);
+}
+
+
+/* =========================
+   Animations
+========================= */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.6);
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.6s ease infinite;
+}
+
+.ticker {
+  animation: ticker 20s linear infinite;
+  white-space: nowrap;
+}
+
+
+/* =========================
+   Hero Background Pattern
+========================= */
+.hero-dots {
+  background-image: radial-gradient(circle, #bfdbfe 1.5px, transparent 1.5px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(
+    ellipse 90% 70% at 50% 0%,
+    black 10%,
+    transparent 75%
+  );
 }
