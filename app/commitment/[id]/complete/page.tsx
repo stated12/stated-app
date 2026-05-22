@@ -81,62 +81,92 @@ export default function CompleteCommitmentPage() {
     return data.publicUrl;
   }
 
-  async function handleComplete() {
-    setError(""); setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+  
+async function handleComplete() {
+  setError("");
+  setLoading(true);
 
-      let imageUrl = "";
-      if (imageFile) imageUrl = await uploadProofImage(user.id);
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      // Build a clean completion update text
-      const proofParts: string[] = [];
-      if (note.trim())      proofParts.push(note.trim());
-      if (proofText.trim()) proofParts.push("Proof: " + proofText.trim());
-      if (proofLink.trim()) proofParts.push("Link: " + proofLink.trim());
-      if (imageUrl)         proofParts.push("Image: " + imageUrl);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
 
-      const completionText = proofParts.length > 0
+    // Upload image if exists
+    let imageUrl = "";
+
+    if (imageFile) {
+      imageUrl = await uploadProofImage(user.id);
+    }
+
+    // Build clean update text
+    const proofParts: string[] = [];
+
+    if (note.trim()) {
+      proofParts.push(note.trim());
+    }
+
+    if (proofText.trim()) {
+      proofParts.push(proofText.trim());
+    }
+
+    const completionText =
+      proofParts.length > 0
         ? "Commitment completed — " + proofParts.join(" | ")
         : "Commitment completed";
 
-      // Mark commitment as completed
-      const { error: updateError } = await supabase
-        .from("commitments")
-        .update({
-          status:       "completed",
-          completed_at: new Date().toISOString(),
-          updated_at:   new Date().toISOString(),
-        })
-        .eq("id", commitmentId);
-      if (updateError) throw updateError;
+    // Mark commitment as completed
+    const { error: updateError } = await supabase
+      .from("commitments")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", commitmentId);
 
-      // Log a completion update
-      await supabase.from("commitment_updates").insert({
-        commitment_id: commitmentId,
-        user_id:       user.id,
-        content:       completionText,
-      });
-
-      // Send notification
-      await supabase.from("notifications").insert({
-        user_id: user.id,
-        type:    "completion",
-        title:   "Commitment Completed 🎉",
-        message: "You successfully completed your commitment.",
-        link:    isCompany ? "/dashboard/company/commitments" : "/dashboard/my",
-        read:    false,
-      });
-
-      router.push(backUrl);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (updateError) {
+      throw updateError;
     }
-  }
 
+    // Save structured update
+    const { error: insertError } = await supabase
+      .from("commitment_updates")
+      .insert({
+        commitment_id: commitmentId,
+        user_id: user.id,
+        content: completionText,
+        proof_image_url: imageUrl || null,
+        proof_link: proofLink || null,
+      });
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    // Send notification
+    await supabase.from("notifications").insert({
+      user_id: user.id,
+      type: "completion",
+      title: "Commitment Completed 🎉",
+      message: "You successfully completed your commitment.",
+      link: isCompany
+        ? "/dashboard/company/commitments"
+        : "/dashboard/my",
+      read: false,
+    });
+
+    router.push(backUrl);
+
+  } catch (err: any) {
+    setError(err.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+}
   const accentColor = isCompany ? "#0891b2" : "#4338ca";
 
   if (error && !commitment) {
