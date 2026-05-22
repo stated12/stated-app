@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 function getOrCreateSessionId() {
-
   const existing = document.cookie
     .split("; ")
     .find((row) => row.startsWith("stated_sid="))
@@ -34,6 +33,7 @@ export default function ViewTracker({
   useEffect(() => {
 
     const element = ref.current;
+
     if (!element) return;
     if (hasTracked) return;
 
@@ -44,7 +44,7 @@ export default function ViewTracker({
         const entry = entries[0];
 
         if (!entry.isIntersecting) return;
-        if (entry.intersectionRatio < 0.5) return;
+        if (entry.intersectionRatio < 0.1) return;
         if (hasTracked) return;
 
         const sessionId = getOrCreateSessionId();
@@ -70,8 +70,9 @@ export default function ViewTracker({
       },
 
       {
-        threshold: 0.5,
+        threshold: 0.1,
       }
+
     );
 
     observer.observe(element);
@@ -80,5 +81,18 @@ export default function ViewTracker({
 
   }, [type, entityId, hasTracked]);
 
-  return <div ref={ref} style={{ height: 1, width: 1 }} />;
+  return (
+    <div
+      ref={ref}
+      style={{
+        width: "100%",
+        height: "120px",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        pointerEvents: "none",
+        opacity: 0,
+      }}
+    />
+  );
 }
