@@ -28,13 +28,17 @@ export default function CommitmentClient({
   const [followerCount, setFollowerCount] = useState<number>(0);
 
   useEffect(() => {
-    loadCommitment();
-    loadUpdates();
-    loadViews();
-    loadShares();
-    loadCheers(); // ✅ added
-    loadUser();
-  }, []);
+
+  if (!commitmentId) return;
+
+  loadCommitment();
+  loadUpdates();
+  loadViews();
+  loadShares();
+  loadCheers();
+  loadUser();
+
+}, [commitmentId]);
 
   useEffect(() => {
     if (profile || company) loadFollowers();
