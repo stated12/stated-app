@@ -738,7 +738,7 @@ export default function CommitmentClient({
           )}
         </div>
 
-        {/* CTA */}
+      {/* CTA */}
         {!isOwner && (
           <div
             style={{
@@ -775,4 +775,42 @@ export default function CommitmentClient({
                   marginBottom: 18,
                   lineHeight: 1.5,
                 }}
+              >
+                Start with{" "}
+                <span
+                  style={{
+                    color: "#fff",
+                    fontWeight: 700,
+                  }}
+                >
+                  5 free commitments
+                </span>
+                . Build credibility publicly.
+              </div>
+
+              <Link
+                href="/dashboard/create"
+                style={{
+                  display: "inline-block",
+                  background: "#fff",
+                  color: "#4338ca",
+                  padding: "11px 28px",
+                  borderRadius: 22,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  boxShadow:
+                    "0 4px 14px rgba(0,0,0,0.15)",
+                }}
+              >
+                Create your commitment →
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
            
