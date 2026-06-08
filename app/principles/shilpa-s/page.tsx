@@ -1,13 +1,37 @@
-"use client";
-
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 const PAGE_URL = "https://app.stated.in/principles/shilpa-s";
-const PAGE_TITLE = "Shilpa S — 5 Principles, Stated | Stated Principles";
 const PAGE_DESC =
   "We finish what we start. Not for the applause — but for the integrity of the promise. Five principles from CMD of SheRocks India.";
+
+export const metadata: Metadata = {
+  title: "Shilpa S — 5 Principles, Stated | Stated Principles",
+  description: PAGE_DESC,
+  metadataBase: new URL("https://app.stated.in"),
+  openGraph: {
+    title: "Shilpa S — 5 Principles, Stated",
+    description: PAGE_DESC,
+    url: PAGE_URL,
+    siteName: "Stated",
+    images: [{ url: "/shilpa-portrait.jpg", width: 600, height: 960, alt: "Shilpa S" }],
+    type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shilpa S — 5 Principles, Stated",
+    description: PAGE_DESC,
+    images: ["/shilpa-portrait.jpg"],
+  },
+  alternates: { canonical: PAGE_URL },
+};
+
+const shareLinks = {
+  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(PAGE_URL)}`,
+  twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(PAGE_URL)}&text=${encodeURIComponent(PAGE_DESC)}`,
+  whatsapp: `https://wa.me/?text=${encodeURIComponent(PAGE_DESC + " " + PAGE_URL)}`,
+};
 
 const principles = [
   {
@@ -78,60 +102,25 @@ const principles = [
 ];
 
 const takeaways = [
-  {
-    title: "Decide, even imperfectly.",
-    body: "Delayed decisions compound into missed opportunities. The cost of waiting is rarely calculated honestly.",
-  },
-  {
-    title: "Build character, not just contacts.",
-    body: "In a connected world, the scarcest resource is integrity. Your reputation is built in private decisions, not public ones.",
-  },
-  {
-    title: "Ideas without risk are imagination.",
-    body: "The bridge from concept to reality is always a calculated bet. Avoiding all risk is itself a risk.",
-  },
-  {
-    title: "Finish what you started.",
-    body: "Authenticity is measured by completion, not intention. The promise you made deserves follow-through — regardless of applause.",
-  },
-  {
-    title: "Execute without excuses.",
-    body: "Silent, disciplined execution is where real value is built. Most people talk about it. The ones who do it have the advantage.",
-  },
+  { title: "Decide, even imperfectly.", body: "Delayed decisions compound into missed opportunities. The cost of waiting is rarely calculated honestly." },
+  { title: "Build character, not just contacts.", body: "In a connected world, the scarcest resource is integrity. Your reputation is built in private decisions, not public ones." },
+  { title: "Ideas without risk are imagination.", body: "The bridge from concept to reality is always a calculated bet. Avoiding all risk is itself a risk." },
+  { title: "Finish what you started.", body: "Authenticity is measured by completion, not intention. The promise you made deserves follow-through — regardless of applause." },
+  { title: "Execute without excuses.", body: "Silent, disciplined execution is where real value is built. Most people talk about it. The ones who do it have the advantage." },
 ];
-
-// Working share URLs
-const shareLinks = {
-  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(PAGE_URL)}`,
-  twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(PAGE_URL)}&text=${encodeURIComponent(PAGE_DESC)}`,
-  whatsapp: `https://wa.me/?text=${encodeURIComponent(PAGE_DESC + " " + PAGE_URL)}`,
-};
-
-function copyLink() {
-  if (typeof navigator !== "undefined") {
-    navigator.clipboard.writeText(PAGE_URL).then(() => {
-      const el = document.getElementById("copy-label");
-      if (el) {
-        el.textContent = "Copied!";
-        setTimeout(() => { if (el) el.textContent = "Copy link"; }, 2000);
-      }
-    });
-  }
-}
 
 export default function ShilpaSPage() {
   return (
-    <div
-      className="min-h-screen bg-white"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
-    >
+    <div className="min-h-screen bg-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400&display=swap');
         .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
         .mono  { font-family: 'DM Mono', monospace; }
+        .copy-btn:active { transform: scale(.97); }
       `}</style>
 
-      {/* BREADCRUMB */}
+      {/* -- BREADCRUMB ------------------------------------------ */}
       <div className="border-b border-gray-100 px-6 py-3">
         <div className="max-w-5xl mx-auto flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
@@ -142,11 +131,9 @@ export default function ShilpaSPage() {
         </div>
       </div>
 
-      {/* HERO SPLIT */}
-      <div
-        className="grid md:grid-cols-2 border-b border-gray-200"
-        style={{ minHeight: "calc(100vh - 108px)" }}
-      >
+      {/* -- HERO SPLIT ------------------------------------------ */}
+      <div className="grid md:grid-cols-2 border-b border-gray-200" style={{ minHeight: "calc(100vh - 108px)" }}>
+
         {/* Photo */}
         <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 400 }}>
           <Image
@@ -181,9 +168,7 @@ export default function ShilpaSPage() {
           </h1>
 
           <div className="text-sm font-light text-gray-400 mb-6 leading-relaxed">
-            <strong className="text-gray-900 font-semibold text-base block mb-1">
-              CMD, SheRocks India
-            </strong>
+            <strong className="text-gray-900 font-semibold text-base block mb-1">CMD, SheRocks India</strong>
             Startup Ecosystem Enabler &middot; Investor for MSMEs<br />
             Strategic Advisor &middot; Political Consultant &middot; International Relations Specialist
           </div>
@@ -210,10 +195,7 @@ export default function ShilpaSPage() {
 
           <div className="flex flex-wrap gap-2 mb-8">
             {["Founder", "Investor", "Advisor", "Political Consultant", "International Relations"].map((t) => (
-              <span
-                key={t}
-                className="mono text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded uppercase tracking-wider"
-              >
+              <span key={t} className="mono text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded uppercase tracking-wider">
                 {t}
               </span>
             ))}
@@ -228,7 +210,7 @@ export default function ShilpaSPage() {
         </div>
       </div>
 
-      {/* INTRO */}
+      {/* -- INTRO ---------------------------------------------- */}
       <section className="bg-white border-b border-gray-200 px-6 py-16">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-2 mb-5">
@@ -239,17 +221,13 @@ export default function ShilpaSPage() {
             "We asked Shilpa five questions. She gave us something better — five principles she lives by."
           </blockquote>
           <div className="text-sm text-gray-500 font-light leading-relaxed space-y-3">
-            <p>
-              Instead of a conventional interview, Shilpa S responded with the principles that have guided her across decades of work — from building startup ecosystems and advising MSMEs, to navigating the intersections of politics and international relations.
-            </p>
-            <p>
-              What follows is not a Q&amp;A. It is a record of what she stands for, stated publicly, in her own words. This is how <em>Stated Principles</em> works: the person states their beliefs. We make them visible. You decide what to carry forward.
-            </p>
+            <p>Instead of a conventional interview, Shilpa S responded with the principles that have guided her across decades of work — from building startup ecosystems and advising MSMEs, to navigating the intersections of politics and international relations.</p>
+            <p>What follows is not a Q&amp;A. It is a record of what she stands for, stated publicly, in her own words. This is how <em>Stated Principles</em> works: the person states their beliefs. We make them visible. You decide what to carry forward.</p>
           </div>
         </div>
       </section>
 
-      {/* PRINCIPLES */}
+      {/* -- PRINCIPLES ----------------------------------------- */}
       <section id="principles" className="px-6 py-16" style={{ background: "#fafaf8" }}>
         <div className="max-w-3xl mx-auto">
 
@@ -264,19 +242,16 @@ export default function ShilpaSPage() {
 
           <div className="flex flex-col gap-8">
             {principles.map((p) => (
-              <div
-                key={p.n}
-                className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm"
-              >
+              <div key={p.n} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+
                 {/* Accent bar */}
                 <div className="h-0.5 w-full bg-gradient-to-r from-amber-600 to-amber-400" />
 
                 <div className="p-8">
+
                   {/* Number + Name */}
                   <div className="flex items-baseline gap-3 mb-5">
-                    <span className="mono text-xs text-amber-600 italic flex-shrink-0">
-                      {p.n} of 05
-                    </span>
+                    <span className="mono text-xs text-amber-600 italic flex-shrink-0">{p.n} of 05</span>
                     <h3 className="serif text-3xl md:text-4xl font-medium text-gray-900 leading-none tracking-tight">
                       {p.name}
                     </h3>
@@ -284,9 +259,7 @@ export default function ShilpaSPage() {
 
                   {/* Quote */}
                   <div className="bg-amber-50 border-l-2 border-amber-400 rounded-r-xl p-5 mb-6">
-                    <p className="serif text-lg font-light text-gray-800 italic leading-relaxed">
-                      {p.quote}
-                    </p>
+                    <p className="serif text-lg font-light text-gray-800 italic leading-relaxed">{p.quote}</p>
                     <div className="mono text-xs text-gray-400 uppercase tracking-wider mt-3">
                       — Shilpa S, stated directly
                     </div>
@@ -295,30 +268,22 @@ export default function ShilpaSPage() {
                   {/* What / Why */}
                   <div className="grid sm:grid-cols-2 gap-5 mb-5">
                     <div>
-                      <div className="mono text-xs text-gray-400 uppercase tracking-wider mb-2">
-                        What this means
-                      </div>
+                      <div className="mono text-xs text-gray-400 uppercase tracking-wider mb-2">What this means</div>
                       <p className="text-sm text-gray-500 font-light leading-relaxed">{p.means}</p>
                     </div>
                     <div>
-                      <div className="mono text-xs text-gray-400 uppercase tracking-wider mb-2">
-                        Why it matters
-                      </div>
+                      <div className="mono text-xs text-gray-400 uppercase tracking-wider mb-2">Why it matters</div>
                       <p className="text-sm text-gray-500 font-light leading-relaxed">{p.matters}</p>
                     </div>
                   </div>
 
                   {/* Reflect */}
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-5">
-                    <div className="mono text-xs text-blue-600 uppercase tracking-wider mb-1.5">
-                      Reflect on this
-                    </div>
-                    <p className="text-sm text-gray-500 font-light italic leading-relaxed">
-                      {p.reflect}
-                    </p>
+                    <div className="mono text-xs text-blue-600 uppercase tracking-wider mb-1.5">Reflect on this</div>
+                    <p className="text-sm text-gray-500 font-light italic leading-relaxed">{p.reflect}</p>
                   </div>
 
-                  {/* Action — only Create Commitment */}
+                  {/* Action */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
                     <Link
                       href="/signup"
@@ -331,6 +296,7 @@ export default function ShilpaSPage() {
                       {p.count.toLocaleString()} people found this meaningful
                     </div>
                   </div>
+
                 </div>
               </div>
             ))}
@@ -338,18 +304,13 @@ export default function ShilpaSPage() {
         </div>
       </section>
 
-      {/* FEATURE QUOTE */}
-      <section
-        className="px-6 py-16 border-t border-amber-100"
-        style={{ background: "#fffbeb" }}
-      >
+      {/* -- FEATURE QUOTE -------------------------------------- */}
+      <section className="px-6 py-16 border-t border-amber-100" style={{ background: "#fffbeb" }}>
         <div className="max-w-2xl mx-auto">
           <div className="serif text-7xl font-light text-amber-300 leading-none mb-1">"</div>
           <p className="serif text-2xl md:text-3xl font-light text-gray-900 leading-snug mb-5">
             We finish what we start. Not for the applause —<br />
-            but for{" "}
-            <em className="italic text-amber-600">the integrity of the promise.</em>
-            <br />
+            but for <em className="italic text-amber-600">the integrity of the promise.</em><br />
             That is the standard.
           </p>
           <div className="flex items-center gap-2 mono text-xs text-gray-400 uppercase tracking-wider">
@@ -359,7 +320,7 @@ export default function ShilpaSPage() {
         </div>
       </section>
 
-      {/* TAKEAWAYS */}
+      {/* -- TAKEAWAYS ------------------------------------------ */}
       <section className="bg-white border-t border-gray-200 px-6 py-16">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
@@ -376,8 +337,7 @@ export default function ShilpaSPage() {
                   {i + 1}
                 </span>
                 <p className="text-sm text-gray-500 font-light leading-relaxed">
-                  <strong className="text-gray-900 font-semibold">{t.title}</strong>{" "}
-                  {t.body}
+                  <strong className="text-gray-900 font-semibold">{t.title}</strong>{" "}{t.body}
                 </p>
               </div>
             ))}
@@ -385,7 +345,7 @@ export default function ShilpaSPage() {
         </div>
       </section>
 
-      {/* COMMIT CTA */}
+      {/* -- COMMIT CTA ----------------------------------------- */}
       <section className="px-6 py-12" style={{ background: "#fafaf8" }}>
         <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl p-10 text-center shadow-sm">
           <h3 className="serif text-2xl font-light text-gray-900 mb-3 leading-snug">
@@ -403,12 +363,93 @@ export default function ShilpaSPage() {
         </div>
       </section>
 
-      {/* SHARE — all links working */}
+      
+      {/* -- SHARE ---------------------------------------------- */}
       <div className="border-t border-gray-100 px-6 py-10">
         <div className="max-w-2xl mx-auto">
+
           <div className="mono text-xs text-gray-400 uppercase tracking-widest mb-4">
             Share this feature
           </div>
+
           <div className="flex flex-wrap gap-2 mb-6">
             <a
-              href={shareLinks.
+              href={shareLinks.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-gray-600 border border-gray-200 hover:border-blue-600 hover:text-blue-600 bg-white px-4 py-2.5 rounded-lg transition-all no-underline"
+            >
+              LinkedIn
+            </a>
+            <a
+              href={shareLinks.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-gray-600 border border-gray-200 hover:border-gray-900 hover:text-gray-900 bg-white px-4 py-2.5 rounded-lg transition-all no-underline"
+            >
+              Twitter / X
+            </a>
+            <a
+              href={shareLinks.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-gray-600 border border-gray-200 hover:border-green-600 hover:text-green-600 bg-white px-4 py-2.5 rounded-lg transition-all no-underline"
+            >
+              WhatsApp
+            </a>
+            {/* Copy link — inline script, no "use client" needed */}
+            <button
+              className="copy-btn text-xs font-medium text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-900 bg-white px-4 py-2.5 rounded-lg transition-all cursor-pointer"
+              onClick={
+                /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+                // @ts-expect-error inline handler
+                undefined
+              }
+              data-url={PAGE_URL}
+              suppressHydrationWarning
+            >
+              Copy link
+            </button>
+          </div>
+
+          {/* Inline script for copy — runs on client, no hydration issue */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                document.querySelectorAll('.copy-btn').forEach(function(btn) {
+                  btn.addEventListener('click', function() {
+                    var url = btn.getAttribute('data-url');
+                    navigator.clipboard.writeText(url).then(function() {
+                      btn.textContent = 'Copied!';
+                      setTimeout(function() { btn.textContent = 'Copy link'; }, 2000);
+                    });
+                  });
+                });
+              `,
+            }}
+          />
+
+          <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-gray-100">
+            <div className="mono text-xs text-gray-300">6 min read &middot; 5 principles</div>
+            <div className="mono text-xs text-gray-300 italic">app.stated.in/principles/shilpa-s</div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* -- BACK ----------------------------------------------- */}
+      <div className="border-t border-gray-100 px-6 py-6 bg-white">
+        <div className="max-w-2xl mx-auto">
+          <Link
+            href="/principles"
+            className="text-sm text-gray-400 hover:text-gray-700 transition-colors no-underline"
+          >
+            All Stated Principles features
+          </Link>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+  
