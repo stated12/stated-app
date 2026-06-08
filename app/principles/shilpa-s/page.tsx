@@ -397,16 +397,11 @@ export default function ShilpaSPage() {
             >
               WhatsApp
             </a>
-            {/* Copy link — inline script, no "use client" needed */}
+            {/* Copy link — handled by inline script below */}
             <button
               className="copy-btn text-xs font-medium text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-900 bg-white px-4 py-2.5 rounded-lg transition-all cursor-pointer"
-              onClick={
-                /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-                // @ts-expect-error inline handler
-                undefined
-              }
               data-url={PAGE_URL}
-              suppressHydrationWarning
+              type="button"
             >
               Copy link
             </button>
