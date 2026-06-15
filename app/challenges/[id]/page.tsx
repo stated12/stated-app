@@ -110,12 +110,14 @@ export default async function ChallengePage({ params }: { params: { id: string }
 
   const isOwner = session?.user?.id === challenge.posted_by_user_id;
   const typeConfig = CHALLENGE_TYPES[challenge.type as ChallengeType];
+  const companies = challenge.companies as any;
+  const profiles = challenge.profiles as any;
   const posterName = challenge.posted_by_type === "company"
-    ? challenge.companies?.name
-    : challenge.profiles?.full_name || challenge.profiles?.username;
+    ? companies?.name
+    : profiles?.full_name || profiles?.username;
   const posterSlug = challenge.posted_by_type === "company"
-    ? `/company/${challenge.companies?.slug}`
-    : `/profile/${challenge.profiles?.username}`;
+    ? `/company/${companies?.slug}`
+    : `/profile/${profiles?.username}`;
 
   const submissionFields = [
     { key: "require_text",  label: "Text response", icon: "📝" },
