@@ -276,22 +276,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update invites_sent count on challenge
-    await supabase
-      .from("challenges")
-      .update({ invites_sent: supabase.rpc("invites_sent", {}) })
-      .eq("id", challenge_id);
-
-    // Simple increment approach
-    await supabase.rpc("increment_invites_sent", {
-      challenge_uuid: challenge_id,
-      count: sent,
-    }).catch(() => {
-      // Fallback: raw update
-      supabase.from("challenges")
+    // Increment invites_sent on challenge
+    try {
+      await supabase.rpc("increment_invites_sent", {
+        challenge_uuid: challenge_id,
+        count: sent,
+      });
+    } catch {
+      // Fallback: direct update
+      await supabase
+        .from("challenges")
         .update({ invites_sent: (challenge as any).invites_sent + sent })
         .eq("id", challenge_id);
-    });
+    }
 
     return NextResponse.json({
       success: true,
