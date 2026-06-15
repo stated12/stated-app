@@ -181,10 +181,11 @@ export default async function ChallengesPage({
               {challenges.map((c: any) => {
                 const typeConfig = CHALLENGE_TYPES[c.type as ChallengeType];
                 const colors = COLOR_MAP[typeConfig?.color || "blue"];
-                const poster = c.posted_by_type === "company" ? c.companies : c.profiles;
+                const cCompanies = (c as any).companies;
+                const cProfiles = (c as any).profiles;
                 const posterName = c.posted_by_type === "company"
-                  ? c.companies?.name
-                  : c.profiles?.full_name || c.profiles?.username;
+                  ? cCompanies?.name
+                  : cProfiles?.full_name || cProfiles?.username;
 
                 return (
                   <Link
