@@ -72,11 +72,10 @@ export default function DashboardLayout({
 
   const activeCompany = company || memberCompany;
 
-  // Workspace detected purely from pathname -- no useSearchParams required.
   const isCompanyWorkspace = !!activeCompany && pathname.startsWith("/dashboard/company");
 
-  const homeLink   = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
-  const createLink = isCompanyWorkspace ? "/dashboard/company/create" : "/dashboard/create";
+  const homeLink    = isCompanyWorkspace ? "/dashboard/company" : "/dashboard";
+  const createLink  = isCompanyWorkspace ? "/dashboard/company/create" : "/dashboard/create";
   const upgradeLink = isCompanyWorkspace ? "/dashboard/company/upgrade" : "/upgrade";
   const billingLink = isCompanyWorkspace ? "/dashboard/company/billing" : "/billing";
 
@@ -110,7 +109,7 @@ export default function DashboardLayout({
   const ac   = isCompanyWorkspace ? "#0891b2" : "#4338ca";
   const bgAc = isCompanyWorkspace ? "#e0f2fe" : "#eef2ff";
 
-  const NavItem = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => {
+  const NavItem = ({ href, icon, label, badge }: { href: string; icon: React.ReactNode; label: string; badge?: number }) => {
     const active = pathname === href || pathname.startsWith(href + "/");
     return (
       <Link
@@ -119,6 +118,11 @@ export default function DashboardLayout({
       >
         <span style={{ color: active ? ac : "#9ca3af", display: "flex", flexShrink: 0 }}>{icon}</span>
         {label}
+        {badge ? (
+          <span style={{ marginLeft: "auto", background: "#2563eb", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 20, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+            {badge}
+          </span>
+        ) : null}
       </Link>
     );
   };
@@ -138,6 +142,8 @@ export default function DashboardLayout({
     logout:      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 16H3a1 1 0 01-1-1V3a1 1 0 011-1h4M12 13l4-4-4-4M16 9H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
     home:        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 9L10 2l8 7v8a1 1 0 01-1 1H3a1 1 0 01-1-1V9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 20v-6h6v6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>,
     search:      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M14 14l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+    // NEW: Challenges icon
+    challenges:  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 4h4.2l-3.4 2.5 1.3 4L9 10l-3.9 2.5 1.3-4L3 6h4.2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
   };
 
   return (
@@ -204,18 +210,19 @@ export default function DashboardLayout({
         <nav style={{ padding: "12px 12px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
           {isCompanyWorkspace ? (
             <>
-              <NavItem href="/dashboard/company/commitments" icon={I.company}  label="Company Commitments" />
-              <NavItem href="/dashboard/company/members"     icon={I.members}  label="Members" />
-              <NavItem href="/dashboard/company/insights"    icon={I.insights} label="Insights" />
-              <NavItem href="/dashboard/company/invite"      icon={I.invite}   label="Invite Members" />
-              <NavItem href="/dashboard/company/settings"    icon={I.settings} label="Company Settings" />
-              <NavItem href={billingLink}                    icon={I.billing}  label="Billing" />
+              <NavItem href="/dashboard/company/commitments" icon={I.company}     label="Company Commitments" />
+              {/* CHALLENGES — Company */}
+              <NavItem href="/dashboard/company/challenges"  icon={I.challenges}  label="My Challenges" />
+              <NavItem href="/dashboard/company/members"     icon={I.members}     label="Members" />
+              <NavItem href="/dashboard/company/insights"    icon={I.insights}    label="Insights" />
+              <NavItem href="/dashboard/company/invite"      icon={I.invite}      label="Invite Members" />
+              <NavItem href="/dashboard/company/settings"    icon={I.settings}    label="Company Settings" />
+              <NavItem href={billingLink}                    icon={I.billing}     label="Billing" />
               {isOnPlan
-                ? <NavItem href={billingLink}  icon={I.credits} label="Buy Credits" />
-                : <NavItem href={upgradeLink}  icon={I.upgrade} label="Upgrade" />
+                ? <NavItem href={billingLink}  icon={I.credits}  label="Buy Credits" />
+                : <NavItem href={upgradeLink}  icon={I.upgrade}  label="Upgrade" />
               }
-              <NavItem href="/dashboard/company/support" icon={I.support} label="Support" />
-              {/* Switch to individual -- only shown for invited members, not owners */}
+              <NavItem href="/dashboard/company/support"     icon={I.support}     label="Support" />
               {!company && memberCompany && (
                 <Link
                   href="/dashboard"
@@ -225,19 +232,20 @@ export default function DashboardLayout({
                   My Dashboard
                 </Link>
               )}
-
             </>
           ) : (
             <>
-              <NavItem href="/dashboard/my"       icon={I.commitments} label="My Commitments" />
-              <NavItem href="/dashboard/insights" icon={I.insights}    label="Insights" />
-              <NavItem href="/billing"            icon={I.billing}     label="Billing" />
-              <NavItem href="/account"            icon={I.settings}    label="Account Settings" />
+              <NavItem href="/dashboard/my"         icon={I.commitments}  label="My Commitments" />
+              {/* CHALLENGES — Individual */}
+              <NavItem href="/dashboard/challenges" icon={I.challenges}   label="My Challenges" />
+              <NavItem href="/dashboard/insights"   icon={I.insights}     label="Insights" />
+              <NavItem href="/billing"              icon={I.billing}      label="Billing" />
+              <NavItem href="/account"              icon={I.settings}     label="Account Settings" />
               {isOnPlan
-                ? <NavItem href="/billing"  icon={I.credits} label="Buy Credits" />
-                : <NavItem href="/upgrade"  icon={I.upgrade} label="Upgrade" />
+                ? <NavItem href="/billing"  icon={I.credits}  label="Buy Credits" />
+                : <NavItem href="/upgrade"  icon={I.upgrade}  label="Upgrade" />
               }
-              <NavItem href="/dashboard/support" icon={I.support} label="Support" />
+              <NavItem href="/dashboard/support"    icon={I.support}      label="Support" />
               {(company || memberCompany) && (
                 <Link
                   href="/dashboard/company"
@@ -308,9 +316,9 @@ export default function DashboardLayout({
               {I.home}
               <span style={{ fontSize: 9, fontWeight: 600 }}>Home</span>
             </Link>
-            <Link href="/search" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === "/search" ? "#4338ca" : "#9ca3af" }}>
-              {I.search}
-              <span style={{ fontSize: 9, fontWeight: 500 }}>Search</span>
+            <Link href="/challenges" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname.startsWith("/challenges") ? "#2563eb" : "#9ca3af" }}>
+              {I.challenges}
+              <span style={{ fontSize: 9, fontWeight: 500 }}>Challenges</span>
             </Link>
             <Link
               href={createLink}
@@ -319,9 +327,13 @@ export default function DashboardLayout({
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
               Create
             </Link>
+            <Link href="/search" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textDecoration: "none", color: pathname === "/search" ? "#4338ca" : "#9ca3af" }}>
+              {I.search}
+              <span style={{ fontSize: 9, fontWeight: 500 }}>Search</span>
+            </Link>
           </div>
         </div>
       </main>
     </div>
-  );
-}
+    );
+} 
