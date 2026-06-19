@@ -12,8 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://app.stated.in"),
   openGraph: {
     title: "Stated - Say it. Do it. Prove it.",
-    description:
-      "Post commitments publicly. Build credibility over time. Every promise you keep raises your reputation score. Free to browse - no signup needed.",
+    description: "Post commitments publicly. Build credibility over time. Every promise you keep raises your reputation score. Free to browse - no signup needed.",
     url: "https://app.stated.in",
     siteName: "Stated",
     images: [{ url: "/og-image.png", width: 1270, height: 760, alt: "Stated - Say it. Do it. Prove it." }],
@@ -26,11 +25,7 @@ export const metadata: Metadata = {
     description: "Post commitments publicly. Build credibility over time. Free to browse - no signup needed.",
     images: ["/og-image.png"],
   },
-  keywords: [
-    "public accountability", "commitments", "credibility", "follow-through",
-    "reputation", "goal tracking", "public goals", "accountability platform",
-    "hiring challenge", "cofounder hunt", "execution platform",
-  ],
+  keywords: ["public accountability", "commitments", "credibility", "follow-through", "reputation", "goal tracking", "public goals", "accountability platform", "hiring challenge", "cofounder hunt", "execution platform"],
   alternates: { canonical: "https://app.stated.in" },
 };
 
@@ -58,14 +53,14 @@ const execRewards = [
 ];
 
 const challengeTypes = [
-  { icon: "💼", title: "Hiring Challenge",   for: "Companies . Anyone",          desc: "Post a real task. Receive actual work as applications. Hire the best executor - not the best CV writer.",           top: "from-blue-600 to-blue-400",     bg: "bg-blue-50"   },
-  { icon: "🤝", title: "Cofounder Hunt",     for: "Founders . Individuals",      desc: "Post a scoped task. See who actually builds with you before committing. Find the right partner with proof.",          top: "from-violet-600 to-violet-400", bg: "bg-violet-50" },
-  { icon: "🔗", title: "Partner Hunt",       for: "Companies . Founders",        desc: "Find integration partners, resellers, or allies. Evaluate real intent through a proposal - not a pitch.",            top: "from-green-600 to-green-400",   bg: "bg-green-50"  },
-  { icon: "🧠", title: "Consultant Hunt",    for: "Companies . Anyone",          desc: "Post the problem. Get a solution as the application. Hire the expert who already showed you what they can do.",      top: "from-teal-600 to-teal-400",     bg: "bg-teal-50"   },
-  { icon: "📡", title: "Investor Signal",    for: "Founders . Companies",        desc: "Let investors evaluate your real execution history - not a polished deck. 18 months of proof speaks louder.",        top: "from-amber-600 to-amber-400",   bg: "bg-amber-50"  },
-  { icon: "⚡", title: "Collaborator Hunt",  for: "Individuals . Creators",      desc: "Find collaborators who prove they will add value before joining. No more co-creators who disappear after week one.",  top: "from-rose-600 to-rose-400",     bg: "bg-rose-50"   },
-  { icon: "🌱", title: "Impact Challenge",   for: "NGOs . Govt. Initiatives",    desc: "NGOs and government initiatives post public accountability commitments and open challenges for volunteers or partners. Every outcome is on public record.", top: "from-slate-500 to-slate-400", bg: "bg-slate-50" },
-  { icon: "🎓", title: "Grant & Fellowship", for: "Institutions . Accelerators", desc: "Accelerators and grant bodies post selection challenges. Applicants submit real work. The best execution wins the seat - not the best essay.",           top: "from-violet-600 to-amber-400", bg: "bg-violet-50" },
+  { icon: "💼", title: "Hiring Challenge",   for: "Companies & Anyone",          desc: "Post a real task. Receive actual work as applications. Hire the best executor - not the best CV writer.",          href: "/challenges?type=hiring",          top: "from-blue-600 to-blue-400",     bg: "bg-blue-50",   badge: null           },
+  { icon: "🤝", title: "Cofounder Hunt",     for: "Founders & Individuals",      desc: "Post a scoped task. See who actually builds with you before committing. Find the right partner with proof.",         href: "/challenges?type=cofounder",       top: "from-violet-600 to-violet-400", bg: "bg-violet-50", badge: null           },
+  { icon: "🔗", title: "Partner Hunt",       for: "Companies & Founders",        desc: "Find integration partners, resellers, or allies. Evaluate real intent through a proposal - not a pitch.",           href: "/challenges?type=partner",         top: "from-green-600 to-green-400",   bg: "bg-green-50",  badge: null           },
+  { icon: "🧠", title: "Consultant Hunt",    for: "Companies & Anyone",          desc: "Post the problem. Get a solution as the application. Hire the expert who already showed you what they can do.",     href: "/challenges?type=consultant",      top: "from-teal-600 to-teal-400",     bg: "bg-teal-50",   badge: null           },
+  { icon: "📡", title: "Investor Signal",    for: "Founders & Companies",        desc: "Let investors evaluate your real execution history - not a polished deck. 18 months of proof speaks louder.",       href: "/challenges?type=investor_signal", top: "from-amber-600 to-amber-400",   bg: "bg-amber-50",  badge: null           },
+  { icon: "⚡", title: "Collaborator Hunt",  for: "Individuals & Creators",      desc: "Find collaborators who prove they will add value before joining. No more co-creators who disappear after week one.", href: "/challenges?type=collaborator",    top: "from-rose-600 to-rose-400",     bg: "bg-rose-50",   badge: null           },
+  { icon: "🌱", title: "Impact Challenge",   for: "NGOs & Govt. Initiatives",    desc: "NGOs and government initiatives post public accountability commitments and open challenges for volunteers or partners.", href: "/challenges?type=impact",        top: "from-slate-500 to-slate-400",   bg: "bg-slate-50",  badge: null           },
+  { icon: "🎓", title: "Grant & Fellowship", for: "Institutions & Accelerators", desc: "Accelerators and grant bodies post selection challenges. The best execution wins the seat - not the best essay.",  href: "/challenges?type=grant",           top: "from-violet-600 to-amber-400",  bg: "bg-violet-50", badge: null           },
 ];
 
 const principlePulls = [
@@ -78,7 +73,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col bg-white text-gray-900">
 
-      {/* -- HEADER ------------------------------------------------------- */}
+      {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -87,6 +82,7 @@ export default async function HomePage() {
           </Link>
           <nav className="flex items-center gap-1">
             <Link href="/explore"    className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Explore</Link>
+            <Link href="/challenges" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Challenges</Link>
             <Link href="/principles" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Principles</Link>
             <Link href="/login"      className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Login</Link>
             <Link href="/signup"     className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-sm">Sign up</Link>
@@ -94,15 +90,14 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* -- HERO --------------------------------------------------------- */}
+      {/* ── HERO ────────────────────────────────────────────────────────── */}
       <section className="relative pt-32 pb-0 overflow-hidden" style={{ background: "linear-gradient(180deg,#eef5ff 0%,#ffffff 100%)" }}>
         <div className="hero-dots absolute inset-0 opacity-70 pointer-events-none" />
-
         <div className="relative max-w-4xl mx-auto px-6 text-center">
 
           <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-blue-700 text-xs font-semibold tracking-wide uppercase px-4 py-2 rounded-full mb-8 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-blue-500 pulse-dot" />
-            🚀 Execution Challenge - Live Now
+            Challenges are now Live
           </div>
 
           <h1 className="font-display text-5xl md:text-7xl font-extrabold text-gray-900 leading-[1.02] tracking-tight mb-6">
@@ -130,36 +125,22 @@ export default async function HomePage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
-            >
-              🚀 Start free - 5 commitments included
+            <Link href="/signup" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5">
+              Start free - 5 commitments included
             </Link>
-            <Link
-              href="/explore"
-              className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-8 py-4 rounded-xl border border-gray-300 transition-all"
-            >
-              Browse what people are doing
+            <Link href="/challenges" className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-8 py-4 rounded-xl border border-gray-300 transition-all">
+              Browse challenges
             </Link>
           </div>
 
           <form action="/search" method="GET" className="flex max-w-xl mx-auto bg-white border border-gray-300 rounded-xl overflow-hidden shadow-md mb-14">
-            <input
-              type="text"
-              name="q"
-              placeholder="Search commitments, people or organisations..."
-              className="flex-1 px-5 py-3.5 text-gray-900 text-sm outline-none placeholder-gray-400 bg-transparent"
-            />
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 transition-colors shrink-0">
-              Search
-            </button>
+            <input type="text" name="q" placeholder="Search commitments, people or organisations..." className="flex-1 px-5 py-3.5 text-gray-900 text-sm outline-none placeholder-gray-400 bg-transparent" />
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 transition-colors shrink-0">Search</button>
           </form>
-
         </div>
       </section>
 
-      {/* -- WHAT IS STATED ----------------------------------------------- */}
+      {/* ── WHAT IS STATED ──────────────────────────────────────────────── */}
       <section className="bg-white py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
@@ -169,22 +150,16 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-2 gap-14 items-start">
             <div>
               <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
-                The platform where your{" "}
-                <span className="text-blue-600">word</span>{" "}
-                becomes your{" "}
-                <span className="text-blue-600">record.</span>
+                The platform where your <span className="text-blue-600">word</span> becomes your <span className="text-blue-600">record.</span>
               </h2>
               <p className="text-gray-600 text-base leading-relaxed mb-8">
                 Stated is where individuals, companies, founders, NGOs, and government initiatives make public commitments - and prove them with real updates and proof. Every action builds a permanent, verifiable credibility score that compounds over time.
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: "👤", label: "Individuals"       },
-                  { icon: "🏢", label: "Companies"         },
-                  { icon: "🚀", label: "Founders"          },
-                  { icon: "🌱", label: "NGOs"              },
-                  { icon: "🏛", label: "Govt. Initiatives" },
-                  { icon: "🎓", label: "Institutions"      },
+                  { icon: "👤", label: "Individuals" }, { icon: "🏢", label: "Companies" },
+                  { icon: "🚀", label: "Founders" },   { icon: "🌱", label: "NGOs" },
+                  { icon: "🏛", label: "Govt. Initiatives" }, { icon: "🎓", label: "Institutions" },
                 ].map(({ icon, label }) => (
                   <div key={label} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
                     <span>{icon}</span> {label}
@@ -194,19 +169,15 @@ export default async function HomePage() {
             </div>
             <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
               <div className="grid grid-cols-2">
-                <div className="bg-red-50 px-5 py-3 border-b border-r border-gray-200">
-                  <span className="text-xs font-bold text-red-600 uppercase tracking-wider">✕ Everywhere else</span>
-                </div>
-                <div className="bg-green-50 px-5 py-3 border-b border-gray-200">
-                  <span className="text-xs font-bold text-green-700 uppercase tracking-wider">✓ On Stated</span>
-                </div>
+                <div className="bg-red-50 px-5 py-3 border-b border-r border-gray-200"><span className="text-xs font-bold text-red-600 uppercase tracking-wider">Everywhere else</span></div>
+                <div className="bg-green-50 px-5 py-3 border-b border-gray-200"><span className="text-xs font-bold text-green-700 uppercase tracking-wider">On Stated</span></div>
               </div>
               {[
-                ["Claims without proof",                  "Every commitment has timestamped proof"   ],
-                ["Resumes over results",                  "Challenges filter by actual work done"    ],
-                ["Hidden, private, unverifiable",         "Public record anyone can see"             ],
-                ["Reputation fades or resets",            "Credibility score compounds forever"      ],
-                ["Tools track tasks, not accountability", "Stated tracks commitments with proof"     ],
+                ["Claims without proof",                  "Every commitment has timestamped proof"  ],
+                ["Resumes over results",                  "Challenges filter by actual work done"   ],
+                ["Hidden, private, unverifiable",         "Public record anyone can see"            ],
+                ["Reputation fades or resets",            "Credibility score compounds forever"     ],
+                ["Tools track tasks, not accountability", "Stated tracks commitments with proof"    ],
               ].map(([bad, good], i) => (
                 <div key={i} className="grid grid-cols-2">
                   <div className="px-5 py-3.5 border-b border-r border-gray-100 text-sm text-gray-400 flex items-start gap-2">
@@ -222,16 +193,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- HOW IT WORKS ------------------------------------------------- */}
+      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
       <section className="bg-gray-900 py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-blue-400 inline-block rounded" />
             How it works
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
-            Four steps. Public record. Forever.
-          </h2>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Four steps. Public record. Forever.</h2>
           <p className="text-gray-400 text-base mb-14 max-w-md">The simplest accountability system ever built. No fluff, no complexity.</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {howSteps.map(({ num, icon, name, desc }) => (
@@ -246,81 +215,30 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- LIVE COMMITMENT FEED ----------------------------------------- */}
-      <section className="bg-white py-24 px-6">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
-            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
-            People on record, right now
-            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 text-center tracking-tight mb-3">
-            Commitments from people &amp; companies
-          </h2>
-          <p className="text-gray-500 text-center text-base mb-12">Real accountability. Public. Timestamped. Cheerable.</p>
-          <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
-          <div className="text-center mt-10">
-            <Link
-              href="/explore"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-md hover:-translate-y-0.5"
-            >
-              Explore all commitments
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* -- STATED PRINCIPLES -------------------------------------------- */}
+      {/* ── STATED PRINCIPLES (moved above feed) ────────────────────────── */}
       <section className="bg-white py-20 px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
-
-          {/* Header */}
           <div className="flex items-end justify-between flex-wrap gap-5 mb-10">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#b45309" }}>
                 <span className="w-5 h-px inline-block" style={{ background: "#b45309" }} />
                 Stated Principles
               </p>
-              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">
-                What remarkable people stand for
-              </h2>
-              <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">
-                Principles, beliefs, and lessons from leaders - stated publicly, in their own words.
-              </p>
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">What remarkable people stand for</h2>
+              <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">Principles, beliefs, and lessons from leaders - stated publicly, in their own words.</p>
             </div>
-            <Link
-              href="/principles"
-              className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all"
-            >
-              Browse all features
-            </Link>
+            <Link href="/principles" className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all">Browse all features</Link>
           </div>
 
-          {/* Featured card */}
-          <Link
-            href="/principles/shilpa-s"
-            className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline"
-          >
+          <Link href="/principles/shilpa-s" className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline">
             <div className="grid md:grid-cols-[300px_1fr]">
-
-              {/* Photo */}
               <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 260 }}>
-                <Image
-                  src="/shilpa-portrait.jpg"
-                  alt="Shilpa S"
-                  fill
-                  className="object-cover"
-                  style={{ objectPosition: "center 20%" }}
-                />
+                <Image src="/shilpa-portrait.jpg" alt="Shilpa S" fill className="object-cover" style={{ objectPosition: "center 20%" }} />
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white border px-3 py-1 rounded-full shadow-sm" style={{ borderColor: "#fde68a" }}>
                   <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#f59e0b" }} />
-                  <span className="text-xs tracking-wider uppercase font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>
-                    Latest - Issue 001
-                  </span>
+                  <span className="text-xs tracking-wider uppercase font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>Latest - Issue 001</span>
                 </div>
               </div>
-
-              {/* Content */}
               <div className="p-8 flex flex-col justify-center">
                 <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-3 font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>
                   <span className="w-3 h-px inline-block" style={{ background: "#b45309" }} />
@@ -329,17 +247,13 @@ export default async function HomePage() {
                 <h3 className="text-4xl font-light text-gray-900 leading-none tracking-tight mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   Shilpa <em className="italic" style={{ color: "#d97706" }}>S.</em>
                 </h3>
-                <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">
-                  CMD, SheRocks India - Startup Ecosystem Enabler - Investor for MSMEs - Strategic Advisor
-                </p>
+                <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">CMD, SheRocks India - Startup Ecosystem Enabler - Investor for MSMEs - Strategic Advisor</p>
                 <blockquote className="text-lg font-light text-gray-600 italic leading-relaxed mb-5 pl-4 border-l-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", borderColor: "#fcd34d" }}>
                   "We finish what we start. Not for the applause - but for the integrity of the promise."
                 </blockquote>
                 <div className="flex flex-wrap gap-1.5 mb-5">
                   {["Decisiveness", "Integrity", "Risk", "Execution", "Authenticity"].map((tag) => (
-                    <span key={tag} className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded uppercase tracking-wider" style={{ fontFamily: "monospace" }}>
-                      {tag}
-                    </span>
+                    <span key={tag} className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded uppercase tracking-wider" style={{ fontFamily: "monospace" }}>{tag}</span>
                   ))}
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
@@ -350,13 +264,10 @@ export default async function HomePage() {
             </div>
           </Link>
 
-          {/* Pull quotes - desktop only */}
           <div className="hidden md:grid grid-cols-3 gap-4">
             {principlePulls.map(({ quote, label }) => (
               <div key={label} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                <p className="text-sm font-light text-gray-600 italic leading-relaxed mb-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  "{quote}"
-                </p>
+                <p className="text-sm font-light text-gray-600 italic leading-relaxed mb-3" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>"{quote}"</p>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0" style={{ background: "#f59e0b" }} />
                   <span className="text-xs text-gray-400 uppercase tracking-wider" style={{ fontFamily: "monospace" }}>{label}</span>
@@ -364,11 +275,119 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* -- WHY STATED WORKS --------------------------------------------- */}
+      {/* ── LIVE COMMITMENT FEED ────────────────────────────────────────── */}
+      <section className="bg-gray-50 py-24 px-6 border-t border-gray-100">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
+            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
+            People on record, right now
+            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 text-center tracking-tight mb-3">Commitments from people & companies</h2>
+          <p className="text-gray-500 text-center text-base mb-12">Real accountability. Public. Timestamped. Cheerable.</p>
+          <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
+          <div className="text-center mt-10">
+            <Link href="/explore" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-md hover:-translate-y-0.5">
+              Explore all commitments
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHALLENGES — LIVE ───────────────────────────────────────────── */}
+      <section className="bg-white py-24 px-6 border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4">
+            <div>
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
+                Stated Challenges
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
+                Hire. Partner. Build.<br />
+                <span className="text-blue-600">Based on work - not words.</span>
+              </h2>
+              <p className="text-gray-500 text-base max-w-lg">Post a challenge. Receive real work as responses. Find exactly who you need - with execution as the filter, not credentials.</p>
+            </div>
+            <div className="flex flex-col gap-3 shrink-0">
+              <Link href="/challenges/new" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-md whitespace-nowrap">
+                Post a Challenge
+              </Link>
+              <Link href="/challenges" className="inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:border-blue-400 text-gray-700 text-sm font-medium px-6 py-3 rounded-xl transition-all whitespace-nowrap">
+                Browse all challenges
+              </Link>
+            </div>
+          </div>
+
+          {/* How it works strip */}
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-10">
+            <p className="text-sm font-semibold text-blue-800 mb-4">How challenges work</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { step: "1", label: "Post",          desc: "Choose your challenge type, fill details, pay to activate" },
+                { step: "2", label: "Get responses", desc: "People submit actual work - links, files, text, or video"  },
+                { step: "3", label: "Evaluate",      desc: "Review submissions. Shortlist. Connect directly."          },
+                { step: "4", label: "Decide",        desc: "Hire, partner, or build with the best executor."           },
+              ].map(({ step, label, desc }) => (
+                <div key={step} className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center mx-auto mb-2">{step}</div>
+                  <div className="font-semibold text-blue-900 text-sm mb-1">{label}</div>
+                  <div className="text-blue-700 text-xs leading-relaxed">{desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Challenge type cards - all live */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            {challengeTypes.slice(0, 6).map(({ icon, title, for: forLabel, desc, href, top, bg }) => (
+              <Link key={title} href={href} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline">
+                <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
+                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
+                  </div>
+                  <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
+                  <div className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                    Browse challenges
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {challengeTypes.slice(6).map(({ icon, title, for: forLabel, desc, href, top, bg }) => (
+              <Link key={title} href={href} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline">
+                <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
+                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
+                  </div>
+                  <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
+                  <div className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                    Browse challenges
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link href="/challenges/new" className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-md hover:-translate-y-0.5">
+              Post a Challenge
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY STATED WORKS ────────────────────────────────────────────── */}
       <section className="bg-gray-50 py-24 px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
@@ -376,9 +395,7 @@ export default async function HomePage() {
             Why Stated works
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
-            Most platforms reward{" "}
-            <span className="italic text-orange-500">performance.</span>
-            <br />We reward follow-through.
+            Most platforms reward <span className="italic text-orange-500">performance.</span><br />We reward follow-through.
           </h2>
           <p className="text-gray-500 text-base mb-14 max-w-md">The accountability layer the internet has always been missing.</p>
           <div className="grid md:grid-cols-3 gap-4">
@@ -393,99 +410,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- CHALLENGES COMING SOON --------------------------------------- */}
-      <section className="bg-white py-24 px-6 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
-            Coming soon - Challenges
-          </p>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div>
-              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
-                Hire. Partner. Build.<br />
-                <span className="text-blue-600">Based on work - not words.</span>
-              </h2>
-              <p className="text-gray-500 text-base max-w-lg">
-                Post a challenge. Receive real work as responses. Find exactly who you need - with execution as the filter, not credentials.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold px-5 py-3 rounded-full whitespace-nowrap shrink-0">
-              <span className="w-2 h-2 rounded-full bg-amber-400 pulse-dot" />
-              Building now
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-10">
-            <p className="text-sm font-semibold text-blue-800 mb-4">How challenges work</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { step: "1", label: "Post",          desc: "Post your challenge with real context and expected output"    },
-                { step: "2", label: "Get responses", desc: "People submit actual work - links, files, text, or images"    },
-                { step: "3", label: "Evaluate",      desc: "Review all public submissions. Compare fairly by work quality" },
-                { step: "4", label: "Decide",        desc: "Shortlist, connect, and hire or partner with confidence"       },
-              ].map(({ step, label, desc }) => (
-                <div key={step} className="text-center">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center mx-auto mb-2">{step}</div>
-                  <div className="font-semibold text-blue-900 text-sm mb-1">{label}</div>
-                  <div className="text-blue-700 text-xs leading-relaxed">{desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            {challengeTypes.slice(0, 6).map(({ icon, title, for: forLabel, desc, top, bg }) => (
-              <div key={title} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
-                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
-                  </div>
-                  <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
-                  <div className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot" />
-                    Coming soon
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {challengeTypes.slice(6).map(({ icon, title, for: forLabel, desc, top, bg }) => (
-              <div key={title} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
-                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
-                  </div>
-                  <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
-                  <div className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot" />
-                    Coming soon
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* -- EXECUTION CHALLENGE ------------------------------------------ */}
+      {/* ── EXECUTION CHALLENGE ─────────────────────────────────────────── */}
       <section className="bg-gray-900 py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-amber-400 inline-block rounded" />
             Execution Challenge
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
-            Win for doing what you said.
-          </h2>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Win for doing what you said.</h2>
           <p className="text-gray-400 text-base mb-14 max-w-md">Top executors get more than recognition - they get a platform.</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {execRewards.map(({ icon, title, body }) => (
@@ -499,7 +431,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- TRUST STRIP -------------------------------------------------- */}
+      {/* ── TRUST STRIP ─────────────────────────────────────────────────── */}
       <div className="bg-blue-600 py-5 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-blue-500">
           {[
@@ -516,34 +448,22 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* -- FINAL CTA ---------------------------------------------------- */}
+      {/* ── FINAL CTA ───────────────────────────────────────────────────── */}
       <section className="bg-white py-28 px-6">
         <div className="max-w-3xl mx-auto">
-          <div
-            className="rounded-3xl p-12 text-center border border-gray-200 shadow-sm relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg,#eff6ff 0%,#f5f3ff 50%,#f0fdf4 100%)" }}
-          >
+          <div className="rounded-3xl p-12 text-center border border-gray-200 shadow-sm relative overflow-hidden" style={{ background: "linear-gradient(135deg,#eff6ff 0%,#f5f3ff 50%,#f0fdf4 100%)" }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full pointer-events-none" style={{ background: "rgba(191,219,254,.4)", filter: "blur(48px)" }} />
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 relative">Your Turn</p>
             <h2 className="font-display text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5 relative">
-              Put your word on the{" "}
-              <span className="italic text-blue-600">line.</span>
+              Put your word on the <span className="italic text-blue-600">line.</span>
             </h2>
-            <p className="text-gray-600 text-base leading-relaxed mb-10 max-w-md mx-auto relative">
-              Say it where it counts. Start free - post your first commitment in under 2 minutes.
-            </p>
+            <p className="text-gray-600 text-base leading-relaxed mb-10 max-w-md mx-auto relative">Say it where it counts. Start free - post your first commitment in under 2 minutes.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8 relative">
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-10 py-4 rounded-xl shadow-lg transition-all hover:-translate-y-0.5"
-              >
-                🚀 Commit publicly - it's free
+              <Link href="/signup" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-10 py-4 rounded-xl shadow-lg transition-all hover:-translate-y-0.5">
+                Commit publicly - it's free
               </Link>
-              <Link
-                href="/explore"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-10 py-4 rounded-xl border border-gray-300 transition-all"
-              >
-                Browse first
+              <Link href="/challenges" className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base px-10 py-4 rounded-xl border border-gray-300 transition-all">
+                Browse challenges
               </Link>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center relative">
@@ -560,4 +480,3 @@ export default async function HomePage() {
     </div>
   );
 }
-    
