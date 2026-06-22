@@ -408,11 +408,10 @@ export default function ChallengesPage() {
         </div>
       </section>
 
+      </div>
+      </div>
+      </div>
     </div>
   );
-
-</div>
-</div>
-</div>
 
 }
