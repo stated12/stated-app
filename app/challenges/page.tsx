@@ -9,7 +9,8 @@ const FILTERS = [
   { v: "all", l: "All" }, { v: "hiring", l: "Hiring" },
   { v: "cofounder", l: "Cofounder" }, { v: "partner", l: "Partner" },
   { v: "consultant", l: "Consultant" }, { v: "investor_signal", l: "Investor Signal" },
-  { v: "collaborator", l: "Collaborator" }, { v: "impact", l: "Impact" }, { v: "grant", l: "Grant" },
+  { v: "collaborator", l: "Collaborator" }, { v: "impact", l: "Impact" },
+  { v: "grant", l: "Grant" },
 ];
 
 const AC: Record<string, string[]> = {
@@ -25,14 +26,14 @@ const AC: Record<string, string[]> = {
 
 function dl(exp: string) {
   const d = Math.ceil((new Date(exp).getTime() - Date.now()) / 86400000);
-  return d <= 0 ? "Closing today" : d === 1 ? "1 day left" : d + " days left";
+  return d <= 0 ? "Closing today" : d + " days left";
 }
 
 export default function ChallengesPage() {
-  const [rows, setRows]       = useState<any[]>([]);
-  const [busy, setBusy]       = useState(true);
-  const [ft, setFt]           = useState("all");
-  const [q, setQ]             = useState("");
+  const [rows, setRows] = useState<any[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [ft, setFt]     = useState("all");
+  const [q, setQ]       = useState("");
 
   useEffect(() => {
     setBusy(true);
@@ -50,41 +51,25 @@ export default function ChallengesPage() {
   }, [ft, q]);
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'DM Sans',sans-serif" }}>
+    <div className="min-h-screen bg-white">
 
       <section style={{ background: "linear-gradient(180deg,#eef5ff 0%,#fff 100%)" }} className="px-6 pt-16 pb-12 border-b border-gray-100">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-blue-700 text-xs font-semibold px-4 py-2 rounded-full mb-6 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            Live now
-          </div>
           <h1 className="font-display text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
             Hire. Partner. Build.<br /><span className="text-blue-600">Based on work.</span>
           </h1>
-          <p className="text-gray-500 text-lg font-light max-w-2xl mx-auto leading-relaxed mb-8">
-            Post a challenge. Receive real work as applications. Find exactly who you need — execution as the filter.
+          <p className="text-gray-500 text-lg font-light max-w-2xl mx-auto mb-8">
+            Post a challenge. Receive real work. Find who you need with execution as the filter.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mb-10">
-            <Link href="/challenges/new" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-7 py-3.5 rounded-xl shadow-md transition-all">Post a Challenge</Link>
-            <a href="#browse" className="inline-flex items-center gap-2 bg-white border border-gray-300 hover:border-blue-400 text-gray-700 text-sm font-medium px-7 py-3.5 rounded-xl transition-all">Browse open challenges</a>
+            <Link href="/challenges/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-7 py-3.5 rounded-xl shadow-md transition-all">Post a Challenge</Link>
+            <a href="#browse" className="bg-white border border-gray-300 hover:border-blue-400 text-gray-700 text-sm font-medium px-7 py-3.5 rounded-xl transition-all">Browse open challenges</a>
           </div>
-          <div className="flex flex-wrap gap-8 justify-center mb-12">
-            {[["8","Challenge types"],["3","Plans from Rs.249"],["100%","Public by default"],["Free","To browse and apply"]].map(([v,l]) => (
-              <div key={l} className="text-center">
-                <div className="font-display text-2xl font-extrabold text-gray-900">{v}</div>
-                <div className="text-xs text-gray-500">{l}</div>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[{n:"1",i:"📋",t:"Post",d:"Choose type, fill details, pay to go live"},{n:"2",i:"📥",t:"Receive",d:"Real work submitted — text, links, files, video"},{n:"3",i:"🔍",t:"Evaluate",d:"Review and shortlist from your dashboard"},{n:"4",i:"🤝",t:"Connect",d:"Reach out to winners — hire, partner, or build"}].map(({ n,i,t,d }) => (
-              <div key={n} className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-3">{n}</div>
-                <div className="text-xl mb-2">{i}</div>
-                <div className="text-sm font-bold text-gray-900 mb-1">{t}</div>
-                <div className="text-xs text-gray-500 leading-relaxed">{d}</div>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-8 justify-center">
+            <div className="text-center"><div className="font-display text-2xl font-extrabold text-gray-900">8</div><div className="text-xs text-gray-500">Challenge types</div></div>
+            <div className="text-center"><div className="font-display text-2xl font-extrabold text-gray-900">3</div><div className="text-xs text-gray-500">Plans from Rs.249</div></div>
+            <div className="text-center"><div className="font-display text-2xl font-extrabold text-gray-900">100%</div><div className="text-xs text-gray-500">Public by default</div></div>
+            <div className="text-center"><div className="font-display text-2xl font-extrabold text-gray-900">Free</div><div className="text-xs text-gray-500">To browse and apply</div></div>
           </div>
         </div>
       </section>
@@ -93,25 +78,23 @@ export default function ChallengesPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">8 challenge types</p>
-            <h2 className="font-display text-3xl font-extrabold text-gray-900 mb-3">What can you post?</h2>
+            <h2 className="font-display text-3xl font-extrabold text-gray-900">What can you post?</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {(Object.entries(CHALLENGE_TYPES) as [ChallengeType, any][]).map(([key, cfg]) => {
-              const ac = AC[key] || AC["hiring"];
-              return (
-                <button key={key} onClick={() => { setFt(key); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
-                  className={"text-left border " + ac[0] + " rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all bg-white cursor-pointer w-full"}>
-                  <div className={"h-1 w-full bg-gradient-to-r " + ac[3]} />
-                  <div className="p-4">
-                    <div className="text-2xl mb-2">{cfg.icon}</div>
-                    <div className="text-sm font-bold text-gray-900 mb-1">{cfg.label}</div>
-                    <div className="text-xs text-gray-400 mb-2">{cfg.for}</div>
-                    <span className="text-xs text-gray-400">From </span>
-                    <span className={"text-xs font-bold " + ac[2]}>Rs.{CHALLENGE_PRICES[key].basic}</span>
-                  </div>
-                </button>
-              );
-            })}
+            {(Object.entries(CHALLENGE_TYPES) as [ChallengeType, any][]).map(([key, cfg]) => (
+              <button key={key}
+                onClick={() => { setFt(key); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
+                className={"text-left border " + (AC[key]||AC["hiring"])[0] + " rounded-2xl overflow-hidden hover:shadow-lg transition-all bg-white cursor-pointer w-full"}>
+                <div className={"h-1 w-full bg-gradient-to-r " + (AC[key]||AC["hiring"])[3]} />
+                <div className="p-4">
+                  <div className="text-2xl mb-2">{cfg.icon}</div>
+                  <div className="text-sm font-bold text-gray-900 mb-1">{cfg.label}</div>
+                  <div className="text-xs text-gray-400 mb-2">{cfg.for}</div>
+                  <span className="text-xs text-gray-400">From </span>
+                  <span className={"text-xs font-bold " + (AC[key]||AC["hiring"])[2]}>Rs.{CHALLENGE_PRICES[key].basic}</span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -120,16 +103,15 @@ export default function ChallengesPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">What you get</p>
-            <h2 className="font-display text-3xl font-extrabold text-gray-900 mb-3">Built for real hiring and partnerships</h2>
+            <h2 className="font-display text-3xl font-extrabold text-gray-900">Built for real hiring and partnerships</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
-            {[{i:"🎯",t:"Work-based applications",b:"Applicants submit real work — not a CV. You evaluate execution, not credentials."},{i:"📊",t:"Submissions dashboard",b:"Review every application in one place. Shortlist, reject, and mark winners."},{i:"📧",t:"Email invites included",b:"Import contacts via CSV or paste emails. Send branded invites from Stated."},{i:"🌐",t:"Public challenge page",b:"Every challenge gets a public shareable URL. Anyone can view without signup."},{i:"⭐",t:"Featured placement",b:"Pro and Scale plans get featured on the browse page for more visibility."},{i:"🔔",t:"Instant notifications",b:"Email alert the moment someone submits. Submitter gets a confirmation too."}].map(({ i,t,b }) => (
-              <div key={t} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-blue-200 transition-all">
-                <div className="text-2xl mb-3">{i}</div>
-                <h3 className="font-display font-bold text-gray-900 text-base mb-2">{t}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{b}</p>
-              </div>
-            ))}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">🎯</div><h3 className="font-bold text-gray-900 mb-2">Work-based applications</h3><p className="text-sm text-gray-500">Applicants submit real work — not a CV. Evaluate execution.</p></div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">📊</div><h3 className="font-bold text-gray-900 mb-2">Submissions dashboard</h3><p className="text-sm text-gray-500">Review all applications. Shortlist, reject, mark winners.</p></div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">📧</div><h3 className="font-bold text-gray-900 mb-2">Email invites included</h3><p className="text-sm text-gray-500">Import CSV or paste emails. Send branded invites from Stated.</p></div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">🌐</div><h3 className="font-bold text-gray-900 mb-2">Public challenge page</h3><p className="text-sm text-gray-500">Shareable URL. Anyone can view and apply without signup.</p></div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">⭐</div><h3 className="font-bold text-gray-900 mb-2">Featured placement</h3><p className="text-sm text-gray-500">Pro and Scale plans get featured on the browse page.</p></div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"><div className="text-2xl mb-3">🔔</div><h3 className="font-bold text-gray-900 mb-2">Instant notifications</h3><p className="text-sm text-gray-500">Email alert on every submission. Submitter gets a confirmation.</p></div>
           </div>
         </div>
       </section>
@@ -139,46 +121,41 @@ export default function ChallengesPage() {
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Pricing</p>
             <h2 className="font-display text-3xl font-extrabold text-gray-900 mb-3">One payment. Challenge goes live.</h2>
-            <p className="text-gray-500 text-sm max-w-lg mx-auto">Prices shown for Hiring Challenge. All types from Rs.249.</p>
+            <p className="text-gray-500 text-sm">Prices shown for Hiring Challenge. All types from Rs.249.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-5 mb-8">
-            {(["basic","pro","scale"] as const).map(p => {
-              const pl = PLANS[p];
-              const price = CHALLENGE_PRICES["hiring"][p];
-              return (
-                <div key={p} className={"border-2 rounded-2xl p-7 relative " + (p === "pro" ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white")}>
-                  {pl.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">{pl.badge}</div>}
-                  <div className={"text-3xl font-extrabold font-display mb-1 " + (p === "pro" ? "text-blue-700" : "text-gray-900")}>Rs.{price.toLocaleString("en-IN")}</div>
-                  <div className="text-sm font-bold text-gray-600 mb-6">{pl.label}</div>
-                  <div className="flex flex-col gap-3 mb-6">
-                    {[["Active duration", pl.durationDays + " days"],["Max submissions", pl.maxSubmissions >= 999999 ? "Unlimited" : String(pl.maxSubmissions)],["Email invites", pl.emailInvites + " included"],["CSV import", pl.csvImport ? "Yes" : "No"],["Featured", pl.featured ? "Yes" : "No"]].map(([label,val]) => (
-                      <div key={label} className="flex justify-between text-sm">
-                        <span className="text-gray-500">{label}</span>
-                        <span className={"font-semibold " + (val === "Yes" ? "text-green-600" : val === "No" ? "text-gray-300" : "text-gray-900")}>{val}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Link href="/challenges/new" className={"block text-center text-sm font-semibold py-3 rounded-xl no-underline " + (p === "pro" ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700")}>Post with {pl.label}</Link>
-                </div>
-              );
-            })}
-          </div>
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-            <div className="text-sm font-bold text-gray-900 mb-4">Need more email invites? Add on anytime.</div>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {[[25,149],[50,249],[100,449],[250,899],[500,1599]].map(([c,pr]) => (
-                <div key={c} className="bg-white border border-gray-200 rounded-xl p-3 text-center">
-                  <div className="text-lg font-bold text-gray-900">{c}</div>
-                  <div className="text-xs text-gray-400 mb-1">contacts</div>
-                  <div className="text-sm font-bold text-blue-600">Rs.{pr}</div>
-                </div>
-              ))}
+          <div className="grid md:grid-cols-3 gap-5">
+            <div className="border-2 border-gray-200 rounded-2xl p-7">
+              <div className="text-3xl font-extrabold font-display text-gray-900 mb-1">Rs.799</div>
+              <div className="text-sm font-bold text-gray-600 mb-4">Basic</div>
+              <div className="text-sm text-gray-500 mb-1">30 days active</div>
+              <div className="text-sm text-gray-500 mb-1">100 submissions</div>
+              <div className="text-sm text-gray-500 mb-6">50 email invites</div>
+              <Link href="/challenges/new" className="block text-center text-sm font-semibold py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 no-underline">Post Basic</Link>
+            </div>
+            <div className="border-2 border-blue-600 rounded-2xl p-7 bg-blue-50 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">Most popular</div>
+              <div className="text-3xl font-extrabold font-display text-blue-700 mb-1">Rs.1,999</div>
+              <div className="text-sm font-bold text-gray-600 mb-4">Pro</div>
+              <div className="text-sm text-gray-500 mb-1">60 days active</div>
+              <div className="text-sm text-gray-500 mb-1">500 submissions</div>
+              <div className="text-sm text-gray-500 mb-1">200 email invites</div>
+              <div className="text-sm text-gray-500 mb-6">Featured on Stated</div>
+              <Link href="/challenges/new" className="block text-center text-sm font-semibold py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white no-underline">Post Pro</Link>
+            </div>
+            <div className="border-2 border-gray-200 rounded-2xl p-7">
+              <div className="text-3xl font-extrabold font-display text-gray-900 mb-1">Rs.4,499</div>
+              <div className="text-sm font-bold text-gray-600 mb-4">Scale</div>
+              <div className="text-sm text-gray-500 mb-1">90 days active</div>
+              <div className="text-sm text-gray-500 mb-1">Unlimited submissions</div>
+              <div className="text-sm text-gray-500 mb-1">500 email invites</div>
+              <div className="text-sm text-gray-500 mb-6">CSV import + Featured</div>
+              <Link href="/challenges/new" className="block text-center text-sm font-semibold py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 no-underline">Post Scale</Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="browse" className="bg-white px-6 py-16">
+      <section id="browse" className="bg-gray-50 px-6 py-16">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-6">
             <div>
@@ -187,10 +164,10 @@ export default function ChallengesPage() {
             </div>
             <div className="flex gap-3">
               <input type="text" value={q} onChange={e => setQ(e.target.value)} placeholder="Search..." className="border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none w-40" />
-              <Link href="/challenges/new" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">Post a Challenge</Link>
+              <Link href="/challenges/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">Post a Challenge</Link>
             </div>
           </div>
-          <div className="flex gap-0 overflow-x-auto border-b border-gray-200 mb-8">
+          <div className="flex overflow-x-auto border-b border-gray-200 mb-8">
             {FILTERS.map(f => (
               <button key={f.v} onClick={() => setFt(f.v)} className={"whitespace-nowrap text-xs font-semibold px-4 py-3 border-b-2 transition-all " + (ft === f.v ? "border-blue-600 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-700")}>{f.l}</button>
             ))}
@@ -200,11 +177,11 @@ export default function ChallengesPage() {
               <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
             </div>
           ) : rows.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="text-4xl mb-4">🔍</div>
               <h3 className="font-display text-xl font-bold text-gray-700 mb-2">No challenges yet</h3>
               <p className="text-gray-400 text-sm mb-6">Be the first to post a challenge.</p>
-              <Link href="/challenges/new" className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Post the first one</Link>
+              <Link href="/challenges/new" className="bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">Post the first one</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,7 +189,7 @@ export default function ChallengesPage() {
                 const cfg = CHALLENGE_TYPES[c.type as ChallengeType];
                 const ac = AC[c.type] || AC["hiring"];
                 return (
-                  <Link key={c.id} href={"/challenges/" + c.id} className={"bg-white border " + ac[0] + " rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline"}>
+                  <Link key={c.id} href={"/challenges/" + c.id} className={"bg-white border " + ac[0] + " rounded-2xl overflow-hidden hover:shadow-lg transition-all no-underline"}>
                     <div className={"h-1 w-full bg-gradient-to-r " + ac[3]} />
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -220,7 +197,7 @@ export default function ChallengesPage() {
                         {c.featured && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">Featured</span>}
                         <span className="ml-auto text-xs text-gray-400">{c.expires_at ? dl(c.expires_at) : ""}</span>
                       </div>
-                      <h3 className="font-display text-base font-bold text-gray-900 leading-snug mb-2">{c.title}</h3>
+                      <h3 className="font-display text-base font-bold text-gray-900 mb-2">{c.title}</h3>
                       <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{c.description}</p>
                       <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 mb-4">
                         <span className="text-xs text-gray-400">What you get: </span>
@@ -245,18 +222,15 @@ export default function ChallengesPage() {
       <section className="bg-gray-900 px-6 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to find who you need?</h2>
-          <p className="text-gray-400 text-base font-light leading-relaxed mb-8">Post a challenge. Receive real work. Stop interviewing people who look good on paper.</p>
+          <p className="text-gray-400 text-base leading-relaxed mb-8">Post a challenge. Receive real work. Stop interviewing people who look good on paper.</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Link href="/challenges/new" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-8 py-4 rounded-xl shadow-lg transition-all">Post a Challenge from Rs.249</Link>
-            <Link href="/signup" className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-8 py-4 rounded-xl border border-white/20 transition-all">Create free account</Link>
+            <Link href="/challenges/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-8 py-4 rounded-xl shadow-lg transition-all">Post a Challenge from Rs.249</Link>
+            <Link href="/signup" className="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-8 py-4 rounded-xl border border-white/20 transition-all">Create free account</Link>
           </div>
-          <p className="text-xs text-gray-500 mt-5">Free to browse and apply. No signup needed to view challenges.</p>
+          <p className="text-xs text-gray-500 mt-5">Free to browse and apply. No signup needed.</p>
         </div>
       </section>
 
     </div>
-    </div>
-    </div>
-    </div>
   );
-      }
+}
