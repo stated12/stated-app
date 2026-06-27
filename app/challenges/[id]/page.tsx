@@ -292,10 +292,10 @@ export default async function ChallengePage({ params }: { params: { id: string }
                 </div>
               ) : !session ? (
                 <Link
-                  href={`/signup?redirect=/challenges/${challenge.id}`}
+                  href={`/login?redirect=/challenges/${challenge.id}`}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-3.5 rounded-xl transition-all no-underline"
                 >
-                  Sign up to respond
+                  Sign in to respond
                 </Link>
               ) : null}
             </div>
@@ -361,4 +361,4 @@ export default async function ChallengePage({ params }: { params: { id: string }
       </div>
     </div>
   );
-}
+      }
