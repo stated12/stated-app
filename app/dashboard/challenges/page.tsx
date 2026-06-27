@@ -199,8 +199,8 @@ function ChallengeCard({ c }: { c: any }) {
           </>
         )}
         {c.status === "draft" && (
-          <Link href={`/challenges/new?resume=${c.id}`}
-            style={{ fontSize: 12, fontWeight: 600, color: "#d97706", background: "#fffbeb", padding: "6px 12px", borderRadius: 8, textDecoration: "none" }}>
+          <Link href={`/challenges/${c.id}/pay`}
+            style={{ fontSize: 12, fontWeight: 600, color: "#d97706", background: "#fffbeb", border: "1px solid #fde68a", padding: "6px 12px", borderRadius: 8, textDecoration: "none" }}>
             Complete payment to activate
           </Link>
         )}
