@@ -361,4 +361,4 @@ export default async function ChallengePage({ params }: { params: { id: string }
       </div>
     </div>
   );
-      }
+}
