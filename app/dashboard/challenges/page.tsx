@@ -34,11 +34,12 @@ export default function MyChallengesPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("challenges")
-        .select("id, title, type, status, submission_count, view_count, expires_at, plan, featured, created_at, invites_sent, invites_remaining")
+        .select("id, title, type, status, submission_count, view_count, expires_at, plan, featured, created_at, invites_sent, invites_included")
         .eq("posted_by_user_id", user.id)
         .order("created_at", { ascending: false });
+      if (error) console.error("My Challenges fetch error:", error);
       setChallenges(data || []);
       setLoading(false);
     }
@@ -194,7 +195,7 @@ function ChallengeCard({ c }: { c: any }) {
             </Link>
             <Link href={`/challenges/${c.id}/invite`}
               style={{ fontSize: 12, fontWeight: 500, color: "#374151", background: "#f9fafb", border: "1px solid #e5e7eb", padding: "6px 12px", borderRadius: 8, textDecoration: "none" }}>
-              Send invites ({c.invites_remaining} left)
+              Send invites ({c.invites_included - c.invites_sent} left)
             </Link>
           </>
         )}
