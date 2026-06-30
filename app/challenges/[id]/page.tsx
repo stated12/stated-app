@@ -82,15 +82,38 @@ export default async function ChallengePage({ params }: { params: { id: string }
       require_text, require_link, require_file, require_video,
       featured, plan, location, tags,
       posted_by_type, posted_by_user_id, company_id,
-      view_count,
-      profiles!posted_by_user_id ( full_name, username, avatar_url ),
-      companies ( name, slug, logo_url )
+      view_count
     `)
     .eq("id", params.id)
     .single();
 
   if (!challenge || !["active", "closed"].includes(challenge.status)) {
     notFound();
+  }
+
+  // Fetch poster name separately to avoid FK join issues
+  let posterName = "Someone on Stated";
+  let posterSlug = "/";
+  if (challenge.posted_by_type === "company" && challenge.company_id) {
+    const { data: companyData } = await supabase
+      .from("companies")
+      .select("name, slug")
+      .eq("id", challenge.company_id)
+      .maybeSingle();
+    if (companyData) {
+      posterName = (companyData as any).name;
+      posterSlug = `/company/${(companyData as any).slug}`;
+    }
+  } else {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("full_name, username")
+      .eq("id", challenge.posted_by_user_id)
+      .maybeSingle();
+    if (profileData) {
+      posterName = (profileData as any).full_name || (profileData as any).username || posterName;
+      posterSlug = `/profile/${(profileData as any).username}`;
+    }
   }
 
   // Increment view count (fire and forget)
@@ -110,14 +133,6 @@ export default async function ChallengePage({ params }: { params: { id: string }
 
   const isOwner = session?.user?.id === challenge.posted_by_user_id;
   const typeConfig = CHALLENGE_TYPES[challenge.type as ChallengeType];
-  const companies = challenge.companies as any;
-  const profiles = challenge.profiles as any;
-  const posterName = challenge.posted_by_type === "company"
-    ? companies?.name
-    : profiles?.full_name || profiles?.username;
-  const posterSlug = challenge.posted_by_type === "company"
-    ? `/company/${companies?.slug}`
-    : `/profile/${profiles?.username}`;
 
   const submissionFields = [
     { key: "require_text",  label: "Text response", icon: "📝" },
