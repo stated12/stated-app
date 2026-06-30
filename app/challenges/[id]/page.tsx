@@ -8,7 +8,8 @@ import ChallengeSubmitForm from "./ChallengeSubmitForm";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const { data } = await supabase
     .from("challenges")
     .select("title, description, type")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!data) return { title: "Challenge not found | Stated" };
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     openGraph: {
       title: data.title,
       description: data.description?.slice(0, 160),
-      url: `https://app.stated.in/challenges/${params.id}`,
+      url: `https://app.stated.in/challenges/${id}`,
       siteName: "Stated",
       type: "article",
     },
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title: data.title,
       description: data.description?.slice(0, 160),
     },
-    alternates: { canonical: `https://app.stated.in/challenges/${params.id}` },
+    alternates: { canonical: `https://app.stated.in/challenges/${id}` },
   };
 }
 
@@ -55,7 +56,8 @@ function daysLeft(expiresAt: string) {
   return `${days} days left`;
 }
 
-export default async function ChallengePage({ params }: { params: { id: string } }) {
+export default async function ChallengePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -84,7 +86,7 @@ export default async function ChallengePage({ params }: { params: { id: string }
       posted_by_type, posted_by_user_id, company_id,
       view_count
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!challenge || !["active", "closed"].includes(challenge.status)) {
@@ -117,7 +119,7 @@ export default async function ChallengePage({ params }: { params: { id: string }
   }
 
   // Increment view count (fire and forget)
-  supabase.rpc("increment_challenge_views", { challenge_uuid: params.id });
+  supabase.rpc("increment_challenge_views", { challenge_uuid: id });
 
   // Check if current user already submitted
   let alreadySubmitted = false;
@@ -125,7 +127,7 @@ export default async function ChallengePage({ params }: { params: { id: string }
     const { data: existing } = await supabase
       .from("challenge_submissions")
       .select("id")
-      .eq("challenge_id", params.id)
+      .eq("challenge_id", id)
       .eq("submitted_by", session.user.id)
       .single();
     alreadySubmitted = !!existing;
@@ -141,7 +143,7 @@ export default async function ChallengePage({ params }: { params: { id: string }
     { key: "require_video", label: "Video link",     icon: "🎬" },
   ].filter((f) => (challenge as any)[f.key] !== "disabled");
 
-  const shareUrl = `https://app.stated.in/challenges/${params.id}`;
+  const shareUrl = `https://app.stated.in/challenges/${id}`;
   const shareText = `"${challenge.title}" — a challenge on Stated. Submit real work to respond.`;
 
   return (
