@@ -10,10 +10,11 @@ function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const inviteToken   = searchParams.get("invite");
-  const errorParam    = searchParams.get("error");
+  const inviteToken    = searchParams.get("invite");
+  const redirectParam  = searchParams.get("redirect");
+  const errorParam     = searchParams.get("error");
   const confirmedParam = searchParams.get("confirmed");
-  const typeParam     = searchParams.get("type"); // "company" if confirmed company signup
+  const typeParam      = searchParams.get("type"); // "company" if confirmed company signup
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +42,14 @@ function LoginForm() {
 
     if (inviteToken) {
       router.push("/invite/" + inviteToken);
+      router.refresh();
+      return;
+    }
+
+    // Honor explicit redirect param (e.g. coming from a challenge page)
+    // This takes priority over the default dashboard routing below
+    if (redirectParam) {
+      router.push(redirectParam);
       router.refresh();
       return;
     }
@@ -86,7 +95,7 @@ function LoginForm() {
       <div style={{ textAlign: "center" as const, marginBottom: 28 }}>
         <div style={{ fontSize: 28, fontWeight: 800, color: "#4338ca", marginBottom: 6 }}>Stated</div>
         <div style={{ fontSize: 13, color: "#9ca3af" }}>
-          {inviteToken ? "Login to accept your invitation" : "Login to your accountability profile"}
+          {inviteToken ? "Login to accept your invitation" : redirectParam ? "Login to continue" : "Login to your accountability profile"}
         </div>
       </div>
 
@@ -114,6 +123,16 @@ function LoginForm() {
             <path d="M2 8h12M8 2l6 6-6 6" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span style={{ fontSize: 12, fontWeight: 600, color: "#0e7490" }}>You have a pending company invitation</span>
+        </div>
+      )}
+
+      {/* Redirect context banner */}
+      {!inviteToken && redirectParam && (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: "10px 14px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 8h12M8 2l6 6-6 6" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8" }}>Log in to continue where you left off</span>
         </div>
       )}
 
@@ -158,7 +177,7 @@ function LoginForm() {
 
       <p style={{ textAlign: "center" as const, fontSize: 13, color: "#9ca3af", marginTop: 20 }}>
         Don't have an account?{" "}
-        <Link href="/signup" style={{ color: "#4338ca", fontWeight: 600, textDecoration: "none" }}>
+        <Link href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : "/signup"} style={{ color: "#4338ca", fontWeight: 600, textDecoration: "none" }}>
           Create account
         </Link>
       </p>
