@@ -7,7 +7,8 @@ import SubmissionActions from "./SubmissionActions";
 
 export const dynamic = "force-dynamic";
 
-export default async function SubmissionsPage({ params }: { params: { id: string } }) {
+export default async function SubmissionsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,13 +22,13 @@ export default async function SubmissionsPage({ params }: { params: { id: string
   );
   const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) redirect(`/login?redirect=/challenges/${params.id}/submissions`);
+  if (!session) redirect(`/login?redirect=/challenges/${id}/submissions`);
 
   // Fetch challenge — must be owner
   const { data: challenge } = await supabase
     .from("challenges")
     .select("id, title, type, status, submission_count, max_submissions, posted_by_user_id, expires_at, invites_sent, invites_remaining")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!challenge) notFound();
@@ -41,7 +42,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
       text_response, link_url, file_url, file_name, video_url,
       profiles!submitted_by ( full_name, username, avatar_url )
     `)
-    .eq("challenge_id", params.id)
+    .eq("challenge_id", id)
     .order("created_at", { ascending: false });
 
   const typeConfig = CHALLENGE_TYPES[challenge.type as ChallengeType];
@@ -241,4 +242,4 @@ export default async function SubmissionsPage({ params }: { params: { id: string
       </div>
     </div>
   );
-                             }
+}
