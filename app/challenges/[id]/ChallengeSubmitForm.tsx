@@ -1,7 +1,8 @@
-"use client"; 
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 interface Props {
   challengeId:  string;
@@ -24,9 +25,59 @@ export default function ChallengeSubmitForm({
   const [videoUrl, setVideoUrl]           = useState("");
   const [fileUrl, setFileUrl]             = useState("");
   const [fileName, setFileName]           = useState("");
+  const [uploading, setUploading]         = useState(false);
+  const [uploadError, setUploadError]     = useState("");
   const [submitting, setSubmitting]       = useState(false);
   const [error, setError]                 = useState("");
   const [success, setSuccess]             = useState(false);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File must be under 10MB.");
+      return;
+    }
+
+    setUploadError("");
+    setUploading(true);
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setUploadError("You must be logged in to upload."); setUploading(false); return; }
+
+      const ext = file.name.split(".").pop();
+      const path = `${challengeId}/${user.id}-${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("challenge-submissions")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadErr) {
+        setUploadError("Upload failed: " + uploadErr.message);
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("challenge-submissions")
+        .getPublicUrl(path);
+
+      setFileUrl(urlData.publicUrl);
+      setFileName(file.name);
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeFile() {
+    setFileUrl("");
+    setFileName("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -149,7 +200,7 @@ export default function ChallengeSubmitForm({
             </div>
           )}
 
-          {/* File upload */}
+          {/* File upload — real upload via Supabase Storage */}
           {requireFile !== "disabled" && (
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-1.5">
@@ -158,24 +209,52 @@ export default function ChallengeSubmitForm({
                 {requireFile === "optional" && <span className="text-gray-400 text-xs font-normal ml-1">(optional)</span>}
               </label>
               <p className="text-xs text-gray-400 mb-2">
-                Upload to Google Drive, Dropbox, or any cloud storage and paste the link below.
-                Max 10MB. PDF, DOC, images accepted.
+                Upload directly — PDF, DOC, images. Max 10MB.
               </p>
-              <input
-                type="url"
-                value={fileUrl}
-                onChange={(e) => setFileUrl(e.target.value)}
-                placeholder="Paste a shareable link to your file..."
-                required={requireFile === "required"}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              />
-              <input
-                type="text"
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                placeholder="File name (optional, e.g. MyProposal.pdf)"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none focus:border-blue-400 transition-all mt-2"
-              />
+
+              {!fileUrl ? (
+                <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-8 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all">
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                  {uploading ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+                      <span className="text-sm text-gray-500">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+                        <path d="M12 4v12m0-12l-4 4m4-4l4 4M4 18h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="text-sm text-gray-600 font-medium">Click to upload a file</span>
+                      <span className="text-xs text-gray-400">PDF, DOC, or image up to 10MB</span>
+                    </>
+                  )}
+                </label>
+              ) : (
+                <div className="flex items-center justify-between border border-green-200 bg-green-50 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg">📎</span>
+                    <span className="text-sm text-gray-700 font-medium truncate">{fileName}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="text-xs font-semibold text-red-600 hover:text-red-700 flex-shrink-0 ml-2"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="text-xs text-red-600 mt-2">{uploadError}</div>
+              )}
             </div>
           )}
 
@@ -194,7 +273,7 @@ export default function ChallengeSubmitForm({
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || uploading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-4 rounded-xl transition-all"
           >
             {submitting ? "Submitting..." : "Submit response"}
