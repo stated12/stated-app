@@ -28,18 +28,24 @@ function daysLeft(expiresAt: string) {
 export default function MyChallengesPage() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
+  const [debugInfo, setDebugInfo]   = useState<string>("");
 
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setDebugInfo("No user session found."); setLoading(false); return; }
       const { data, error } = await supabase
         .from("challenges")
         .select("id, title, type, status, submission_count, view_count, expires_at, plan, featured, created_at, invites_sent, invites_included")
         .eq("posted_by_user_id", user.id)
         .order("created_at", { ascending: false });
-      if (error) console.error("My Challenges fetch error:", error);
+      if (error) {
+        console.error("My Challenges fetch error:", error);
+        setDebugInfo(`Query error: ${error.message} (code: ${error.code})`);
+      } else {
+        setDebugInfo(`User ID: ${user.id} | Rows found: ${data?.length || 0}`);
+      }
       setChallenges(data || []);
       setLoading(false);
     }
@@ -64,6 +70,11 @@ export default function MyChallengesPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.03em" }}>My Challenges</h1>
+          {debugInfo && (
+            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2, fontFamily: "monospace", wordBreak: "break-all" }}>
+              {debugInfo}
+            </div>
+          )}
           <p style={{ fontSize: 13, color: "#6b7280", marginTop: 4, fontWeight: 400 }}>
             Manage your posted challenges, view submissions and send invites.
           </p>
