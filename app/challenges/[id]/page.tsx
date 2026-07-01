@@ -107,14 +107,15 @@ export default async function ChallengePage({ params }: { params: Promise<{ id: 
       posterSlug = `/company/${(companyData as any).slug}`;
     }
   } else {
-    const { data: profileData } = await supabase
+    const { data: profileData, error: profileErr } = await supabase
       .from("profiles")
-      .select("full_name, username")
+      .select("display_name, username")
       .eq("id", challenge.posted_by_user_id)
       .maybeSingle();
+    if (profileErr) console.error("Poster profile fetch error:", profileErr);
     if (profileData) {
-      posterName = (profileData as any).full_name || (profileData as any).username || posterName;
-      posterSlug = `/profile/${(profileData as any).username}`;
+      posterName = (profileData as any).display_name || (profileData as any).username || posterName;
+      posterSlug = `/u/${(profileData as any).username}`;
     }
   }
 
@@ -205,7 +206,7 @@ export default async function ChallengePage({ params }: { params: Promise<{ id: 
                       {posterName}
                     </div>
                     <div className="text-xs text-gray-400 capitalize">
-                      {challenge.posted_by_type} &middot; {challenge.location || "India"}
+                      {challenge.posted_by_type} &middot; {challenge.location || "India"} &middot; <span style={{ fontFamily: "monospace", fontSize: 10 }}>uid:{challenge.posted_by_user_id?.slice(0,8)}</span>
                     </div>
                   </div>
                 </Link>
