@@ -33,18 +33,30 @@ export default function MyChallengesPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setDebugInfo("No user session found."); setLoading(false); return; }
-      const { data, error } = await supabase
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+
+      if (userErr || !user) {
+        setDebugInfo(`No session. Error: ${userErr?.message || "none"}`);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error, count } = await supabase
         .from("challenges")
-        .select("id, title, type, status, submission_count, view_count, expires_at, plan, featured, created_at, invites_sent, invites_included")
+        .select("id, title, type, status, submission_count, view_count, expires_at, plan, featured, created_at, invites_sent, invites_included", { count: "exact" })
         .eq("posted_by_user_id", user.id)
         .order("created_at", { ascending: false });
+
+      // Also test: can this session see ANY challenges at all (RLS sanity check)
+      const { data: anyData, count: anyCount } = await supabase
+        .from("challenges")
+        .select("id", { count: "exact" })
+        .limit(1);
+
       if (error) {
-        console.error("My Challenges fetch error:", error);
-        setDebugInfo(`Query error: ${error.message} (code: ${error.code})`);
+        setDebugInfo(`Query error: ${error.message} | code: ${error.code}`);
       } else {
-        setDebugInfo(`User ID: ${user.id} | Rows found: ${data?.length || 0}`);
+        setDebugInfo(`uid: ${user.id.slice(0,8)}... | filtered rows: ${count ?? data?.length ?? 0} | any-visible rows: ${anyCount ?? 0}`);
       }
       setChallenges(data || []);
       setLoading(false);
