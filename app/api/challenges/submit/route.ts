@@ -37,20 +37,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing challenge_id" }, { status: 400 });
     }
 
-    // ── Fetch challenge with poster profile for notification ───────────────
+    // ── Fetch challenge (no joins - avoid FK relationship issues) ──────────
     const { data: challenge, error: fetchError } = await supabase
       .from("challenges")
       .select(`
         id, title, status,
         require_text, require_link, require_file, require_video,
         submission_count, max_submissions, posted_by_user_id,
-        profiles!posted_by_user_id ( full_name, username )
+        posted_by_type, company_id
       `)
       .eq("id", challenge_id)
       .single();
 
+    if (fetchError) console.error("Submit: challenge fetch error:", fetchError);
     if (fetchError || !challenge) {
       return NextResponse.json({ error: "Challenge not found" }, { status: 404 });
+    }
+
+    // Fetch poster name separately for notification
+    let posterName = "there";
+    let posterEmail = "";
+    if (challenge.posted_by_type === "company" && challenge.company_id) {
+      const { data: companyData } = await supabase
+        .from("companies")
+        .select("name, owner_user_id")
+        .eq("id", challenge.company_id)
+        .maybeSingle();
+      if (companyData) {
+        posterName = (companyData as any).name || posterName;
+      }
+      // Get owner's email from profiles
+      const ownerId = (companyData as any)?.owner_user_id || challenge.posted_by_user_id;
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", ownerId)
+        .maybeSingle();
+      posterEmail = (ownerProfile as any)?.email || "";
+    } else {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("display_name, username, email")
+        .eq("id", challenge.posted_by_user_id)
+        .maybeSingle();
+      if (profileData) {
+        posterName = (profileData as any).display_name || (profileData as any).username || posterName;
+        posterEmail = (profileData as any).email || "";
+      }
     }
 
     if (challenge.status !== "active") {
@@ -112,23 +145,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Send notifications — fire and forget ───────────────────────────────
-    const posterProfile  = (challenge as any).profiles;
-    const posterName     = posterProfile?.full_name || posterProfile?.username || "there";
     const submitterName  = submitterProfile?.full_name || submitterProfile?.username || "Someone";
     const submitterEmail = session.user.email || "";
     const newCount       = (challenge.submission_count || 0) + 1;
-
-    // Fetch poster email from auth (only available server-side via service role)
-    // We use the submitter email for confirmation and poster gets notified via their
-    // registered email stored in profiles or auth — fetch from supabase admin if available
-    // For now poster email comes from auth lookup using posted_by_user_id
-    const { data: posterAuthData } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("id", challenge.posted_by_user_id)
-      .maybeSingle();
-
-    const posterEmail = (posterAuthData as any)?.email || "";
 
     fetch(
       `${process.env.NEXT_PUBLIC_APP_URL || "https://app.stated.in"}/api/challenges/notify`,
