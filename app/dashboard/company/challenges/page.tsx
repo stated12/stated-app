@@ -189,7 +189,7 @@ function ChallengeCard({ c, accent }: { c: any; accent: string }) {
           { label: "Submissions", val: c.submission_count },
           { label: "Views",       val: c.view_count       },
           { label: "Invites sent",val: c.invites_sent || 0},
-          { label: "Invites left",val: (c.invites_included - c.invites_sent) ?? "--" },
+          { label: "Invites left",val: c.invites_included - c.invites_sent },
           { label: "Plan",        val: c.plan?.toUpperCase() || "--" },
         ].map(({ label, val }) => (
           <div key={label}>
@@ -212,7 +212,7 @@ function ChallengeCard({ c, accent }: { c: any; accent: string }) {
             </Link>
             <Link href={`/challenges/${c.id}/invite`}
               style={{ fontSize: 12, fontWeight: 500, color: "#374151", background: "#f9fafb", border: "1px solid #e5e7eb", padding: "6px 12px", borderRadius: 8, textDecoration: "none" }}>
-              Send invites ({(c.invites_included - c.invites_sent) ?? 0} left)
+              Send invites ({c.invites_included - c.invites_sent} left)
             </Link>
           </>
         )}
