@@ -1,33 +1,11 @@
+"use client";
+
 export const dynamic = "force-dynamic";
 
-import type { Metadata } from "next";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CommitmentFeed from "@/components/CommitmentFeed";
-
-export const metadata: Metadata = {
-  title: "Stated - Say it. Do it. Prove it.",
-  description:
-    "Stated is the public accountability platform where individuals, companies, founders, NGOs and government initiatives post commitments, run challenges, and build a verifiable record of execution. Browse free - no signup required.",
-  metadataBase: new URL("https://app.stated.in"),
-  openGraph: {
-    title: "Stated - Say it. Do it. Prove it.",
-    description: "Post commitments publicly. Build credibility over time. Every promise you keep raises your reputation score. Free to browse - no signup needed.",
-    url: "https://app.stated.in",
-    siteName: "Stated",
-    images: [{ url: "/og-image.png", width: 1270, height: 760, alt: "Stated - Say it. Do it. Prove it." }],
-    type: "website",
-    locale: "en_US",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Stated - Say it. Do it. Prove it.",
-    description: "Post commitments publicly. Build credibility over time. Free to browse - no signup needed.",
-    images: ["/og-image.png"],
-  },
-  keywords: ["public accountability", "commitments", "credibility", "follow-through", "reputation", "goal tracking", "public goals", "accountability platform", "hiring challenge", "cofounder hunt", "execution platform"],
-  alternates: { canonical: "https://app.stated.in" },
-};
 
 const howSteps = [
   { num: "01", icon: "📝", name: "Commit",   desc: "Post what you're going to do - publicly. Your word, your name, your timestamp. On record forever." },
@@ -53,14 +31,14 @@ const execRewards = [
 ];
 
 const challengeTypes = [
-  { icon: "💼", title: "Hiring Challenge",   for: "Companies & Anyone",          desc: "Post a real task. Receive actual work as applications. Hire the best executor - not the best CV writer.",          href: "/challenges?type=hiring",          top: "from-blue-600 to-blue-400",     bg: "bg-blue-50",   badge: null           },
-  { icon: "🤝", title: "Cofounder Hunt",     for: "Founders & Individuals",      desc: "Post a scoped task. See who actually builds with you before committing. Find the right partner with proof.",         href: "/challenges?type=cofounder",       top: "from-violet-600 to-violet-400", bg: "bg-violet-50", badge: null           },
-  { icon: "🔗", title: "Partner Hunt",       for: "Companies & Founders",        desc: "Find integration partners, resellers, or allies. Evaluate real intent through a proposal - not a pitch.",           href: "/challenges?type=partner",         top: "from-green-600 to-green-400",   bg: "bg-green-50",  badge: null           },
-  { icon: "🧠", title: "Consultant Hunt",    for: "Companies & Anyone",          desc: "Post the problem. Get a solution as the application. Hire the expert who already showed you what they can do.",     href: "/challenges?type=consultant",      top: "from-teal-600 to-teal-400",     bg: "bg-teal-50",   badge: null           },
-  { icon: "📡", title: "Investor Signal",    for: "Founders & Companies",        desc: "Let investors evaluate your real execution history - not a polished deck. 18 months of proof speaks louder.",       href: "/challenges?type=investor_signal", top: "from-amber-600 to-amber-400",   bg: "bg-amber-50",  badge: null           },
-  { icon: "⚡", title: "Collaborator Hunt",  for: "Individuals & Creators",      desc: "Find collaborators who prove they will add value before joining. No more co-creators who disappear after week one.", href: "/challenges?type=collaborator",    top: "from-rose-600 to-rose-400",     bg: "bg-rose-50",   badge: null           },
-  { icon: "🌱", title: "Impact Challenge",   for: "NGOs & Govt. Initiatives",    desc: "NGOs and government initiatives post public accountability commitments and open challenges for volunteers or partners.", href: "/challenges?type=impact",        top: "from-slate-500 to-slate-400",   bg: "bg-slate-50",  badge: null           },
-  { icon: "🎓", title: "Grant & Fellowship", for: "Institutions & Accelerators", desc: "Accelerators and grant bodies post selection challenges. The best execution wins the seat - not the best essay.",  href: "/challenges?type=grant",           top: "from-violet-600 to-amber-400",  bg: "bg-violet-50", badge: null           },
+  { icon: "💼", title: "Hiring Challenge",   for: "Companies & Anyone",          desc: "Post a real task. Receive actual work as applications. Hire the best executor - not the best CV writer.",          href: "/challenges?type=hiring",          top: "from-blue-600 to-blue-400",     bg: "bg-blue-50"   },
+  { icon: "🤝", title: "Cofounder Hunt",     for: "Founders & Individuals",      desc: "Post a scoped task. See who actually builds with you before committing. Find the right partner with proof.",         href: "/challenges?type=cofounder",       top: "from-violet-600 to-violet-400", bg: "bg-violet-50" },
+  { icon: "🔗", title: "Partner Hunt",       for: "Companies & Founders",        desc: "Find integration partners, resellers, or allies. Evaluate real intent through a proposal - not a pitch.",           href: "/challenges?type=partner",         top: "from-green-600 to-green-400",   bg: "bg-green-50"  },
+  { icon: "🧠", title: "Consultant Hunt",    for: "Companies & Anyone",          desc: "Post the problem. Get a solution as the application. Hire the expert who already showed you what they can do.",     href: "/challenges?type=consultant",      top: "from-teal-600 to-teal-400",     bg: "bg-teal-50"   },
+  { icon: "📡", title: "Investor Signal",    for: "Founders & Companies",        desc: "Let investors evaluate your real execution history - not a polished deck. 18 months of proof speaks louder.",       href: "/challenges?type=investor_signal", top: "from-amber-600 to-amber-400",   bg: "bg-amber-50"  },
+  { icon: "⚡", title: "Collaborator Hunt",  for: "Individuals & Creators",      desc: "Find collaborators who prove they will add value before joining. No more co-creators who disappear after week one.", href: "/challenges?type=collaborator",    top: "from-rose-600 to-rose-400",     bg: "bg-rose-50"   },
+  { icon: "🌱", title: "Impact Challenge",   for: "NGOs & Govt. Initiatives",    desc: "NGOs and government initiatives post public accountability commitments and open challenges for volunteers or partners.", href: "/challenges?type=impact",        top: "from-slate-500 to-slate-400",   bg: "bg-slate-50"  },
+  { icon: "🎓", title: "Grant & Fellowship", for: "Institutions & Accelerators", desc: "Accelerators and grant bodies post selection challenges. The best execution wins the seat - not the best essay.",  href: "/challenges?type=grant",           top: "from-violet-600 to-amber-400",  bg: "bg-violet-50" },
 ];
 
 const principlePulls = [
@@ -69,62 +47,96 @@ const principlePulls = [
   { quote: "Be a warrior. We finish what we start. Not for the applause - but for the integrity of the promise.", label: "Authenticity" },
 ];
 
-export default async function HomePage() {
+export default function HomePage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col bg-white text-gray-900">
 
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold">✓</div>
             <span className="font-display text-xl font-bold text-gray-900 tracking-tight">stated</span>
           </Link>
-          <nav className="flex items-center gap-1">
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
             <Link href="/explore"    className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Explore</Link>
             <Link href="/challenges" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Challenges</Link>
             <Link href="/principles" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Principles</Link>
             <Link href="/login"      className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Login</Link>
             <Link href="/signup"     className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-sm">Sign up</Link>
           </nav>
+
+          {/* Mobile: Login button always visible + hamburger for rest */}
+          <div className="flex md:hidden items-center gap-2">
+            <Link href="/login" className="text-gray-700 text-sm font-semibold px-3 py-2 rounded-lg hover:bg-gray-100 transition-all">
+              Login
+            </Link>
+            <Link href="/signup" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm whitespace-nowrap">
+              Sign up
+            </Link>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Menu"
+              className="p-2 -mr-1 text-gray-700"
+            >
+              {menuOpen ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-1 shadow-lg">
+            <Link href="/explore"    onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Explore</Link>
+            <Link href="/challenges" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Challenges</Link>
+            <Link href="/principles" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Principles</Link>
+          </div>
+        )}
       </header>
 
       {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-0 overflow-hidden" style={{ background: "linear-gradient(180deg,#eef5ff 0%,#ffffff 100%)" }}>
+      <section className="relative pt-28 sm:pt-32 pb-0 overflow-hidden" style={{ background: "linear-gradient(180deg,#eef5ff 0%,#ffffff 100%)" }}>
         <div className="hero-dots absolute inset-0 opacity-70 pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
 
-          <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-blue-700 text-xs font-semibold tracking-wide uppercase px-4 py-2 rounded-full mb-8 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-blue-500 pulse-dot" />
-            Challenges are now Live
+          <div className="inline-flex items-center gap-2 bg-white border border-blue-200 text-blue-700 text-xs font-semibold tracking-wide uppercase px-3 sm:px-4 py-2 rounded-full mb-6 sm:mb-8 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-blue-500 pulse-dot shrink-0" />
+            <span>Challenges are now Live</span>
           </div>
 
-          <h1 className="font-display text-5xl md:text-7xl font-extrabold text-gray-900 leading-[1.02] tracking-tight mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-extrabold text-gray-900 leading-[1.05] sm:leading-[1.02] tracking-tight mb-5 sm:mb-6">
             Say it publicly.<br />
             <span className="text-blue-600">Do it publicly.</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8 font-light">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-8 font-light px-2">
             The public accountability platform for{" "}
             <strong className="text-gray-900 font-semibold">individuals, companies, founders, NGOs</strong>{" "}
             and organisations. Post commitments. Run hiring and partner challenges. Build credibility that compounds.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8 sm:mb-10 px-2">
             {[
               { icon: "📝", label: "Post commitments"  },
               { icon: "🎯", label: "Run challenges"    },
               { icon: "📊", label: "Track progress"    },
               { icon: "🏆", label: "Build credibility" },
             ].map(({ icon, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-full shadow-sm">
+              <div key={label} className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-200 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm">
                 <span>{icon}</span> {label}
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8 px-2">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5">
               Start free - 5 commitments included
             </Link>
@@ -133,23 +145,23 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <form action="/search" method="GET" className="flex max-w-xl mx-auto bg-white border border-gray-300 rounded-xl overflow-hidden shadow-md mb-14">
-            <input type="text" name="q" placeholder="Search commitments, people or organisations..." className="flex-1 px-5 py-3.5 text-gray-900 text-sm outline-none placeholder-gray-400 bg-transparent" />
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 transition-colors shrink-0">Search</button>
+          <form action="/search" method="GET" className="flex max-w-xl mx-auto bg-white border border-gray-300 rounded-xl overflow-hidden shadow-md mb-12 sm:mb-14 mx-4 sm:mx-auto">
+            <input type="text" name="q" placeholder="Search commitments, people..." className="flex-1 min-w-0 px-4 sm:px-5 py-3.5 text-gray-900 text-sm outline-none placeholder-gray-400 bg-transparent" />
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 sm:px-6 transition-colors shrink-0">Search</button>
           </form>
         </div>
       </section>
 
       {/* ── WHAT IS STATED ──────────────────────────────────────────────── */}
-      <section className="bg-white py-24 px-6">
+      <section className="bg-white py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
             What is Stated
           </p>
-          <div className="grid md:grid-cols-2 gap-14 items-start">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
             <div>
-              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
                 The platform where your <span className="text-blue-600">word</span> becomes your <span className="text-blue-600">record.</span>
               </h2>
               <p className="text-gray-600 text-base leading-relaxed mb-8">
@@ -169,8 +181,8 @@ export default async function HomePage() {
             </div>
             <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
               <div className="grid grid-cols-2">
-                <div className="bg-red-50 px-5 py-3 border-b border-r border-gray-200"><span className="text-xs font-bold text-red-600 uppercase tracking-wider">Everywhere else</span></div>
-                <div className="bg-green-50 px-5 py-3 border-b border-gray-200"><span className="text-xs font-bold text-green-700 uppercase tracking-wider">On Stated</span></div>
+                <div className="bg-red-50 px-3 sm:px-5 py-3 border-b border-r border-gray-200"><span className="text-xs font-bold text-red-600 uppercase tracking-wider">Everywhere else</span></div>
+                <div className="bg-green-50 px-3 sm:px-5 py-3 border-b border-gray-200"><span className="text-xs font-bold text-green-700 uppercase tracking-wider">On Stated</span></div>
               </div>
               {[
                 ["Claims without proof",                  "Every commitment has timestamped proof"  ],
@@ -180,10 +192,10 @@ export default async function HomePage() {
                 ["Tools track tasks, not accountability", "Stated tracks commitments with proof"    ],
               ].map(([bad, good], i) => (
                 <div key={i} className="grid grid-cols-2">
-                  <div className="px-5 py-3.5 border-b border-r border-gray-100 text-sm text-gray-400 flex items-start gap-2">
+                  <div className="px-3 sm:px-5 py-3.5 border-b border-r border-gray-100 text-xs sm:text-sm text-gray-400 flex items-start gap-2">
                     <span className="shrink-0 mt-0.5 text-red-300">-</span>{bad}
                   </div>
-                  <div className="px-5 py-3.5 border-b border-gray-100 text-sm text-gray-800 font-medium flex items-start gap-2">
+                  <div className="px-3 sm:px-5 py-3.5 border-b border-gray-100 text-xs sm:text-sm text-gray-800 font-medium flex items-start gap-2">
                     <span className="text-green-600 font-bold shrink-0 mt-0.5">✓</span>{good}
                   </div>
                 </div>
@@ -194,19 +206,19 @@ export default async function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
-      <section className="bg-gray-900 py-24 px-6">
+      <section className="bg-gray-900 py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-blue-400 inline-block rounded" />
             How it works
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Four steps. Public record. Forever.</h2>
-          <p className="text-gray-400 text-base mb-14 max-w-md">The simplest accountability system ever built. No fluff, no complexity.</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Four steps. Public record. Forever.</h2>
+          <p className="text-gray-400 text-sm sm:text-base mb-10 sm:mb-14 max-w-md">The simplest accountability system ever built. No fluff, no complexity.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {howSteps.map(({ num, icon, name, desc }) => (
-              <div key={name} className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 hover:border-blue-500/50 hover:-translate-y-1 transition-all">
-                <div className="text-white/[0.08] font-display font-extrabold text-3xl leading-none mb-3">{num}</div>
-                <div className="text-3xl mb-4">{icon}</div>
+              <div key={name} className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 sm:p-6 hover:border-blue-500/50 hover:-translate-y-1 transition-all">
+                <div className="text-white/[0.08] font-display font-extrabold text-2xl sm:text-3xl leading-none mb-2 sm:mb-3">{num}</div>
+                <div className="text-2xl sm:text-3xl mb-3 sm:mb-4">{icon}</div>
                 <div className="text-blue-400 font-semibold text-sm mb-2">{name}</div>
                 <div className="text-gray-400 text-xs leading-relaxed">{desc}</div>
               </div>
@@ -215,16 +227,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── STATED PRINCIPLES (moved above feed) ────────────────────────── */}
-      <section className="bg-white py-20 px-6 border-t border-gray-100">
+      {/* ── STATED PRINCIPLES ───────────────────────────────────────────── */}
+      <section className="bg-white py-16 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-end justify-between flex-wrap gap-5 mb-10">
+          <div className="flex items-end justify-between flex-wrap gap-5 mb-8 sm:mb-10">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#b45309" }}>
                 <span className="w-5 h-px inline-block" style={{ background: "#b45309" }} />
                 Stated Principles
               </p>
-              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">What remarkable people stand for</h2>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">What remarkable people stand for</h2>
               <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">Principles, beliefs, and lessons from leaders - stated publicly, in their own words.</p>
             </div>
             <Link href="/principles" className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all">Browse all features</Link>
@@ -232,23 +244,23 @@ export default async function HomePage() {
 
           <Link href="/principles/shilpa-s" className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline">
             <div className="grid md:grid-cols-[300px_1fr]">
-              <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 260 }}>
+              <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 220 }}>
                 <Image src="/shilpa-portrait.jpg" alt="Shilpa S" fill className="object-cover" style={{ objectPosition: "center 20%" }} />
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white border px-3 py-1 rounded-full shadow-sm" style={{ borderColor: "#fde68a" }}>
                   <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#f59e0b" }} />
                   <span className="text-xs tracking-wider uppercase font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>Latest - Issue 001</span>
                 </div>
               </div>
-              <div className="p-8 flex flex-col justify-center">
+              <div className="p-5 sm:p-8 flex flex-col justify-center">
                 <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-3 font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>
                   <span className="w-3 h-px inline-block" style={{ background: "#b45309" }} />
                   Stated Principles - Issue 001
                 </p>
-                <h3 className="text-4xl font-light text-gray-900 leading-none tracking-tight mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                <h3 className="text-3xl sm:text-4xl font-light text-gray-900 leading-none tracking-tight mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   Shilpa <em className="italic" style={{ color: "#d97706" }}>S.</em>
                 </h3>
                 <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">CMD, SheRocks India - Startup Ecosystem Enabler - Investor for MSMEs - Strategic Advisor</p>
-                <blockquote className="text-lg font-light text-gray-600 italic leading-relaxed mb-5 pl-4 border-l-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", borderColor: "#fcd34d" }}>
+                <blockquote className="text-base sm:text-lg font-light text-gray-600 italic leading-relaxed mb-5 pl-4 border-l-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", borderColor: "#fcd34d" }}>
                   "We finish what we start. Not for the applause - but for the integrity of the promise."
                 </blockquote>
                 <div className="flex flex-wrap gap-1.5 mb-5">
@@ -279,15 +291,15 @@ export default async function HomePage() {
       </section>
 
       {/* ── LIVE COMMITMENT FEED ────────────────────────────────────────── */}
-      <section className="bg-gray-50 py-24 px-6 border-t border-gray-100">
+      <section className="bg-gray-50 py-16 sm:py-24 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
             <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
             People on record, right now
             <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 text-center tracking-tight mb-3">Commitments from people & companies</h2>
-          <p className="text-gray-500 text-center text-base mb-12">Real accountability. Public. Timestamped. Cheerable.</p>
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 text-center tracking-tight mb-3">Commitments from people & companies</h2>
+          <p className="text-gray-500 text-center text-sm sm:text-base mb-10 sm:mb-12">Real accountability. Public. Timestamped. Cheerable.</p>
           <CommitmentFeed endpoint="/api/feed?limit=6" showFilters={false} />
           <div className="text-center mt-10">
             <Link href="/explore" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-md hover:-translate-y-0.5">
@@ -297,8 +309,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CHALLENGES — LIVE ───────────────────────────────────────────── */}
-      <section className="bg-white py-24 px-6 border-t border-gray-100">
+      {/* ── CHALLENGES ──────────────────────────────────────────────────── */}
+      <section className="bg-white py-16 sm:py-24 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4">
             <div>
@@ -306,11 +318,11 @@ export default async function HomePage() {
                 <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
                 Stated Challenges
               </p>
-              <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
                 Hire. Partner. Build.<br />
                 <span className="text-blue-600">Based on work - not words.</span>
               </h2>
-              <p className="text-gray-500 text-base max-w-lg">Post a challenge. Receive real work as responses. Find exactly who you need - with execution as the filter, not credentials.</p>
+              <p className="text-gray-500 text-sm sm:text-base max-w-lg">Post a challenge. Receive real work as responses. Find exactly who you need - with execution as the filter, not credentials.</p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
               <Link href="/challenges/new" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-md whitespace-nowrap">
@@ -322,8 +334,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* How it works strip */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-10">
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 sm:p-6 mb-10 mt-6">
             <p className="text-sm font-semibold text-blue-800 mb-4">How challenges work</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -333,23 +344,22 @@ export default async function HomePage() {
                 { step: "4", label: "Decide",        desc: "Hire, partner, or build with the best executor."           },
               ].map(({ step, label, desc }) => (
                 <div key={step} className="text-center">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center mx-auto mb-2">{step}</div>
-                  <div className="font-semibold text-blue-900 text-sm mb-1">{label}</div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center mx-auto mb-2">{step}</div>
+                  <div className="font-semibold text-blue-900 text-xs sm:text-sm mb-1">{label}</div>
                   <div className="text-blue-700 text-xs leading-relaxed">{desc}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Challenge type cards - all live */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
             {challengeTypes.slice(0, 6).map(({ icon, title, for: forLabel, desc, href, top, bg }) => (
               <Link key={title} href={href} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline">
                 <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
-                <div className="p-6">
+                <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
-                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
+                    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${bg} flex items-center justify-center text-lg sm:text-xl`}>{icon}</div>
+                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2 sm:px-2.5 py-1 rounded-md">{forLabel}</span>
                   </div>
                   <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
@@ -364,10 +374,10 @@ export default async function HomePage() {
             {challengeTypes.slice(6).map(({ icon, title, for: forLabel, desc, href, top, bg }) => (
               <Link key={title} href={href} className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline">
                 <div className={`h-1 w-full bg-gradient-to-r ${top}`} />
-                <div className="p-6">
+                <div className="p-5 sm:p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center text-xl`}>{icon}</div>
-                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">{forLabel}</span>
+                    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${bg} flex items-center justify-center text-lg sm:text-xl`}>{icon}</div>
+                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2 sm:px-2.5 py-1 rounded-md">{forLabel}</span>
                   </div>
                   <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
@@ -388,19 +398,19 @@ export default async function HomePage() {
       </section>
 
       {/* ── WHY STATED WORKS ────────────────────────────────────────────── */}
-      <section className="bg-gray-50 py-24 px-6 border-t border-gray-100">
+      <section className="bg-gray-50 py-16 sm:py-24 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-blue-600 inline-block rounded" />
             Why Stated works
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-3">
             Most platforms reward <span className="italic text-orange-500">performance.</span><br />We reward follow-through.
           </h2>
-          <p className="text-gray-500 text-base mb-14 max-w-md">The accountability layer the internet has always been missing.</p>
+          <p className="text-gray-500 text-sm sm:text-base mb-10 sm:mb-14 max-w-md">The accountability layer the internet has always been missing.</p>
           <div className="grid md:grid-cols-3 gap-4">
             {whyCards.map(({ icon, title, body }) => (
-              <div key={title} className="bg-white rounded-2xl p-7 border border-gray-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
+              <div key={title} className="bg-white rounded-2xl p-6 sm:p-7 border border-gray-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
                 <div className="text-3xl mb-4">{icon}</div>
                 <h3 className="font-display font-bold text-gray-900 text-base mb-2">{title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
@@ -411,18 +421,18 @@ export default async function HomePage() {
       </section>
 
       {/* ── EXECUTION CHALLENGE ─────────────────────────────────────────── */}
-      <section className="bg-gray-900 py-24 px-6">
+      <section className="bg-gray-900 py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="w-5 h-0.5 bg-amber-400 inline-block rounded" />
             Execution Challenge
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Win for doing what you said.</h2>
-          <p className="text-gray-400 text-base mb-14 max-w-md">Top executors get more than recognition - they get a platform.</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">Win for doing what you said.</h2>
+          <p className="text-gray-400 text-sm sm:text-base mb-10 sm:mb-14 max-w-md">Top executors get more than recognition - they get a platform.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {execRewards.map(({ icon, title, body }) => (
-              <div key={title} className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 text-center hover:border-amber-400/40 hover:-translate-y-1 transition-all">
-                <div className="text-3xl mb-3">{icon}</div>
+              <div key={title} className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 sm:p-6 text-center hover:border-amber-400/40 hover:-translate-y-1 transition-all">
+                <div className="text-2xl sm:text-3xl mb-3">{icon}</div>
                 <div className="text-amber-400 font-semibold text-sm mb-2">{title}</div>
                 <div className="text-gray-400 text-xs leading-relaxed">{body}</div>
               </div>
@@ -432,7 +442,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── TRUST STRIP ─────────────────────────────────────────────────── */}
-      <div className="bg-blue-600 py-5 px-6">
+      <div className="bg-blue-600 py-5 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-blue-500">
           {[
             { val: "Free",  label: "To start - no credit card"   },
@@ -440,8 +450,8 @@ export default async function HomePage() {
             { val: "100%",  label: "Public - no signup to browse" },
             { val: "🇮🇳",   label: "Built in India for the world" },
           ].map(({ val, label }) => (
-            <div key={label} className="text-center px-6 py-2">
-              <div className="font-display text-2xl font-extrabold text-white leading-none mb-1">{val}</div>
+            <div key={label} className="text-center px-3 sm:px-6 py-2">
+              <div className="font-display text-xl sm:text-2xl font-extrabold text-white leading-none mb-1">{val}</div>
               <div className="text-xs text-blue-200">{label}</div>
             </div>
           ))}
@@ -449,15 +459,15 @@ export default async function HomePage() {
       </div>
 
       {/* ── FINAL CTA ───────────────────────────────────────────────────── */}
-      <section className="bg-white py-28 px-6">
+      <section className="bg-white py-16 sm:py-28 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="rounded-3xl p-12 text-center border border-gray-200 shadow-sm relative overflow-hidden" style={{ background: "linear-gradient(135deg,#eff6ff 0%,#f5f3ff 50%,#f0fdf4 100%)" }}>
+          <div className="rounded-3xl p-6 sm:p-12 text-center border border-gray-200 shadow-sm relative overflow-hidden" style={{ background: "linear-gradient(135deg,#eff6ff 0%,#f5f3ff 50%,#f0fdf4 100%)" }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full pointer-events-none" style={{ background: "rgba(191,219,254,.4)", filter: "blur(48px)" }} />
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-5 relative">Your Turn</p>
-            <h2 className="font-display text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5 relative">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5 relative">
               Put your word on the <span className="italic text-blue-600">line.</span>
             </h2>
-            <p className="text-gray-600 text-base leading-relaxed mb-10 max-w-md mx-auto relative">Say it where it counts. Start free - post your first commitment in under 2 minutes.</p>
+            <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-8 sm:mb-10 max-w-md mx-auto relative">Say it where it counts. Start free - post your first commitment in under 2 minutes.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8 relative">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-10 py-4 rounded-xl shadow-lg transition-all hover:-translate-y-0.5">
                 Commit publicly - it's free
@@ -468,7 +478,7 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center relative">
               {["Free to start", "No credit card required", "5 commitments included", "No signup to browse"].map((t) => (
-                <div key={t} className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div key={t} className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
                   <span className="text-green-600 font-bold">✓</span> {t}
                 </div>
               ))}
