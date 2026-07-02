@@ -97,14 +97,15 @@ export default async function ChallengePage({ params }: { params: Promise<{ id: 
   let posterName = "Someone on Stated";
   let posterSlug = "/";
   if (challenge.posted_by_type === "company" && challenge.company_id) {
-    const { data: companyData } = await supabase
+    const { data: companyData, error: companyErr } = await supabase
       .from("companies")
-      .select("name, slug")
+      .select("id, name")
       .eq("id", challenge.company_id)
       .maybeSingle();
+    if (companyErr) console.error("Poster company fetch error:", companyErr);
     if (companyData) {
-      posterName = (companyData as any).name;
-      posterSlug = `/company/${(companyData as any).slug}`;
+      posterName = (companyData as any).name || posterName;
+      posterSlug = `/company/${(companyData as any).id}`;
     }
   } else {
     const { data: profileData, error: profileErr } = await supabase
@@ -206,7 +207,7 @@ export default async function ChallengePage({ params }: { params: Promise<{ id: 
                       {posterName}
                     </div>
                     <div className="text-xs text-gray-400 capitalize">
-                      {challenge.posted_by_type} &middot; {challenge.location || "India"} &middot; <span style={{ fontFamily: "monospace", fontSize: 10 }}>uid:{challenge.posted_by_user_id?.slice(0,8)}</span>
+                      {challenge.posted_by_type} &middot; {challenge.location || "India"} &middot; <span style={{ fontFamily: "monospace", fontSize: 10 }}>uid:{challenge.posted_by_user_id?.slice(0,8)} cid:{challenge.company_id?.slice(0,8) || "none"}</span>
                     </div>
                   </div>
                 </Link>
