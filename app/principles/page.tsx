@@ -38,6 +38,17 @@ const published = [
     tags:     ["Leadership", "Execution", "Integrity"],
     readTime: 6,
   },
+  {
+    slug:     "dr-lenin-raghuvanshi",
+    name:     "Dr. Lenin Raghuvanshi",
+    role:     "Founder, People's Vigilance Committee on Human Rights (PVCHR) · Author",
+    issue:    "002",
+    date:     "July 2026",
+    photo:    "/lenin-portrait.jpg",
+    tagline:  "Human dignity is not a reward to be earned -- it is a birthright that must be protected for everyone.",
+    tags:     ["Human Rights", "Dignity", "Civil Society"],
+    readTime: 7,
+  },
 ];
 
 const comingSoon = [
