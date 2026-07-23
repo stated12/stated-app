@@ -37,6 +37,7 @@ const published = [
     tagline:  "We finish what we start. Not for the applause -- but for the integrity of the promise.",
     tags:     ["Leadership", "Execution", "Integrity"],
     readTime: 6,
+    principleCount: 5,
   },
   {
     slug:     "dr-lenin-raghuvanshi",
@@ -48,21 +49,19 @@ const published = [
     tagline:  "Human dignity is not a reward to be earned -- it is a birthright that must be protected for everyone.",
     tags:     ["Human Rights", "Dignity", "Civil Society"],
     readTime: 7,
-  },
-];
-
-const comingSoon = [
-  {
-    title: "The Founder Who Builds in Public",
-    desc:  "On transparency, accountability, and why public building is a strategic advantage.",
+    principleCount: 5,
   },
   {
-    title: "The Investor Who Backs Execution",
-    desc:  "What separates fundable founders from everyone else. Hint: it is not the pitch.",
-  },
-  {
-    title: "The Policymaker Who Thinks Long",
-    desc:  "On patience, systems thinking, and why most initiatives fail before they start.",
+    slug:     "col-mandhir-singh",
+    name:     "Colonel Mandhir Singh",
+    role:     "Indian Army (Retd.) · Commando Instructor · Independent Director, MDI Gurgaon",
+    issue:    "003",
+    date:     "July 2026",
+    photo:    "/mandhir-portrait.jpg",
+    tagline:  "Army was never a career for me. It was a way of life.",
+    tags:     ["Leadership", "Patriotism", "Accountability"],
+    readTime: 13,
+    principleCount: 6,
   },
 ];
 
@@ -217,7 +216,7 @@ export default function PrinciplesIndexPage() {
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
                     <span className="text-xs text-gray-400 font-light">
-                      5 principles &middot; {f.readTime} min read
+                      {f.principleCount} principles &middot; {f.readTime} min read
                     </span>
                     <span className="bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-lg">
                       Read feature
@@ -228,29 +227,6 @@ export default function PrinciplesIndexPage() {
               </div>
             </Link>
           ))}
-
-          {/* Coming soon cards */}
-          <div className="grid sm:grid-cols-3 gap-4 mt-4">
-            {comingSoon.map((c) => (
-              <div
-                key={c.title}
-                className="bg-white border border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center text-center"
-                style={{ minHeight: 200 }}
-              >
-                <div className="text-2xl mb-3 opacity-25">✦</div>
-                <h4 className="serif text-lg font-light text-gray-400 mb-2 leading-tight">
-                  {c.title}
-                </h4>
-                <p className="text-xs text-gray-300 font-light leading-relaxed mb-4">{c.desc}</p>
-                <a
-                  href={MAILTO_LINK}
-                  className="text-xs font-semibold text-amber-600 border border-amber-200 bg-amber-50 px-4 py-1.5 rounded-full hover:bg-amber-100 transition-all no-underline"
-                >
-                  Notify me
-                </a>
-              </div>
-            ))}
-          </div>
 
         </div>
       </section>
