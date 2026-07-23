@@ -227,6 +227,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      
       {/* ── STATED PRINCIPLES ───────────────────────────────────────────── */}
       <section className="bg-white py-16 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-5xl mx-auto">
@@ -236,40 +237,40 @@ export default function HomePage() {
                 <span className="w-5 h-px inline-block" style={{ background: "#b45309" }} />
                 Stated Principles
               </p>
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">What remarkable people stand for</h2>
-              <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">Principles, beliefs, and lessons from leaders - stated publicly, in their own words.</p>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">Read what distinguished leaders stand for</h2>
+              <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">Principles, beliefs, and lessons from leaders - stated publicly, in their own words. 3 features published so far.</p>
             </div>
             <Link href="/principles" className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all">Browse all features</Link>
           </div>
 
-          <Link href="/principles/shilpa-s" className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline">
+          <Link href="/principles" className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline">
             <div className="grid md:grid-cols-[300px_1fr]">
               <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 220 }}>
-                <Image src="/shilpa-portrait.jpg" alt="Shilpa S" fill className="object-cover" style={{ objectPosition: "center 20%" }} />
+                <Image src="/mandhir-portrait.jpg" alt="Colonel Mandhir Singh" fill className="object-cover" style={{ objectPosition: "center 20%" }} />
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white border px-3 py-1 rounded-full shadow-sm" style={{ borderColor: "#fde68a" }}>
                   <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#f59e0b" }} />
-                  <span className="text-xs tracking-wider uppercase font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>Latest - Issue 001</span>
+                  <span className="text-xs tracking-wider uppercase font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>Latest - Issue 003</span>
                 </div>
               </div>
               <div className="p-5 sm:p-8 flex flex-col justify-center">
                 <p className="flex items-center gap-2 text-xs uppercase tracking-widest mb-3 font-medium" style={{ color: "#b45309", fontFamily: "monospace" }}>
                   <span className="w-3 h-px inline-block" style={{ background: "#b45309" }} />
-                  Stated Principles - Issue 001
+                  Stated Principles - Issue 003
                 </p>
                 <h3 className="text-3xl sm:text-4xl font-light text-gray-900 leading-none tracking-tight mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  Shilpa <em className="italic" style={{ color: "#d97706" }}>S.</em>
+                  Colonel Mandhir <em className="italic" style={{ color: "#d97706" }}>Singh</em>
                 </h3>
-                <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">CMD, SheRocks India - Startup Ecosystem Enabler - Investor for MSMEs - Strategic Advisor</p>
+                <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">Indian Army (Retd.) - Commando Instructor - Counter Terrorist &amp; Counter Insurgency Operations - Independent Director, MDI Gurgaon</p>
                 <blockquote className="text-base sm:text-lg font-light text-gray-600 italic leading-relaxed mb-5 pl-4 border-l-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", borderColor: "#fcd34d" }}>
-                  "We finish what we start. Not for the applause - but for the integrity of the promise."
+                  "Army was NEVER a career for me. It was a Way of Life."
                 </blockquote>
                 <div className="flex flex-wrap gap-1.5 mb-5">
-                  {["Decisiveness", "Integrity", "Risk", "Execution", "Authenticity"].map((tag) => (
+                  {["Leadership", "Patriotism", "Accountability", "Nation First", "Duty"].map((tag) => (
                     <span key={tag} className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded uppercase tracking-wider" style={{ fontFamily: "monospace" }}>{tag}</span>
                   ))}
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
-                  <span className="text-xs text-gray-400 font-light">5 principles - 6 min read</span>
+                  <span className="text-xs text-gray-400 font-light">6 principles - 13 min read</span>
                   <span className="bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-lg">Read feature</span>
                 </div>
               </div>
@@ -289,7 +290,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* ── LIVE COMMITMENT FEED ────────────────────────────────────────── */}
       <section className="bg-gray-50 py-16 sm:py-24 px-4 sm:px-6 border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
