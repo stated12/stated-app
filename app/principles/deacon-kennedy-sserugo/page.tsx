@@ -237,6 +237,7 @@ export default function Page() {
           "Period Poverty Advocate",
           "Child Protection",
           "Youth Development",
+          "Palliative Care",
         ].map((tag) => (
           <span
             key={tag}
