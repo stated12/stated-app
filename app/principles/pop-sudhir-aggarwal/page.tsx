@@ -64,18 +64,18 @@ const principles = [
     number: "01",
     title: "One and Only One Can Build One's Own Attitude",
     quote: [
-      "Let me start with a disclaimer. Principles, values, and leadership are never available in the market for anyone to simply go and buy. The best and greatest institution on earth doesn't necessarily deliver people with good principles, values, and leadership. None of it has anything to do with a person's socio-economic status.",
+      "Let me start with a disclaimer. Principles, values, and leadership are never available in the market for anyone to simply go and buy. The best and greatest institution on earth doesn't necessarily deliver people with good principles, values, and leadership. None of it has anything to do with a person's socio-economic or geo-political status.",
       "There is a saying that it is the environment in which one is born and brought up. That describes, sufficiently and elaborately, how principles, values, and leadership are built and extensively influenced by the many things happening around and across the various facets of one's life and situations.",
       "To me, a good combination of being honest to yourself, holding a positive attitude, building mutual trust and mutual respect, and being aspirational without carrying unrealistic or unreasonable expectations, is a good mantra for a successful career as a natural evolution. Still, if I need to define it in one word, I will say attitude.",
-      "With a good, positive, and forward looking attitude, one can achieve the world and make a real impact. I can work on building the skill of the people around me, not their attitude. One and only one can work upon and build one's own attitude.",
+      "With a good, positive, and forward-looking attitude, one can achieve the world and make a real impact. I can work on building the skill of the people around me, not their attitude. One and only one can work upon and build one's own attitude.",
       "In my own context, trust in my leadership helped me embrace altogether out of the box, newer opportunities in my life, where every time I experienced and stepped into newer career choices to shape my journey.",
-      "Likewise, trusting and mentoring the people around me, and I am deliberately avoiding the term reportee or team member, and giving them the opportunity to make decisions, has helped me build teams and organisations with a focus on continuing to work and grow irrespective of me. Success lies in making oneself dispensable rather than remaining a power centre artificially.",
+      "Likewise, trusting and mentoring the people around me, and I am deliberately avoiding the term reportee or team member, and giving them the opportunity to make decisions, has helped me build teams and organizations with a focus on continuing to work and grow irrespective of me. Success lies in making oneself dispensable rather than remaining a power center artificially.",
       "This can be seen visibly in my professional and personal life, across every facet of it.",
     ],
     whatThisMeans:
       "He locates attitude as the one thing a person builds entirely alone. You can help someone build a skill, but no one else can build your attitude for you. This distinction runs quietly under everything else he says about leadership.",
     whyItMatters:
-      "\"Success lies in making oneself dispensable rather than remaining a power centre artificially\" is a genuinely unusual definition of career success from someone who reached CHRO. Most people spend a career trying to become indispensable. He built his around the opposite goal.",
+      "\"Success lies in making oneself dispensable rather than remaining a power center artificially\" is a genuinely unusual definition of career success from someone who reached CHRO. Most people spend a career trying to become indispensable. He built his around the opposite goal.",
     reflect:
       "Are you currently building your team's skill, your own attitude, or quietly trying to make yourself indispensable instead of dispensable?",
   },
@@ -107,19 +107,19 @@ const principles = [
     title: "A Change With a Difference Has Always Excited Me",
     quote: [
       "Let me respond to the second part of the question first. The future worries me the least, and that is precisely how I have never been anxious about it. I have never allowed myself to sit in a comfort zone. I have always challenged myself and thrown myself open to newer opportunities and possibilities, including the unconventional and the diverse. Let me share some of my career shifts.",
-      "I accepted a Resource Manager role focused on hiring to serve global body shopping opportunities in the mid 1990s. Almost all my peers discouraged me, and that move turned out to be among the best of my professional career, giving me a very different visibility and flavour of career options.",
+      "I accepted a Resource Manager role focused on hiring to serve global body-shopping opportunities in the mid 1990s. Almost all my peers discouraged me, and that move turned out to be among the best of my professional career, giving me a very different visibility and flavor of career options.",
       "I stepped into the role of ERP Practice Head, having never seen an ERP screen with my own eyes. Identifying and trusting the people around me, with empathy in spirit, helped me and my teams grow. We had some genuinely unconventional experiences and engagements.",
-      "I worked on and successfully delivered the recovery of company money from bleeding projects, with zero background in those projects, and did this multiple times across the organisation. It simply required my heart and soul, in service of the company's purpose.",
+      "I worked on and successfully delivered the recovery of company money from bleeding projects, with zero background in those projects, and did this multiple times across the organization over years. It simply required my aligned heart and soul, in service of the company's purpose.",
       "At 58, I joined Deloitte, a consulting firm, in India.",
-      "At 59, I became a faculty member teaching emerging technologies such as AI, GenAI, IoT, and drones to government officers, with the Wadhwani Foundation.",
-      "At 62, I became a CHRO, a 360 degree shift from the business side to HR, with a purpose.",
+      "At 59, I became a faculty member teaching emerging technologies such as AI, GenAI, IoT, drones, and other emerging technologies to government officers, with the Wadhwani Foundation.",
+      "At 62, I became a CHRO, a 360-degree shift from the business side to HR, with a purpose.",
       "Has it ever been difficult? Never. Some of these I chose, and a few came my way.",
-      "A change with a difference has always excited me. It gives me a kick. More than competing with others, challenging myself and working through that challenge is positive, progressive, and growth oriented. It has broadened my skillset, experience, expertise, and my ability to work with people of varied profiles and personalities.",
-      "Let me make an acknowledgement here, in the spirit of gratitude. HCL, and the HCL Sales organisation in particular, has been instrumental in making me whatever I am today. Working with multinationals like IBM and Oracle helped shape my career and personality, with a level of professional fine tuning and maturity I am grateful for.",
-      "I have also developed a formula for myself that I believe applies to anyone: 10:20:70. In today's times especially, there is so much happening around us, at a pace never imagined before. This causes anxiety and discomfort. My belief, held with conviction, is that 70 percent of the innovations and developments happening around me simply don't concern me. 20 percent, I keep myself appropriately appraised of. 10 percent is what actually matters to me, and that is what I focus on and invest in. This simple approach helps me manage my insecurities and anxieties, and keeps me focused on my purpose.",
+      "A change with a difference has always excited me. It gives me a kick. More than competing with others, challenging myself and working through that challenge is positive, progressive, and growth oriented. It has broadened my skillset, experience, expertise, perspectives, and my ability to work with people of varied profiles and personalities.",
+      "Let me make an acknowledgement here, in the spirit of gratitude. HCL, and the HCL Sales organization in particular, has been instrumental in making me whatever I am today. Working with multinationals like IBM and Oracle helped shape my career and personality, with a level of professional fine tuning and maturity I am grateful for.",
+      "I have also developed a formula for myself that I believe applies to anyone: 10:20:70. In today's times especially, there is so much happening around us, at a pace never imagined before. This causes anxiety and discomfort. My belief, held with conviction, is that 70 percent of the innovations and developments happening around me simply don't concern me. 20 percent, I keep myself appropriately appraised of. 10 percent is what actually matters to me, and that is what I focus on and invest in. This simple approach helps me manage my insecurities and anxieties, and keeps me focused on my purpose to stay relevant.",
     ],
     whatThisMeans:
-      "His six career shifts, listed one after another, aren't a resume flex; they're evidence for his central claim that comfort is the actual risk, not change. Joining Deloitte at 58 and becoming a CHRO at 62 are not late career slowdowns in his account; they're the same pattern he started in the mid 1990s.",
+      "His six unconventional career shifts, listed one after another, aren't a resume flex; they're evidence for his central claim that comfort is the actual risk, not change. Joining Deloitte at 58 and becoming a CHRO at 62 are not late career slowdowns in his account; they're the same pattern he started in the mid 1990s.",
     whyItMatters:
       "The 10:20:70 formula turns \"don't worry about everything\" into an actual allocation you can use: 70 percent of what's happening around you genuinely doesn't need your attention, 20 percent needs awareness, and only 10 percent deserves your real investment.",
     reflect:
@@ -129,12 +129,12 @@ const principles = [
     number: "04",
     title: "Make Yourself Dispensable, Not a Control Freak",
     quote: [
-      "A positive and forward looking attitude makes the difference in every facet of life.",
+      "A positive and forward-looking attitude makes the difference in every facet of life.",
       "Know yourself, with a focus on what you are not good at, and leverage PPT, people, process, and technology, to complement and supplement that in creating the big, complete, and comprehensive picture. I hold a copyright on the term WANG@, which stands for What Am I Not Good At.",
-      "Learn to know and manage your insecurities. The more you know about and manage your insecurities, the deeper you get into what I call insecurity management, a term I also hold a copyright on. This can certainly make you a different person. I am not saying a better person, simply a different one.",
-      "Trust yourself. People don't delegate because they believe the people around them are incompetent. An honest, deeper self introspection can produce a fairly scary outcome: it is often a lack of conviction, confidence, or belief in oneself that holds a person back from delegating. In a larger sense, insecurities may be the root cause. This is the let go phenomenon, easier said than done.",
+      "Learn to know and manage your insecurities. The more you know about and manage your insecurities, the deeper you get into what I call insecurity management, a term I also hold a copyright on. This can certainly make you a different person. I am not saying a better person, simply a person with a difference.",
+      "Trust yourself. People don't delegate because they believe the people around them are incompetent. An honest, deeper self-introspection can produce a fairly scary outcome: it is often a lack of conviction, confidence, or belief in oneself that holds a person back from delegating. In a larger sense, insecurities may be the root cause. This is the let-go phenomenon, easier said than done.",
       "Make yourself dispensable rather than being a control freak. This is among the truest growth mantras there is, because it produces results and outcomes on multiple fronts. It creates growth for yourself, and it creates an environment where the people around you can grow too.",
-      "Focus on horizontal and vertical growth for all round maturity. Horizontal growth orientation becomes a natural evolution as people grow. As people grow, with some exceptions, their soft and behavioural side plays an increasingly larger role. Look deeper, and you'll see that leadership is really about soft skills and behaviour. A manager is always a CEO is another one of my copyrighted lines.",
+      "Focus on horizontal and vertical growth for all round maturity. Horizontal growth orientation becomes a natural evolution as people grow. As people grow, with some exceptions, their soft and behavioral side plays an increasingly larger role. Look deeper, and you'll see that leadership is really about soft skills and behavior. A Manager – Always a CEO is another one of my copyrighted lines.",
       "Have the courage to own your mistakes, acknowledging them sooner rather than later, and give credit to your team. Never delay or shy away from acknowledging good work, because it helps build togetherness and a relationship built on trust. Never compete with your own team members in any manner; that can be among the biggest foul plays there is.",
       "Mutual trust, and mutual respect.",
     ],
@@ -153,10 +153,10 @@ const principles = [
       "Do what you like, love what you do, do what suits you, and be expressive without living under the influence of other people's opinions or points of view.",
       "Very humbly, and feeling even more humbled saying this, I am a family values person. All my life, I have tried working with the people around me, offering my two bits selflessly, whatever I could, in whatever manner I had to offer it. Any response otherwise has never discouraged me or diverted me from my fundamentals.",
       "Have gratitude in life towards anyone, everyone, and anything. Give credit to the people who have been kind to you, or who have done or delivered something for you in whichever way. It matters to name them when sharing their contribution, even if they are no longer around.",
-      "Zero expectations. Lately in my life, I have been practising, on a best effort basis, engaging with zero expectations, meaning I don't expect that things will happen my way, or that people will follow my advice or suggestions. Life is not about my way or the highway. There may be many reasons behind people's actions and reactions in any given situation; I leave that to their own self introspection and their own actions.",
+      "Zero expectations. Lately in my life, I have been practicing, on a best effort basis. Engaging with zero expectations, meaning I don't expect that things will happen my way, or that people will follow my advice or suggestions. Life is not about my way or the highway. There may be many reasons behind people's actions and reactions in any given situation; I leave that to their own self-introspection and their own actions.",
       "I have always tried to give space to people, whether younger, elder, or peer, in various situations, by not struggling to be seen or visible, believing instead that your efforts speak louder than being seen.",
-      "I have learned to extend my relationships to the people around me, as required or as I have wished to. This has helped me build a long lasting legacy in an institutionalised way.",
-      "More than a few people have told me that I am a blessed person, that nothing wrong happens to people like me who have not wronged anyone in their personal life. This despite having gone through professional redundancies twice, survived a brain stroke, and even delivered some genuinely tough decisions as part of my responsibilities.",
+      "I have learned to extend my relationships to the people around me, as required or as I have wished to. This has helped me build a long-lasting legacy in an institutionalized way.",
+      "More than a few people have told me that I am a blessed person, that nothing wrong happens to people like me who have not wronged anyone in their personal life. This despite having gone through professional redundancies twice, survived a brain stroke, and even delivered some genuinely tough decisions as part of my professional responsibilities.",
       "Be honest to yourself.",
     ],
     whatThisMeans:
@@ -172,8 +172,8 @@ const principles = [
     quote: [
       "Be yourself.",
       "It is crucial and significant to know yourself and love yourself in an ever evolving, fast changing world like never before. It is good to be inspired by the people and events around you, but contextualise that inspiration for yourself, within your own abilities, capabilities, and competencies.",
-      "Knowing yourself is among the biggest challenges there is, because people do not connect with themselves, do not speak with themselves, do not analyse themselves, and most of the time are not honest with themselves.",
-      "Beware: don't be mad about yourself, and don't be self obsessed.",
+      "Knowing yourself is among the biggest challenges there is, because people do not connect with themselves, do not speak with themselves, do not analyse themselves, and most of the time are not honest with themselves. Most times, people live in denial mode.",
+      "Beware: don't be mad about yourself, and don't be self-obsessed.",
       "Those who know me, even a little, will vouch for everything I have articulated and narrated above.",
     ],
     whatThisMeans:
@@ -192,7 +192,7 @@ const takeaways = [
   },
   {
     title: "The three I's: inclusive, informed, independent.",
-    body: "Difficult choices become simpler when you check whether your thinking is inclusive, informed, and independent, rather than missing one of the three without realising it.",
+    body: "Difficult choices become simpler when you check whether your thinking is inclusive, informed, and independent, rather than missing one or more of the three without realizing it.",
   },
   {
     title: "Comfort is the real risk, not change.",
@@ -255,7 +255,7 @@ export default function Page() {
         </p>
         <p className="mt-1 text-sm text-neutral-500">
           CHRO and Director, Digital Transformation, Orbit Techsol India · Formerly HCL, IBM,
-          Oracle and Deloitte
+          Oracle, Sify Technologies, Thomson Reuters, Microsoft, Deloitte, and Wadhwani Foundation
         </p>
 
         {/* Social links - standout treatment */}
@@ -336,11 +336,12 @@ export default function Page() {
         </blockquote>
         <p className="mt-6 leading-relaxed text-neutral-700">
           PoP Sudhir Aggarwal is CHRO and Director, Digital Transformation at Orbit Techsol
-          India. His career has moved through HCL, IBM, Oracle and Deloitte, across roles as
-          varied as Resource Manager, ERP Practice Head, Head of Government business, faculty
-          member teaching emerging technologies with the Wadhwani Foundation, and finally CHRO,
-          a shift he took on at 62. He holds copyrights on the terms WANG@ (What Am I Not Good
-          At), Insecurity Management, and A Manager Is Always a CEO.
+          India. His career has moved through HCL, IBM, Oracle, Sify Technologies, Thomson
+          Reuters, Microsoft, Deloitte, and Wadhwani Foundation, across roles as varied as
+          Resource Manager, ERP Practice Head, Head of Government business, faculty member
+          teaching emerging technologies with the Wadhwani Foundation, and finally CHRO, a shift
+          he took on at 62. He holds copyrights on the terms WANG@ (What Am I Not Good At),
+          Insecurity Management, Soft Skills Leads to Wisdom, and A Manager – Always a CEO.
         </p>
         <p className="mt-4 leading-relaxed text-neutral-700">
           What follows is not a Q&amp;A. It is a record of what he stands for, stated publicly, in
