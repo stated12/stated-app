@@ -353,7 +353,7 @@ export default function Page() {
       {/* Principles */}
       <section id="principles" className="mx-auto max-w-3xl px-6 py-6">
         <p className="text-xs uppercase tracking-wide text-neutral-400">
-          Six principles · Stated by PoP Sudhir Aggarwal
+          Six principles · Stated by <span className="normal-case">PoP</span> Sudhir Aggarwal
         </p>
         <h2 className="mt-3 text-3xl font-serif">
           What he stands for — in his own words.
