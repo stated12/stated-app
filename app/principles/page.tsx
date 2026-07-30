@@ -13,14 +13,14 @@ export const metadata: Metadata = {
       "Principles, beliefs, and lessons from leaders -- stated publicly, in their own words.",
     url: "https://app.stated.in/principles",
     siteName: "Stated",
-    images: [{ url: "/eric-portrait.jpg", width: 1080, height: 1440, alt: "Stated Principles" }],
+    images: [{ url: "/shokin-portrait.jpg", width: 880, height: 875, alt: "Stated Principles" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Stated Principles",
     description: "What remarkable people stand for -- stated publicly.",
-    images: ["/eric-portrait.jpg"],
+    images: ["/shokin-portrait.jpg"],
   },
   alternates: { canonical: "https://app.stated.in/principles" },
 };
@@ -28,6 +28,30 @@ export const metadata: Metadata = {
 // ── DATA ──────────────────────────────────────────────────────────────────────
 // Ordered latest first -- newest issue always leads.
 const published = [
+  {
+    slug:     "pop-sudhir-aggarwal",
+    name:     "PoP Sudhir Aggarwal",
+    role:     "CHRO and Director, Digital Transformation, Orbit Techsol India",
+    issue:    "007",
+    date:     "July 2026",
+    photo:    "/sudhir-portrait.jpg",
+    tagline:  "One and only one can work upon and build one's own attitude.",
+    tags:     ["CHRO", "Digital Transformation", "Attitude"],
+    readTime: 10,
+    principleCount: 6,
+  },
+  {
+    slug:     "lt-general-shokin-chauhan",
+    name:     "Lt General Shokin Chauhan",
+    role:     "Indian Army (Retd.) · Former Defence Attach\u00e9 to Nepal",
+    issue:    "006",
+    date:     "July 2026",
+    photo:    "/shokin-portrait.jpg",
+    tagline:  "Leadership is an act of service before it is an exercise of authority.",
+    tags:     ["Leadership", "Integrity", "Service"],
+    readTime: 32,
+    principleCount: 16,
+  },
   {
     slug:     "eric-anthony-jones",
     name:     "Eric Anthony Jones",
