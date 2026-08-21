@@ -695,16 +695,6 @@ export default function Page() {
         </Link>
       </section>
 
-      {/* Footer */}
-      <footer className="mx-auto max-w-3xl px-6 py-10 text-xs text-neutral-400">
-        <div className="flex flex-wrap gap-4">
-          <Link href="/">Home</Link>
-          <a href="https://stated.in/privacy">Privacy Policy</a>
-          <a href="https://stated.in/terms">Terms of Service</a>
-          <a href="https://stated.in/refund">Refund Policy</a>
-        </div>
-        <p className="mt-4">© 2026 Stated • Built in India for the World</p>
-      </footer>
     </main>
   );
 }
