@@ -155,7 +155,7 @@ const principlesPart2 = [
     number: "09",
     title: "When Peacekeepers Fail, They Are No Longer Seen as Impartial",
     quote: [
-      "When deployed, peacekeepers are seen as angels of peace. They are expected not only to protect civilians but also become the first point of contact for all problems plaguing a state recovering from conflict. The reality, however, is quite different. A peacekeeper's ability to meet these expectations is constrained by how the organisation empowers them, including its mandate, the number of peacekeepers authorised and deployed, and budgetary support to sustain the mission.",
+      "When deployed, peacekeepers are seen as angels of peace. Civilians expect peacekeepers not only to protect them from danger but also to serve as the first point of contact for all the challenges facing a conflict-affected state as it recovers. The reality, however, is quite different. A peacekeeper's ability to meet these expectations is constrained by how the organisation empowers them, including its mandate, the number of peacekeepers authorised and deployed, and budgetary support to sustain the mission.",
       "And when peacekeepers fail, they are no longer perceived as impartial brokers of peace. Since peacekeeping has evolved significantly over the years, it must be continuously reviewed and reformed, including through organisational changes, to remain effective. Besides, unless the root cause of the problem is addressed, conflict will continue, and civilians will continue to suffer. Peacekeeping missions don't address the root cause of the conflict.",
     ],
     whatThisMeans:
