@@ -87,7 +87,7 @@ const principles = [
     number: "05",
     title: "The Three Cardinal Principles Are Not as Simple as They Seem",
     quote: [
-      "Peacekeeping always requires restraint, not as often as you stated. Adherence to the three cardinal principles of peacekeeping, i.e., consent, impartiality, and minimum use of force, is a must for success in peacekeeping.",
+      "Peacekeeping (also referred to as peace operations) always requires restraint. Adherence to the three cardinal principles of peacekeeping, i.e., consent, impartiality, and minimum use of force, is a must for success in peacekeeping.",
       "Well, these are not as simple as they seem. Ambiguity in how these principles are interpreted directly affects peacekeeping performance. It is difficult to explain the inconsistency in a few words. I thought it would be helpful if readers could find time to read about it.",
     ],
     linkLabel: "Read his fuller explanation of this ambiguity",
@@ -155,8 +155,8 @@ const principlesPart2 = [
     number: "09",
     title: "When Peacekeepers Fail, They Are No Longer Seen as Impartial",
     quote: [
-      "When deployed, peacekeepers are seen as angels of peace. They are expected not only to protect civilians but also to become the first point of contact for all problems plaguing a state recovering from conflict. The reality, however, is quite different. A peacekeeper's ability to meet these expectations is constrained by how the organisation empowers them, including its mandate, the number of peacekeepers authorised and deployed, and budgetary support to sustain the mission.",
-      "And when they fail, they are no longer perceived as impartial brokers of peace. Since peacekeeping has evolved significantly over the years, it must be continuously reviewed and reformed, including through organisational changes, to remain effective. Besides, unless the root cause of the problem is addressed, conflict will continue, and civilians will continue to suffer. Peacekeeping missions don't address the root cause.",
+      "When deployed, peacekeepers are seen as angels of peace. They are expected not only to protect civilians but also become the first point of contact for all problems plaguing a state recovering from conflict. The reality, however, is quite different. A peacekeeper's ability to meet these expectations is constrained by how the organisation empowers them, including its mandate, the number of peacekeepers authorised and deployed, and budgetary support to sustain the mission.",
+      "And when peacekeepers fail, they are no longer perceived as impartial brokers of peace. Since peacekeeping has evolved significantly over the years, it must be continuously reviewed and reformed, including through organisational changes, to remain effective. Besides, unless the root cause of the problem is addressed, conflict will continue, and civilians will continue to suffer. Peacekeeping missions don't address the root cause of the conflict.",
     ],
     whatThisMeans:
       "He names the gap between how peacekeepers are perceived on arrival, as \"angels of peace\" expected to solve everything, and what they're actually resourced to do, constrained by mandate, troop numbers, and budget they don't control.",
@@ -186,7 +186,7 @@ const principlesPart2 = [
     title: "Credibility Is Not Available Upfront. It Must Be Earned",
     quote: [
       "Consent, impartiality, and the minimum use of force are three cardinal principles of peacekeeping, and adherence to them helps achieve success. Another crucial factor is legitimacy. When arriving in the conflict zone, peacekeepers, including the organisation, are expected to adhere to certain norms, which are not exhaustive. A mission gains legitimacy when the parties to the conflict agree to the deployment of the peacekeeping mission through a peace agreement, and the UN Security Council authorises it.",
-      "However, strategic-level legitimacy differs from local legitimacy. Local legitimacy is about credibility. Credibility is not available upfront. It must be earned by presenting daily evidence and implementing the mandate. Once the mission and the peacekeepers gain local legitimacy, they gain cooperation and better acceptance in local society. Civilians then make a conscious effort to differentiate between what is possible and what is not. Then they come forward willingly to help the peacekeepers implement the mandate within the organisational constraints and the dynamics of the conflict.",
+      "However, strategic-level legitimacy differs from local legitimacy. Local legitimacy is about credibility. Credibility is not available upfront. It must be earned by presenting daily evidence and implementing the mandate. Once the mission and the peacekeepers gain local legitimacy, they gain cooperation and better acceptance in local society. Civilians then make a conscious effort to differentiate, within the constraints, between what is possible for the peacekeepers to do and what is not. Then they come forward willingly to help the peacekeepers implement the mandate despite the organisational constraints and the dynamics of the conflict.",
     ],
     whatThisMeans:
       "He splits legitimacy into two distinct kinds that don't automatically transfer to each other: strategic-level legitimacy, granted on paper through a peace agreement and Security Council authorisation, and local legitimacy, which is credibility, earned daily on the ground.",
@@ -216,7 +216,7 @@ const principlesPart3 = [
     title: "Have I Introduced Something New, or Am I Merely Repeating Existing Theories?",
     quote: [
       "We need a mirror to show us what we lack. Only when we learn to accept our weaknesses does scope for improvement emerge. Research provides a perspective beyond our own, enabling us to draw logical conclusions based on available inputs.",
-      "Another lesson I have learned from research is the importance of contributing something new to the research community, whether in terms of content or methodology. When my supervisor asked me this question during my research, it took me a few days to find the answer. For instance, while addressing questions on leadership in this forum, I must ask myself: have I introduced something new, or am I merely repeating existing theories?",
+      "Another lesson I have learned from research is the importance of contributing something new to the research community, whether in terms of content or methodology. When Prof. Dr. S.J. Soeters, who was my supervisor for my doctoral thesis, asked me this question, it took me a few days to find the answer. For instance, while addressing questions on leadership in this forum, I must ask myself: have I introduced something new, or am I merely repeating existing theories?",
     ],
     whatThisMeans:
       "He credits research with something command couldn't give him: a genuine outside perspective on his own experience, one that only becomes useful once he's willing to accept what it reveals about his own weaknesses.",
@@ -232,7 +232,7 @@ const principlesPart3 = [
       "I have been learning ever since I learned to stand on my feet. The lessons that I have learned will lead me to write a book. Hence, I will rest here.",
     ],
     whatThisMeans:
-      "Asked whether a lesson from his military career only became clear years later, he declines to isolate a single one, choosing instead to point toward a book he's still writing rather than compress a lifetime of learning into a soundbite for this feature.",
+      "Asked whether a lesson from his military career only became clear years later, he declines to isolate a single one, choosing instead to point toward a need to write another book rather than compress a lifetime of learning into a soundbite for this feature.",
     whyItMatters:
       "This restraint is consistent with everything else he's shown here, elsewhere pointing readers to fuller published writing rather than oversimplifying, he treats his own hardest-won lessons the same way, as something that deserves its own space rather than a shortcut.",
     reflect:
@@ -242,7 +242,7 @@ const principlesPart3 = [
     number: "15",
     title: "The Camel Never Sees the Hump on Its Own Back",
     quote: [
-      "How can I say one mistake? All mistakes, if repeated, might affect different people and institutions in different ways. This will probably be the biggest mistake. Hence, we must constantly look inward and ask what we have done wrong when something goes wrong.",
+      "How can I say one mistake? Any mistake, if repeated, might affect different people and institutions in different ways. This will probably be the biggest mistake. Hence, we must constantly look inward and ask what we have done wrong when something goes wrong, instead of looking for someone else to blame.",
       "In this regard, it will be worth reflecting on the famous Moroccan proverb: 'The camel never sees the hump on its own back but has its eyes on its brother's hump.'",
     ],
     whatThisMeans:
@@ -315,7 +315,7 @@ const principlesPart3 = [
     whatThisMeans:
       "Given the chance to add anything the questionnaire didn't ask, he doesn't reach for a tidy closing thought. He names, plainly, that he's made many mistakes and that a few of them he wishes he could undo, without elaborating further here.",
     whyItMatters:
-      "Choosing to hold this back for a future book, rather than compress it into a soundbite for this feature, is the same restraint he showed in Principle 14. Some things, in his account, deserve their own space rather than a summary.",
+      "Choosing to hold this back, rather than compress it into a soundbite for this feature, is the same restraint he showed in Principle 14. Some things, in his account, deserve their own space rather than a summary.",
     reflect:
       "What's something you've made peace with sharing only partially for now, trusting that the fuller telling will come when it's ready?",
   },
@@ -372,7 +372,7 @@ export default function Page() {
         <div className="mx-auto mb-6 w-40 overflow-hidden rounded-full ring-1 ring-neutral-200">
           <Image
             src="/bardalai-portrait.jpg"
-            alt="Maj Gen (Dr) A.K. Bardalai, VSM (Retd)"
+            alt="Maj Gen (Dr) A.K. Bardalai (Retd)"
             width={242}
             height={242}
             className="h-40 w-40 object-cover object-top"
@@ -380,7 +380,7 @@ export default function Page() {
           />
         </div>
         <p className="text-sm text-neutral-500">
-          Maj Gen (Dr) A.K. Bardalai, VSM (Retd) · Indian Army · UN Peace Operations Scholar
+          Maj Gen (Dr) A.K. Bardalai (Retd) · Indian Army · UN Peace Operations Scholar
         </p>
         <p className="mt-1 text-xs uppercase tracking-wide text-neutral-400">
           Stated Principles · Issue No. 011
@@ -455,7 +455,7 @@ export default function Page() {
       <section className="mx-auto max-w-3xl px-6 py-14">
         <p className="text-xs uppercase tracking-wide text-neutral-400">About him</p>
         <p className="mt-4 leading-relaxed text-neutral-700">
-          Maj Gen (Dr) A.K. Bardalai, VSM (Retd), was commissioned into the Indian Army on 11 June
+          Maj Gen (Dr) A.K. Bardalai (Retd), was commissioned into the Indian Army on 11 June
           1977, a graduate of the National Defence Academy and the Defence Services Staff
           College, Wellington. He served with the Indian Peacekeeping Force in Sri Lanka,
           commanded an infantry battalion in the Siachen Glacier, and later an infantry brigade
