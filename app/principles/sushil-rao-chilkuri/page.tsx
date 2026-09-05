@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const SLUG = "sushil-rao-chilkuri";
 const URL = `https://app.stated.in/principles/${SLUG}`;
-const TITLE = "Sushil Rao Chilkuri — You Represent the Public";
+const TITLE = "Sushil Rao Chilkuri — You Are the Voice of the People";
 const DESCRIPTION =
   "Only print is final. You cannot undo print. Twenty principles from 38 years in journalism, from cub reporter to Editor, Special Reports, The Times of India.";
 const IMAGE = "https://app.stated.in/sushilrao-portrait.jpg";
@@ -350,16 +350,16 @@ const principlesPart4 = [
   },
   {
     number: "20",
-    title: "You Represent the Public",
+    title: "You Are the Voice of the People",
     quote: [
-      "A journalist should never forget that... you represent the public.",
+      "A journalist should never forget that... you are the voice of the people.",
     ],
     whatThisMeans:
       "Asked to complete the sentence in his own words, after nineteen answers full of specific stories, court cases, mistakes, and decisions, he closes with the shortest possible statement of the entire feature's throughline.",
     whyItMatters:
-      "Every story he told, the girl in the mud house, the tiger photograph, the heroine who asked him not to publish, the source he stopped trusting, only makes sense in light of this closing line. None of it was really about him. It was about who he was answerable to the whole time.",
+      "Every story he told, the girl in the mud house, the tiger photograph, the heroine who asked him not to publish, the source he stopped trusting, only makes sense in light of this closing line. None of it was really about him. It was about whose voice he was carrying the whole time.",
     reflect:
-      "Whoever or whatever you represent in your own work, would the way you've handled your hardest decisions hold up if the people you represent could see exactly how you made them?",
+      "Whoever or whatever you speak for in your own work, would the way you've handled your hardest decisions hold up if the people whose voice you carry could see exactly how you made them?",
   },
 ];
 
@@ -389,7 +389,7 @@ const takeaways = [
     body: "Somebody else's speed should not determine your own pace. AI should help you get it right, not take responsibility for getting it right.",
   },
   {
-    title: "You represent the public.",
+    title: "You are the voice of the people.",
     body: "Every hard decision, what to publish, what to leave out, who to trust, ultimately answers to that one fact.",
   },
 ];
@@ -434,7 +434,7 @@ export default function Page() {
         </h1>
 
         <p className="mt-3 text-base font-medium">
-          You Represent the Public
+          You Are the Voice of the People
         </p>
         <p className="mt-1 text-sm text-neutral-500">
           Cub Reporter, 1988 → Editor, Special Reports, The Times of India, Hyderabad (Retd.
@@ -724,7 +724,7 @@ export default function Page() {
         <p className="text-3xl font-serif leading-snug">
           &ldquo;A journalist should never forget
           <br />
-          <em>that you represent the public.</em>&rdquo;
+          <em>that you are the voice of the people.</em>&rdquo;
         </p>
         <p className="mt-4 text-sm text-neutral-500">
           Sushil Rao Chilkuri — Principle XX, Stated
