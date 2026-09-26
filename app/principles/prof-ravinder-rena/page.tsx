@@ -330,3 +330,441 @@ const takeaways = [
     body: "Legacy is defined not by titles or accolades, but by the positive difference made in the lives of others.",
   },
 ];
+
+export default function Page() {
+  return (
+    <main className="min-h-screen bg-white text-neutral-900">
+      {/* Breadcrumb */}
+      <nav className="mx-auto max-w-3xl px-6 pt-8 text-sm text-neutral-500">
+        <Link href="/" className="hover:text-neutral-900">
+          Home
+        </Link>{" "}
+        /{" "}
+        <Link href="/principles" className="hover:text-neutral-900">
+          Stated Principles
+        </Link>{" "}
+        / Prof. Dr. Ravinder Rena
+      </nav>
+
+      {/* Hero */}
+      <header className="mx-auto max-w-3xl px-6 pt-6 text-center">
+        <div className="mx-auto mb-6 w-40 overflow-hidden rounded-full ring-1 ring-neutral-200">
+          <Image
+            src="/rena-portrait.jpg"
+            alt="Prof. Dr. Ravinder Rena"
+            width={851}
+            height={851}
+            className="h-40 w-40 object-cover object-top"
+            priority
+          />
+        </div>
+        <p className="text-sm text-neutral-500">
+          Prof. Dr. Ravinder Rena, B.A.(Econ), B.Ed., LL.B., M.A., M.Phil., Ph.D.(Econ), Gold
+          Medallist · Professor of Economics, DUT Business School, Durban University of
+          Technology, South Africa
+        </p>
+        <p className="mt-1 text-xs uppercase tracking-wide text-neutral-400">
+          Stated Principles · Issue No. 022
+        </p>
+
+        <h1 className="mt-6 text-4xl font-serif italic tracking-tight md:text-5xl">
+          Prof. Dr. Ravinder <em>Rena</em>
+        </h1>
+
+        <p className="mt-3 text-base font-medium">
+          The True Measure of a Life Is Not What We Accumulate, but What We Give Back
+        </p>
+        <p className="mt-1 text-sm text-neutral-500">
+          Associate Editor, <em>The Bottom Line</em> (Q1 Scopus &amp; WoS) · Founding
+          Editor-in-Chief, <em>International Journal of Education Economics and Development</em>{" "}
+          (2009&ndash;2016) · Associate Editor, <em>African Journal of Science, Technology,
+          Innovation and Development</em> (2016&ndash;2021)
+        </p>
+
+        {/* Official links */}
+        <div className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-2.5">
+          <a
+            href="http://ssrn.com/author=910083"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 transition-colors hover:bg-amber-600 hover:text-white"
+          >
+            SSRN Profile
+            <span className="sr-only"> (opens in new window)</span>
+          </a>
+          <a
+            href="http://orcid.org/0000-0002-4156-8693"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 transition-colors hover:bg-amber-600 hover:text-white"
+          >
+            ORCID
+            <span className="sr-only"> (opens in new window)</span>
+          </a>
+        </div>
+
+        <blockquote className="mx-auto mt-6 max-w-xl text-lg italic text-neutral-700">
+          &ldquo;True leadership is defined not by the authority one holds, but by the positive
+          difference one makes in the lives of others.&rdquo;
+        </blockquote>
+      </header>
+
+      {/* Stats row */}
+      <section className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-6 border-y border-neutral-200 px-6 py-6 text-sm sm:grid-cols-4">
+        <div>
+          <p className="text-neutral-400">Format</p>
+          <p className="font-medium">Leadership Principles</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Read time</p>
+          <p className="font-medium">15 minutes</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Principles</p>
+          <p className="font-medium">16 stated</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Published</p>
+          <p className="font-medium">September 2026</p>
+        </div>
+      </section>
+
+      {/* Tags */}
+      <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 py-6 text-xs">
+        {[
+          "Economics & Development",
+          "Higher Education Leadership",
+          "Public Policy",
+          "Mentorship",
+          "Inclusive Growth",
+        ].map((tag) => (
+          <span
+            key={tag}
+            className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-600"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="mx-auto max-w-3xl px-6">
+        <a
+          href="#principles"
+          className="inline-block rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          Read the principles
+        </a>
+      </div>
+
+      {/* About */}
+      <section className="mx-auto max-w-3xl px-6 py-14">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">About him</p>
+        <blockquote className="mt-4 border-l-2 border-neutral-300 pl-4 text-lg italic text-neutral-700">
+          &ldquo;We asked Prof. Dr. Ravinder Rena fifteen questions, and one final reflection. He
+          answered from a career spanning economics research, higher education leadership, and
+          public policy across Africa and South Asia.&rdquo;
+        </blockquote>
+        <p className="mt-6 leading-relaxed text-neutral-700">
+          Prof. Dr. Ravinder Rena is Professor of Economics at the DUT Business School, Faculty of
+          Management Sciences, Durban University of Technology, South Africa. He holds a
+          Ph.D.(Econ) as a Gold Medallist, alongside degrees in Economics, Education, and Law. He
+          serves as Associate Editor of <em>The Bottom Line</em> (Q1 Scopus and Web of Science),
+          was Founding Editor-in-Chief of the <em>International Journal of Education Economics
+          and Development</em> from 2009 to 2016, and served as Associate Editor of the{" "}
+          <em>African Journal of Science, Technology, Innovation and Development</em> from 2016
+          to 2021. His work spans economic development, inclusive growth, higher education
+          governance, and mentorship of early-career researchers.
+        </p>
+        <p className="mt-4 leading-relaxed text-neutral-700">
+          What follows is not a Q&amp;A. It is a record of what he stands for, stated publicly, in
+          his own words. This is how <em>Stated Principles</em> works: the person states their
+          beliefs. We make them visible. You decide what to carry forward.
+        </p>
+      </section>
+
+      {/* Principles 1-5 */}
+      <section id="principles" className="mx-auto max-w-3xl px-6 py-6">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">
+          Sixteen principles · Stated by Prof. Dr. Ravinder Rena
+        </p>
+        <h2 className="mt-3 text-3xl font-serif">
+          What he stands for — in his own words.
+        </h2>
+
+        <div className="mt-12 space-y-20">
+          {principles.map((p) => (
+            <article key={p.number} className="border-t border-neutral-200 pt-10">
+              <p className="text-sm text-neutral-400">{p.number} of 16</p>
+              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+                {p.quote.map((para, i) => (
+                  <p key={i} className="leading-relaxed">
+                    {para}
+                  </p>
+                ))}
+              </blockquote>
+              <p className="mt-3 text-sm text-neutral-500">
+                — Prof. Dr. Ravinder Rena, stated directly
+              </p>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Pull quote 1 */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <p className="text-3xl font-serif leading-snug">
+          &ldquo;PhD does not merely denote
+          <br />
+          <em>a Doctor of Philosophy.</em>&rdquo;
+        </p>
+        <p className="mt-4 text-sm text-neutral-500">
+          Prof. Dr. Ravinder Rena — Principle VIII, Stated
+        </p>
+      </section>
+
+      {/* Principles 6-10 */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <div className="space-y-20">
+          {principlesPart2.map((p) => (
+            <article key={p.number} className="border-t border-neutral-200 pt-10">
+              <p className="text-sm text-neutral-400">{p.number} of 16</p>
+              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+                {p.quote.map((para, i) => (
+                  <p key={i} className="leading-relaxed">
+                    {para}
+                  </p>
+                ))}
+              </blockquote>
+              <p className="mt-3 text-sm text-neutral-500">
+                — Prof. Dr. Ravinder Rena, stated directly
+              </p>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Pull quote 2 */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <p className="text-3xl font-serif leading-snug">
+          &ldquo;Setbacks are not failures;
+          <br />
+          <em>they are opportunities to refine strategies.</em>&rdquo;
+        </p>
+        <p className="mt-4 text-sm text-neutral-500">
+          Prof. Dr. Ravinder Rena — Principle XIII, Stated
+        </p>
+      </section>
+
+      {/* Principles 11-14 */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <div className="space-y-20">
+          {principlesPart3.map((p) => (
+            <article key={p.number} className="border-t border-neutral-200 pt-10">
+              <p className="text-sm text-neutral-400">{p.number} of 16</p>
+              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+                {p.quote.map((para, i) => (
+                  <p key={i} className="leading-relaxed">
+                    {para}
+                  </p>
+                ))}
+              </blockquote>
+              <p className="mt-3 text-sm text-neutral-500">
+                — Prof. Dr. Ravinder Rena, stated directly
+              </p>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Pull quote 3 */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <p className="text-3xl font-serif leading-snug">
+          &ldquo;Seek knowledge with humility,
+          <br />
+          <em>act with integrity, lead with compassion.</em>&rdquo;
+        </p>
+        <p className="mt-4 text-sm text-neutral-500">
+          Prof. Dr. Ravinder Rena — Principle XV, Stated
+        </p>
+      </section>
+
+      {/* Principles 15-16 */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <div className="space-y-20">
+          {principlesPart4.map((p) => (
+            <article key={p.number} className="border-t border-neutral-200 pt-10">
+              <p className="text-sm text-neutral-400">{p.number} of 16</p>
+              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+                {p.quote.map((para, i) => (
+                  <p key={i} className="leading-relaxed">
+                    {para}
+                  </p>
+                ))}
+              </blockquote>
+              <p className="mt-3 text-sm text-neutral-500">
+                — Prof. Dr. Ravinder Rena, stated directly
+              </p>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+                </div>
+              </div>
+
+              <a
+                href="https://app.stated.in/signup"
+                className="mt-8 inline-block rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-neutral-900"
+              >
+                Create a Commitment inspired by this
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Pull quote 4 */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <p className="text-3xl font-serif leading-snug">
+          &ldquo;The true measure of a life
+          <br />
+          <em>is not what we accumulate, but what we give back.</em>&rdquo;
+        </p>
+        <p className="mt-4 text-sm text-neutral-500">
+          Prof. Dr. Ravinder Rena — Principle XVI, Stated
+        </p>
+      </section>
+
+      {/* Key takeaways */}
+      <section className="mx-auto max-w-3xl px-6 py-14">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Key takeaways</p>
+        <h2 className="mt-3 text-3xl font-serif">Seven ideas worth carrying forward</h2>
+
+        <ol className="mt-8 space-y-6">
+          {takeaways.map((t, i) => (
+            <li key={i} className="flex gap-4">
+              <span className="text-lg font-serif text-neutral-400">{i + 1}</span>
+              <p className="leading-relaxed text-neutral-700">
+                <span className="font-semibold text-neutral-900">{t.title}</span> {t.body}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* CTA */}
+      <section className="mx-auto max-w-3xl px-6 py-10">
+        <h3 className="text-xl font-serif">Which principle resonates with you?</h3>
+        <p className="mt-2 text-neutral-700">
+          Post a commitment inspired by Prof. Dr. Ravinder Rena&apos;s principles. State it
+          publicly — and make it real.
+        </p>
+        <a
+          href="https://app.stated.in/signup"
+          className="mt-5 inline-block rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          Create a Commitment
+        </a>
+      </section>
+
+      {/* Share */}
+      <section className="mx-auto max-w-3xl px-6 py-10">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Share this feature</p>
+        <div className="mt-3 flex flex-wrap gap-4 text-sm">
+          <a
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(URL)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            LinkedIn
+          </a>
+          <a
+            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+              URL
+            )}&text=${encodeURIComponent(DESCRIPTION)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Twitter / X
+          </a>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`${DESCRIPTION} ${URL}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            WhatsApp
+          </a>
+        </div>
+        <p className="mt-4 text-sm text-neutral-500">15 min read · 16 principles</p>
+        <p className="text-sm text-neutral-400">app.stated.in/principles/{SLUG}</p>
+        <Link href="/principles" className="mt-4 inline-block text-sm underline">
+          All Stated Principles features
+        </Link>
+      </section>
+    </main>
+  );
+}
