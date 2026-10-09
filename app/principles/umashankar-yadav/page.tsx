@@ -4,10 +4,11 @@ import Link from "next/link";
 
 const SLUG = "umashankar-yadav";
 const URL = `https://app.stated.in/principles/${SLUG}`;
-const TITLE = "Umashankar Yadav — Be Flexible in Your Approach, But Firm in Your Values";
+const TITLE = "Umashankar Yadav — Be Flexible in Your Approach, but Firm in Your Values";
 const DESCRIPTION =
-  "A film company was not born from a business plan. It was born from a story. Seventeen principles on creativity, dignity, and building a film company rooted in both.";
+  "Stories make ideas human. Seventeen principles from a former Air Force professional turned entrepreneur, filmmaker, writer and founder of the Ahmedabad International Literature Festival.";
 const IMAGE = "https://app.stated.in/yadav-portrait.jpg";
+const TOTAL = 17;
 
 export const metadata: Metadata = {
   title: `${TITLE} | Stated Principles`,
@@ -29,311 +30,555 @@ export const metadata: Metadata = {
   },
 };
 
-const principles = [
+type Seg = string | { b: string } | { i: string };
+type Para = string | Seg[];
+type Principle = {
+  number: string;
+  title: string;
+  quote: Para[];
+  whatThisMeans: string;
+  whyItMatters: string;
+  reflect: string;
+};
+
+const linkPill =
+  "inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 transition-colors hover:bg-amber-600 hover:text-white";
+
+function renderSeg(s: Seg, i: number) {
+  if (typeof s === "string") return <span key={i}>{s}</span>;
+  if ("b" in s)
+    return (
+      <strong key={i} className="font-semibold text-neutral-900">
+        {s.b}
+      </strong>
+    );
+  return <em key={i}>{s.i}</em>;
+}
+
+function PrincipleCard({ p, showCta }: { p: Principle; showCta?: boolean }) {
+  return (
+    <article className="border-t border-neutral-200 pt-10">
+      <p className="text-sm text-neutral-400">
+        {p.number} of {TOTAL}
+      </p>
+      <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+      <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+        {p.quote.map((para, i) => (
+          <p key={i} className="leading-relaxed">
+            {typeof para === "string" ? para : para.map(renderSeg)}
+          </p>
+        ))}
+      </blockquote>
+      <p className="mt-3 text-sm text-neutral-500">— Umashankar Yadav, stated directly</p>
+
+      <div className="mt-8 space-y-6">
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">What this means</p>
+          <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+          <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+          <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+        </div>
+      </div>
+
+      {showCta && (
+        <a
+          href="https://app.stated.in/signup"
+          className="mt-8 inline-block rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-neutral-900"
+        >
+          Create a Commitment inspired by this
+        </a>
+      )}
+    </article>
+  );
+}
+
+const principles: Principle[] = [
   {
-    number: "01",
-    title: "I Am, in Many Ways, the Sum of All Those Experiences",
-    quote: [
-      "Looking back, I realise that life has shaped me in layers, each phase came at a different age, through different circumstances, and each left behind something that became part of who I am today.",
-      "At a very young age, I lost my father. That experience brought an early sense of responsibility and maturity, but it also brought uncertainty. I grew up watching my mother navigate life with quiet strength, and that silently shaped my own resilience.",
-      "Later, as I began working, I experienced both failures and small victories, moments that taught me patience and humility. There were times things did not go as planned, and I had to rebuild, rethink and start again.",
-      "Then came the phase of building something of my own, starting a company, taking creative and financial risks, and learning that courage is not the absence of fear but the decision to move forward despite it.",
-      "Each of these experiences, loss, struggle, failure and rebuilding, has contributed to shaping my character, my patience and my perspective on life. I am, in many ways, the sum of all those experiences.",
+    "number": "01",
+    "title": "I Am, in Many Ways, the Sum of All Those Experiences",
+    "quote": [
+      [
+        {
+          "b": "Everything I have experienced in my journey has taught me something. I believe I am, in many ways, the sum of all those experiences. The Indian Air Force taught me discipline, technology, responsibility and self-reliance. At a very young age, it taught me how to take care of myself, support my family and serve the nation with pride and a sense of purpose. Entrepreneurship taught me how to build—ideas, products, businesses and opportunities. It also gave me the financial independence to pursue the passions that were close to my heart. Literature made me more sensitive and observant. Cinema taught me collaboration and showed me how different people, talents and perspectives can come together to create something meaningful. And the Ahmedabad International Literature Festival taught me perhaps the most important lesson—that passion and purpose can come together to touch people's lives and contribute to society."
+        }
+      ],
+      "I don't think any single experience made me who I am today. Each phase came at a different age, with different challenges, opportunities and aspirations. Each one added something to me. What remained constant was my desire to learn, to grow and to keep moving forward with a sense of purpose.",
+      "So, when I look back, I don't see one defining chapter. I see a collection of experiences, each shaping the next. And perhaps that is what the journey really is—learning, evolving and becoming a little more complete with every phase of life."
     ],
-    whatThisMeans:
-      "He traces his own character back to a sequence of distinct life phases, early loss, workplace failure and small victories, and eventually entrepreneurial risk, treating none of them as separate from who he is today, but as layers that together built him.",
-    whyItMatters:
-      "Naming courage as \"not the absence of fear but the decision to move forward despite it\" is a hard-won definition, arrived at specifically through the experience of building a company and taking creative and financial risk, not offered as an abstract motivational line.",
-    reflect:
-      "Looking at the distinct phases of your own life so far, which one shaped your character the most, and have you actually acknowledged what it gave you?",
+    "whatThisMeans": "He credits no single defining chapter. Each phase, from the Air Force to the festival, added something different.",
+    "whyItMatters": "The constant across every phase was the desire to learn, to grow and to keep moving forward with purpose.",
+    "reflect": "Which phase of your own life taught you something the others could not?"
   },
   {
-    number: "02",
-    title: "I Would Rather Lose Something While Remaining True to Myself",
-    quote: [
-      "Yes, there have been several moments where I had to choose between what felt easier and what felt right. One belief I have never compromised on is honesty in intent, even when the truth was inconvenient or could cost me an opportunity.",
-      "There were business situations where bending a little, saying what people wanted to hear, or taking a shortcut would have been simpler. But I always believed that short-term comfort built on compromise eventually costs more in the long run, either in trust, in reputation, or in self-respect.",
-      "So yes, there have been real costs, financial, relational, even professional, but I would rather lose something while remaining true to myself than gain something by losing my integrity.",
+    "number": "02",
+    "title": "I Would Rather Lose Something While Remaining True to Myself",
+    "quote": [
+      "I believe that, by nature, every human being has some degree of self-interest. I am no different. I have my own likes, dislikes, ambitions and opinions, and I am a fairly opinionated person. But I try to ensure that my opinions are guided by reason, experience and a clear sense of what I believe is right.",
+      "With time, my personal interests have evolved into a larger sense of purpose. What matters to me personally is often connected to the larger interest of the people and society around me and ultimately to the nation. I have never been comfortable with partisan thinking. I value honesty, integrity and the intention of the people I work with and associate with.",
+      "The larger purpose behind this way of thinking is to contribute, in whatever way I can, towards creating a better society for generations that will come after us.",
+      "I have paid a price for holding on to these principles. At different points in my life, I have lost businesses, friendships and relationships because I was unwilling to compromise on certain values. But I have made peace with those losses. Because at the end of the day, I would rather lose something while remaining true to myself than gain something by compromising what I believe in. These principles are not just ideas I talk about, but they are my lived experiences, core values and the way I have chosen to live my life.",
+      "For me, purpose is ultimately finding a balance between what we want for ourselves and what we can contribute to the world around us. If my journey can make even a small difference to the society and leave something meaningful for future generations, that gives greater meaning to everything I do."
     ],
-    whatThisMeans:
-      "He names honesty in intent as the specific belief he's never compromised on, and is direct about the fact that holding to it has cost him real, concrete things, financial, relational, professional, not just abstract discomfort.",
-    whyItMatters:
-      "\"Short-term comfort built on compromise eventually costs more in the long run\" reframes the easier choice as the more expensive one over time, a calculation most people avoid making explicit even when they sense it's true.",
-    reflect:
-      "Is there a shortcut you're currently tempted by that would be easier now but, by his logic, would cost you more later in trust or self-respect?",
+    "whatThisMeans": "He names the price of his values plainly: lost businesses, friendships and relationships.",
+    "whyItMatters": "Purpose, for him, is a balance between what we want for ourselves and what we can contribute to the world around us.",
+    "reflect": "What have you been unwilling to compromise on, and what has it cost you?"
   },
   {
-    number: "03",
-    title: "We Wanted to Make It Deeper, Not Bigger",
-    quote: [
-      "AILF, the Ashirwad International Literature Festival, started with a very simple but strong intention: to create a space where literature, art, cinema and ideas could meet without barriers of language, geography or background.",
-      "I have always believed that literature is not just about books, it is about human experience, emotion and thought. India has such a rich diversity of languages and storytelling traditions, yet many of these voices remain unheard outside their own regions.",
-      "AILF was built on the idea of inclusivity, bringing together established as well as emerging writers, filmmakers, artists and thinkers on one platform. We wanted to create dialogue, not competition, collaboration, not hierarchy.",
-      "Over time, instead of simply scaling the number of events, we focused on deepening the quality of conversations, strengthening regional participation and building long-term relationships with authors and institutions. We wanted AILF to feel personal, not corporate, where everyone, from a published author to a first-time poet, feels equally valued. That intention of inclusivity and authenticity is what has helped AILF grow organically, chapter by chapter, voice by voice.",
+    "number": "03",
+    "title": "Not Just Another Festival",
+    "quote": [
+      "When we started Ahmedabad International Literature Festival in 2016, we never wanted to create just another festival. We wanted to create a space where people could come with curiosity and questions and go back with some answers, perhaps more questions, and maybe a new direction in life.",
+      "For me, literature has never existed in isolation. I wanted it to have a conversation with young people and society—with journalism, cinema, art, culture and everything that influences the way we think and live. We were never obsessed with making AILF bigger. We wanted to make it deeper. We wanted people to participate, question, discuss, debate, deconstruct and contribute—not simply sit in an audience and consume content.",
+      "I think over the years, AILF has stayed true to that idea. The love and trust people have given the festival has been incredibly encouraging.",
+      "But the journey has also taught me that building a cultural institution is much more challenging than running a normal business. When you work with creative people, everyone comes with their own aspirations, expectations and ideas. And sometimes, even when your intentions are genuine, your resources don't allow you to fulfill everyone's expectations. That can be painful because you care deeply about the people and the platform.",
+      "A cultural institution survives not only on resources but on passion, commitment and the ability to keep finding a way forward. There have been difficult moments, but the belief in what we are trying to create has kept me going.",
+      "Today, AILF is no longer just a festival for me. It has become a part of my life. It has given me friendships, conversations, ideas and perspectives that I may never have encountered otherwise.",
+      "And when I look back, I realise this was perhaps the life I was searching for all along—a life where my work allows me to meet people, exchange ideas, create conversations and, hopefully, make some small contributions to the society around me."
     ],
-    whatThisMeans:
-      "Rather than scaling by increasing the number of events, he describes a deliberate choice to deepen the quality of conversations and regional participation instead, treating growth in reach and growth in depth as two genuinely different goals.",
-    whyItMatters:
-      "\"We wanted to create dialogue, not competition, collaboration, not hierarchy\" is a specific structural choice about how a platform treats both established and first-time voices, not just a value statement about inclusivity in the abstract.",
-    reflect:
-      "In something you've built or are building, have you been optimising for scale, or for depth, and which one does it actually need more right now?",
+    "whatThisMeans": "AILF began in 2016 with one aim: to be deeper, not bigger, a place for participation rather than consumption.",
+    "whyItMatters": "He is candid that a cultural institution is harder than a normal business, and that it survives on passion and commitment as much as resources.",
+    "reflect": "Is what you are building designed to be bigger, or deeper?"
   },
   {
-    number: "04",
-    title: "A Film Company Was Not Born From a Business Plan. It Was Born From a Story.",
-    quote: [
-      "The idea for Akashwadi Films did not come from a business plan, it came from a story. A few years ago, I came across a real-life incident that deeply moved me, something so human and emotional that I felt it had to be told through cinema.",
-      "I realised that if a story could move me that much, it could move audiences too, if told honestly, without compromising its emotional truth for commercial formula.",
-      "That became the seed of Akashwadi Films, a company built not just to produce films, but to tell stories that matter, stories rooted in human emotion, culture and reality rather than just entertainment value.",
-      "Since then, our focus has remained the same: to find stories that deserve to be told and give them the right platform, authenticity and respect they deserve.",
+    "number": "04",
+    "title": "Stories Make Ideas Human",
+    "quote": [
+      "I have always felt that facts and information are important, but by themselves they can remain abstract. They give us knowledge, but they do not always touch us. They tell us what happened, but they don't necessarily make us feel why it matters.",
+      [
+        {
+          "b": "Stories have a different power. They make ideas human."
+        }
+      ],
+      "I experienced this myself about two years ago.",
+      "One day, a person I barely knew called me and said, \"Sir, I am in your city and would like to meet you.\" I invited him to my office. He came with his wife. During our conversation, he told me that he had written a story and screenplay and asked if he could narrate it to me.",
+      "I listened. I liked the story.",
+      "Then he said, \"If you support me, we can make a short film.\"",
+      [
+        "I had never planned to enter film production. But I thought about it for a moment. I had the resources; he had the story, the screenplay and the vision. So, I said, ",
+        {
+          "b": "\"Let's do it.\""
+        }
+      ],
+      [
+        "That simple conversation gave birth to ",
+        {
+          "b": "SERENE FILMS"
+        },
+        "."
+      ],
+      [
+        "The film, ",
+        {
+          "i": "Sukhnath Mogra Ni Vaarta"
+        },
+        ", was made in Gujarati and has been running successfully on WAVES OTT for more than a year. The person who walked into my office that day was ",
+        {
+          "b": "Omkar Pethkar"
+        },
+        ". He later wrote the screenplay and directed our Hindi feature film ",
+        {
+          "b": "Drop Out"
+        },
+        ", which had a good theatrical run and subsequently reached a prestigious OTT platform."
+      ],
+      [
+        "We later produced another short film, ",
+        {
+          "i": "Heer Aur Raanjha"
+        },
+        ", written and directed by ",
+        {
+          "b": "Tamal Dutta"
+        },
+        ", which is also streaming on WAVES OTT. We are now working on several more ambitious projects."
+      ],
+      "When I look back, I find the journey fascinating.",
+      [
+        {
+          "b": "A film company was not born from a business plan. It was born from a story."
+        }
+      ],
+      "And that, for me, is the power of storytelling.",
+      "Data can inform us. Facts can educate us. But a story can make us feel. It can give a face to an idea, emotion to information and meaning to an experience.",
+      [
+        {
+          "b": "Facts tell us what is happening. Stories help us understand why it matters."
+        }
+      ],
+      "Facts can inform us. Ideas can challenge us. But stories can move us. And sometimes, a story does more than communicate an idea—it changes the direction of a life.",
+      [
+        {
+          "b": "Perhaps that is the greatest power of a story: it can change not only the way we see the world, but sometimes the direction in which we choose to walk."
+        }
+      ]
     ],
-    whatThisMeans:
-      "The founding moment wasn't a market gap or a business opportunity, it was a real-life incident that moved him personally, and the entire company grew from the conviction that if a story could move him, it could move an audience too, if told honestly.",
-    whyItMatters:
-      "\"Without compromising its emotional truth for commercial formula\" names the specific tension a production company constantly faces, and states plainly which side of that tension the company was built to protect.",
-    reflect:
-      "Has something you built or started come from a genuine emotional conviction, or from a calculated opportunity, and does it still feel true to that original source?",
+    "whatThisMeans": "Serene Films began with a single conversation: a stranger, a screenplay and a willingness to say yes.",
+    "whyItMatters": "For him, facts inform but stories make us feel why something matters.",
+    "reflect": "What story has changed the direction in which you chose to walk?"
   },
   {
-    number: "05",
-    title: "Let Creativity Be Fearless in Thought, Responsible in Expression, Independent in Spirit",
-    quote: [
-      "Creative freedom, to me, means the ability to explore ideas, emotions and perspectives honestly, without fear of judgement or unnecessary restriction. However, true creative freedom also comes with responsibility, towards the audience, towards society and towards the truth of the story itself.",
-      "I believe creativity should provoke thought, not provoke hatred. It should question, but not divide. Art and storytelling have the power to influence minds, so with that power comes the duty to be sensitive and socially conscious.",
-      "At the same time, I strongly oppose unnecessary censorship that stifles genuine artistic expression. The key lies in intent, if a story is being told to spread awareness, empathy or reflection, it deserves space, but if it is being told carelessly, only to provoke controversy or hurt sentiments without purpose, that is not freedom, that is irresponsibility disguised as art.",
-      "So, my philosophy is simple: let creativity be fearless in thought, responsible in expression, and independent in spirit.",
+    "number": "05",
+    "title": "Fearless in Thought, Responsible in Expression, Independent in Spirit",
+    "quote": [
+      [
+        "I believe creativity should challenge minds, not target people. It should provoke thought, not provoke hatred",
+        {
+          "b": "."
+        }
+      ],
+      "It should remain independent of activism. A creator may have convictions, but art should not become merely a vehicle for an agenda. The moment creativity loses its freedom to explore, question and interpret, it risks losing something essential to its very nature.",
+      "Let creativity be fearless in thought, responsible in expression, and independent in spirit."
     ],
-    whatThisMeans:
-      "He separates two things often confused in debates about creative freedom: the intent behind a work, awareness, empathy, reflection, versus carelessness aimed only at provoking controversy, treating only the first as genuine freedom worth protecting.",
-    whyItMatters:
-      "Holding both \"oppose unnecessary censorship\" and \"creativity should provoke thought, not provoke hatred\" at once refuses to collapse into either a purely libertarian or purely restrictive position on artistic expression.",
-    reflect:
-      "In your own creative or professional work, is the intent behind what you make genuinely about awareness or empathy, or has it drifted toward provocation for its own sake?",
-  },
+    "whatThisMeans": "Creativity should challenge minds without targeting people, and stay free of any agenda.",
+    "whyItMatters": "Freedom to explore, question and interpret is, in his view, essential to the nature of art.",
+    "reflect": "Where does your own work draw the line between provoking thought and provoking hatred?"
+  }
 ];
 
-const principlesPart2 = [
+const principlesPart2: Principle[] = [
   {
-    number: "06",
-    title: "Business With Dignity",
-    quote: [
-      "In my experience, success and ethics are not opposing forces, they actually strengthen each other in the long run. I have always believed in transparency with investors, fairness with collaborators and respect for every individual associated with a project, whether it is a lead actor or a junior technician.",
-      "Yes, there are moments when deadlines, budgets and market pressures tempt shortcuts, but I try to remind myself and my team that reputation is built slowly and lost quickly.",
-      "I run my business with one simple principle: business with dignity. Profit is important, every business needs it to survive and grow, but not at the cost of someone's dignity, safety or trust.",
+    "number": "06",
+    "title": "Business with Dignity",
+    "quote": [
+      "For me, entrepreneurship has never been only about creating financial success for myself or the people around me. It is equally about creating value for the people and businesses we work with.",
+      "One of my greatest satisfactions as an entrepreneur comes from seeing how the systems, technology and support we provided decades ago have helped our clients transform their businesses—making them more accurate, efficient and faster. When something we created years ago continues to make a difference in someone's business today, that gives me a sense of fulfilment that goes beyond financial success. We have always believed in standing by our clients and supporting them whenever they need us.",
+      [
+        "My simple principle is ",
+        {
+          "b": "\"Business with Dignity.\""
+        }
+      ],
+      [
+        "I tell my team and fellow entrepreneurs: ",
+        {
+          "b": "Be proud of what you do, regardless of the size or scale of your business."
+        },
+        " Every honest business contributes to an industry, creates value, supports livelihoods and, in its own way, contributes to the building of the nation."
+      ],
+      [
+        {
+          "b": "Entrepreneurship is not just about building a business. It is about building value, earning trust and leaving something better than you found it."
+        }
+      ]
     ],
-    whatThisMeans:
-      "He explicitly rejects the framing that ethics and success are opposing forces, arguing instead that fairness and transparency, especially with the people who have the least leverage, a junior technician as much as a lead actor, strengthen a business over time rather than slow it down.",
-    whyItMatters:
-      "\"Reputation is built slowly and lost quickly\" is offered as a practical, not just moral, reason to resist shortcuts under deadline and budget pressure, treating integrity as a long-term asset rather than a cost.",
-    reflect:
-      "Under your own current pressures, deadlines, budgets, or otherwise, is dignity for the people with the least leverage still holding, or has it quietly started to slip?",
+    "whatThisMeans": "His measure of entrepreneurship is value created for clients, still working years later.",
+    "whyItMatters": "Every honest business, whatever its size, supports livelihoods and builds the nation.",
+    "reflect": "Would you be proud of your work if no one measured its size?"
   },
   {
-    number: "07",
-    title: "I Will Try to Make the World a Little Better Than I Found It",
-    quote: [
-      "I want to be remembered not just as a filmmaker or an entrepreneur, but as someone who created spaces, spaces for stories to be told, for voices to be heard, and for creativity to thrive with honesty and purpose.",
-      "I would like people to say that I believed in human connection more than personal gain, and that whatever I built, whether AILF or Akashwadi Films, was rooted in authenticity, respect and purpose.",
-      "If, through my work, even a few people find courage to express themselves, or a few stories reach audiences that truly deserve them, I will consider my journey meaningful.",
-      "I don't think in terms of legacy as fame or recognition, I think in terms of impact, how many lives, however small the number, were touched positively because of something I created or believed in. That, to me, is success, and that is what I hope to be remembered for: that I tried, with honesty and heart, to make the world a little better than I found it.",
+    "number": "07",
+    "title": "What We Are Able to Give Back",
+    "quote": [
+      "If something I create can outlive me and continue to have meaning for others, I would consider that my small contribution to the world.",
+      [
+        "We come into this world with nothing and eventually leave with nothing. Perhaps the real measure of our journey is not what we accumulate for ourselves, but ",
+        {
+          "b": "what we are able to give back while we are here."
+        }
+      ],
+      [
+        {
+          "b": "My thought process is, \"I will try to make the world a little better than I found it.\""
+        }
+      ]
     ],
-    whatThisMeans:
-      "He explicitly separates legacy from fame or recognition, redefining it instead as impact, measured by however small a number of lives were touched positively, rather than by scale or visibility.",
-    whyItMatters:
-      "Wanting to be remembered for creating \"spaces\" rather than for personal output ties directly back to Principle 3's approach to AILF, built on inclusivity and giving others a platform, not on his own name being central to it.",
-    reflect:
-      "If you measured your own impact by lives touched rather than recognition received, would your current priorities look the same?",
+    "whatThisMeans": "He measures a life by what it gives back, not by what it accumulates.",
+    "whyItMatters": "Lasting meaning for others is the only legacy he asks of his work.",
+    "reflect": "What are you building that could outlive you?"
   },
   {
-    number: "08",
-    title: "Never Drop Out of Life Just Because You Could Not Follow the First Plan",
-    quote: [
-      "Interestingly, one of our recent projects is literally titled Drop Out, and the irony is that it explores exactly this theme, failure, self-doubt and the courage to rediscover oneself after setbacks.",
-      "In real life too, there was a phase when a major project I was developing fell apart due to financial and creative differences. It was disheartening, but instead of giving up, I used that time to research, write and restructure my approach.",
-      "That failure eventually led me to create stronger, more grounded content and helped me understand the industry, and myself, much better.",
-      "So, if I were to connect it symbolically, Drop Out is not just a film title, it reflects a life lesson, that sometimes you have to drop out of your comfort zone, drop out of failure's grip and start again with renewed purpose.",
-      "The message to carry forward from this experience is simple: never drop out of life just because you could not follow the first plan.",
+    "number": "08",
+    "title": "Never Drop Out of Life",
+    "quote": [
+      [
+        "In fact, my movie ",
+        {
+          "b": "Drop Out"
+        },
+        " is based on the same subject. I would advise the young generation:"
+      ],
+      [
+        {
+          "b": "Never drop out of life just because you could not follow the first plan."
+        }
+      ],
+      "Life is not only about success. It is about discovering who you are, finding what gives your life meaning, and having the courage to begin again.",
+      [
+        {
+          "b": "Be patient."
+        },
+        " Good things take time."
+      ]
     ],
-    whatThisMeans:
-      "He draws a direct line between a real professional setback, a major project falling apart over financial and creative differences, and the thematic content of an actual film his company made, treating the failure as research material rather than something to simply move past.",
-    whyItMatters:
-      "Reframing \"drop out\" from a term of failure into \"drop out of your comfort zone, drop out of failure's grip\" repurposes the exact language of the setback into the language of recovery, rather than avoiding the word altogether.",
-    reflect:
-      "Is there a failed plan in your own past that you've filed away as simply a loss, rather than mined for what it could teach you, the way he did with Drop Out?",
+    "whatThisMeans": "His film Drop Out carries the same message he gives young people: a failed first plan is not the end.",
+    "whyItMatters": "Life, he says, is about discovering who you are and having the courage to begin again.",
+    "reflect": "What would you begin again if the first plan had not worked?"
   },
   {
-    number: "09",
-    title: "Technology May Shape the Future, But Culture Must Help Humanity Remain at Its Heart",
-    quote: [
-      "Technology, especially AI and digital platforms, has changed how stories are created, distributed and consumed. It has given more people access to tools that were once limited to big studios, and that's empowering.",
-      "But I also believe that no matter how advanced technology becomes, it cannot replace human emotion, intuition or imagination, the very soul of storytelling.",
-      "My approach has always been to use technology as a tool, not a replacement, for creativity. Whether it's using digital platforms to reach wider audiences for AILF, or using modern production techniques to tell stories more effectively in Akashwadi Films, I see technology as an enabler of human expression, not a substitute for it.",
-      "The future will belong to those who can balance innovation with authenticity, using new tools, but keeping the human heart of storytelling alive.",
+    "number": "09",
+    "title": "Development Should Not Make Us Less Human",
+    "quote": [
+      "The world is changing at an unprecedented pace and so is India. Technology, business, media and changing social behaviour have transformed the way we live, think and interact. While these changes have brought remarkable possibilities, they have also made us increasingly focused on the self—our success, our possessions, our opinions and our ambitions.",
+      "In this race to achieve more, we sometimes forget the deeper essence of life and the human values that give it meaning. We seldom pause to reflect on a simple truth: everything is temporary—even life itself. Perhaps this forgetfulness has contributed to a growing impatience, aggression and insensitivity in society.",
+      "This is where literature, cinema, art and cultural institutions have a responsibility far beyond entertainment. They must create spaces where people can pause, reflect, question, feel and reconnect with what makes us human. They can remind us of empathy, compassion, humility, relationships and the value of living together—not merely competing with one another.",
+      "Progress should not come at the cost of sensitivity. Development should not make us less human.",
+      [
+        {
+          "b": "Technology may shape the future, but culture must help humanity remain at its heart."
+        }
+      ]
     ],
-    whatThisMeans:
-      "He treats the access technology provides, tools once limited to big studios now reaching more people, as a genuine benefit, while drawing a firm line around what it cannot do: replace human emotion, intuition, or imagination.",
-    whyItMatters:
-      "\"The future will belong to those who can balance innovation with authenticity\" applies directly to both of his own ventures, AILF and Akashwadi Films, each using modern tools in service of human storytelling rather than letting the tools define the work.",
-    reflect:
-      "In your own use of new tools or technology, are you using them to enable something genuinely human, or letting them start to substitute for it?",
+    "whatThisMeans": "He sees culture's role as creating spaces to pause, reflect, question and feel.",
+    "whyItMatters": "Rapid change has made us more focused on the self, and culture can remind us of empathy and humility.",
+    "reflect": "When did you last pause, in the middle of a race to achieve more?"
   },
   {
-    number: "10",
-    title: "We Must Learn to Agree to Disagree, Not to End the Conversation, But to Reach a Constructive Outcome",
-    quote: [
-      "As a leader, I have faced situations where I had to challenge dominant opinions, whether it was questioning a popular market trend, taking an unconventional storytelling approach, or standing by a decision that others doubted.",
-      "I believe influence without authority comes from consistency, credibility and genuine intent. When people see that your actions align with your words over time, trust builds naturally, even without formal power.",
-      "I try to lead through dialogue rather than dictation, listening to different viewpoints but also having the confidence to stand by what I believe is right, even if it's not the popular choice.",
-      "Sometimes, influence also means patience, waiting for the right moment to present an idea persuasively rather than forcing it. In my experience, people are more open to differing views when they feel heard and respected, not challenged or dismissed.",
-      "So, in short, I believe we must learn to agree to disagree, not to end the conversation, but to reach a constructive outcome.",
+    "number": "10",
+    "title": "Agree to Disagree, to Move Forward Together",
+    "quote": [
+      "At the heart of it all, I believe human beings are fundamentally good. We may hold different beliefs, affiliations, ideologies and interests, and sometimes we may strongly defend the principles we believe in. That diversity is a natural part of society.",
+      "What matters is that our personal beliefs and differences should not come in the way of our collective progress as a society and as a nation. We may disagree on many things, but there is a larger common aspiration that connects us: we all want a better life, a harmonious society and a stronger, more compassionate nation.",
+      "Perhaps the maturity of a society lies not in making everyone think alike, but in creating the space for different people to think differently and still move forward together.",
+      [
+        {
+          "b": "We must learn to agree to disagree—not to end the conversation, but to reach a meaningful and constructive outcome."
+        }
+      ],
+      "Because ultimately, progress is not about proving that one side is right. It is about finding enough common ground for all of us to move forward."
     ],
-    whatThisMeans:
-      "He locates influence without formal authority in consistency between words and actions over time, rather than in persuasive argument alone, treating trust as something built cumulatively rather than claimed through a single convincing case.",
-    whyItMatters:
-      "Redefining \"agree to disagree\" as a tool to continue toward a constructive outcome, rather than a way to end a conversation, changes what the phrase is actually for, keeping dialogue open rather than using it to politely shut discussion down.",
-    reflect:
-      "The last time you said \"let's agree to disagree,\" was it to keep working toward something constructive together, or was it actually a way to end the conversation?",
-  },
+    "whatThisMeans": "He starts from the belief that human beings are fundamentally good.",
+    "whyItMatters": "A mature society makes space for different people to think differently and still move forward together.",
+    "reflect": "Where could you look for common ground instead of proving yourself right?"
+  }
 ];
 
-const principlesPart3 = [
+const principlesPart3: Principle[] = [
   {
-    number: "11",
-    title: "You Can Control Your Effort; You Cannot Control How the World Responds",
-    quote: [
-      "Honestly, failure has been one of my greatest teachers. There have been projects, both in films and in AILF, that did not go as planned, financially, creatively or logistically.",
-      "But every failure taught me something new: patience, better planning, humility and the importance of staying grounded.",
-      "I have learnt that failure is not the opposite of success, it's part of the process toward it. The key is not to take failure personally, but to analyse it objectively, what went wrong, what could have been done differently, and what can be improved.",
-      "I have also learnt to separate self-worth from outcome. You can control your effort, your intention and your integrity, but you cannot always control how the world responds. That understanding has helped me stay mentally strong and move forward without carrying unnecessary guilt or fear.",
+    "number": "11",
+    "title": "You Can Never Be Certain of the Outcome",
+    "quote": [
+      [
+        "One of the biggest lessons I have learnt through my journey in creativity is that, no matter how sincerely you work or how carefully you plan, ",
+        {
+          "b": "you can never be certain of the outcome."
+        }
+      ],
+      [
+        "I experienced this deeply while making ",
+        {
+          "i": "Drop Out"
+        },
+        ". During production and post-production, there were moments when things simply did not happen according to plan. The music was getting delayed, decisions were getting stuck, and there were times when I genuinely did not know what would happen next or what I could do about it. The most difficult part was knowing that I had done everything I could, yet some things were simply beyond my control."
+      ],
+      "Even before the film's OTT release, there was another period of uncertainty and helplessness. Waiting without knowing what the outcome would be was perhaps more difficult than the work itself.",
+      "I have experienced something similar with the Ahmedabad International Literature Festival. In business, you can often work with numbers, systems and relatively predictable outcomes. But in creativity, you are dealing with people, emotions and responses. You may curate what you believe is a meaningful session, but you cannot be certain how the audience will receive it.",
+      "That, perhaps, is both the difficulty and the beauty of creative work.",
+      [
+        {
+          "b": "You can control your effort, your intention and the quality of your work—but you cannot control how the world will respond to it."
+        }
+      ],
+      [
+        "And perhaps creativity teaches us something that business sometimes does not: ",
+        {
+          "b": "to keep faith, remain patient and continue moving even when the outcome is uncertain."
+        }
+      ]
     ],
-    whatThisMeans:
-      "He treats failure as data to analyse objectively, what went wrong, what could have been done differently, rather than as a verdict on his own worth, explicitly separating self-worth from outcome as two different things.",
-    whyItMatters:
-      "\"You can control your effort, your intention and your integrity, but you cannot always control how the world responds\" draws the actual boundary of what's within a person's power, which is a more useful standard than simply urging resilience in the abstract.",
-    reflect:
-      "After your last significant failure, did you analyse it objectively, or did you let it become a verdict on your own worth?",
+    "whatThisMeans": "He describes the helplessness of waiting during Drop Out, which he found harder than the work itself.",
+    "whyItMatters": "In business you work with systems; in creativity you work with people, emotions and responses.",
+    "reflect": "What are you waiting on that is beyond your control?"
   },
   {
-    number: "12",
-    title: "Leadership Is Not About Being a Boss",
-    quote: [
-      "To me, leadership is not about being a boss, it's about being a guide and a support system for the people around you. I try to develop young talent and emerging voices by giving them real opportunities, not just encouragement.",
-      "At AILF, I ensure that new and upcoming writers get genuine platforms alongside established ones. At Akashwadi Films, I often collaborate with young technicians, writers and actors, giving them creative freedom while mentoring them through the process.",
-      "I believe talent needs direction more than instruction. So, instead of telling people exactly what to do, I try to create an environment where they feel safe to experiment, make mistakes and grow from them.",
-      "I also make it a point to give credit where it's due, recognition is one of the most powerful motivators for young talent. Ultimately, my goal is to build not just projects, but people, individuals who can eventually lead their own paths with confidence and integrity.",
+    "number": "12",
+    "title": "A Project May Have One Vision, but It Takes Many People",
+    "quote": [
+      "One thing that has worked well for me in my journey is giving people space and giving due credit for their contribution. I have learnt that every person involved in a project, whether big or small, has a role to play—and every process has its own importance.",
+      "At the same time, I have to remain graceful with people and patient in every situation. In a collaborative project, one moment of arrogance, impatience or high-handedness from my side can sometimes jeopardise months of work.",
+      "I have realised that leadership is not about being a boss. If I start behaving like one, collaboration can quickly break down. People need to feel respected, heard and valued.",
+      "Every individual and every process also have the potential to influence the outcome. What may appear small or insignificant can sometimes create a major obstacle if it is ignored.",
+      [
+        {
+          "b": "For me, successful collaboration is about respecting people, giving them space, acknowledging their contribution and staying patient—even when things do not go as planned."
+        }
+      ],
+      "Because ultimately, a project may have one vision, but it takes many people to bring that vision to life."
     ],
-    whatThisMeans:
-      "He draws a specific line between encouragement and real opportunity, giving new writers genuine platforms alongside established ones at AILF, and collaborating directly with young technicians and actors at Akashwadi Films, rather than offering only supportive words.",
-    whyItMatters:
-      "\"Talent needs direction more than instruction\" is a precise distinction: instruction tells someone what to do, direction creates the conditions, safety to experiment and make mistakes, for them to find it themselves.",
-    reflect:
-      "In mentoring or guiding someone, are you giving them real opportunities and direction, or mostly encouragement and instruction?",
+    "whatThisMeans": "He names space and due credit as what makes collaboration work.",
+    "whyItMatters": "Leadership, he says, is not about being a boss.",
+    "reflect": "Who on your team deserves more space, or more credit?"
   },
   {
-    number: "13",
-    title: "Dignity, Integrity and Character",
-    quote: [
-      "Dignity, integrity and character.",
+    "number": "13",
+    "title": "Dignity, Integrity and Character",
+    "quote": [
+      "Dignity, Integrity and Character"
     ],
-    whatThisMeans:
-      "Asked for the one principle he'd want people to remember him by, he gives three words rather than an elaborated statement, each of which has already appeared as a load-bearing idea throughout his earlier answers, from \"business with dignity\" to never compromising honesty in intent.",
-    whyItMatters:
-      "The brevity itself is notable. After sixteen other detailed answers, choosing not to elaborate here suggests these three words already carry everything he needs them to, without further explanation.",
-    reflect:
-      "If you had to reduce what you want to be remembered for to three words, would they hold up as consistently across your own actions as his three do across his answers?",
+    "whatThisMeans": "These are his three non-negotiables.",
+    "whyItMatters": "He holds to them even when compromising might make a project, relationship or opportunity easier.",
+    "reflect": "What are your own non-negotiables?"
   },
   {
-    number: "14",
-    title: "Not Taking a Risk Can Sometimes Be the Biggest Risk in Life",
-    quote: [
-      "Yes, starting Akashwadi Films itself was a huge risk. I didn't have the backing of a big production house or unlimited resources, I started with limited funds, a small team and a strong belief in the stories I wanted to tell.",
-      "There were moments of doubt, will this film find an audience, will investors trust an independent story, will the market accept content that doesn't follow the usual commercial formula? But I decided to take that risk because I believed that authentic storytelling, even on a smaller scale, has lasting value.",
-      "My philosophy has always been: not taking a risk can sometimes be the biggest risk in life. If you never try, you never know what could have been. So, I would rather fail trying something I believe in, than succeed by following a path that isn't truly mine.",
+    "number": "14",
+    "title": "Start With What You Have",
+    "quote": [
+      [
+        {
+          "b": "Start With What You Have"
+        }
+      ],
+      [
+        "To all the young creators and entrepreneurs, I would say: ",
+        {
+          "b": "start with what you have."
+        },
+        " Do not keep waiting for the perfect opportunity, perfect resources or perfect circumstances. They may never arrive exactly as you imagine them."
+      ],
+      "Begin with whatever is available to you, take the first step and keep moving. When you genuinely believe in what you are doing and remain committed to it, support often comes from unexpected places and unexpected people.",
+      [
+        "I have also learnt that ",
+        {
+          "b": "not taking a risk can sometimes be the biggest risk in life."
+        },
+        " Of course, every risk must be considered thoughtfully, but fear of failure should not stop us from trying."
+      ],
+      "You may not know where the journey will take you. You only need enough courage to begin.",
+      [
+        {
+          "b": "Start with what you have. Believe in what you are doing. Take the risk. The journey will teach you the rest."
+        }
+      ]
     ],
-    whatThisMeans:
-      "He names the specific doubts he carried when starting without a big production house behind him, whether the film would find an audience, whether investors would trust an independent story, rather than presenting the risk as something he took without hesitation.",
-    whyItMatters:
-      "\"I would rather fail trying something I believe in, than succeed by following a path that isn't truly mine\" sets a standard for what actually counts as success, one tied to authenticity rather than only to outcome.",
-    reflect:
-      "Is there a risk you've avoided taking, not because you calculated it wasn't worth it, but because not trying felt safer than trying and failing?",
+    "whatThisMeans": "His advice to young creators is to stop waiting for perfect circumstances.",
+    "whyItMatters": "Not taking a risk can sometimes be the biggest risk in life.",
+    "reflect": "What first step could you take this week with only what you have?"
   },
   {
-    number: "15",
-    title: "Be Flexible in Your Approach, But Firm in Your Values",
-    quote: [
-      "If I could leave one principle for the next generation of creators and entrepreneurs, it would be this: stay authentic, work hard, and never lose your human side.",
-      "The creative and business world will constantly change, trends will shift, technology will evolve, but what will always matter is honesty in your intent and respect for the people you work with. Chase purpose more than popularity, because popularity fades, but purpose creates lasting impact.",
-      "I would also tell them: don't be afraid to take risks, but take them with responsibility and integrity. Failures are not the end, they are often the beginning of something better.",
-      "Lastly, be flexible in your approach, but firm in your values. The methods may change with time, but your core principles should remain unshaken.",
+    "number": "15",
+    "title": "Be Flexible in Your Approach, but Firm in Your Values",
+    "quote": [
+      [
+        {
+          "b": "Never compromise on your core values."
+        }
+      ],
+      "You may change your plans, your methods, your profession or even your direction in life. You may have to adapt, negotiate and make compromises along the way. But do not compromise on the values that define who you are.",
+      "Success may come and go. Circumstances may change. People may applaud you today and question you tomorrow. But when everything else changes, your values are what remain with you.",
+      [
+        {
+          "b": "Be flexible in your approach, but firm in your values."
+        }
+      ],
+      [
+        "Because ultimately, what you achieve in life matters—but ",
+        {
+          "b": "who you become while achieving it matters even more."
+        }
+      ]
     ],
-    whatThisMeans:
-      "His advice to the next generation doesn't promise that trends or technology will stabilise. It assumes they won't, and builds the principle specifically around what should stay fixed, honesty and respect, while everything else is expected to keep shifting.",
-    whyItMatters:
-      "\"Chase purpose more than popularity, because popularity fades, but purpose creates lasting impact\" offers a specific, testable distinction rather than a vague call to have integrity, giving young creators something concrete to check their own choices against.",
-    reflect:
-      "In your own current work, are you chasing purpose or popularity, and would you be able to tell the difference if you were honest about it?",
+    "whatThisMeans": "This is the one principle he would leave to a reader twenty years from now.",
+    "whyItMatters": "Plans, methods and even professions can change; the values that define who you are should not.",
+    "reflect": "Which of your methods could you change, and which values never?"
   },
   {
-    number: "16",
-    title: "Gratitude Should Not Have an Expiry Date",
-    quote: [
-      "If I could have a conversation with my younger self, I would tell him to trust the process more and worry less about instant results. Success often takes time, and patience is as important as talent or hard work.",
-      "I would also remind him that failures are not setbacks, they're stepping stones, every rejection or mistake is preparing you for something bigger.",
-      "I'd tell him to value relationships more than transactions, because people remember how you made them feel, not just what you achieved. And most importantly, I'd tell him to enjoy the journey, not just chase the destination, because life is happening in these very moments of struggle and growth, not just in the achievements that come later.",
-      "Lastly, I would tell him to stay humble and grounded, no matter how much success comes your way, because gratitude should not have an expiry date.",
+    "number": "16",
+    "title": "Gratitude Should Not Have an Expiry Date",
+    "quote": [
+      [
+        {
+          "b": "Keep a space in your heart for those who stood by you and loved you when you needed them."
+        }
+      ],
+      "It does not mean forgetting what happened later, nor does it mean allowing yourself to be hurt again. It simply means choosing gratitude over bitterness and remembering the good without denying the difficult.",
+      [
+        "Because relationships may change, but ",
+        {
+          "b": "gratitude should not have an expiry date."
+        }
+      ]
     ],
-    whatThisMeans:
-      "His advice to his younger self doesn't focus on what to achieve differently, it focuses on how to hold the process itself, patience over instant results, relationships over transactions, the journey over the destination.",
-    whyItMatters:
-      "\"Gratitude should not have an expiry date\" is a specific warning against a common pattern, where early humility and thankfulness fade as success accumulates, treating gratitude as something that has to be actively maintained, not just felt once.",
-    reflect:
-      "Has your own gratitude for something you once wanted badly quietly expired now that you have it?",
-  },
+    "whatThisMeans": "The story he would preserve is about remembering those who stood by you.",
+    "whyItMatters": "Gratitude here means choosing it over bitterness, without denying what was difficult.",
+    "reflect": "Who stood by you when you needed them, and have you thanked them?"
+  }
+];
+
+const principlesPart4: Principle[] = [
   {
-    number: "17",
-    title: "Live With Courage, Create With Conviction, Treat People With Dignity",
-    quote: [
-      "If there's one thing I'd want people to take away from my journey, it's this: live with courage, create with conviction, treat people with dignity, remain grounded in your values, and never stop believing in the possibility of a better tomorrow.",
+    "number": "17",
+    "title": "Live with Courage, Create with Conviction",
+    "quote": [
+      "Live with courage, create with conviction, treat people with dignity, remain grounded in your values—and never stop believing in the possibility of a better tomorrow."
     ],
-    whatThisMeans:
-      "His closing principle compresses the entire arc of his earlier answers, courage from Principle 1, conviction from founding Akashwadi Films on a real story, dignity as the explicit operating principle of his business, into a single closing sentence.",
-    whyItMatters:
-      "Ending on \"never stop believing in the possibility of a better tomorrow\" returns to the same hope that opened his answer about legacy, that his work might make the world a little better than he found it.",
-    reflect:
-      "Of his five closing instructions, courage, conviction, dignity, groundedness, belief in a better tomorrow, which one would you say is currently the weakest link in your own life?",
-  },
+    "whatThisMeans": "This is the message he chose to add in his own words.",
+    "whyItMatters": "It gathers the threads of the whole series: courage, conviction, dignity and values.",
+    "reflect": "Which of these four would you most like to strengthen?"
+  }
 ];
 
 const takeaways = [
   {
-    title: "I would rather lose something while remaining true to myself.",
-    body: "Short-term comfort built on compromise eventually costs more in the long run, in trust, reputation, or self-respect.",
+    "title": "Be flexible in your approach, but firm in your values.",
+    "body": "Plans, methods and even professions can change. The values that define who you are should not."
   },
   {
-    title: "A film company was not born from a business plan. It was born from a story.",
-    body: "If a story could move him that much, he believed it could move audiences too, if told honestly.",
+    "title": "Stories make ideas human.",
+    "body": "Facts tell us what is happening. Stories help us understand why it matters."
   },
   {
-    title: "Business with dignity.",
-    body: "Profit matters, but not at the cost of someone's dignity, safety, or trust, whether a lead actor or a junior technician.",
+    "title": "A film company was not born from a business plan. It was born from a story.",
+    "body": "Serene Films began with one conversation and a willingness to say yes."
   },
   {
-    title: "Not taking a risk can sometimes be the biggest risk in life.",
-    body: "He would rather fail trying something he believes in than succeed by following a path that isn't truly his.",
+    "title": "Business with Dignity.",
+    "body": "Be proud of what you do, regardless of the size or scale of your business."
   },
   {
-    title: "Talent needs direction more than instruction.",
-    body: "Create an environment where people feel safe to experiment and make mistakes, rather than telling them exactly what to do.",
+    "title": "Start with what you have.",
+    "body": "Not taking a risk can sometimes be the biggest risk in life."
   },
   {
-    title: "Chase purpose more than popularity.",
-    body: "Popularity fades. Purpose creates lasting impact. Be flexible in your approach, but firm in your values.",
+    "title": "We must learn to agree to disagree.",
+    "body": "Not to end the conversation, but to reach a meaningful and constructive outcome."
   },
   {
-    title: "Gratitude should not have an expiry date.",
-    body: "Stay humble and grounded no matter how much success comes your way.",
-  },
+    "title": "Gratitude should not have an expiry date.",
+    "body": "Choose gratitude over bitterness, and remember the good without denying the difficult."
+  }
 ];
+
+const tags = [
+  "Literature & Culture",
+  "Cinema & Storytelling",
+  "Entrepreneurship with Purpose",
+  "Education & Youth",
+  "Society & Impact",
+];
+
+function PullQuote({ children, label }: { children: React.ReactNode; label: string }) {
+  return (
+    <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+      <p className="text-3xl font-serif leading-snug">{children}</p>
+      <p className="mt-4 text-sm text-neutral-500">Umashankar Yadav — {label}, Stated</p>
+    </section>
+  );
+}
+
+function WebsiteLink() {
+  return (
+    <a href="https://ailf.co.in/" target="_blank" rel="noopener noreferrer" className={linkPill}>
+      AILF Website
+      <span aria-hidden>↗</span>
+    </a>
+  );
+}
 
 export default function Page() {
   return (
@@ -363,8 +608,7 @@ export default function Page() {
           />
         </div>
         <p className="text-sm text-neutral-500">
-          Umashankar Yadav · Founder, Akashwadi Films · Founder, Ashirwad International
-          Literature Festival (AILF)
+          Umashankar Yadav · Entrepreneur · Filmmaker · Writer · Cultural Visionary
         </p>
         <p className="mt-1 text-xs uppercase tracking-wide text-neutral-400">
           Stated Principles · Issue No. 023
@@ -375,29 +619,21 @@ export default function Page() {
         </h1>
 
         <p className="mt-3 text-base font-medium">
-          Be Flexible in Your Approach, But Firm in Your Values
+          Be Flexible in Your Approach, but Firm in Your Values
         </p>
         <p className="mt-1 text-sm text-neutral-500">
-          Filmmaker &amp; Entrepreneur · Founder, Akashwadi Films &amp; Ashirwad International
-          Literature Festival
+          Founder Director, Ahmedabad International Literature Festival (AILF) · Managing Trustee,
+          Ikon Education Foundation · Serene Films · Former Indian Air Force
         </p>
 
-        <div className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-2.5">
-          <a
-            href="https://ailf.co.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 transition-colors hover:bg-amber-600 hover:text-white"
-          >
-            AILF Website
-            <span className="sr-only"> (opens in new window)</span>
-          </a>
-        </div>
-
         <blockquote className="mx-auto mt-6 max-w-xl text-lg italic text-neutral-700">
-          &ldquo;A film company was not born from a business plan. It was born from a
-          story.&rdquo;
+          &ldquo;Stories have the power to connect people, inspire change and build a more
+          compassionate society.&rdquo;
         </blockquote>
+
+        <div className="mt-5 flex justify-center">
+          <WebsiteLink />
+        </div>
       </header>
 
       {/* Stats row */}
@@ -408,7 +644,7 @@ export default function Page() {
         </div>
         <div>
           <p className="text-neutral-400">Read time</p>
-          <p className="font-medium">14 minutes</p>
+          <p className="font-medium">15 minutes</p>
         </div>
         <div>
           <p className="text-neutral-400">Principles</p>
@@ -422,17 +658,8 @@ export default function Page() {
 
       {/* Tags */}
       <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 py-6 text-xs">
-        {[
-          "Filmmaking",
-          "Literature Festival",
-          "Creative Freedom",
-          "Entrepreneurship",
-          "Mentorship",
-        ].map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-600"
-          >
+        {tags.map((tag) => (
+          <span key={tag} className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-600">
             {tag}
           </span>
         ))}
@@ -450,18 +677,34 @@ export default function Page() {
       {/* About */}
       <section className="mx-auto max-w-3xl px-6 py-14">
         <p className="text-xs uppercase tracking-wide text-neutral-400">About him</p>
-        <blockquote className="mt-4 border-l-2 border-neutral-300 pl-4 text-lg italic text-neutral-700">
-          &ldquo;We asked Umashankar Yadav seventeen questions. He answered from building a film
-          company around a single true story, and a literature festival around the belief that
-          every regional voice deserves a platform.&rdquo;
-        </blockquote>
-        <p className="mt-6 leading-relaxed text-neutral-700">
-          Umashankar Yadav is the founder of Akashwadi Films, a production company built around
-          authentic, emotionally honest storytelling, and the Ashirwad International Literature
-          Festival (AILF), a platform bringing together established and emerging writers,
-          filmmakers, artists and thinkers across India&apos;s diverse languages and storytelling
-          traditions.
+        <p className="mt-4 leading-relaxed text-neutral-700">
+          Umashankar Yadav is an entrepreneur, filmmaker, writer and cultural visionary. A former
+          Indian Air Force professional who served for 15 years, he later built successful
+          enterprises while pursuing his passion for literature, arts, cinema, education and social
+          development. Through the Ahmedabad International Literature Festival (AILF), Ikon
+          Education Foundation and his film production house Serene Films, he has created platforms
+          that celebrate ideas, nurture creativity and contribute to a more mindful and inclusive
+          society.
         </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 leading-relaxed text-neutral-700">
+          <li>Former Indian Air Force professional (15 years of service)</li>
+          <li>
+            Founder Director, Ahmedabad International Literature Festival (AILF), nurturing a major
+            literary and cultural platform since 2016
+          </li>
+          <li>Managing Trustee, Ikon Education Foundation</li>
+          <li>Entrepreneur with successful business ventures</li>
+          <li>
+            Filmmaker, writer and actor. Producer, writer and actor of the Hindi feature film
+            &ldquo;Drop Out&rdquo; (2026) under his banner, Serene Films
+          </li>
+          <li>Continues to champion literature, arts, cinema, education and social development</li>
+        </ul>
+        <blockquote className="mt-6 border-l-2 border-neutral-300 pl-4 text-lg italic text-neutral-700">
+          &ldquo;We asked Umashankar Yadav seventeen questions. He answered from the Air Force, from
+          business, from the Ahmedabad International Literature Festival and from Serene
+          Films.&rdquo;
+        </blockquote>
         <p className="mt-4 leading-relaxed text-neutral-700">
           What follows is not a Q&amp;A. It is a record of what he stands for, stated publicly, in
           his own words. This is how <em>Stated Principles</em> works: the person states their
@@ -474,168 +717,63 @@ export default function Page() {
         <p className="text-xs uppercase tracking-wide text-neutral-400">
           Seventeen principles · Stated by Umashankar Yadav
         </p>
-        <h2 className="mt-3 text-3xl font-serif">
-          What he stands for — in his own words.
-        </h2>
-
+        <h2 className="mt-3 text-3xl font-serif">What he stands for — in his own words.</h2>
         <div className="mt-12 space-y-20">
           {principles.map((p) => (
-            <article key={p.number} className="border-t border-neutral-200 pt-10">
-              <p className="text-sm text-neutral-400">{p.number} of 17</p>
-              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
-
-              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
-                {p.quote.map((para, i) => (
-                  <p key={i} className="leading-relaxed">
-                    {para}
-                  </p>
-                ))}
-              </blockquote>
-              <p className="mt-3 text-sm text-neutral-500">
-                — Umashankar Yadav, stated directly
-              </p>
-
-              <div className="mt-8 space-y-6">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
-                </div>
-              </div>
-            </article>
+            <PrincipleCard key={p.number} p={p} />
           ))}
         </div>
       </section>
 
-      {/* Pull quote 1 */}
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p className="text-3xl font-serif leading-snug">
-          &ldquo;Let creativity be fearless in thought,
-          <br />
-          <em>responsible in expression, independent in spirit.</em>&rdquo;
-        </p>
-        <p className="mt-4 text-sm text-neutral-500">
-          Umashankar Yadav — Principle V, Stated
-        </p>
-      </section>
+      <PullQuote label="Principle IV">
+        &ldquo;A film company was not born from a business plan.
+        <br />
+        <em>It was born from a story.</em>&rdquo;
+      </PullQuote>
 
       {/* Principles 6-10 */}
       <section className="mx-auto max-w-3xl px-6 py-6">
         <div className="space-y-20">
           {principlesPart2.map((p) => (
-            <article key={p.number} className="border-t border-neutral-200 pt-10">
-              <p className="text-sm text-neutral-400">{p.number} of 17</p>
-              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
-
-              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
-                {p.quote.map((para, i) => (
-                  <p key={i} className="leading-relaxed">
-                    {para}
-                  </p>
-                ))}
-              </blockquote>
-              <p className="mt-3 text-sm text-neutral-500">
-                — Umashankar Yadav, stated directly
-              </p>
-
-              <div className="mt-8 space-y-6">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
-                </div>
-              </div>
-            </article>
+            <PrincipleCard key={p.number} p={p} />
           ))}
         </div>
       </section>
 
-      {/* Pull quote 2 */}
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p className="text-3xl font-serif leading-snug">
-          &ldquo;Business with dignity.&rdquo;
-        </p>
-        <p className="mt-4 text-sm text-neutral-500">
-          Umashankar Yadav — Principle VI, Stated
-        </p>
-      </section>
+      <PullQuote label="Principle IX">
+        &ldquo;Technology may shape the future,
+        <br />
+        <em>but culture must help humanity remain at its heart.</em>&rdquo;
+      </PullQuote>
 
-      {/* Principles 11-17 */}
+      {/* Principles 11-16 */}
       <section className="mx-auto max-w-3xl px-6 py-6">
         <div className="space-y-20">
           {principlesPart3.map((p) => (
-            <article key={p.number} className="border-t border-neutral-200 pt-10">
-              <p className="text-sm text-neutral-400">{p.number} of 17</p>
-              <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
-
-              <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
-                {p.quote.map((para, i) => (
-                  <p key={i} className="leading-relaxed">
-                    {para}
-                  </p>
-                ))}
-              </blockquote>
-              <p className="mt-3 text-sm text-neutral-500">
-                — Umashankar Yadav, stated directly
-              </p>
-
-              <div className="mt-8 space-y-6">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">What this means</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
-                  <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
-                </div>
-              </div>
-
-              <a
-                href="https://app.stated.in/signup"
-                className="mt-8 inline-block rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-neutral-900"
-              >
-                Create a Commitment inspired by this
-              </a>
-            </article>
+            <PrincipleCard key={p.number} p={p} />
           ))}
         </div>
       </section>
 
-      {/* Pull quote 3 */}
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p className="text-3xl font-serif leading-snug">
-          &ldquo;Gratitude should not
-          <br />
-          <em>have an expiry date.</em>&rdquo;
-        </p>
-        <p className="mt-4 text-sm text-neutral-500">
-          Umashankar Yadav — Principle XVI, Stated
-        </p>
+      <PullQuote label="Principle XVI">
+        &ldquo;Gratitude should not
+        <br />
+        <em>have an expiry date.</em>&rdquo;
+      </PullQuote>
+
+      {/* Principle 17 */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <div className="space-y-20">
+          {principlesPart4.map((p) => (
+            <PrincipleCard key={p.number} p={p} showCta />
+          ))}
+        </div>
       </section>
 
       {/* Key takeaways */}
       <section className="mx-auto max-w-3xl px-6 py-14">
         <p className="text-xs uppercase tracking-wide text-neutral-400">Key takeaways</p>
         <h2 className="mt-3 text-3xl font-serif">Seven ideas worth carrying forward</h2>
-
         <ol className="mt-8 space-y-6">
           {takeaways.map((t, i) => (
             <li key={i} className="flex gap-4">
@@ -648,12 +786,20 @@ export default function Page() {
         </ol>
       </section>
 
+      {/* Connect */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Connect with him</p>
+        <div className="mt-3">
+          <WebsiteLink />
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="mx-auto max-w-3xl px-6 py-10">
         <h3 className="text-xl font-serif">Which principle resonates with you?</h3>
         <p className="mt-2 text-neutral-700">
-          Post a commitment inspired by Umashankar Yadav&apos;s principles. State it publicly —
-          and make it real.
+          Post a commitment inspired by Umashankar Yadav&apos;s principles. State it publicly — and
+          make it real.
         </p>
         <a
           href="https://app.stated.in/signup"
@@ -665,22 +811,7 @@ export default function Page() {
 
       {/* Share */}
       <section className="mx-auto max-w-3xl px-6 py-10">
-        <p className="text-xs uppercase tracking-wide text-neutral-400">Connect with him</p>
-        <div className="mt-3 flex flex-wrap gap-2.5">
-          <a
-            href="https://ailf.co.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 transition-colors hover:bg-amber-600 hover:text-white"
-          >
-            AILF Website
-            <span className="sr-only"> (opens in new window)</span>
-          </a>
-        </div>
-
-        <p className="mt-8 text-xs uppercase tracking-wide text-neutral-400">
-          Share this feature
-        </p>
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Share this feature</p>
         <div className="mt-3 flex flex-wrap gap-4 text-sm">
           <a
             href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(URL)}`}
@@ -691,9 +822,7 @@ export default function Page() {
             LinkedIn
           </a>
           <a
-            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-              URL
-            )}&text=${encodeURIComponent(DESCRIPTION)}`}
+            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(URL)}&text=${encodeURIComponent(DESCRIPTION)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -709,7 +838,7 @@ export default function Page() {
             WhatsApp
           </a>
         </div>
-        <p className="mt-4 text-sm text-neutral-500">14 min read · 17 principles</p>
+        <p className="mt-4 text-sm text-neutral-500">15 min read · 17 principles</p>
         <p className="text-sm text-neutral-400">app.stated.in/principles/{SLUG}</p>
         <Link href="/principles" className="mt-4 inline-block text-sm underline">
           All Stated Principles features
