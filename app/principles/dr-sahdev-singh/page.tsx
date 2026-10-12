@@ -185,42 +185,42 @@ const principlesPart2: Principle[] = [
     "number": "07",
     "title": "A Farmer Is Already an Entrepreneur",
     "quote": [
-      "From my experience in public administration and, more recently, in the Department of Agriculture and Farmers Welfare, I believe agriculture must be viewed as a complete economic value chain, not merely as an activity of farm production.",
-      "A farmer is already an entrepreneur. Every farmer makes decisions relating to inputs, investment, technology, production, risk and markets. However, farmers need stronger institutional support, better market information, infrastructure, storage, processing and access to finance to realise the full economic value of their efforts.",
-      "My present association with agricultural marketing has reinforced my belief that the farmer must have a stronger role beyond the farm gate. Aggregation, grading, standardisation, value addition and efficient market linkages can substantially improve farmers' economic returns.",
-      "The objective should therefore be to empower farmers as producers, entrepreneurs and informed participants across the agricultural value chain, with greater choice, bargaining power and economic opportunity."
+      "I believe Indian agriculture must move beyond a production-centric approach towards an entrepreneurship- and market-centric approach. While increasing agricultural productivity remains important, farmers must also be empowered with the skills and resources needed to create value and participate meaningfully across the agricultural value chain.",
+      "A farmer is already an entrepreneur, making decisions relating to inputs, investment, technology, production, risk and markets. However, farmers need better market intelligence, business acumen, price-negotiation skills, risk-management capabilities and access to finance to realise the full economic potential of their efforts.",
+      "In my role in public administration and the Department of Agriculture and Farmers Welfare, and while holding the additional charge of Director, CCS NIAM, I have come to appreciate the importance of agricultural marketing in improving farmers' economic returns. Efficient aggregation, grading, standardisation, storage, processing, value addition and market linkages can strengthen farmers' bargaining power and help them secure a greater share of the value generated beyond the farm gate.",
+      "Our objective should be to empower farmers as informed entrepreneurs with greater market access, economic choices and sustainable livelihood opportunities."
     ],
-    "whatThisMeans": "Speaking from public administration and, more recently, the Department of Agriculture and Farmers Welfare, he asks that agriculture be seen as a complete economic value chain and not merely as farm production. Every farmer already makes decisions on inputs, investment, technology, production, risk and markets.",
-    "whyItMatters": "What farmers need, he says, is stronger institutional support, better market information, infrastructure, storage, processing and access to finance. His work in agricultural marketing has reinforced his belief that aggregation, grading, standardisation, value addition and market linkages can substantially improve farmers' economic returns.",
-    "reflect": "Whom do you currently treat only as a producer or beneficiary, who in fact makes enterprise decisions every day?"
+    "whatThisMeans": "Agriculture must be viewed as a complete economic value chain rather than merely an activity of production. Farmers already make entrepreneurial decisions every day, but they need appropriate skills, information, finance and institutional support to make those decisions more rewarding.",
+    "whyItMatters": "Recognising farmers as entrepreneurs shifts the focus from how much they produce to how effectively they can market their produce, manage risks and capture value. Stronger agricultural marketing systems can help improve farm incomes and bargaining power.",
+    "reflect": "How can we move beyond treating farmers merely as producers or beneficiaries and enable them to become informed, confident agricultural entrepreneurs?"
   },
   {
     "number": "08",
     "title": "The Farmer and the Market Are Part of the Same Ecosystem",
     "quote": [
-      "The farmer and the market must be viewed as integral parts of the same agricultural ecosystem. Higher production alone does not necessarily translate into higher farm income.",
-      "My experience in agricultural administration and marketing has shown me that timely market information, efficient aggregation, grading and standardisation, adequate storage, infrastructure and access to value addition are critical for improving farmers' returns.",
-      "Agricultural marketing institutions also have an important role in creating better linkages between producers, markets and consumers while protecting the interests of both farmers and consumers.",
-      "We should therefore focus on building transparent, efficient and farmer-oriented value chains, so that farmers are not confined to the role of producers but can participate more effectively in the value created after production.",
-      "A successful agricultural policy is ultimately one that improves not only productivity, but also the income, choices and bargaining position of the farmer."
+      "I believe the most important change required in Indian agriculture is to transform the relationship between farmers and markets from a largely transactional relationship into a strong, transparent and mutually beneficial business partnership.",
+      "Traditionally, agricultural development has focused considerably on increasing production, while market access, price discovery, value addition and consumer preferences have received comparatively less attention. Higher production alone does not necessarily translate into higher farm income. Agricultural marketing must therefore become an integral part of agricultural development.",
+      "In my view, five priority areas are essential to this transformation: strengthening market intelligence and price transparency; developing Farmer Producer Organisations (FPOs) as professionally managed business enterprises; investing in post-harvest infrastructure, storage, processing and value addition; building trust-based, long-term partnerships between farmers and market participants; and developing farmers as entrepreneurs with better business and risk-management skills.",
+      "Agricultural marketing institutions have a crucial role in connecting producers, markets and consumers through capacity building, market-oriented education, research and industry partnerships. These efforts should create transparent and efficient value chains that protect the interests of both farmers and consumers.",
+      "Ultimately, agricultural policy must focus not only on increasing productivity but also on improving farmers' incomes, choices, bargaining power and ability to secure a fair share of the value they create."
     ],
-    "whatThisMeans": "He begins with a simple observation: higher production alone does not necessarily translate into higher farm income. Timely market information, efficient aggregation, grading and standardisation, adequate storage, infrastructure and access to value addition are, from his experience, critical to improving farmers' returns.",
-    "whyItMatters": "He also gives agricultural marketing institutions a role in linking producers, markets and consumers while protecting the interests of both farmers and consumers. His closing test is a policy that improves not only productivity but also the income, choices and bargaining position of the farmer.",
-    "reflect": "Does the way you measure success in your own field capture who benefits after production, or only what is produced?"
+    "whatThisMeans": "Farmers and markets must be treated as interconnected parts of the same agricultural ecosystem. Production decisions need to be supported by reliable market information, efficient supply chains, adequate infrastructure and opportunities for value addition.",
+    "whyItMatters": "A shift towards transparent and mutually beneficial market partnerships can help FPOs negotiate better terms, reduce post-harvest losses, improve market access and create more predictable business relationships. This can make agricultural growth more rewarding for farmers while strengthening links with consumers.",
+    "reflect": "Does the way we measure agricultural success capture improvements in farmers' incomes and bargaining power, or does it focus mainly on how much they produce?"
   },
   {
     "number": "09",
     "title": "Not an Occupation of Last Resort",
     "quote": [
-      "Young people have a crucial role in shaping the future of Indian agriculture. Their familiarity with technology, data, innovation and entrepreneurship can help transform agriculture into a more knowledge-driven and competitive sector.",
-      "From my experience in government, higher education and agricultural administration, I believe that young people should be encouraged to look at agriculture not only as cultivation, but also as an opportunity in agri-business, research, technology, processing, agricultural marketing, logistics and value addition.",
-      "Institutions such as the National Institute of Agricultural Marketing have an important role in developing the knowledge and professional capabilities required for this transformation.",
-      "The future lies in combining India's traditional agricultural knowledge with modern science, technology, management and entrepreneurship.",
-      "If agriculture becomes more economically rewarding, knowledge-driven and innovation-oriented, the younger generation will increasingly see it not as an occupation of last resort, but as a sector offering meaningful opportunities for enterprise, innovation and nation-building."
+      "I believe young people can play a transformative role in making Indian agriculture more competitive, profitable, sustainable and attractive. Their familiarity with technology, data, innovation and entrepreneurship offers significant opportunities to address challenges across the agricultural value chain.",
+      "From my experience in government, higher education and agricultural administration, I see considerable potential to nurture the next generation through agricultural marketing education, entrepreneurship development, agribusiness incubation, industry partnerships and practical exposure to emerging value chains.",
+      "Agriculture should be presented not merely as cultivation, but as a diverse field of opportunities in agri-business, digital agriculture, research, food processing, agricultural marketing, logistics, supply-chain management and value addition. Institutions such as CCS NIAM can contribute by equipping young people with professional knowledge, entrepreneurial capabilities and an understanding of both agricultural realities and market opportunities.",
+      "Our focus should be on developing not only job seekers but also job creators who can establish viable enterprises, strengthen FPOs, improve market linkages and develop innovative solutions to farmers' real challenges. With appropriate mentoring, institutional support, finance and industry connections, young entrepreneurs can bridge the gap between farmers and markets.",
+      "Ultimately, young people must become the bridge between the farm and the future—combining technology with entrepreneurship, innovation with inclusion, and business growth with farmers' welfare. By channelising their talent towards practical agricultural challenges, we can create meaningful opportunities for employment, enterprise and nation-building."
     ],
-    "whatThisMeans": "He believes young people have a crucial role in the future of Indian agriculture, because of their familiarity with technology, data, innovation and entrepreneurship. He asks that they see agriculture not only as cultivation but as an opportunity in agri-business, research, technology, processing, marketing, logistics and value addition.",
-    "whyItMatters": "He points to institutions such as the National Institute of Agricultural Marketing in building the knowledge and professional capabilities this requires. The future, in his words, lies in combining India's traditional agricultural knowledge with modern science, technology, management and entrepreneurship.",
-    "reflect": "Which sector that young people overlook could become meaningful and rewarding if it were more knowledge-driven and innovation-oriented?"
+    "whatThisMeans": "Young people can contribute to agricultural transformation not only as cultivators but also as entrepreneurs, researchers, technologists, marketers and innovators. Agricultural education and practical industry exposure can help them identify opportunities across the value chain.",
+    "whyItMatters": "Developing job creators alongside job seekers can generate rural employment, strengthen agricultural markets and improve farmers' access to technology, services and value addition. Institutions such as CCS NIAM can help connect education, entrepreneurship and industry requirements.",
+    "reflect": "How can we equip young people to turn agricultural challenges into viable business opportunities that benefit both farmers and the wider rural economy?"
   },
   {
     "number": "10",
@@ -353,7 +353,7 @@ const takeaways = [
   },
   {
     "title": "A farmer is already an entrepreneur.",
-    "body": "Empower farmers as producers, entrepreneurs and informed participants across the agricultural value chain."
+    "body": "Our objective should be to empower farmers as informed entrepreneurs with greater market access, economic choices and sustainable livelihood opportunities."
   },
   {
     "title": "Authority can compel compliance, but it cannot create genuine trust.",
@@ -412,6 +412,10 @@ export default function Page() {
         <p className="text-sm text-neutral-500">
           Dr. Sahdev Singh · Deputy Secretary, Government of India · Ministry of Agriculture &amp;
           Farmers Welfare
+        </p>
+        <p className="mt-1 text-sm text-neutral-500">
+          Director (Administration), Directorate of Marketing and Inspection (DMI) · Additional
+          Charge, Director (Administration), CCS-NIAM, Jaipur
         </p>
         <p className="mt-1 text-xs uppercase tracking-wide text-neutral-400">
           Stated Principles · Issue No. 025
@@ -474,31 +478,46 @@ export default function Page() {
       <section className="mx-auto max-w-3xl px-6 py-14">
         <p className="text-xs uppercase tracking-wide text-neutral-400">About him</p>
         <p className="mt-4 leading-relaxed text-neutral-700">
-          Dr. Sahdev Singh is an accomplished officer of the Central Secretariat Service with a
-          diverse and enriching journey across multiple Ministries, law, education and agriculture.
-          He is Deputy Secretary, Government of India, in the Ministry of Agriculture &amp; Farmers
-          Welfare.
+          Dr. Sahdev Singh is an accomplished officer of the Central Secretariat Service, with a
+          diverse and enriching career spanning multiple Ministries and encompassing the fields of
+          law, education and agriculture. He is currently serving as Deputy Secretary to the
+          Government of India in the Ministry of Agriculture and Farmers Welfare. He also serves as
+          Director (Administration) of the Directorate of Marketing and Inspection (DMI) and holds
+          the additional charge of Director (Administration) at the Chaudhary Charan Singh National
+          Institute of Agricultural Marketing (CCS-NIAM), Jaipur.
         </p>
         <p className="mt-4 leading-relaxed text-neutral-700">
-          With strong academic excellence and a passion for learning, teaching and institutional
-          development, he brings deep insights on governance, law, public administration,
-          agriculture and nation-building. A firm believer in continuous growth, integrity and
-          purposeful service.
+          With a strong academic foundation and a deep passion for learning, teaching and
+          institutional development, Dr. Sahdev Singh brings valuable insights into governance,
+          law, public administration, agriculture and nation-building. He is a firm believer in
+          continuous learning, integrity and purposeful public service.
         </p>
-        <ul className="mt-4 list-disc space-y-1 pl-5 leading-relaxed text-neutral-700">
-          <li>Began his career in public service after 10th standard, driven by commitment and purpose</li>
+        <ul className="mt-4 list-disc space-y-2 pl-5 leading-relaxed text-neutral-700">
           <li>
-            Served in multiple Ministries of Government of India, including Health &amp; Family
-            Welfare, Shipping and Justice
+            Began his career in public service after completing his Class 10 education, driven by a
+            strong sense of commitment and purpose.
           </li>
           <li>
-            Strong legal foundation with LLB, LLM (International Maritime Law) and advanced studies
-            in Constitutional Law, International Law &amp; Diplomacy
+            Served in various Ministries of the Government of India, including the Ministries of
+            Health and Family Welfare, Shipping, and Justice.
           </li>
-          <li>Passionate educator and visiting faculty for LLB/LLM and research students</li>
           <li>
-            Contributing to agriculture, farmers&apos; welfare, institutional development and
-            capacity building
+            Possesses a strong legal background, with an LL.B. and LL.M. in International Maritime
+            Law, along with advanced studies in Constitutional Law, International Law and
+            Diplomacy.
+          </li>
+          <li>
+            Holds a Doctorate in Law and has also been conferred honorary doctorates in recognition
+            of his academic and professional contributions.
+          </li>
+          <li>
+            Actively pursues his passion for education as a visiting faculty member for LL.B. and
+            LL.M. students, as well as research scholars.
+          </li>
+          <li>
+            Contributes to the fields of agriculture, farmers&apos; welfare, institutional
+            development and capacity building, with a focus on strengthening governance and public
+            service delivery.
           </li>
         </ul>
         <blockquote className="mt-6 border-l-2 border-neutral-300 pl-4 text-lg italic text-neutral-700">
@@ -577,6 +596,30 @@ export default function Page() {
         <em>and leave every institution and every person you touch stronger than you found them.</em>&rdquo;
       </PullQuote>
 
+      {/* Perspectives */}
+      <section className="mx-auto max-w-3xl px-6 py-6">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Perspectives that matter</p>
+        <div className="mt-4 flex flex-wrap gap-2 text-xs">
+          {[
+            "Public Service & Responsibility",
+            "Governance & Administration",
+            "Law, Justice & Institutions",
+            "Lifelong Learning & Excellence",
+            "Agriculture & Farmers' Welfare",
+            "Institution Building",
+            "Education & Mentorship",
+            "Integrity, Discipline & Purpose",
+          ].map((tag) => (
+            <span key={tag} className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-600">
+              {tag}
+            </span>
+          ))}
+        </div>
+        <p className="mt-4 text-sm italic text-neutral-500">
+          Lessons for future leaders, public servants, professionals and changemakers.
+        </p>
+      </section>
+
       {/* Key takeaways */}
       <section className="mx-auto max-w-3xl px-6 py-14">
         <p className="text-xs uppercase tracking-wide text-neutral-400">Key takeaways</p>
@@ -610,14 +653,20 @@ export default function Page() {
 
       {/* Disclaimer */}
       <section className="mx-auto max-w-3xl px-6 py-6">
-        <p className="text-sm leading-relaxed text-neutral-500">
-          <strong className="font-semibold">Disclaimer:</strong> The views, opinions and
-          experiences expressed in this magazine are those of the respective authors and are based
-          on their personal experiences and perspectives.{" "}
-          <span className="underline">
-            They do not necessarily represent the views, opinions of the Government.
-          </span>
-        </p>
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Disclaimer
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+            This publication is part of the Stated Principles Series. The views, opinions and
+            experiences expressed here are those of the contributor, are shared in a personal
+            capacity and are based on his personal experiences and perspectives.{" "}
+            <span className="font-medium">
+              They do not necessarily represent the views or opinions of the Government of India or
+              of any Ministry, Department or organisation with which he is or has been associated.
+            </span>
+          </p>
+        </div>
       </section>
 
       {/* Share */}
