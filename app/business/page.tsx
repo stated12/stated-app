@@ -104,6 +104,83 @@ I look forward to discussing the possibilities.
 Thank you.`
 );
 
+const STUDENT_SUBJECT = "Stated Student Voices — Student Host Expression of Interest";
+const studentHref = mailto(
+  STUDENT_SUBJECT,
+  `Hello Stated Team,
+
+I would like to express my interest in becoming a student host for Stated Student Voices.
+
+Full name:
+College or university:
+Course or area of study:
+Year of study:
+City and country:
+LinkedIn profile or relevant link, if available:
+Why would you like to host a business leader?
+Which business topics interest you?
+Have you hosted or participated in interviews before? (Optional)
+
+I understand that this is an expression of interest and that participation will depend on the programme's requirements, suitability, and available opportunities.
+
+Thank you for considering my interest.`
+);
+
+const INSTITUTION_SUBJECT = "Stated Student Voices — Institutional Collaboration";
+const institutionHref = mailto(
+  INSTITUTION_SUBJECT,
+  `Hello Stated Team,
+
+I am interested in exploring a potential collaboration between my institution and Stated Student Voices.
+
+Name:
+Designation:
+Institution:
+Institution website:
+City and country:
+Brief description of the collaboration you would like to explore:
+
+Thank you.`
+);
+
+const studentSteps = [
+  {
+    title: "Nominate or express interest",
+    body: "Students can express their interest in becoming hosts, while educators and institutions can nominate students who would benefit from the opportunity.",
+  },
+  {
+    title: "Prepare and meet",
+    body: "Selected students will be guided through guest research, question preparation, and interview planning before the conversation.",
+  },
+  {
+    title: "Host and learn",
+    body: "Students will have the opportunity to host conversations with business leaders, explore practical experiences, and share key learning points with a wider audience.",
+  },
+];
+
+const studentThemes = [
+  {
+    title: "Entrepreneurship",
+    body: "How businesses begin, grow, overcome challenges, and adapt.",
+    icon: "flag",
+  },
+  {
+    title: "Leadership",
+    body: "How leaders build teams, manage responsibilities, and make difficult decisions.",
+    icon: "compass",
+  },
+  {
+    title: "Innovation",
+    body: "How new ideas, technologies, and changing markets shape business.",
+    icon: "bulb",
+  },
+  {
+    title: "Lessons from experience",
+    body: "What professionals learn from setbacks, uncertainty, mistakes, and achievements.",
+    icon: "book",
+  },
+];
+
 /* ---------- Content ---------- */
 const themes = [
   {
@@ -195,6 +272,13 @@ function Icon({ name }: { name: string }) {
           <path d="M15 7h6v6" />
         </svg>
       );
+    case "book":
+      return (
+        <svg {...common}>
+          <path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z" />
+          <path d="M12 6v14" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>
@@ -253,6 +337,39 @@ function HeroIllustration() {
           <circle cx={x} cy={y} r="6" fill={i % 2 ? "#14213D" : "#B8862B"} />
         </g>
       ))}
+    </svg>
+  );
+}
+
+function StudentIllustration() {
+  return (
+    <svg
+      viewBox="0 0 380 280"
+      role="img"
+      aria-label="Illustration of a student interviewing a business leader"
+      className="h-auto w-full"
+    >
+      <rect width="380" height="280" rx="20" fill="#F3EDE0" />
+      <rect x="20" y="228" width="340" height="3" rx="1.5" fill="#14213D" fillOpacity="0.15" />
+      {/* student (left) */}
+      <circle cx="105" cy="120" r="26" fill="#14213D" />
+      <path d="M62 226c0-40 18-66 43-66s43 26 43 66z" fill="#14213D" />
+      <rect x="86" y="188" width="40" height="30" rx="4" fill="#FBF8F2" stroke="#B8862B" strokeWidth="2" />
+      <line x1="93" y1="198" x2="119" y2="198" stroke="#B8862B" strokeWidth="2" />
+      <line x1="93" y1="206" x2="113" y2="206" stroke="#B8862B" strokeWidth="2" />
+      {/* leader (right) */}
+      <circle cx="275" cy="120" r="26" fill="#B8862B" />
+      <path d="M232 226c0-40 18-66 43-66s43 26 43 66z" fill="#8A6420" />
+      <path d="M262 160l13 22 13-22" fill="#FBF8F2" />
+      {/* speech bubbles */}
+      <rect x="82" y="40" width="74" height="42" rx="12" fill="#FBF8F2" stroke="#14213D" strokeOpacity="0.45" />
+      <path d="M110 82l8 12 6-12z" fill="#FBF8F2" stroke="#14213D" strokeOpacity="0.45" />
+      <text x="119" y="68" textAnchor="middle" fontSize="22" fill="#14213D" fontFamily="Georgia, serif">?</text>
+      <rect x="224" y="40" width="74" height="42" rx="12" fill="#FBF8F2" stroke="#B8862B" />
+      <path d="M262 82l-8 12-6-12z" fill="#FBF8F2" stroke="#B8862B" />
+      <circle cx="248" cy="61" r="3.5" fill="#B8862B" />
+      <circle cx="261" cy="61" r="3.5" fill="#B8862B" />
+      <circle cx="274" cy="61" r="3.5" fill="#B8862B" />
     </svg>
   );
 }
@@ -419,6 +536,150 @@ export default function Page() {
           <p className="mt-6 text-sm leading-relaxed text-neutral-700">
             The emphasis is on learning and useful insights, not on promoting individuals or
             companies. Conversations will be published here as they are ready.
+          </p>
+        </div>
+      </section>
+
+      {/* Stated Student Voices */}
+      <section id="student-voices" className="border-t border-[#E3DAC7]">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="grid items-center gap-10 md:grid-cols-[1.2fr_1fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A6420]">
+                A Student-Led Initiative
+              </p>
+              <h2 className="mt-3 font-serif text-3xl leading-snug md:text-4xl">
+                Stated Student Voices
+              </h2>
+              <p className="mt-2 text-lg font-semibold text-[#8A6420]">
+                Students Ask. Business Leaders Share. Everyone Learns.
+              </p>
+              <p className="mt-5 leading-relaxed text-neutral-800">
+                What if students could learn directly from the people building businesses, leading
+                organisations, and making important decisions?
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                Stated Student Voices aims to bring students and business leaders together through
+                thoughtful, student-led conversations. Students will have opportunities to explore
+                real business journeys, ask meaningful questions, understand the thinking behind
+                important decisions, and learn from experiences that extend beyond the classroom.
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                The goal is simple: help students become better thinkers, more confident
+                communicators, and more informed future professionals.
+              </p>
+            </div>
+            <div className="mx-auto w-full max-w-md md:max-w-none">
+              <StudentIllustration />
+            </div>
+          </div>
+
+          {/* How it works */}
+          <h3 className="mt-14 text-xl font-semibold">How it works</h3>
+          <ol className="mt-6 grid gap-6 md:grid-cols-3">
+            {studentSteps.map((st, i) => (
+              <li key={st.title} className="rounded-xl border border-[#E3DAC7] bg-white/70 p-6">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#14213D] text-sm font-semibold text-white">
+                  {i + 1}
+                </span>
+                <h4 className="mt-4 text-base font-semibold">{st.title}</h4>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-700">{st.body}</p>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-5 border-l-2 border-[#B8862B] pl-4 text-sm leading-relaxed text-neutral-700">
+            Participation will depend on guest availability, programme suitability, and selection.
+            An expression of interest does not guarantee selection or a hosting opportunity.
+          </p>
+
+          {/* What students could explore */}
+          <h3 className="mt-14 text-xl font-semibold">What students could explore</h3>
+          <ul className="mt-6 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+            {studentThemes.map((t) => (
+              <li key={t.title}>
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#E3DAC7] bg-white text-[#8A6420]">
+                  <Icon name={t.icon} />
+                </span>
+                <h4 className="mt-3 text-base font-semibold">{t.title}</h4>
+                <p className="mt-1.5 text-sm leading-relaxed text-neutral-700">{t.body}</p>
+              </li>
+            ))}
+          </ul>
+
+          {/* Host + guests */}
+          <div className="mt-14 grid gap-10 lg:grid-cols-2">
+            <div>
+              <h3 className="font-serif text-2xl leading-snug">Who Can Become a Student Host?</h3>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                We welcome expressions of interest from curious, motivated students who want to
+                learn from business leaders and develop their communication, research,
+                critical-thinking, and interviewing skills.
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                Students from universities, colleges, business schools, entrepreneurship
+                programmes, and other educational institutions may express their interest.
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                Prior interviewing experience is not essential. Preparation, curiosity, thoughtful
+                questions, and a willingness to learn are what matter. Educators and institutions
+                may also recommend students for consideration.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-serif text-2xl leading-snug">Learn Directly From Business Leaders</h3>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                Conversations may feature entrepreneurs, startup founders, CEOs, senior executives,
+                investors, family business leaders, technology professionals, and experts from
+                diverse industries.
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                Each conversation will offer students an opportunity to explore the experiences,
+                decisions, challenges, and lessons behind a professional journey.
+              </p>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                The programme will develop as suitable guests and opportunities become available.
+              </p>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-12 rounded-xl border border-[#E3DAC7] bg-white/70 p-7">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-xl">
+                <h3 className="text-xl font-semibold">Ready to ask the questions?</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+                  Your email application will open with a draft. Your expression of interest is
+                  sent only when you send the email. There is no charge to express interest, and
+                  student participation is separate from sponsorship: sponsors do not control
+                  student questions, conclusions or selection.
+                </p>
+              </div>
+              <a href={studentHref} className={`${btnPrimary} w-full flex-none md:w-auto`}>
+                Become a Student Host
+              </a>
+            </div>
+          </div>
+
+          {/* Institutions */}
+          <div className="mt-6 rounded-xl border border-dashed border-[#B8862B] p-7">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-xl">
+                <h3 className="text-xl font-semibold">Bring Student Voices to Your Institution</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+                  Are you an educator, university representative, or institutional leader interested
+                  in creating opportunities for students to learn directly from business leaders?
+                  We welcome conversations about potential institutional collaborations, student
+                  participation, and online business-learning sessions.
+                </p>
+              </div>
+              <a href={institutionHref} className={`${btnSecondary} w-full flex-none md:w-auto`}>
+                Discuss an Institutional Collaboration
+              </a>
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-neutral-500">
+            If your email app does not open, write to {EMAIL} with the subject “{STUDENT_SUBJECT}”
+            or “{INSTITUTION_SUBJECT}”.
           </p>
         </div>
       </section>
