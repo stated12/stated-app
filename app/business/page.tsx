@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 const URL = "https://app.stated.in/business";
@@ -142,6 +143,65 @@ Brief description of the collaboration you would like to explore:
 
 Thank you.`
 );
+
+const firstGuests = [
+  {
+    name: "Dr. Heera Lal Patel, IAS",
+    descriptor: "Good Governance Expert | Author | Change-Maker",
+    headline: "People-Centred Governance. Practical Solutions. Lasting Impact.",
+    body: "A conversation on good governance, rural transformation, water conservation, climate action and community-led development.",
+    photo: "/patel-portrait.jpg",
+    size: 750,
+    principles: { href: "/principles/dr-heera-lal-patel-ias", label: "Read his Stated Principles" },
+  },
+  {
+    name: "Kanika Bhutani",
+    descriptor: "Ethics & Compliance Leader | Governance & Risk",
+    headline: "Ethics. Integrity. Accountability.",
+    body: "A conversation on ethical leadership, compliance culture, responsible decision-making and building trust in organisations.",
+    photo: "/kanika-portrait.jpg",
+    size: 844,
+    principles: null as null | { href: string; label: string },
+  },
+];
+
+const guestCategories = [
+  "Military veterans",
+  "Public service leaders",
+  "Business leaders",
+  "Academics & professors",
+  "Doctors & healthcare professionals",
+  "Entrepreneurs & founders",
+  "Authors & creatives",
+  "Investors & venture professionals",
+  "Technology & innovation leaders",
+  "Legal & judicial professionals",
+  "Journalists & media leaders",
+  "Social entrepreneurs & non-profit leaders",
+];
+
+const disciplines = [
+  "Journalism & Mass Communication",
+  "Business & MBA",
+  "Engineering & Technology",
+  "Law",
+  "Social Sciences",
+  "Humanities",
+  "Medicine & Healthcare",
+  "Science",
+  "Arts & Design",
+  "Economics & Public Policy",
+  "Education",
+  "Agriculture & Rural Development",
+];
+
+const studentGains = [
+  { title: "Conduct one-on-one interviews", body: "Hold structured conversations with distinguished professionals." },
+  { title: "Build core skills", body: "Develop research, communication, and critical-thinking skills." },
+  { title: "Learn from real-world experience", body: "Understand the decisions and lessons behind professional journeys." },
+  { title: "Gain hands-on experience", body: "Prepare, host, and reflect on a real conversation." },
+  { title: "Possible remuneration", body: "Selected student hosts may be remunerated for funded sessions, subject to programme terms." },
+];
 
 const studentSteps = [
   {
@@ -540,6 +600,54 @@ export default function Page() {
         </div>
       </section>
 
+      {/* Coming soon: first conversations */}
+      <section id="coming-soon" className="border-t border-[#E3DAC7] bg-white/60">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A6420]">Coming soon</p>
+          <h2 className="mt-3 font-serif text-3xl leading-snug">First Conversations</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed text-neutral-700">
+            The first guests of the Stated Business Series. Each conversation will be published here
+            as it is ready.
+          </p>
+          <ul className="mt-10 grid gap-6 md:grid-cols-2">
+            {firstGuests.map((g) => (
+              <li key={g.name}>
+                <article className="flex h-full flex-col gap-6 rounded-xl border border-[#E3DAC7] bg-[#FBF8F2] p-6 sm:flex-row sm:items-start">
+                  <div className="relative h-32 w-32 flex-none overflow-hidden rounded-full ring-1 ring-[#E3DAC7]">
+                    <Image
+                      src={g.photo}
+                      alt={g.name}
+                      width={g.size}
+                      height={g.size}
+                      className="h-32 w-32 object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col">
+                    <span className="self-start rounded-full border border-[#B8862B] px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-[#8A6420]">
+                      Coming soon
+                    </span>
+                    <h3 className="mt-3 text-xl font-semibold leading-snug">{g.name}</h3>
+                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-neutral-600">
+                      {g.descriptor}
+                    </p>
+                    <p className="mt-3 font-serif text-lg leading-snug text-[#14213D]">{g.headline}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-neutral-700">{g.body}</p>
+                    {g.principles && (
+                      <Link
+                        href={g.principles.href}
+                        className="mt-4 inline-block text-sm font-semibold underline underline-offset-2"
+                      >
+                        {g.principles.label}
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* Stated Student Voices */}
       <section id="student-voices" className="border-t border-[#E3DAC7]">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -624,6 +732,20 @@ export default function Page() {
                 questions, and a willingness to learn are what matter. Educators and institutions
                 may also recommend students for consideration.
               </p>
+              <h4 className="mt-6 text-base font-semibold">Open to students from all disciplines</h4>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {disciplines.map((d) => (
+                  <li
+                    key={d}
+                    className="rounded-full border border-[#E3DAC7] bg-white px-3 py-1 text-sm text-neutral-700"
+                  >
+                    {d}
+                  </li>
+                ))}
+                <li className="rounded-full border border-dashed border-[#B8862B] px-3 py-1 text-sm text-[#8A6420]">
+                  And many more
+                </li>
+              </ul>
             </div>
             <div>
               <h3 className="font-serif text-2xl leading-snug">Learn Directly From Business Leaders</h3>
@@ -639,8 +761,42 @@ export default function Page() {
               <p className="mt-3 leading-relaxed text-neutral-700">
                 The programme will develop as suitable guests and opportunities become available.
               </p>
+              <h4 className="mt-6 text-base font-semibold">Perspectives students may hear from</h4>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {guestCategories.map((g) => (
+                  <li
+                    key={g}
+                    className="rounded-full border border-[#E3DAC7] bg-white px-3 py-1 text-sm text-neutral-700"
+                  >
+                    {g}
+                  </li>
+                ))}
+                <li className="rounded-full border border-dashed border-[#B8862B] px-3 py-1 text-sm text-[#8A6420]">
+                  And many more
+                </li>
+              </ul>
+              <p className="mt-3 text-xs text-neutral-500">
+                These are the kinds of professionals the programme hopes to feature. Individual
+                guests are confirmed and announced separately.
+              </p>
             </div>
           </div>
+
+          {/* What students will gain */}
+          <h3 className="mt-14 text-xl font-semibold">What students will gain</h3>
+          <ul className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+            {studentGains.map((g, i) => (
+              <li key={g.title} className="border-t border-[#E3DAC7] pt-4">
+                <span className="text-sm font-semibold text-[#8A6420]">{String(i + 1).padStart(2, "0")}</span>
+                <h4 className="mt-1 text-base font-semibold leading-snug">{g.title}</h4>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-700">{g.body}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs leading-relaxed text-neutral-500">
+            Hosting opportunities depend on guest availability, programme suitability and selection.
+            Participation does not imply internships, employment, certificates or academic credit.
+          </p>
 
           {/* CTA */}
           <div className="mt-12 rounded-xl border border-[#E3DAC7] bg-white/70 p-7">
@@ -670,6 +826,10 @@ export default function Page() {
                   in creating opportunities for students to learn directly from business leaders?
                   We welcome conversations about potential institutional collaborations, student
                   participation, and online business-learning sessions.
+                </p>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-neutral-800">
+                  Please share this opportunity with your students, or nominate someone who would be
+                  a great fit.
                 </p>
               </div>
               <a href={institutionHref} className={`${btnSecondary} w-full flex-none md:w-auto`}>
