@@ -163,6 +163,15 @@ const firstGuests = [
     size: 844,
     principles: null as null | { href: string; label: string },
   },
+  {
+    name: "Yashovardhan Jha Azad, IPS (Retd.)",
+    descriptor: "Security Leader | Intelligence Professional | Former Central Information Commissioner | Champion of Accountability",
+    headline: "Leadership. Accountability. A Stronger, More Informed India.",
+    body: "A student-led conversation with one of India\u2019s most respected security and governance leaders on leadership, national security, accountability and building a stronger, more informed India.",
+    photo: "/yashovardhan-portrait.jpg",
+    size: 844,
+    principles: null as null | { href: string; label: string },
+  },
 ];
 
 const guestCategories = [
@@ -610,8 +619,11 @@ export default function Page() {
             as it is ready.
           </p>
           <ul className="mt-10 grid gap-6 md:grid-cols-2">
-            {firstGuests.map((g) => (
-              <li key={g.name}>
+            {firstGuests.map((g, i) => (
+              <li
+                key={g.name}
+                className={i === 2 ? "md:col-span-2 md:mx-auto md:w-full md:max-w-[calc(50%-0.75rem)]" : undefined}
+              >
                 <article className="flex h-full flex-col gap-6 rounded-xl border border-[#E3DAC7] bg-[#FBF8F2] p-6 sm:flex-row sm:items-start">
                   <div className="relative h-32 w-32 flex-none overflow-hidden rounded-full ring-1 ring-[#E3DAC7]">
                     <Image
