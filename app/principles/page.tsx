@@ -29,6 +29,30 @@ export const metadata: Metadata = {
 // Ordered latest first -- newest issue always leads.
 const published = [
   {
+    slug:     "abhijit-sen",
+    name:     "Abhijit Sen",
+    role:     "Former CFO, Citi India Subcontinent \u00b7 Board Member \u00b7 Governance Expert \u00b7 Mentor",
+    issue:    "027",
+    date:     "October 2026",
+    photo:    "/abhijit-portrait.jpg",
+    tagline:  "Uphold, without any compromise, ethical values and principles.",
+    tags:     ["Financial Leadership", "Governance & Risk", "Boards & Mentorship"],
+    readTime: 33,
+    principleCount: 25,
+  },
+  {
+    slug:     "angelos-tsavdaris",
+    name:     "Angelos Tsavdaris",
+    role:     "President, Hellenic-Indian Chamber of Commerce and Economy",
+    issue:    "026",
+    date:     "October 2026",
+    photo:    "/tsavdaris-portrait.jpg",
+    tagline:  "Honour people\u2019s trust through actions for which you are prepared to take responsibility.",
+    tags:     ["Leadership & Trust", "Human Dignity", "International Cooperation"],
+    readTime: 16,
+    principleCount: 13,
+  },
+  {
     slug:     "dr-sahdev-singh",
     name:     "Dr. Sahdev Singh",
     role:     "Deputy Secretary, Government of India \u00b7 Ministry of Agriculture & Farmers Welfare",
