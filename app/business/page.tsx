@@ -172,6 +172,15 @@ const firstGuests = [
     size: 844,
     principles: null as null | { href: string; label: string },
   },
+  {
+    name: "Sushil Rao Chilkuri",
+    descriptor: "Journalist | Storyteller | Media Professional",
+    headline: "Truth. Storytelling. Credibility.",
+    body: "A student-led conversation exploring journalism, storytelling, media leadership, truth, credibility, and the power of stories to shape society.",
+    photo: "/chilkuri-portrait.jpg",
+    size: 844,
+    principles: null as null | { href: string; label: string },
+  },
 ];
 
 const guestCategories = [
@@ -619,11 +628,8 @@ export default function Page() {
             as it is ready.
           </p>
           <ul className="mt-10 grid gap-6 md:grid-cols-2">
-            {firstGuests.map((g, i) => (
-              <li
-                key={g.name}
-                className={i === 2 ? "md:col-span-2 md:mx-auto md:w-full md:max-w-[calc(50%-0.75rem)]" : undefined}
-              >
+            {firstGuests.map((g) => (
+              <li key={g.name}>
                 <article className="flex h-full flex-col gap-6 rounded-xl border border-[#E3DAC7] bg-[#FBF8F2] p-6 sm:flex-row sm:items-start">
                   <div className="relative h-32 w-32 flex-none overflow-hidden rounded-full ring-1 ring-[#E3DAC7]">
                     <Image
