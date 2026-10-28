@@ -35,6 +35,23 @@ export const featured: Book = {
 
 export const shelf: Book[] = [
   {
+    slug: "i-dare",
+    title: "I Dare!",
+    subtitle: "Revised & Enlarged Edition",
+    author: "Kiran Bedi",
+    publisher: "Hay House India",
+    language: "English",
+    cover: "/i-dare.jpg",
+    w: 900,
+    h: 1487,
+    link: "",
+    about: [
+      "Kiran Bedi joined the Indian Police Service in 1972 as its first woman officer, and went on to receive the Ramon Magsaysay Award for Government Service. I Dare! is her autobiography, following her life from her formative years to the present.",
+      "The book looks at her work in policing, prison management and training, the three fields in which she became best known. It is written in her own voice and aimed at readers who want to understand what it takes to lead and reform from inside a large public institution.",
+      "This Revised & Enlarged Edition adds new material, including a section on the reasons for her early retirement from the service, her approach to leading the Delhi Police, and her current ventures. The cover carries a bestseller badge for over 150,000 copies sold.",
+    ],
+  },
+  {
     slug: "bridging-cultures",
     title: "Bridging Cultures",
     subtitle: "Northeast India\u2019s Role in Furthering India\u2019s Act East Policy",
