@@ -39,6 +39,8 @@ export async function POST(req: Request) {
   const email = String(b.email || "").trim().toLowerCase();
   const body = String(b.body || "").trim();
   const rating = Number(b.rating);
+  const disclosure =
+    b.disclosure === "free-copy" ? "Received a free copy" : b.disclosure === "connected" ? "Knows the author or publisher" : null;
 
   if (!book) return NextResponse.json({ error: "Please choose a book." }, { status: 400 });
   if (name.length < 2 || name.length > 80) return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
@@ -77,7 +79,7 @@ export async function POST(req: Request) {
 
   const { data, error } = await supabase
     .from("book_reviews")
-    .insert({ book_slug: slug, reviewer_name: name, reviewer_email: email || null, rating, body, ip_hash: ipHash })
+    .insert({ book_slug: slug, reviewer_name: name, reviewer_email: email || null, rating, body, disclosure, ip_hash: ipHash })
     .select("id")
     .single();
   if (error || !data) {
@@ -100,6 +102,7 @@ export async function POST(req: Request) {
           html: `<div style="font-family:Arial,sans-serif;max-width:520px">
             <h3>${esc(book.title)} — ${"★".repeat(rating)}${"☆".repeat(5 - rating)}</h3>
             <p style="white-space:pre-wrap">${esc(body)}</p>
+            ${disclosure ? `<p><i>Disclosure: ${disclosure}</i></p>` : ""}
             <p><b>${esc(name)}</b><br>${email ? esc(email) : "no email given"}</p>
             <p><a href="${link}" style="background:#111827;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">Review &amp; approve</a></p>
           </div>`,
