@@ -66,6 +66,7 @@ export default function HomePage() {
             <Link href="/explore"    className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Explore</Link>
             <Link href="/challenges" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Challenges</Link>
             <Link href="/principles" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Principles</Link>
+            <Link href="/books"      className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Books</Link>
             <Link href="/business"   className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Business</Link>
             <Link href="/login"      className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Login</Link>
             <Link href="/signup"     className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-sm">Sign up</Link>
@@ -99,6 +100,7 @@ export default function HomePage() {
             <Link href="/explore"    onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Explore</Link>
             <Link href="/challenges" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Challenges</Link>
             <Link href="/principles" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Principles</Link>
+            <Link href="/books"      onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Books</Link>
             <Link href="/business"   onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Business</Link>
           </div>
         )}
@@ -292,8 +294,41 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <Link href="/books" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Books</Link>
-       <Link href="/books" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Books</Link>
+      {/* ── STATED BOOKSHELF ────────────────────────────────────────────── */}
+      <section className="bg-white py-16 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-end justify-between flex-wrap gap-5 mb-8 sm:mb-10">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#b45309" }}>
+                <span className="w-5 h-px inline-block" style={{ background: "#b45309" }} />
+                Stated Bookshelf
+              </p>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-2">Books by those who served the republic</h2>
+              <p className="text-sm text-gray-400 font-light max-w-sm leading-relaxed">Memoirs and field accounts from police officers, administrators and soldiers. Read the descriptions and share your review.</p>
+            </div>
+            <Link href="/books" className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all">Visit the bookshelf</Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6">
+            {[
+              { slug: "policing-the-republic", title: "Policing the Republic", author: "Yashovardhan Azad", cover: "/policing-the-republic.jpg" },
+              { slug: "you-can-make-it-happen", title: "You Can Make It Happen", author: "Anil Swarup", cover: "/you-can-make-it-happen.jpg" },
+              { slug: "dynamic-dm", title: "Dynamic D.M.", author: "Dr. Heera Lal, IAS", cover: "/dynamic-dm.jpg" },
+              { slug: "khaki-in-action", title: "Khaki in Action", author: "O.P. Singh", cover: "/khaki-in-action.jpg" },
+              { slug: "kashmir-in-the-line-of-fire", title: "Kashmir in the Line of Fire", author: "Maj Gen Ranjan Mahajan", cover: "/kashmir-in-the-line-of-fire.jpg" },
+            ].map((b) => (
+              <Link key={b.slug} href={`/books#${b.slug}`} className="group block no-underline">
+                <div className="relative aspect-[2/3] overflow-hidden rounded-sm bg-stone-100 shadow-md group-hover:shadow-xl group-hover:-translate-y-0.5 transition-all">
+                  <Image src={b.cover} alt={`${b.title} by ${b.author}`} fill sizes="(max-width: 640px) 45vw, 18vw" className="object-cover" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-gray-900 leading-snug">{b.title}</p>
+                <p className="text-xs text-gray-400 font-light">{b.author}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── STATED BUSINESS SERIES ──────────────────────────────────────── */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-t border-gray-100" style={{ background: "#FBF8F2" }}>
         <div className="max-w-5xl mx-auto">
