@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
-import { featured, shelf, allBooks } from "./data";
-import ReviewForm from "./review-form";
+import { featured, shelf, type Book } from "./data";
+import BookReviews from "./book-reviews";
 
 export const metadata: Metadata = {
   title: "Stated Bookshelf -- Books by Leaders in Public Service",
@@ -66,6 +66,48 @@ export default async function BooksPage() {
     if (!r.length) return null;
     return { avg: r.reduce((t, x) => t + x.rating, 0) / r.length, n: r.length };
   };
+  const BookBlock = ({ b, big = false }: { b: Book; big?: boolean }) => {
+    const rs = reviews.filter((x) => x.book_slug === b.slug);
+    const st = stat(b.slug);
+    return (
+      <article id={b.slug} className="grid md:grid-cols-5 gap-8 md:gap-12 items-start">
+        <div className={`md:col-span-2 mx-auto w-full ${big ? "max-w-[300px]" : "max-w-[240px]"}`}>
+          <Image src={b.cover} alt={`${b.title} by ${b.author}`} width={b.w} height={b.h} priority={big} className="cover w-full h-auto rounded-sm" />
+        </div>
+        <div className="md:col-span-3">
+          <h2 className={`serif font-light text-gray-900 leading-tight tracking-tight mb-3 ${big ? "text-4xl md:text-5xl" : "text-3xl md:text-4xl"}`}>{b.title}</h2>
+          <p className="text-gray-500 text-base font-light leading-relaxed mb-4">{b.subtitle}</p>
+          <p className="text-gray-900 text-sm font-semibold mb-1">{b.author}</p>
+          {b.note ? <p className="text-gray-500 text-sm font-light mb-1">{b.note}</p> : null}
+          <p className="mono text-xs text-gray-400 tracking-widest uppercase mb-4">
+            {[b.publisher, b.language].filter(Boolean).join(" · ")}
+          </p>
+          {st ? (
+            <a href={`#reviews-${b.slug}`} className="text-sm text-gray-600 no-underline inline-block mb-4">
+              <Stars n={Math.round(st.avg)} /> {st.avg.toFixed(1)} ({st.n} {st.n === 1 ? "review" : "reviews"})
+            </a>
+          ) : null}
+          {b.about ? (
+            <details className="mb-4 group">
+              <summary className="cursor-pointer text-sm font-medium text-amber-700 list-none">
+                <span className="group-open:hidden">About this book →</span>
+                <span className="hidden group-open:inline">Hide description</span>
+              </summary>
+              <div className="mt-3 space-y-3 text-gray-600 text-sm font-light leading-relaxed">
+                {b.about.map((t, i) => <p key={i}>{t}</p>)}
+              </div>
+            </details>
+          ) : null}
+          {b.link ? (
+            <a href={b.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-all no-underline">
+              Get the book
+            </a>
+          ) : null}
+          <BookReviews slug={b.slug} title={b.title} reviews={rs} />
+        </div>
+      </article>
+    );
+  };
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -102,119 +144,23 @@ export default async function BooksPage() {
             <span className="w-5 h-px bg-amber-600 inline-block" />
             <span className="mono text-amber-600 text-xs tracking-widest uppercase">Featured</span>
           </div>
-          <div className="grid md:grid-cols-5 gap-8 md:gap-12 items-center">
-            <div className="md:col-span-2 mx-auto w-full max-w-[300px]">
-              <Image
-                src={featured.cover}
-                alt={`${featured.title} by ${featured.author}`}
-                width={featured.w}
-                height={featured.h}
-                priority
-                className="cover w-full h-auto rounded-sm"
-              />
-            </div>
-            <div className="md:col-span-3">
-              <h2 className="serif text-4xl md:text-5xl font-light text-gray-900 leading-tight tracking-tight mb-3">
-                {featured.title}
-              </h2>
-              <p className="text-gray-500 text-base font-light leading-relaxed mb-5">{featured.subtitle}</p>
-              <p className="text-gray-900 text-sm font-semibold mb-1">{featured.author}</p>
-              <p className="text-gray-500 text-sm font-light mb-1">{featured.note}</p>
-              <p className="mono text-xs text-gray-400 tracking-widest uppercase mb-4">{featured.publisher}</p>
-              {stat(featured.slug) ? (
-                <p className="text-sm text-gray-600 mb-6">
-                  <Stars n={Math.round(stat(featured.slug)!.avg)} /> {stat(featured.slug)!.avg.toFixed(1)} ({stat(featured.slug)!.n})
-                </p>
-              ) : null}
-              {featured.link ? (
-                <a
-                  href={featured.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-all no-underline"
-                >
-                  Get the book
-                </a>
-              ) : null}
-            </div>
-          </div>
+          <BookBlock b={featured} big />
         </div>
       </section>
 
       {/* SHELF */}
       <section className="px-6 py-14">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-10">
             <span className="w-5 h-px bg-amber-600 inline-block" />
             <span className="mono text-amber-600 text-xs tracking-widest uppercase">More on the shelf</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+          <div className="space-y-14">
             {shelf.map((b) => (
-              <article key={b.title} className="flex flex-col">
-                <div className="mx-auto w-full max-w-[240px] mb-5">
-                  <Image
-                    src={b.cover}
-                    alt={`${b.title} by ${b.author}`}
-                    width={b.w}
-                    height={b.h}
-                    className="cover w-full h-auto rounded-sm"
-                  />
-                </div>
-                <h3 className="serif text-2xl font-normal text-gray-900 leading-snug mb-1">{b.title}</h3>
-                <p className="text-gray-500 text-sm font-light leading-relaxed mb-2">{b.subtitle}</p>
-                <p className="text-gray-900 text-sm font-medium mb-2">{b.author}</p>
-                <p className="mono text-xs text-amber-600 tracking-widest uppercase">{b.language}</p>
-                {stat(b.slug) ? (
-                  <p className="text-sm text-gray-600 mt-2">
-                    <Stars n={Math.round(stat(b.slug)!.avg)} /> {stat(b.slug)!.avg.toFixed(1)} ({stat(b.slug)!.n})
-                  </p>
-                ) : null}
-                {b.link ? (
-                  <a
-                    href={b.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 text-sm text-amber-600 hover:underline"
-                  >
-                    Get the book
-                  </a>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* REVIEWS */}
-      <section id="reviews" className="px-6 py-14 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12">
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <span className="w-5 h-px bg-amber-600 inline-block" />
-              <span className="mono text-amber-600 text-xs tracking-widest uppercase">Reader reviews</span>
-            </div>
-            {reviews.length === 0 ? (
-              <p className="text-gray-500 text-sm font-light">No reviews yet. Be the first to share what you thought.</p>
-            ) : (
-              <div className="space-y-6">
-                {reviews.map((r) => (
-                  <div key={r.id} className="border-b border-gray-100 pb-5">
-                    <p className="text-sm"><Stars n={r.rating}></Stars></p>
-                    <p className="text-gray-700 text-sm font-light leading-relaxed mt-2 whitespace-pre-line">{r.body}</p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {r.reviewer_name} on {allBooks.find((b) => b.slug === r.book_slug)?.title}
-                    </p>
-                  </div>
-                ))}
+              <div key={b.slug} className="pb-14 border-b border-gray-100 last:border-0 last:pb-0">
+                <BookBlock b={b} />
               </div>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <span className="w-5 h-px bg-amber-600 inline-block" />
-              <span className="mono text-amber-600 text-xs tracking-widest uppercase">Write a review</span>
-            </div>
-            <ReviewForm books={allBooks.map((b) => ({ slug: b.slug, title: b.title }))} />
+            ))}
           </div>
         </div>
       </section>
