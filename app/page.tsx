@@ -318,7 +318,7 @@ export default function HomePage() {
               { slug: "khaki-in-action", title: "Khaki in Action", author: "O.P. Singh", cover: "/khaki-in-action.jpg" },
               { slug: "kashmir-in-the-line-of-fire", title: "Kashmir in the Line of Fire", author: "Maj Gen Ranjan Mahajan", cover: "/kashmir-in-the-line-of-fire.jpg" },
             ].map((b) => (
-              <Link key={b.slug} href={`/books#${b.slug}`} className="group block no-underline">
+              <Link key={b.slug} href={`/books/${b.slug}`} className="group block no-underline">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-sm bg-stone-100 shadow-md group-hover:shadow-xl group-hover:-translate-y-0.5 transition-all">
                   <Image src={b.cover} alt={`${b.title} by ${b.author}`} fill sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 15vw" className="object-cover" />
                 </div>
