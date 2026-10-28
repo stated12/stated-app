@@ -309,9 +309,10 @@ export default function HomePage() {
             <Link href="/books" className="text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-lg transition-all">Visit the bookshelf</Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
             {[
               { slug: "policing-the-republic", title: "Policing the Republic", author: "Yashovardhan Azad", cover: "/policing-the-republic.jpg" },
+              { slug: "bridging-cultures", title: "Bridging Cultures", author: "Lt Gen Shokin Chauhan", cover: "/bridging-cultures.jpg" },
               { slug: "you-can-make-it-happen", title: "You Can Make It Happen", author: "Anil Swarup", cover: "/you-can-make-it-happen.jpg" },
               { slug: "dynamic-dm", title: "Dynamic D.M.", author: "Dr. Heera Lal, IAS", cover: "/dynamic-dm.jpg" },
               { slug: "khaki-in-action", title: "Khaki in Action", author: "O.P. Singh", cover: "/khaki-in-action.jpg" },
@@ -319,7 +320,7 @@ export default function HomePage() {
             ].map((b) => (
               <Link key={b.slug} href={`/books#${b.slug}`} className="group block no-underline">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-sm bg-stone-100 shadow-md group-hover:shadow-xl group-hover:-translate-y-0.5 transition-all">
-                  <Image src={b.cover} alt={`${b.title} by ${b.author}`} fill sizes="(max-width: 640px) 45vw, 18vw" className="object-cover" />
+                  <Image src={b.cover} alt={`${b.title} by ${b.author}`} fill sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 15vw" className="object-cover" />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-gray-900 leading-snug">{b.title}</p>
                 <p className="text-xs text-gray-400 font-light">{b.author}</p>
