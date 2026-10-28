@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
+import { featured, shelf, allBooks } from "./data";
+import ReviewForm from "./review-form";
 
 export const metadata: Metadata = {
   title: "Stated Bookshelf -- Books by Leaders in Public Service",
@@ -23,58 +26,46 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://app.stated.in/books" },
 };
 
-// ── DATA ──────────────────────────────────────────────────────────────────────
-// Details below are taken from the book covers only. Add buy links by filling `link`.
-const featured = {
-  title: "Policing the Republic",
-  subtitle: "An Inside View of How India Fights Corruption and Crime, and Protects Rights",
-  author: "Yashovardhan Azad",
-  note: "Foreword by M.K. Narayanan",
-  publisher: "Bloomsbury",
-  cover: "/policing-the-republic.jpg",
-  w: 900,
-  h: 1293,
-  link: "", // e.g. "https://www.bloomsbury.com/..."
-};
+export const revalidate = 60;
 
-const shelf = [
-  {
-    title: "Dynamic D.M.",
-    subtitle: "सहयोग से सुशासन, सुशासन से समृद्धि",
-    author: "Dr. Heera Lal, IAS · Kumud Verma",
-    language: "Hindi",
-    cover: "/dynamic-dm.jpg",
-    w: 862,
-    h: 1300,
-    link: "",
-  },
-  {
-    title: "Khaki in Action",
-    subtitle: "Unsuni Case Files (Hindi edition of Crime, Grime & Gumption)",
-    author: "O.P. Singh, Former Director General of Police",
-    language: "Hindi",
-    cover: "/khaki-in-action.jpg",
-    w: 900,
-    h: 1285,
-    link: "",
-  },
-  {
-    title: "Kashmir in the Line of Fire",
-    subtitle: "A Memoir of Its Unordinary People and Soldiers",
-    author: "Maj Gen Ranjan Mahajan",
-    language: "English",
-    cover: "/kashmir-in-the-line-of-fire.jpg",
-    w: 896,
-    h: 1300,
-    link: "",
-  },
-];
+type Review = { id: string; book_slug: string; reviewer_name: string; rating: number; body: string; created_at: string };
+
+async function getReviews(): Promise<Review[]> {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return [];
+    const supabase = createClient(url, key, { auth: { persistSession: false } });
+    const { data } = await supabase
+      .from("book_reviews")
+      .select("id, book_slug, reviewer_name, rating, body, created_at")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(60);
+    return (data as Review[]) || [];
+  } catch {
+    return [];
+  }
+}
+
+const Stars = ({ n }: { n: number }) => (
+  <span className="text-amber-500" aria-label={`${n} out of 5`}>
+    {"★".repeat(n)}
+    <span className="text-gray-300">{"★".repeat(5 - n)}</span>
+  </span>
+);
 
 const NOMINATION_MAIL =
   "mailto:hello@stated.in?subject=" + encodeURIComponent("Book suggestion for the Stated Bookshelf");
 
 // ── PAGE ──────────────────────────────────────────────────────────────────────
-export default function BooksPage() {
+export default async function BooksPage() {
+  const reviews = await getReviews();
+  const stat = (slug: string) => {
+    const r = reviews.filter((x) => x.book_slug === slug);
+    if (!r.length) return null;
+    return { avg: r.reduce((t, x) => t + x.rating, 0) / r.length, n: r.length };
+  };
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -129,7 +120,12 @@ export default function BooksPage() {
               <p className="text-gray-500 text-base font-light leading-relaxed mb-5">{featured.subtitle}</p>
               <p className="text-gray-900 text-sm font-semibold mb-1">{featured.author}</p>
               <p className="text-gray-500 text-sm font-light mb-1">{featured.note}</p>
-              <p className="mono text-xs text-gray-400 tracking-widest uppercase mb-6">{featured.publisher}</p>
+              <p className="mono text-xs text-gray-400 tracking-widest uppercase mb-4">{featured.publisher}</p>
+              {stat(featured.slug) ? (
+                <p className="text-sm text-gray-600 mb-6">
+                  <Stars n={Math.round(stat(featured.slug)!.avg)} /> {stat(featured.slug)!.avg.toFixed(1)} ({stat(featured.slug)!.n})
+                </p>
+              ) : null}
               {featured.link ? (
                 <a
                   href={featured.link}
@@ -168,6 +164,11 @@ export default function BooksPage() {
                 <p className="text-gray-500 text-sm font-light leading-relaxed mb-2">{b.subtitle}</p>
                 <p className="text-gray-900 text-sm font-medium mb-2">{b.author}</p>
                 <p className="mono text-xs text-amber-600 tracking-widest uppercase">{b.language}</p>
+                {stat(b.slug) ? (
+                  <p className="text-sm text-gray-600 mt-2">
+                    <Stars n={Math.round(stat(b.slug)!.avg)} /> {stat(b.slug)!.avg.toFixed(1)} ({stat(b.slug)!.n})
+                  </p>
+                ) : null}
                 {b.link ? (
                   <a
                     href={b.link}
@@ -180,6 +181,40 @@ export default function BooksPage() {
                 ) : null}
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      <section id="reviews" className="px-6 py-14 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12">
+          <div>
+            <div className="flex items-center gap-2 mb-6">
+              <span className="w-5 h-px bg-amber-600 inline-block" />
+              <span className="mono text-amber-600 text-xs tracking-widest uppercase">Reader reviews</span>
+            </div>
+            {reviews.length === 0 ? (
+              <p className="text-gray-500 text-sm font-light">No reviews yet. Be the first to share what you thought.</p>
+            ) : (
+              <div className="space-y-6">
+                {reviews.map((r) => (
+                  <div key={r.id} className="border-b border-gray-100 pb-5">
+                    <p className="text-sm"><Stars n={r.rating}></Stars></p>
+                    <p className="text-gray-700 text-sm font-light leading-relaxed mt-2 whitespace-pre-line">{r.body}</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {r.reviewer_name} on {allBooks.find((b) => b.slug === r.book_slug)?.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-6">
+              <span className="w-5 h-px bg-amber-600 inline-block" />
+              <span className="mono text-amber-600 text-xs tracking-widest uppercase">Write a review</span>
+            </div>
+            <ReviewForm books={allBooks.map((b) => ({ slug: b.slug, title: b.title }))} />
           </div>
         </div>
       </section>
