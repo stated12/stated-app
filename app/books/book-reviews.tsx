@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ReviewForm from "./review-form";
 
-type R = { id: string; reviewer_name: string; rating: number; body: string; created_at: string };
+type R = { id: string; reviewer_name: string; rating: number; body: string; disclosure?: string | null; created_at: string };
 
 const Stars = ({ n }: { n: number }) => (
   <span className="text-amber-500" aria-label={`${n} out of 5`}>
@@ -12,15 +12,15 @@ const Stars = ({ n }: { n: number }) => (
   </span>
 );
 
-export default function BookReviews({ slug, title, reviews }: { slug: string; title: string; reviews: R[] }) {
+export default function BookReviews({ slug, title, reviews, defaultWriting = false }: { slug: string; title: string; reviews: R[]; defaultWriting?: boolean }) {
   const [all, setAll] = useState(false);
-  const [writing, setWriting] = useState(false);
+  const [writing, setWriting] = useState(defaultWriting);
   const n = reviews.length;
   const avg = n ? reviews.reduce((t, r) => t + r.rating, 0) / n : 0;
   const shown = all ? reviews : reviews.slice(0, 2);
 
   return (
-    <div className="mt-6 border-t border-gray-200 pt-5" id={`reviews-${slug}`}>
+    <div className="mt-6 border-t border-gray-200 pt-5" id="write-review">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-700">
           {n ? (
@@ -53,6 +53,7 @@ export default function BookReviews({ slug, title, reviews }: { slug: string; ti
             <div key={r.id} className="text-sm">
               <Stars n={r.rating} />
               <p className="text-gray-700 font-light leading-relaxed mt-1 whitespace-pre-line">{r.body}</p>
+              {r.disclosure ? <p className="text-xs text-gray-500 italic mt-1">Disclosure: {r.disclosure}</p> : null}
               <p className="text-xs text-gray-400 mt-1">
                 {r.reviewer_name} · {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
               </p>
