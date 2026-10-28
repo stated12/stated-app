@@ -292,6 +292,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <Link href="/books" className="text-gray-500 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-all">Books</Link>
+       <Link href="/books" onClick={() => setMenuOpen(false)} className="text-gray-700 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-gray-100">Books</Link>
       {/* ── STATED BUSINESS SERIES ──────────────────────────────────────── */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-t border-gray-100" style={{ background: "#FBF8F2" }}>
         <div className="max-w-5xl mx-auto">
