@@ -42,6 +42,7 @@ export async function GET(req: Request) {
   return page(`
     <h3>${esc(book?.title || data.book_slug)} — ${"★".repeat(data.rating)}${"☆".repeat(5 - data.rating)}</h3>
     <p style="white-space:pre-wrap">${esc(data.body)}</p>
+    ${data.disclosure ? `<p><i>Disclosure: ${esc(data.disclosure)}</i></p>` : ""}
     <p><b>${esc(data.reviewer_name)}</b><br>${data.reviewer_email ? esc(data.reviewer_email) : "no email given"}</p>
     <p>Current status: <b>${esc(data.status)}</b></p>
     <form method="POST" style="display:flex;gap:12px">
