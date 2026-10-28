@@ -35,6 +35,22 @@ export const featured: Book = {
 
 export const shelf: Book[] = [
   {
+    slug: "bridging-cultures",
+    title: "Bridging Cultures",
+    subtitle: "Northeast India\u2019s Role in Furthering India\u2019s Act East Policy",
+    author: "Lt General Shokin Chauhan, PVSM, AVSM, YSM, SM, VSM, PhD",
+    language: "English",
+    cover: "/bridging-cultures.jpg",
+    w: 900,
+    h: 1463,
+    link: "",
+    about: [
+      "Lt General Shokin Chauhan commissioned into the 11 Gorkha Rifles in 1979 and served nearly four decades in the Indian Army. He commanded 1 Corps, 8 Mountain Division and 70 Infantry Brigade, and also served as Director General of Assam Rifles and as Chairman of the Cease Fire Monitoring Group for Nagaland and Northeast India. His PhD, from Panjab University, is on India\u2013Nepal strategic relations.",
+      "Bridging Cultures turns that experience to a question of foreign policy: what part can Northeast India play in furthering India\u2019s Act East Policy? The cover, which pairs the flags of India and Myanmar above a footbridge across a river, points to the book\u2019s theme of connection across borders and cultures.",
+      "The book was released at the United Service Institution of India, New Delhi, on 30 September 2026 by General Anil Chauhan, former Chief of Defence Staff. It is written by an officer with long operational experience in counter-insurgency, counter-terrorism and border management in the region, and will interest readers of strategy, regional diplomacy and Northeast India.",
+    ],
+  },
+  {
     slug: "you-can-make-it-happen",
     title: "You Can Make It Happen",
     subtitle: "Anil Swarup on turning intent into results",
