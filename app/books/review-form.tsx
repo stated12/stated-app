@@ -23,6 +23,7 @@ export default function ReviewForm({ books, bookSlug, onDone }: { books: Opt[]; 
           name: f.get("name"),
           email: f.get("email"),
           body: f.get("body"),
+          disclosure: f.get("disclosure"),
           website: f.get("website"),
           rating,
         }),
@@ -88,6 +89,11 @@ export default function ReviewForm({ books, bookSlug, onDone }: { books: Opt[]; 
         placeholder="Your review (20 to 1200 characters, no links)"
         className={input}
       />
+      <select name="disclosure" defaultValue="" className={input} aria-label="Disclosure (optional)">
+        <option value="">Disclosure (optional): none</option>
+        <option value="free-copy">I received a free copy</option>
+        <option value="connected">I know the author or publisher</option>
+      </select>
       {/* honeypot */}
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
