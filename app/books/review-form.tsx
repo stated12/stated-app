@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type Opt = { slug: string; title: string };
 
-export default function ReviewForm({ books }: { books: Opt[] }) {
+export default function ReviewForm({ books, bookSlug, onDone }: { books: Opt[]; bookSlug?: string; onDone?: () => void }) {
   const [rating, setRating] = useState(0);
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export default function ReviewForm({ books }: { books: Opt[] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          book_slug: f.get("book_slug"),
+          book_slug: bookSlug || f.get("book_slug"),
           name: f.get("name"),
           email: f.get("email"),
           body: f.get("body"),
@@ -34,6 +34,7 @@ export default function ReviewForm({ books }: { books: Opt[] }) {
         return;
       }
       setState("done");
+      onDone?.();
     } catch {
       setError("Network error. Please try again.");
       setState("idle");
@@ -53,12 +54,12 @@ export default function ReviewForm({ books }: { books: Opt[] }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <select name="book_slug" required defaultValue="" className={input}>
+      {bookSlug ? null : <select name="book_slug" required defaultValue="" className={input}>
         <option value="" disabled>Choose the book</option>
         {books.map((b) => (
           <option key={b.slug} value={b.slug}>{b.title}</option>
         ))}
-      </select>
+      </select>}
 
       <div>
         <div className="flex gap-1" role="radiogroup" aria-label="Rating">
