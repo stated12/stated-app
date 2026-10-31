@@ -181,6 +181,15 @@ const firstGuests = [
     size: 844,
     principles: null as null | { href: string; label: string },
   },
+  {
+    name: "Dr. Vidhya Arumugam",
+    descriptor: "Founder, Clarity Works | Certified Independent Director | Leadership & Transformation Coach",
+    headline: "Governance. Growth. Leadership That Transforms.",
+    body: "A student-led conversation exploring leadership, corporate governance, strategic thinking, entrepreneurship and the future of business, drawing on experience in board governance, strategic growth, leadership development and AI & Business Analytics.",
+    photo: "/vidhya-portrait.jpg",
+    size: 800,
+    principles: null as null | { href: string; label: string },
+  },
 ];
 
 const guestCategories = [
@@ -496,10 +505,13 @@ export default function Page() {
           <Link href="/" className="text-xl font-bold tracking-tight">
             Stated
           </Link>
-          <nav aria-label="Primary" className="flex items-center gap-6 text-sm text-neutral-700">
+          <nav aria-label="Primary" className="flex items-center gap-4 text-sm text-neutral-700 sm:gap-6">
             <Link href="/principles" className="hover:text-[#14213D]">
               Stated Principles
             </Link>
+            <a href="#coming-soon" className="hover:text-[#14213D]">
+              Guests
+            </a>
             <span className="font-semibold text-[#14213D]">Business Series</span>
           </nav>
         </div>
@@ -528,15 +540,40 @@ export default function Page() {
           </p>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start">
-            <a href="#readers" className={btnPrimary}>
-              Explore Business Stories
+            <a href="#coming-soon" className={btnPrimary}>
+              Meet the First Guests
             </a>
             <a href="#participate" className={btnSecondary}>
               Nominate a Business Leader
             </a>
           </div>
 
-          <p className="mt-8 text-sm text-neutral-600">
+          <a
+            href="#coming-soon"
+            className="mt-8 flex items-center gap-4 rounded-full border border-[#E3DAC7] bg-white/70 py-2 pl-2 pr-5 hover:border-[#B8862B] sm:inline-flex"
+            aria-label="See the first guests of the Stated Business Series"
+          >
+            <span className="flex -space-x-3">
+              {firstGuests.map((g) => (
+                <Image
+                  key={g.name}
+                  src={g.photo}
+                  alt=""
+                  width={g.size}
+                  height={g.size}
+                  className="h-11 w-11 rounded-full object-cover object-top ring-2 ring-[#FBF8F2]"
+                />
+              ))}
+            </span>
+            <span className="text-sm leading-snug">
+              <span className="block font-semibold text-[#14213D]">
+                {firstGuests.length} guests coming soon
+              </span>
+              <span className="block text-neutral-600">Student-led conversations</span>
+            </span>
+          </a>
+
+          <p className="mt-6 text-sm text-neutral-600">
             In Association with{" "}
             <a
               href="https://www.credorium.com"
@@ -551,6 +588,72 @@ export default function Page() {
 
         <div className="mx-auto w-full max-w-md md:max-w-none">
           <HeroIllustration />
+        </div>
+      </section>
+
+      {/* Coming soon: first conversations (placed right after the hero) */}
+      <section id="coming-soon" className="border-y border-[#E3DAC7] bg-white/60">
+        <div className="mx-auto max-w-6xl px-6 py-14 md:py-16">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A6420]">
+                Coming soon
+              </p>
+              <h2 className="mt-3 font-serif text-3xl leading-snug md:text-4xl">
+                Meet the First Guests
+              </h2>
+              <p className="mt-3 max-w-2xl leading-relaxed text-neutral-700">
+                Student-led conversations with leaders from governance, security, ethics, media and
+                business. Each conversation will be published here as it is ready.
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-[#8A6420]">
+              {firstGuests.length} guests announced &middot; more to follow
+            </p>
+          </div>
+          <ul className="mt-10 grid gap-6 md:grid-cols-2">
+            {firstGuests.map((g, i) => (
+              <li
+                key={g.name}
+                className={
+                  i === firstGuests.length - 1 && firstGuests.length % 2 === 1
+                    ? "md:col-span-2"
+                    : undefined
+                }
+              >
+                <article className="flex h-full flex-col items-center gap-6 rounded-xl border border-[#E3DAC7] bg-[#FBF8F2] p-6 text-center shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-start sm:text-left">
+                  <div className="relative h-32 w-32 flex-none overflow-hidden rounded-full ring-2 ring-[#B8862B]/40 ring-offset-2 ring-offset-[#FBF8F2]">
+                    <Image
+                      src={g.photo}
+                      alt={g.name}
+                      width={g.size}
+                      height={g.size}
+                      className="h-32 w-32 object-cover object-top"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col items-center sm:items-start">
+                    <span className="rounded-full border border-[#B8862B] px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-[#8A6420]">
+                      Coming soon
+                    </span>
+                    <h3 className="mt-3 text-xl font-semibold leading-snug">{g.name}</h3>
+                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-neutral-600">
+                      {g.descriptor}
+                    </p>
+                    <p className="mt-3 font-serif text-lg leading-snug text-[#14213D]">{g.headline}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-neutral-700">{g.body}</p>
+                    {g.principles && (
+                      <Link
+                        href={g.principles.href}
+                        className="mt-4 inline-block text-sm font-semibold underline underline-offset-2"
+                      >
+                        {g.principles.label}
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -615,54 +718,6 @@ export default function Page() {
             The emphasis is on learning and useful insights, not on promoting individuals or
             companies. Conversations will be published here as they are ready.
           </p>
-        </div>
-      </section>
-
-      {/* Coming soon: first conversations */}
-      <section id="coming-soon" className="border-t border-[#E3DAC7] bg-white/60">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A6420]">Coming soon</p>
-          <h2 className="mt-3 font-serif text-3xl leading-snug">First Conversations</h2>
-          <p className="mt-3 max-w-2xl leading-relaxed text-neutral-700">
-            The first guests of the Stated Business Series. Each conversation will be published here
-            as it is ready.
-          </p>
-          <ul className="mt-10 grid gap-6 md:grid-cols-2">
-            {firstGuests.map((g) => (
-              <li key={g.name}>
-                <article className="flex h-full flex-col gap-6 rounded-xl border border-[#E3DAC7] bg-[#FBF8F2] p-6 sm:flex-row sm:items-start">
-                  <div className="relative h-32 w-32 flex-none overflow-hidden rounded-full ring-1 ring-[#E3DAC7]">
-                    <Image
-                      src={g.photo}
-                      alt={g.name}
-                      width={g.size}
-                      height={g.size}
-                      className="h-32 w-32 object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col">
-                    <span className="self-start rounded-full border border-[#B8862B] px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-[#8A6420]">
-                      Coming soon
-                    </span>
-                    <h3 className="mt-3 text-xl font-semibold leading-snug">{g.name}</h3>
-                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-neutral-600">
-                      {g.descriptor}
-                    </p>
-                    <p className="mt-3 font-serif text-lg leading-snug text-[#14213D]">{g.headline}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-neutral-700">{g.body}</p>
-                    {g.principles && (
-                      <Link
-                        href={g.principles.href}
-                        className="mt-4 inline-block text-sm font-semibold underline underline-offset-2"
-                      >
-                        {g.principles.label}
-                      </Link>
-                    )}
-                  </div>
-                </article>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
