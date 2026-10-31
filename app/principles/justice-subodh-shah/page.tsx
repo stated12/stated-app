@@ -7,11 +7,10 @@ const APPROVED = false;
 
 const SLUG = "justice-subodh-shah";
 const URL = `https://app.stated.in/principles/${SLUG}`;
-const TITLE = "Justice Subodh G. Shah — Justice, Integrity & Public Trust";
+const TITLE = "Justice Subodh G. Shah — Justice Must Be Both Principled and Effective";
 const DESCRIPTION =
-  "Justice, integrity and constitutional values. Twelve principles from a former Judge of the High Court of Gujarat who worked on the computerisation of Indian courts, on judgement, public trust, technology and a life of meaningful contribution.";
+  "Justice must be both principled and effective. Twelve principles from a former Judge of the High Court of Gujarat who worked on the computerisation of Indian courts, on judgement, integrity, public trust and technology in the courts.";
 const IMAGE = "https://app.stated.in/subodh-shah-portrait.jpg";
-const TOTAL = 12;
 
 export const metadata: Metadata = {
   title: `${TITLE} | Stated Principles`,
@@ -36,16 +35,6 @@ export const metadata: Metadata = {
 
 type Seg = string | { b: string } | { i: string };
 type Para = string | Seg[];
-type Principle = {
-  number: string;
-  topic: string;
-  title: string;
-  question: string;
-  quote: Para[];
-  whatThisMeans: string;
-  whyItMatters: string;
-  reflect: string;
-};
 
 function renderSeg(s: Seg, i: number) {
   if (typeof s === "string") return <span key={i}>{s}</span>;
@@ -56,55 +45,6 @@ function renderSeg(s: Seg, i: number) {
       </strong>
     );
   return <em key={i}>{s.i}</em>;
-}
-
-function PrincipleCard({ p, showCta }: { p: Principle; showCta?: boolean }) {
-  return (
-    <article id={`principle-${p.number}`} className="scroll-mt-6 border-t border-neutral-200 pt-10">
-      <p className="text-sm text-neutral-400">
-        {p.number} of {TOTAL} · {p.topic}
-      </p>
-      <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
-
-      <p className="mt-4 text-sm italic leading-relaxed text-neutral-500">
-        <span className="not-italic font-semibold text-neutral-600">The question we asked: </span>
-        {p.question}
-      </p>
-
-      <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
-        {p.quote.map((para, i) => (
-          <p key={i} className="leading-relaxed">
-            {typeof para === "string" ? para : para.map(renderSeg)}
-          </p>
-        ))}
-      </blockquote>
-      <p className="mt-3 text-sm text-neutral-500">— Justice Subodh G. Shah, stated directly</p>
-
-      <div className="mt-8 space-y-6">
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">What this means</p>
-          <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
-          <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
-          <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
-        </div>
-      </div>
-
-      {showCta && (
-        <a
-          href="https://app.stated.in/signup"
-          className="mt-8 inline-block rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-neutral-900"
-        >
-          Create a Commitment inspired by this
-        </a>
-      )}
-    </article>
-  );
 }
 
 const FACTS = [
@@ -129,7 +69,16 @@ const FACTS = [
 // Biography: his resume, reproduced word for word (static, trusted HTML).
 const PROFILE_HTML = "<ul class=\"\">\n<li><p>As a student</p>\n<ul>\n<li><p>Received President’s Award as best Scout.</p></li>\n<li><p>Attended NCC up to first rank,</p></li>\n<li><p>Gained several medals in few games (Badminton, Table Tennis)</p></li>\n</ul></li>\n<li><p>Education</p>\n<ul>\n<li><p>Graduated in B.Sc. with Microbiology as main and Chemistry as subsidiary subjects in the year 1977.</p></li>\n<li><p>Obtained Law Degree in the year 1981 with Labour Laws and</p></li>\n<li><p>LL.M. with Constitution, in the year 1987.</p></li>\n</ul></li>\n<li><p>Enrolled as an Advocate in the month of December 1981 and practice as an Advocate until February 1997.</p></li>\n<li><p>Practiced almost on all sides viz;</p></li>\n</ul><p>Civil, Criminal, Constitutional, and Revenue in various Courts, Tribunals and Commissions, which includes:</p><ul class=\"\">\n<li><p>High Court of Gujarat,</p></li>\n<li><p>Bombay High Court,</p></li>\n<li><p>few Courts in Rajasthan and</p></li>\n<li><p>National Consumer Commission, etc.</p></li>\n</ul><ul class=\"\">\n<li><p>First advocate to adopt computer technology as early as in year 1985</p></li>\n<li><p>Computerised personal office on LAN network in 1989,</p></li>\n<li><p>Directly appointed as a Judge of the City Civil &amp; Sessions Court, Ahmadabad by invitation in March 1997,</p></li>\n<li><p>Mediator in several Lok Adalat and mediation during carrier as an Advocate and as a Judge,</p></li>\n<li><p>Judicial Classification of pending cases before Supreme Court of India in May 1997.</p></li>\n<li><p>Attended the conference on 'SAAP Technology' at Kathmandu in December 1997.</p></li>\n</ul><p>Worked for:</p><ul class=\"\">\n<li><p>infrastructure requirements (buildings for Court Complex and Residential Quarters etc.) of entire Judiciary,</p></li>\n<li><p>Rule making process of Gujarat High Court,</p></li>\n<li><p>Accounts with Financial Management of Gujarat High Court;</p></li>\n<li><p>Cyber Crimes &amp; Cyber Laws to comment on Information Technology Act, 2000.</p></li>\n</ul><ul class=\"cols\">\n<li><p>Instrumental in implementing the project of computerization of</p>\n<ul>\n<li><p>New Gujarat High Court Complex,</p></li>\n<li><p>Supreme Court of India,</p></li>\n<li><p>Madras High Court,</p></li>\n<li><p>all District Courts of Gujarat and</p></li>\n<li><p>Entire Judiciary – all courts of India through E-Committee</p></li>\n</ul></li>\n<li><p>Member of the Standing Committee of the Supreme Court of India for monitoring E-Committee for computerization of entire judiciary in the country.</p></li>\n<li><p>Developed e-Court for the first time in India.</p></li>\n<li><p>Had exercised limited powers for interlocutory orders as per Supreme Court Rules, 1966.</p></li>\n<li><p>Attended 'Asia-Pacific Courts conference, 2010' in Singapore.</p></li>\n<li><p>Delivered several lectures on different Judicial Subjects / issues to Judicial Officers and Judges of different States at Ahmedabad, Bhopal, Bhubaneswar, Jodhpur, and other places so also Students of C A &amp; C S.</p></li>\n<li><p>Address to scientist of Forensic Science at Kolkata in their National Conference.</p></li>\n<li><p>As City Civil &amp; Sessions Judge conducted several Civil &amp; Criminal matters: decided 1388 cases in 174 days.</p></li>\n<li><p>As CBI Judge conducted complex cases: decided eighteen cases in 138 working days and decided more than two hundred discharge applications and examine 272 witnesses.</p></li>\n<li><p>As Judge of the High Court of Gujarat deal with almost all subjects and delivered approximately 19832 judgements in 1260 working days</p></li>\n<li><p>At present since 2019 educating JMFC aspirants, in addition to consultation and Arbitration.</p></li>\n<li><p>Delivered Several lectures online after COVID Pendamic on different platform and with different Institution.</p></li>\n<li><p>Worked as a Domain Expert for developing AI for National Judicial Council of Nigeria, sponsored by US Government and Microsoft</p></li>\n<li><p>Addressed 11th Biennial Commonwealth Judicial Educators Meeting Artificial held on 14 February 2026 at Supreme Court of India on <strong>Artificial Intelligence: Key Leadership &amp; Challenges</strong></p></li>\n<li><p>List of Lectures at Different Places &amp; Institute Viz:</p></li>\n</ul><ul class=\"cols\">\n<li><p>All India Forensic Science Conference by Department of Forensic Science, Ministry of Home Affairs</p></li>\n<li><p>Gujarat National Law University</p></li>\n<li><p>Gujarat State Judicial Academy</p></li>\n<li><p>High Court of Gujarat</p></li>\n<li><p>Modasa Law College</p></li>\n<li><p>National Forensic Science University, Gandhinagar</p></li>\n<li><p>National Judicial Academy, Bhopal</p></li>\n<li><p>Odisha Judicial Academy</p></li>\n<li><p>Rajasthan State Judicial Academy</p></li>\n<li><p>Tilak Maharashtra Vidyapeeth, Pune</p></li>\n<li><p>Unitedworld School Of Law in Karnavati University</p></li>\n</ul><ul class=\"\">\n<li><p>Delivered Lectures Online on Different Platforms Viz:</p></li>\n</ul><ul class=\"cols\">\n<li><blockquote>\n<p>Amity University</p>\n</blockquote></li>\n<li><blockquote>\n<p>Jain International Organization</p>\n</blockquote></li>\n<li><blockquote>\n<p>Kristu Jayanti College of Law, Bengaluru</p>\n</blockquote></li>\n<li><blockquote>\n<p>Legal Eagle Law Forum</p>\n</blockquote></li>\n<li><blockquote>\n<p>Legal Thirst</p>\n</blockquote></li>\n<li><blockquote>\n<p>Lex Simplicitor Series</p>\n</blockquote></li>\n<li><blockquote>\n<p>Mediate Guru</p>\n</blockquote></li>\n<li><blockquote>\n<p>MS University, Vadodara</p>\n</blockquote></li>\n<li><blockquote>\n<p>Sambhav Initiative</p>\n</blockquote></li>\n<li><blockquote>\n<p>The Amikus Qriae (YouTube Channel)</p>\n</blockquote></li>\n<li><blockquote>\n<p>Unaccc Global Water Summit</p>\n</blockquote></li>\n<li><blockquote>\n<p>United Forum for Legal Studies</p>\n</blockquote></li>\n<li><blockquote>\n<p>Vidhi Parivartan</p>\n</blockquote></li>\n<li><blockquote>\n<p>Wazir Education Society</p>\n</blockquote></li>\n</ul><ul class=\"\">\n<li><p>Delivered Lectures on Different Subjects &amp; Topics Viz:</p></li>\n</ul><ul class=\"cols\">\n<li><p>Application of IT In Count Room Monitoring &amp; Forensic Evidence</p></li>\n<li><p>Appreciation of Evidence</p></li>\n<li><p>Appreciation of Evidence in Criminal Cases &amp; Role Of APP</p></li>\n<li><p>Appreciation of Evidence in Criminal Trial</p></li>\n<li><p>Capacity Building on Forensic Justice</p></li>\n<li><p>Child Custody &amp; Guardianship</p></li>\n<li><p>Computer Applications</p></li>\n<li><p>Computer Awareness</p></li>\n<li><p>Computerization in Judiciary</p></li>\n<li><p>Constitutional Challenges In 21st Century</p></li>\n<li><p>Contours of Criminal Trial in The Administration of Criminal Justice</p></li>\n<li><p>Criminal Jurisprudence and Challenges</p></li>\n<li><p>Criminal Trial</p></li>\n<li><p>Custodial Death</p></li>\n<li><p>Cyber Crimes &amp; Cyber Laws</p></li>\n<li><p>Cyber Crimes and Law of Evidence</p></li>\n<li><p>Cyber Laws, Information Technology &amp; E - Commerce</p></li>\n<li><p>Data Security</p></li>\n<li><p>Digital Signature &amp; Cryptography</p></li>\n<li><p>E-court &amp; NJDG<a class=\"footnote-ref\" href=\"#fn1\" id=\"fnref1\" role=\"doc-noteref\"><sup>1</sup></a></p></li>\n<li><p>E-justice</p></li>\n<li><p>Electronic Environment</p></li>\n<li><p>Enhancing The Excellence of Judicial Institutions: Challenges &amp; Opportunities</p></li>\n<li><p>Evolvement of ADR Towards ODR &amp; Its Forthcoming</p></li>\n<li><p>Harassment of Women and Legal Provision to Defend</p></li>\n<li><p>ICT in Courts: Modernization of Judiciary</p></li>\n<li><p>Information Technology Act, 2000</p></li>\n<li><p>Judicial Administration</p></li>\n<li><p>Law &amp; E-Governance</p></li>\n<li><p>Law of Torts</p></li>\n<li><p>Legal Framework Governing Information Technology</p></li>\n<li><p>Linux or Windows</p></li>\n<li><p>Management of Judicial Administration</p></li>\n<li><p>Court Management</p></li>\n<li><p>Case Management</p></li>\n<li><p>Case Flow Management</p></li>\n<li><p>My Experience</p></li>\n<li><p>Model Court Under The E-Court Project</p></li>\n<li><p>Negotiable Instrument Act</p></li>\n<li><p>Rights Of Child Webinar &amp; Juvenile Justice System</p></li>\n<li><p>Rules Of Pleading &amp; Amendment</p></li>\n<li><p>Plaint, Written Statement, Set Off &amp; Counter Claim</p></li>\n<li><p>Search Warrant -2022 Challenges &amp; Role of Magistrate</p></li>\n<li><p>Sec. 372 Of CrPC</p></li>\n<li><p>Security for Courts Records and Networks: Risks, Challenges &amp; Practical Considerations</p></li>\n<li><p>Speedy &amp; Fair Trial.</p></li>\n<li><p>Evidence of Statement by Person Who Cannot Be Called as A Witness</p></li>\n<li><p>Surrender By Accused</p></li>\n<li><p>Ground Water -Making Invisible Visible</p></li>\n<li><p>Tighter Legal Regime for Media and OTT Platform</p></li>\n<li><p>Training The Trainers Science-Technology Applications in Law and Administration</p></li>\n</ul><ul class=\"\">\n<li><p>Uniform Nomenclature</p></li>\n<li><p>What is a Network?</p></li>\n<li><p>Why to Join Judiciary</p></li>\n<li><p>Youth &amp; The Constitution of India</p></li>\n</ul><aside class=\"footnotes footnotes-end-of-document\" id=\"footnotes\" role=\"doc-endnotes\">\n<hr/>\n<ol>\n<li id=\"fn1\"><p>National Judicial Data Grid</p></li>\n</ol>\n</aside>";
 
-const principles: Principle[] = [
+const principles: {
+  number: string;
+  topic: string;
+  title: string;
+  question: string;
+  quote: Para[];
+  whatThisMeans: string;
+  whyItMatters: string;
+  reflect: string;
+}[] = [
   {
     "number": "01",
     "topic": "Formative Influences: The Foundations of a Life in Law",
@@ -366,83 +315,181 @@ const principles: Principle[] = [
   }
 ];
 
-function ShareLinks() {
-  const u = encodeURIComponent(URL);
-  const t = encodeURIComponent(TITLE);
-  const links = [
-    { label: "WhatsApp", href: `https://wa.me/?text=${t}%20${u}` },
-    { label: "X", href: `https://twitter.com/intent/tweet?text=${t}&url=${u}` },
-    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` },
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${u}` },
-  ];
-  return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Share this page">
-      {links.map((l) => (
-        <a
-          key={l.label}
-          href={l.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Share on ${l.label} (opens in a new tab)`}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:border-neutral-900"
-        >
-          {l.label}
-        </a>
-      ))}
-    </div>
-  );
-}
+const takeaways = [
+  {
+    "title": "Let Science and Law Sharpen Each Other.",
+    "body": "Scientific training tests assumptions and revises conclusions when facts require it; legal training gives that habit a constitutional and human purpose."
+  },
+  {
+    "title": "Justice Must Be Both Principled and Effective.",
+    "body": "Timely disposal, substantive justice, procedural fairness and careful appreciation of evidence: none can safely replace the others."
+  },
+  {
+    "title": "Impartiality Does Not Require Indifference.",
+    "body": "Listen closely enough to understand the human circumstances, and stay disciplined enough that compassion never displaces proof or law."
+  },
+  {
+    "title": "Guard Your Credibility; Courage Is Not Loudness.",
+    "body": "A reputation for accuracy and fairness is built slowly and lost quickly; courage is acting on principle when no applause is assured."
+  },
+  {
+    "title": "Public Trust Is Earned, Not Demanded.",
+    "body": "Courts earn confidence through fairness, reasoned decisions, openness to lawful scrutiny and equal treatment."
+  },
+  {
+    "title": "Resist the Immediate Answer.",
+    "body": "Identify the real questions, understand the strongest opposing case, and aim for the judgement that is accurate, transparent and in time."
+  },
+  {
+    "title": "Changing Your View After Better Evidence Is Discipline.",
+    "body": "A reasoned conviction survives serious questioning; rigidity refuses to listen."
+  },
+  {
+    "title": "Modernisation Is More Than Buying Hardware.",
+    "body": "It means rethinking processes, training people and making sure the benefits reach litigants, including those without resources or digital literacy."
+  },
+  {
+    "title": "Build Systems That Outlast Your Credit.",
+    "body": "Sustainable reform depends on processes, training and institutional ownership, not on individual credit."
+  },
+  {
+    "title": "Mentorship Should Not Produce Imitation.",
+    "body": "Teaching is also learning, and a good mentor builds independent judgement rather than agreement."
+  },
+  {
+    "title": "A Judicial Decision Cannot Be Delegated to a System.",
+    "body": "Technology must strengthen independence and access without weakening human judgement, which stays accountable."
+  },
+  {
+    "title": "A Meaningful Life Is Measured by Value Added and Principles Kept.",
+    "body": "Integrity, disciplined reasoning, fairness, continuous learning and responsibility towards society, backed by hard and sincere work."
+  }
+];
 
 export default function Page() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: TITLE,
-    description: DESCRIPTION,
-    url: URL,
-    image: IMAGE,
-    about: { "@type": "Person", name: "Justice Subodh G. Shah", jobTitle: "Former Judge, High Court of Gujarat" },
-    publisher: { "@type": "Organization", name: "Stated", url: "https://app.stated.in" },
-  };
-
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12 text-neutral-800">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    <main className="min-h-screen bg-white text-neutral-900">
+      {/* Breadcrumb */}
+      <nav className="mx-auto max-w-3xl px-6 pt-8 text-sm text-neutral-500">
+        <Link href="/" className="hover:text-neutral-900">
+          Home
+        </Link>{" "}
+        /{" "}
+        <Link href="/principles" className="hover:text-neutral-900">
+          Stated Principles
+        </Link>{" "}
+        / Justice Subodh G. Shah
+      </nav>
 
-      <p className="text-sm">
-        <Link href="/principles" className="text-neutral-500 hover:text-neutral-900">
-          &larr; All Stated Principles
-        </Link>
-      </p>
-
-      <header className="mt-8">
-        <p className="text-sm uppercase tracking-widest text-neutral-400">Stated Principles Series</p>
-        <h1 className="mt-3 text-4xl font-serif leading-tight">{TITLE}</h1>
-        <div className="mt-6 flex items-center gap-5">
+      {/* Hero */}
+      <header className="mx-auto max-w-3xl px-6 pt-6 text-center">
+        <div className="mx-auto mb-6 w-40 overflow-hidden rounded-full ring-1 ring-neutral-200">
           <Image
             src="/subodh-shah-portrait.jpg"
             alt="Justice Subodh G. Shah"
             width={560}
             height={560}
+            className="h-40 w-40 object-cover object-top"
             priority
-            className="h-28 w-28 shrink-0 rounded-full border border-neutral-200 object-cover"
           />
-          <div>
-            <p className="font-semibold text-neutral-900">Justice Subodh G. Shah</p>
-            <p className="text-neutral-600">Former Judge, High Court of Gujarat</p>
-          </div>
         </div>
-        <p className="mt-6 leading-relaxed text-neutral-700">{DESCRIPTION}</p>
-        <p className="mt-2 text-sm text-neutral-500">50 People • 50 Perspectives • 50 Principles</p>
-        <div className="mt-6"><ShareLinks /></div>
+        <p className="text-sm text-neutral-500">
+          Justice Subodh G. Shah · Former Judge, High Court of Gujarat (2012&ndash;19)
+        </p>
+        <p className="mt-1 text-xs uppercase tracking-wide text-neutral-400">
+          Stated Principles
+        </p>
+
+        <h1 className="mt-6 text-4xl font-serif italic tracking-tight md:text-5xl">
+          Justice Subodh G. <em>Shah</em>
+        </h1>
+
+        <p className="mt-3 text-base font-medium">
+          Justice Must Be Both Principled and Effective
+        </p>
+        <p className="mt-1 text-sm text-neutral-500">
+          Former Judge, High Court of Gujarat · Former Judge, City Civil &amp; Sessions Court,
+          Ahmedabad · Member, Standing Committee of the Supreme Court of India for monitoring the
+          E-Committee
+        </p>
+
+        <blockquote className="mx-auto mt-6 max-w-xl text-lg italic text-neutral-700">
+          &ldquo;Justice must be both principled and effective.&rdquo;
+        </blockquote>
       </header>
 
-      <section aria-labelledby="bio" className="mt-12 border-t border-neutral-200 pt-10">
-        <h2 id="bio" className="text-2xl font-serif">Biography</h2>
-        <p className="mt-3 font-semibold text-neutral-900">Mr. Justice S. G. Shah</p>
-        <p className="text-neutral-700">(Justice Subodhkumar Gunvantlal Shah)</p>
-        <p className="mt-1 font-semibold text-neutral-900">Former Judge of High Court of Gujarat</p>
-        <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+      {/* Stats row */}
+      <section className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-6 border-y border-neutral-200 px-6 py-6 text-sm sm:grid-cols-4">
+        <div>
+          <p className="text-neutral-400">Format</p>
+          <p className="font-medium">Judicial Principles</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Read time</p>
+          <p className="font-medium">25 minutes</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Principles</p>
+          <p className="font-medium">12 stated</p>
+        </div>
+        <div>
+          <p className="text-neutral-400">Published</p>
+          <p className="font-medium">November 2026</p>
+        </div>
+      </section>
+
+      {/* Tags */}
+      <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 py-6 text-xs">
+        {[
+          "Judiciary",
+          "Constitutional Values",
+          "Judicial Integrity",
+          "Courts & Technology",
+          "Legal Education",
+        ].map((tag) => (
+          <span
+            key={tag}
+            className="rounded-full border border-neutral-200 px-3 py-1 text-neutral-600"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="mx-auto max-w-3xl px-6">
+        <a
+          href="#principles"
+          className="inline-block rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          Read the principles
+        </a>
+      </div>
+
+      {/* About */}
+      <section className="mx-auto max-w-3xl px-6 py-14">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">About him</p>
+        <blockquote className="mt-4 border-l-2 border-neutral-300 pl-4 text-lg italic text-neutral-700">
+          &ldquo;We asked Justice Subodh G. Shah twelve questions. He answered from a career at
+          the Bar, on the bench, and in the modernisation of India&apos;s courts.&rdquo;
+        </blockquote>
+        <p className="mt-6 leading-relaxed text-neutral-700">
+          Justice Subodh G. Shah enrolled as an advocate in December 1981 and practised in civil,
+          criminal, constitutional and revenue matters until February 1997. In March 1997 he was
+          directly appointed, by invitation, as a Judge of the City Civil &amp; Sessions Court,
+          Ahmedabad. He was elevated as a Judge of the High Court of Gujarat on 12 November 2012
+          and retired on 1 February 2019. He was the first advocate to adopt computer technology,
+          in 1985, and later worked on the computerisation of Indian courts, including as a member
+          of the Standing Committee of the Supreme Court of India for monitoring the E-Committee.
+          Since 2019 he has been educating JMFC aspirants, in addition to consultation and
+          arbitration.
+        </p>
+        <p className="mt-4 leading-relaxed text-neutral-700">
+          What follows is not a Q&amp;A. It is a record of what he stands for, stated publicly, in
+          his own words. This is how <em>Stated Principles</em> works: the person states their
+          beliefs. We make them visible. You decide what to carry forward.
+        </p>
+
+        <dl className="mt-8 grid gap-3 sm:grid-cols-2">
           {FACTS.map((f) => (
             <div key={f.label} className="rounded-md border border-neutral-200 px-4 py-3">
               <dt className="text-xs uppercase tracking-wide text-neutral-400">{f.label}</dt>
@@ -461,35 +508,161 @@ export default function Page() {
         </details>
       </section>
 
-      <section aria-labelledby="reflections" className="mt-12">
-        <h2 id="reflections" className="text-2xl font-serif">Twelve principles, in his own words</h2>
-        <ol className="mt-5 divide-y divide-neutral-200 border-y border-neutral-200">
-          {principles.map((p) => (
-            <li key={p.number}>
-              <a href={`#principle-${p.number}`} className="flex gap-4 py-3 text-neutral-800 hover:text-neutral-900">
-                <span className="w-6 shrink-0 text-sm text-neutral-400">{p.number}</span>
-                <span>{p.title}</span>
-              </a>
+      {/* Principles */}
+      <section id="principles" className="mx-auto max-w-3xl px-6 py-6">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">
+          Twelve principles · Stated by Justice Subodh G. Shah
+        </p>
+        <h2 className="mt-3 text-3xl font-serif">
+          What he stands for — in his own words.
+        </h2>
+
+        <div className="mt-12 space-y-20">
+          {principles.map((p, idx) => (
+            <div key={p.number}>
+              <article className="border-t border-neutral-200 pt-10">
+                <p className="text-sm text-neutral-400">{p.number} of 12 · {p.topic}</p>
+                <h3 className="mt-2 text-2xl font-serif">{p.title}</h3>
+
+                <p className="mt-4 text-sm italic leading-relaxed text-neutral-500">
+                  <span className="font-semibold not-italic text-neutral-600">
+                    The question we asked:{" "}
+                  </span>
+                  {p.question}
+                </p>
+
+                <blockquote className="mt-5 space-y-4 border-l-2 border-neutral-300 pl-5 text-neutral-800">
+                  {p.quote.map((para, i) => (
+                    <p key={i} className="leading-relaxed">
+                      {typeof para === "string" ? para : para.map(renderSeg)}
+                    </p>
+                  ))}
+                </blockquote>
+                <p className="mt-3 text-sm text-neutral-500">
+                  — Justice Subodh G. Shah, stated directly
+                </p>
+
+                <div className="mt-8 space-y-6">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">What this means</p>
+                    <p className="mt-1 leading-relaxed text-neutral-700">{p.whatThisMeans}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Why it matters</p>
+                    <p className="mt-1 leading-relaxed text-neutral-700">{p.whyItMatters}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Reflect on this</p>
+                    <p className="mt-1 leading-relaxed text-neutral-700">{p.reflect}</p>
+                  </div>
+                </div>
+
+                <a
+                  href="https://app.stated.in/signup"
+                  className="mt-8 inline-block rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-neutral-900"
+                >
+                  Create a Commitment inspired by this
+                </a>
+              </article>
+
+              {idx === 2 && (
+                <div className="mt-20 border-t border-neutral-200 pt-16 text-center">
+                  <p className="text-3xl font-serif leading-snug">
+                    &ldquo;<em>Impartiality does not</em>
+                    <br />
+                    require indifference.&rdquo;
+                  </p>
+                  <p className="mt-4 text-sm text-neutral-500">
+                    Justice Subodh G. Shah — Principle III, Stated
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pull quote */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <p className="text-3xl font-serif leading-snug">
+          &ldquo;A meaningful life is not measured only by the positions one has held,
+          <br />
+          <em>but by the value one has added and the principles one has refused to abandon.</em>&rdquo;
+        </p>
+        <p className="mt-4 text-sm text-neutral-500">
+          Justice Subodh G. Shah — Principle XII, Stated
+        </p>
+      </section>
+
+      {/* Key takeaways */}
+      <section className="mx-auto max-w-3xl px-6 py-14">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Key takeaways</p>
+        <h2 className="mt-3 text-3xl font-serif">Twelve ideas worth carrying forward</h2>
+
+        <ol className="mt-8 space-y-6">
+          {takeaways.map((t, i) => (
+            <li key={i} className="flex gap-4">
+              <span className="text-lg font-serif text-neutral-400">{i + 1}</span>
+              <p className="leading-relaxed text-neutral-700">
+                <span className="font-semibold text-neutral-900">{t.title}</span> {t.body}
+              </p>
             </li>
           ))}
         </ol>
       </section>
 
-      <div className="mt-12 space-y-16">
-        {principles.map((p, i) => (
-          <PrincipleCard key={p.number} p={p} showCta={i === principles.length - 1} />
-        ))}
-      </div>
-
-      <footer className="mt-16 border-t border-neutral-200 pt-8">
-        <p className="text-sm text-neutral-500">Share these principles</p>
-        <div className="mt-3"><ShareLinks /></div>
-        <p className="mt-8 text-sm">
-          <Link href="/principles" className="text-neutral-500 hover:text-neutral-900">
-            &larr; All Stated Principles
-          </Link>
+      {/* CTA */}
+      <section className="mx-auto max-w-3xl px-6 py-10">
+        <h3 className="text-xl font-serif">Which principle resonates with you?</h3>
+        <p className="mt-2 text-neutral-700">
+          Post a commitment inspired by Justice Subodh G. Shah&apos;s principles. State it
+          publicly — and make it real.
         </p>
-      </footer>
+        <a
+          href="https://app.stated.in/signup"
+          className="mt-5 inline-block rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          Create a Commitment
+        </a>
+      </section>
+
+      {/* Share */}
+      <section className="mx-auto max-w-3xl px-6 py-10">
+        <p className="text-xs uppercase tracking-wide text-neutral-400">Share this feature</p>
+        <div className="mt-3 flex flex-wrap gap-4 text-sm">
+          <a
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(URL)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            LinkedIn
+          </a>
+          <a
+            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+              URL
+            )}&text=${encodeURIComponent(DESCRIPTION)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Twitter / X
+          </a>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`${DESCRIPTION} ${URL}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            WhatsApp
+          </a>
+        </div>
+        <p className="mt-4 text-sm text-neutral-500">25 min read · 12 principles</p>
+        <p className="text-sm text-neutral-400">app.stated.in/principles/{SLUG}</p>
+        <Link href="/principles" className="mt-4 inline-block text-sm underline">
+          All Stated Principles features
+        </Link>
+      </section>
     </main>
   );
 }
