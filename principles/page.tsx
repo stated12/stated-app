@@ -31,7 +31,7 @@ const published = [
   {
     slug:     "justice-subodh-shah",
     name:     "Justice Subodh G. Shah",
-    role:     "Former Judge, High Court of Gujarat \u00b7 Court Computerisation Pioneer \u00b7 Legal Educator",
+    role:     "Former Judge, High Court of Gujarat · Court Computerisation Pioneer · Legal Educator",
     issue:    "028",
     date:     "November 2026",
     photo:    "/subodh-shah-portrait.jpg",
@@ -43,7 +43,7 @@ const published = [
   {
     slug:     "abhijit-sen",
     name:     "Abhijit Sen",
-    role:     "Former CFO, Citi India Subcontinent \u00b7 Board Member \u00b7 Governance Expert \u00b7 Mentor",
+    role:     "Former CFO, Citi India Subcontinent · Board Member · Governance Expert · Mentor",
     issue:    "027",
     date:     "October 2026",
     photo:    "/abhijit-portrait.jpg",
@@ -59,7 +59,7 @@ const published = [
     issue:    "026",
     date:     "October 2026",
     photo:    "/tsavdaris-portrait.jpg",
-    tagline:  "Honour people\u2019s trust through actions for which you are prepared to take responsibility.",
+    tagline:  "Honour people’s trust through actions for which you are prepared to take responsibility.",
     tags:     ["Leadership & Trust", "Human Dignity", "International Cooperation"],
     readTime: 16,
     principleCount: 13,
@@ -67,7 +67,7 @@ const published = [
   {
     slug:     "dr-sahdev-singh",
     name:     "Dr. Sahdev Singh",
-    role:     "Deputy Secretary, Government of India \u00b7 Ministry of Agriculture & Farmers Welfare",
+    role:     "Deputy Secretary, Government of India · Ministry of Agriculture & Farmers Welfare",
     issue:    "025",
     date:     "October 2026",
     photo:    "/sahdev-portrait.jpg",
@@ -79,7 +79,7 @@ const published = [
   {
     slug:     "dr-heera-lal-patel-ias",
     name:     "Dr. Heera Lal Patel, IAS",
-    role:     "Secretary, National Integration, Government of Uttar Pradesh \u00b7 Climate Action Leader \u00b7 Author",
+    role:     "Secretary, National Integration, Government of Uttar Pradesh · Climate Action Leader · Author",
     issue:    "024",
     date:     "September 2026",
     photo:    "/patel-portrait.jpg",
@@ -91,7 +91,7 @@ const published = [
   {
     slug:     "umashanker-yadav",
     name:     "Umashanker Yadav",
-    role:     "Founder Director, Ahmedabad International Literature Festival (AILF) \u00b7 Entrepreneur \u00b7 Filmmaker \u00b7 Writer",
+    role:     "Founder Director, Ahmedabad International Literature Festival (AILF) · Entrepreneur · Filmmaker · Writer",
     issue:    "023",
     date:     "September 2026",
     photo:    "/yadav-portrait.jpg",
@@ -103,7 +103,7 @@ const published = [
   {
     slug:     "prof-ravinder-rena",
     name:     "Prof. Dr. Ravinder Rena",
-    role:     "Professor of Economics \u00b7 DUT Business School, Durban University of Technology",
+    role:     "Professor of Economics · DUT Business School, Durban University of Technology",
     issue:    "022",
     date:     "September 2026",
     photo:    "/rena-portrait.jpg",
@@ -115,7 +115,7 @@ const published = [
   {
     slug:     "barbara-vercruysse",
     name:     "Barbara Vercruysse",
-    role:     "Global Kindness Advocate \u00b7 President, PWI Brussels (PWN Global) \u00b7 Author",
+    role:     "Global Kindness Advocate · President, PWI Brussels (PWN Global) · Author",
     issue:    "021",
     date:     "September 2026",
     photo:    "/barbara-portrait.jpg",
@@ -127,7 +127,7 @@ const published = [
   {
     slug:     "rajendra-shah",
     name:     "Rajendra Shah",
-    role:     "Education Entrepreneur \u00b7 Connector, Mentor & Platform Builder",
+    role:     "Education Entrepreneur · Connector, Mentor & Platform Builder",
     issue:    "020",
     date:     "September 2026",
     photo:    "/shah-portrait.jpg",
@@ -139,7 +139,7 @@ const published = [
   {
     slug:     "adapa-sharath-kumar-ask",
     name:     "Adapa Sharath Kumar (ASK)",
-    role:     "Board Advisor & Board Member \u00b7 Entrepreneur \u00b7 Institution Builder",
+    role:     "Board Advisor & Board Member · Entrepreneur · Institution Builder",
     issue:    "019",
     date:     "September 2026",
     photo:    "/ask-portrait.jpg",
@@ -151,7 +151,7 @@ const published = [
   {
     slug:     "dr-mariam-shaikh",
     name:     "Dr. Mariam Shaikh",
-    role:     "Global 200 Women Power Leaders 2024 \u00b7 Founder & CEO, MS Education Consultants",
+    role:     "Global 200 Women Power Leaders 2024 · Founder & CEO, MS Education Consultants",
     issue:    "018",
     date:     "September 2026",
     photo:    "/mariam-portrait.jpg",
@@ -163,7 +163,7 @@ const published = [
   {
     slug:     "prof-dr-pramod-kumar-rajput",
     name:     "Prof. Dr. Pramod Kumar Rajput",
-    role:     "Former Sr. Vice President, Cadila Pharma Ltd. \u00b7 Director, CliMed Research Solutions",
+    role:     "Former Sr. Vice President, Cadila Pharma Ltd. · Director, CliMed Research Solutions",
     issue:    "017",
     date:     "September 2026",
     photo:    "/rajput-portrait.jpg",
@@ -175,7 +175,7 @@ const published = [
   {
     slug:     "air-marshal-anil-khosla",
     name:     "Air Marshal Anil Khosla",
-    role:     "Indian Air Force (Retd.) \u00b7 Former Vice Chief of the Air Staff",
+    role:     "Indian Air Force (Retd.) · Former Vice Chief of the Air Staff",
     issue:    "016",
     date:     "September 2026",
     photo:    "/khosla-portrait.jpg",
@@ -187,7 +187,7 @@ const published = [
   {
     slug:     "sushil-rao-chilkuri",
     name:     "Sushil Rao Chilkuri",
-    role:     "38 Years in Journalism \u00b7 Former Editor, Special Reports, The Times of India",
+    role:     "38 Years in Journalism · Former Editor, Special Reports, The Times of India",
     issue:    "015",
     date:     "September 2026",
     photo:    "/sushilrao-portrait.jpg",
@@ -199,7 +199,7 @@ const published = [
   {
     slug:     "dr-jalpan-lala",
     name:     "Dr. (Hon) Jalpan Lala",
-    role:     "Global Branding Strategist \u00b7 Founder, BrandBrews \u00b7 VP, HBL Atrium",
+    role:     "Global Branding Strategist · Founder, BrandBrews · VP, HBL Atrium",
     issue:    "014",
     date:     "September 2026",
     photo:    "/jalpan-portrait.jpg",
@@ -211,7 +211,7 @@ const published = [
   {
     slug:     "maj-gen-ranjan-mahajan",
     name:     "Maj Gen Ranjan Mahajan",
-    role:     "Indian Army (Retd.) \u00b7 Five Tenures in Kashmir \u00b7 Author, Kashmir in the Line of Fire",
+    role:     "Indian Army (Retd.) · Five Tenures in Kashmir · Author, Kashmir in the Line of Fire",
     issue:    "013",
     date:     "September 2026",
     photo:    "/mahajan-portrait.jpg",
@@ -223,7 +223,7 @@ const published = [
   {
     slug:     "anil-swarup",
     name:     "Shri Anil Swarup",
-    role:     "Founder Chairman, Nexus of Good \u00b7 Former Secretary, School Education & Coal, Govt. of India",
+    role:     "Founder Chairman, Nexus of Good · Former Secretary, School Education & Coal, Govt. of India",
     issue:    "012",
     date:     "August 2026",
     photo:    "/swarup-portrait.jpg",
@@ -235,7 +235,7 @@ const published = [
   {
     slug:     "maj-gen-ak-bardalai",
     name:     "Maj Gen (Dr) A.K. Bardalai",
-    role:     "Indian Army (Retd.) \u00b7 UN Peace Operations Scholar",
+    role:     "Indian Army (Retd.) · UN Peace Operations Scholar",
     issue:    "011",
     date:     "August 2026",
     photo:    "/bardalai-portrait.jpg",
@@ -247,7 +247,7 @@ const published = [
   {
     slug:     "amb-sanjiv-kohli",
     name:     "Amb Sanjiv Kohli",
-    role:     "Indian Foreign Service, IFS \u00b7 Former High Commissioner & Ambassador",
+    role:     "Indian Foreign Service, IFS · Former High Commissioner & Ambassador",
     issue:    "010",
     date:     "August 2026",
     photo:    "/kohli-portrait.jpg",
@@ -271,7 +271,7 @@ const published = [
   {
     slug:     "peter-toutain-dorbec",
     name:     "Peter Toutain-Dorbec",
-    role:     "Artist \u00b7 Photographer \u00b7 Author \u00b7 Poet \u00b7 Publisher",
+    role:     "Artist · Photographer · Author · Poet · Publisher",
     issue:    "008",
     date:     "August 2026",
     photo:    "/peter-portrait.jpg",
@@ -295,7 +295,7 @@ const published = [
   {
     slug:     "lt-general-shokin-chauhan",
     name:     "Lt General Shokin Chauhan",
-    role:     "Indian Army (Retd.) \u00b7 Former Defence Attach\u00e9 to Nepal",
+    role:     "Indian Army (Retd.) · Former Defence Attaché to Nepal",
     issue:    "006",
     date:     "July 2026",
     photo:    "/shokin-portrait.jpg",
@@ -307,7 +307,7 @@ const published = [
   {
     slug:     "eric-anthony-jones",
     name:     "Eric Anthony Jones",
-    role:     "Founder, The Peacemakers Movement\u2122 \u00b7 Former Attorney & ABA Commissioner",
+    role:     "Founder, The Peacemakers Movement™ · Former Attorney & ABA Commissioner",
     issue:    "005",
     date:     "July 2026",
     photo:    "/eric-portrait.jpg",
@@ -331,7 +331,7 @@ const published = [
   {
     slug:     "col-mandhir-singh",
     name:     "Colonel Mandhir Singh",
-    role:     "Indian Army (Retd.) \u00b7 Commando Instructor \u00b7 Independent Director, MDI Gurgaon",
+    role:     "Indian Army (Retd.) · Commando Instructor · Independent Director, MDI Gurgaon",
     issue:    "003",
     date:     "July 2026",
     photo:    "/mandhir-portrait.jpg",
@@ -343,7 +343,7 @@ const published = [
   {
     slug:     "dr-lenin-raghuvanshi",
     name:     "Dr. Lenin Raghuvanshi",
-    role:     "Founder, People's Vigilance Committee on Human Rights (PVCHR) \u00b7 Author",
+    role:     "Founder, People's Vigilance Committee on Human Rights (PVCHR) · Author",
     issue:    "002",
     date:     "July 2026",
     photo:    "/lenin-portrait.jpg",
@@ -355,7 +355,7 @@ const published = [
   {
     slug:     "shilpa-s",
     name:     "Shilpa S",
-    role:     "CMD, SheRocks India \u00b7 Startup Ecosystem Enabler \u00b7 Investor for MSMEs",
+    role:     "CMD, SheRocks India · Startup Ecosystem Enabler · Investor for MSMEs",
     issue:    "001",
     date:     "June 2026",
     photo:    "/shilpa-portrait.jpg",
@@ -482,239 +482,3 @@ export default function PrinciplesIndexPage() {
           <p className="text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-2xl mb-8">
             This series is not only a digital archive. It is the foundation of a book, compiled
             from fifty people across fifty different walks of life, each stating what they stand
-            for in their own words. Once complete, the book will be printed and given away for
-            free to students, youth, emerging leaders, and institutions who need real wisdom,
-            not filtered advice.
-          </p>
-
-          <div className="max-w-2xl">
-            <div className="flex items-baseline justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-900">
-                {publishedCount} of {BOOK_GOAL} published
-              </span>
-              <span className="mono text-xs text-amber-600 uppercase tracking-wider">
-                {progressPercent}% complete
-              </span>
-            </div>
-            <div className="h-2.5 w-full rounded-full bg-amber-100 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-amber-500"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PUBLISHED FEATURES ────────────────────────────────────────── */}
-      <section className="px-6 py-16" style={{ background: "#fafaf8" }}>
-        <div className="max-w-4xl mx-auto">
-
-          <div className="flex items-center gap-2 mb-8">
-            <span className="w-5 h-px bg-amber-600 inline-block" />
-            <span className="mono text-amber-600 text-xs tracking-widest uppercase">Features</span>
-          </div>
-
-          {published.map((f) => (
-            <Link
-              key={f.slug}
-              href={`/principles/${f.slug}`}
-              className="block mb-5 rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline"
-            >
-              <div className="grid md:grid-cols-[280px_1fr]">
-
-                {/* Photo */}
-                <div className="relative overflow-hidden bg-stone-100" style={{ minHeight: 280 }}>
-                  <Image
-                    src={f.photo}
-                    alt={f.name}
-                    fill
-                    className="object-cover"
-                    style={{ objectPosition: "center 20%" }}
-                  />
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white border border-amber-200 text-amber-700 px-3 py-1 rounded-full shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                    <span className="mono text-xs tracking-wider uppercase">Issue {f.issue}</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-8 flex flex-col justify-center">
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="w-3 h-px bg-amber-600 inline-block" />
-                    <span className="mono text-amber-600 text-xs tracking-widest uppercase">
-                      Stated Principles &middot; {f.date}
-                    </span>
-                  </div>
-
-                  <h2 className="serif text-4xl font-light text-gray-900 leading-none tracking-tight mb-2">
-                    {f.name}
-                  </h2>
-
-                  <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">{f.role}</p>
-
-                  <blockquote className="serif text-lg font-light text-gray-600 italic leading-relaxed mb-5 pl-4 border-l-2 border-amber-300">
-                    "{f.tagline}"
-                  </blockquote>
-
-                  <div className="flex flex-wrap gap-1.5 mb-5">
-                    {f.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="mono text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded uppercase tracking-wider"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-3">
-                    <span className="text-xs text-gray-400 font-light">
-                      {f.principleCount} principles &middot; {f.readTime} min read
-                    </span>
-                    <span className="bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                      Read feature
-                    </span>
-                  </div>
-
-                </div>
-              </div>
-            </Link>
-          ))}
-
-        </div>
-      </section>
-
-      {/* ── ABOUT THE FORMAT ──────────────────────────────────────────── */}
-      <section className="bg-white border-t border-gray-200 px-6 py-16">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-14 items-start">
-
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <span className="w-5 h-px bg-amber-600 inline-block" />
-              <span className="mono text-amber-600 text-xs tracking-widest uppercase">
-                About the format
-              </span>
-            </div>
-            <h2 className="serif text-4xl font-light text-gray-900 leading-tight tracking-tight mb-5">
-              Not an interview.<br />A public record of<br />
-              <em className="italic text-amber-600">what someone stands for.</em>
-            </h2>
-            <div className="text-sm text-gray-500 font-light leading-relaxed space-y-3">
-              <p>
-                Most interviews are forgotten the day after they are published.
-                Stated Principles is designed to last -- because it captures beliefs and
-                principles, not opinions about current events.
-              </p>
-              <p>
-                Every feature is archived permanently. Every principle can inspire a
-                commitment. Every quote becomes a public record tied to the person who stated it.
-              </p>
-              <p>
-                And every feature is one more voice toward a book meant to outlast any single
-                post, one that a student or a young leader can hold in their hands.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {formatSteps.map(({ n, title, desc }) => (
-              <div
-                key={n}
-                className="flex gap-4 items-start bg-gray-50 border border-gray-200 rounded-xl p-4"
-              >
-                <span className="serif text-xl font-light text-amber-600 flex-shrink-0 leading-none mt-0.5">
-                  {n}
-                </span>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-1">{title}</h4>
-                  <p className="text-xs text-gray-500 font-light leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── NOMINATE ──────────────────────────────────────────────────── */}
-      <section
-        className="px-6 py-16 border-t border-amber-100"
-        style={{ background: "#fffbeb" }}
-      >
-        <div className="max-w-2xl mx-auto">
-
-          <div className="flex items-center gap-2 mb-5">
-            <span className="w-5 h-px bg-amber-600 inline-block" />
-            <span className="mono text-amber-600 text-xs tracking-widest uppercase">
-              Nominate someone
-            </span>
-          </div>
-
-          <h2 className="serif text-3xl md:text-4xl font-light text-gray-900 mb-4 leading-tight">
-            Know someone whose principles deserve to be stated?
-          </h2>
-
-          <p className="text-sm text-gray-500 font-light leading-relaxed mb-8">
-            We feature founders, investors, policymakers, creators, executives, and professionals
-            who have something worth standing for. Click below to send us a nomination -- we will
-            reach out within 5 working days.
-          </p>
-
-          {/* What happens when you click */}
-          <div className="bg-white border border-amber-200 rounded-xl p-5 mb-7">
-            <div className="mono text-xs text-amber-600 uppercase tracking-wider mb-3">
-              What you will be asked
-            </div>
-            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-2">
-              {[
-                "Full name of the person",
-                "Their current role and company",
-                "LinkedIn or website",
-                "Why they should be featured",
-                "Your name and contact",
-                "Your email and phone",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-xs text-gray-500 font-light">
-                  <span className="w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
-                  {item}
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 font-light mt-3 italic">
-              Nominating yourself? Just fill in your own details and leave the nominator section blank.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={MAILTO_LINK}
-              className="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold px-7 py-3.5 rounded-lg transition-all no-underline"
-            >
-              Nominate via email
-            </a>
-            <a
-              href={MAILTO_LINK}
-              className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-sm font-medium px-7 py-3.5 rounded-lg transition-all no-underline"
-            >
-              Nominate yourself
-            </a>
-          </div>
-
-          <p className="text-xs text-gray-400 font-light mt-4">
-            Or write directly to{" "}
-            <a
-              href="mailto:hello@stated.in"
-              className="text-amber-600 hover:underline"
-            >
-              hello@stated.in
-            </a>
-          </p>
-
-        </div>
-      </section>
-
-    </div>
-  );
-}
