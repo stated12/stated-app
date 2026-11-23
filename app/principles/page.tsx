@@ -29,6 +29,18 @@ export const metadata: Metadata = {
 // Ordered latest first -- newest issue always leads.
 const published = [
   {
+    slug:     "justice-subodh-shah",
+    name:     "Justice Subodh G. Shah",
+    role:     "Former Judge, High Court of Gujarat \u00b7 Court Computerisation Pioneer \u00b7 Legal Educator",
+    issue:    "028",
+    date:     "November 2026",
+    photo:    "/subodh-shah-portrait.jpg",
+    tagline:  "Justice must be both principled and effective.",
+    tags:     ["Judiciary", "Constitutional Values", "Courts & Technology"],
+    readTime: 25,
+    principleCount: 12,
+  },
+  {
     slug:     "abhijit-sen",
     name:     "Abhijit Sen",
     role:     "Former CFO, Citi India Subcontinent \u00b7 Board Member \u00b7 Governance Expert \u00b7 Mentor",
